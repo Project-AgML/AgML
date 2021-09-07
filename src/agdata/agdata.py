@@ -27,6 +27,9 @@ class AgDataServer:
         # Define s3 bucket URI
         self.agdata_s3_uri = 'https://s3.us-west-1.amazonaws.com/agdata-data/'
 
+        # Initialize attribute for storing dataset download path
+        self.dataset_download_path = None
+
 
     def upload_dataset(self, dataset_dir, dataset_name):
 
@@ -50,11 +53,14 @@ class AgDataServer:
         self.pg.start()
 
         # Upload data to agdata-data bucket
-        with open(dataset_dir + '/' + dataset_name + '.zip', 'rb') as data:
-            self.s3.upload_fileobj(Fileobj=data, 
-                                   Bucket='agdata-data', 
-                                   Key=dataset_name + '.zip', 
-                                   Callback=self.updownload_callback)   
+        try:
+            with open(dataset_dir + '/' + dataset_name + '.zip', 'rb') as data:
+                self.s3.upload_fileobj(Fileobj=data, 
+                                    Bucket='agdata-data', 
+                                    Key=dataset_name + '.zip', 
+                                    Callback=self.updownload_callback)
+        except:
+            print('Upload unsuccessful. You may not have permission to upload to the agdata-data s3 bucket...')
 
 
     def download_dataset(self, dataset_name, dest_dir):
@@ -80,24 +86,24 @@ class AgDataServer:
         self.pg.start()
 
         # File path of zipped dataset
-        dataset_download_path = dest_dir + '/' + dataset_name + '.zip'
+        self.dataset_download_path = dest_dir + '/' + dataset_name + '.zip'
 
         # Upload data to agdata-data bucket
-        with open(dataset_download_path, 'wb') as data:
+        with open(self.dataset_download_path, 'wb') as data:
             self.s3.download_fileobj(Bucket='agdata-data', 
                                      Key=dataset_name + '.zip', 
                                      Fileobj=data,
                                      Callback=self.updownload_callback)
 
         # Unzip downloaded dataset
-        with zipfile.ZipFile(dataset_download_path, 'r') as zip:
+        with zipfile.ZipFile(self.dataset_download_path, 'r') as zip:
             zip.printdir()
             print('Extracting files...')
             zip.extractall(path=dest_dir)
             print('Done!')
 
         # Delete zipped file
-        os.remove(dataset_download_path)
+        os.remove(self.dataset_download_path)
 
 
     def updownload_callback(self, size):
