@@ -5,7 +5,7 @@ import zipfile
 import boto3
 import progressbar
 
-class AgDataServer: 
+class AgDataAPI: 
 
     """
     A class for working with AgData
