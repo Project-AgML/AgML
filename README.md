@@ -8,7 +8,7 @@ You can also view this information, along with available datasets, via the AgDat
 
 ```
 from agdata import agdata
-adapi = agdata.AgDataServer()
+adapi = agdata.AgDataAPI()
 adapi.data_srcs
 ```
 
