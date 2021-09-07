@@ -1,10 +1,10 @@
-# AgData
+# AgData-API
 The AgData API aims to provide easy access to centralized and standardized agricultural datasets for deep learning model training.
 
-### Downloading datasets using AgData 
+### Downloading datasets using AgData-API
 All of the datasources included in AgData, along with their associated meta-data, are described within [`data_sources.json`](/src/assets/data_sources.json). 
 
-You can also view this information, along with available datasets via the AgData API.
+You can also view this information, along with available datasets, via the AgData API.
 
 ```
 from agdata import agdata
