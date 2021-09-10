@@ -188,7 +188,15 @@
         },
     "rangeland_weeds_australia":{
         "crop_types":{
-            "1": "rangeland"
+            "1": "no_weeds",
+            "2": "chinee_apple",
+            "3": "lantana",
+            "4": "parkinsonia",
+            "5": "parthenium",
+            "6": "prickly_acacia",
+            "7": "rubber_vine",
+            "8": "siam_weed",
+            "9": "snake_weed"
         },
             "ml_task": "image_classification",
             "ag_task": "weed_classification",
@@ -199,9 +207,9 @@
             "sensor_modality": "rgb",
             "real_synthetic": "real",
             "platform": "ground",
-            "input_data_format": "png",
-            "annotation_format": "image",
-            "n_images": "1931",
-            "docs_url": "http://www.diag.uniroma1.it//~labrococo/fds/syntheticdatasets.html"
+            "input_data_format": "jpg",
+            "annotation_format": "directory_names",
+            "n_images": "17509",
+            "docs_url": "https://github.com/AlexOlsen/DeepWeeds"
     }
 }
