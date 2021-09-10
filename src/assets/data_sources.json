@@ -117,5 +117,45 @@
             "input_data_format": "png",
             "annotation_format": "directory_names",
             "docs_url": "https://vision.eng.au.dk/plant-seedlings-dataset/"
-        }       
+        },
+        "sugarcanebillets_damage_usa": {
+            "crop_types": {
+                "1": "cracked",
+                "2": "crushed",
+                "3": "no_buds",
+                "4": "two_buds",
+                "5": "single_damaged_buds",
+                "6": "no_damage"
+            },
+            "ml_task": "image_classification",
+            "ag_task": "damage_classification",
+            "location": {
+                "continent": "north_america",
+                "country": "usa"
+            },
+            "sensor_modality": "rgb",
+            "platform": "ground_fixed",
+            "input_data_format": "bmp",
+            "annotation_format": "directory_names",
+            "docs_url": "https://github.com/plant-ai-biophysics-lab/AgData"
+        },
+        "crop_weeds_greece": {
+            "crop_types": {
+                "1": "black_nightsade",
+                "2": "velvet_leaf",
+                "3": "cotton",
+                "4": "tomato"
+            },
+            "ml_task": "image_classification",
+            "ag_task": "weed_classification",
+            "location": {
+                "continent": "europe",
+                "country": "greece"
+            },
+            "sensor_modality": "rgb",
+            "platform": "handheld",
+            "input_data_format": "jpg",
+            "annotation_format": "directory_names",
+            "docs_url": "https://github.com/AUAgroup/early-crop-weed"
+        }
 }
