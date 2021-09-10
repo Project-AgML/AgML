@@ -211,5 +211,29 @@
             "annotation_format": "directory_names",
             "n_images": "17509",
             "docs_url": "https://github.com/AlexOlsen/DeepWeeds"
+    },
+    "fruits_classification_worldwide":{
+        "crop_types":{
+            "1": "avocado",
+            "2": "rockmelon",
+            "3": "apple",
+            "4": "orange",
+            "5": "strawberry",
+            "6": "mango",
+            "7": "capsicum"
+        },
+            "ml_task": "image_classification",
+            "ag_task": "fruit_classification",
+            "location":{
+                    "continent": "worldwide",
+                    "country": "worldwide"
+                },
+            "sensor_modality": "rgb",
+            "real_synthetic": "real",
+            "platform": "mixed",
+            "input_data_format": "jpg",
+            "annotation_format": "coco_json",
+            "n_images": "565",
+            "docs_url": "https://drive.google.com/drive/folders/1CmsZb1caggLRN7ANfika8WuPiywo4mBb"
     }
 }
