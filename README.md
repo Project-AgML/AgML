@@ -1,5 +1,5 @@
 # AgML
-Currently AgML provides access to publicly available and synthetic agricultural datasets for deep learning model training. In the future, we aim to provide a full pipeline for data access, model training, and evaluation.
+Currently AgML provides access to publicly available and synthetic agricultural datasets for deep learning model training. In the future, we aim to provide full pipelines for data access, model training, and evaluation.
 
 ## Downloading publicly available agricultural datasets
 ### Getting started
