@@ -1,71 +1,62 @@
 {
-    "bean_disease_uganda":
-        {
-            "crop_types":
-                {
+    "bean_disease_uganda":{
+            "crop_types":{
                     "1": "bean"
-                }
-            ,
+                },
             "ml_task": "image_classification",
             "ag_task": "disease_classification",
-            "location":
-                {
+            "location":{
                     "continent": "africa",
                     "country": "uganda"
-                }
-            ,
+                },
             "sensor_modality": "rgb",
+            "real_synthetic": "real",
             "platform": "handheld",
             "input_data_format": "jpg",
             "annotation_format": "directory_names",
+            "n_images": "1296",
             "docs_url": "https://github.com/AI-Lab-Makerere/ibean/"
         },
-    "carrot_weeds_germany":
-        {
-            "crop_types":
-                {
-                    "1": "daucus_carota"
-                }
-            ,
+    "carrot_weeds_germany":{
+            "crop_types":{
+                    "1": "carrot",
+                    "2": "weeds"
+                },
             "ml_task": "semantic_segmentation",
             "ag_task": "weed_segmentation",
-            "location":
-                {
+            "location":{
                     "continent": "europe",
                     "country": "germany"
-                }
-            ,
+                },
             "sensor_modality": "rgb",
+            "real_synthetic": "real",
             "platform": "ground_mobile",
             "input_data_format": "png",
             "annotation_format": "image",
+            "n_images": "60",
             "docs_url": "https://github.com/cwfid/dataset"
         },
-    "carrot_weeds_macedonia":
-        {
-            "crop_types":
-                {
-                    "1": "daucus_carota"
-                }
-            ,
+    "carrot_weeds_macedonia":{
+            "crop_types":{
+                    "1": "carrot",
+                    "2": "weeds"
+                },
             "ml_task": "semantic_segmentation",
             "ag_task": "weed_segmentation",
-            "location":
-                {
+            "location":{
                     "continent": "europe",
                     "country": "macedonia"
-                }
-            ,
+                },
             "sensor_modality": "rgb",
+            "real_synthetic": "real",
             "platform": "handheld",
             "input_data_format": "jpg",
             "annotation_format": "image",
+            "n_images": "39",
             "docs_url": "https://github.com/lameski/rgbweeddetection"
         },
-    "plant_seedlings_aarhus":
-        {
-            "crop_types":
-                {
+    "plant_seedlings_aarhus":{
+            "crop_types":{
                     "1": "zea_mays",
                     "2": "triticum_aestivum",
                     "3": "beta_vulgaris",
@@ -78,47 +69,44 @@
                     "10": "geranium_pusillium",
                     "11": "alopecurus_myosuroides",
                     "12": "apera_spicaventi"
-                }
-            ,
+                },
             "ml_task": "image_classification",
             "ag_task": "weed_classification",
             "location":
                 {
                     "continent": "europe",
                     "country": "denmark"
-                }
-            ,
+                },
             "sensor_modality": "rgb",
+            "real_synthetic": "real",
             "platform": "ground_fixed",
             "input_data_format": "png",
             "annotation_format": "directory_names",
+            "n_images": "5588",
             "docs_url": "https://vision.eng.au.dk/plant-seedlings-dataset/"
         },
-    "soybean_weed_uav_brazil":
-        {
-            "crop_types":
-                {
-                    "1": "glycine_max",
-                    "2": "broadleaf_weeds",
-                    "3": "grass_weeds",
-                    "4": "bare_soil"
-                }
-            ,
+    "soybean_weed_uav_brazil":{
+            "crop_types":{
+                "1": "glycine_max",
+                "2": "broadleaf_weeds",
+                "3": "grass_weeds",
+                "4": "bare_soil"
+                },
             "ml_task": "image_classification",
             "ag_task": "weed_classification",
-            "location":
-                {
-                    "continent": "south_america",
-                    "country": "brazil"
-                }
-            ,
+            "location":{
+                "continent": "south_america",
+                "country": "brazil"
+                },
             "sensor_modality": "rgb",
-            "platform": "ground_fixed",
-            "input_data_format": "png",
+            "real_synthetic": "real",
+            "platform": "uav",
+            "input_data_format": "tif",
             "annotation_format": "directory_names",
-            "docs_url": "https://vision.eng.au.dk/plant-seedlings-dataset/"
+            "docs_url": "https://data.mendeley.com/datasets/3fmjm7ncc6/2",
+             "n_images": "15336"
         },
-        "sugarcanebillets_damage_usa": {
+    "sugarcanebillets_damage_usa": {
             "crop_types": {
                 "1": "cracked",
                 "2": "crushed",
@@ -157,5 +145,45 @@
             "input_data_format": "jpg",
             "annotation_format": "directory_names",
             "docs_url": "https://github.com/AUAgroup/early-crop-weed"
-        }
+        },
+    "sugarbeet_weeds_synthetic":{
+            "crop_types":{
+                    "1": "sugar_beet",
+                    "2": "random_weeds"
+                }
+            ,
+            "ml_task": "semantic_segmentation",
+            "ag_task": "weed_segmentation",
+            "location":{
+                    "continent": "none",
+                    "country": "none"
+                },
+            "sensor_modality": "rgb",
+            "real_synthetic": "synthetic",
+            "platform": "ground",
+            "input_data_format": "png",
+            "annotation_format": "image",
+            "n_images": "1252",
+            "docs_url": "http://www.diag.uniroma1.it//~labrococo/fds/syntheticdatasets.html"
+        },
+    "sugarbeet_weeds_germany":{
+            "crop_types":{
+                    "1": "sugar_beet",
+                    "2": "random_weeds"
+                }
+            ,
+            "ml_task": "semantic_segmentation",
+            "ag_task": "weed_segmentation",
+            "location":{
+                    "continent": "none",
+                    "country": "none"
+                },
+            "sensor_modality": "rgb",
+            "real_synthetic": "real",
+            "platform": "ground",
+            "input_data_format": "png",
+            "annotation_format": "image",
+            "n_images": "1931",
+            "docs_url": "http://www.diag.uniroma1.it//~labrococo/fds/syntheticdatasets.html"
+        }   
 }
