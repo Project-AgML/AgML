@@ -185,5 +185,23 @@
             "annotation_format": "image",
             "n_images": "1931",
             "docs_url": "http://www.diag.uniroma1.it//~labrococo/fds/syntheticdatasets.html"
-        }   
+        },
+    "rangeland_weeds_australia":{
+        "crop_types":{
+            "1": "rangeland"
+        },
+            "ml_task": "image_classification",
+            "ag_task": "weed_classification",
+            "location":{
+                    "continent": "australia",
+                    "country": "australia"
+                },
+            "sensor_modality": "rgb",
+            "real_synthetic": "real",
+            "platform": "ground",
+            "input_data_format": "png",
+            "annotation_format": "image",
+            "n_images": "1931",
+            "docs_url": "http://www.diag.uniroma1.it//~labrococo/fds/syntheticdatasets.html"
+    }
 }
