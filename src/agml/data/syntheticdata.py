@@ -14,16 +14,22 @@ from skimage.morphology import closing
 import imantics
 import pandas as pd
 
+HELIOS_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'Helios')
+
 #%%
 #%%
 class HeliosDataGenerator:
 
-    def __init__(self, path_helios_dir='../../Helios/'):
+    def __init__(self, path_helios_dir=HELIOS_PATH):
         
-        self.path_canopygen_header = path_helios_dir + 'plugins/canopygenerator/include/CanopyGenerator.h'
-        self.path_canopygen_cpp = path_helios_dir + 'plugins/canopygenerator/src/CanopyGenerator.cpp'
-        self.path_cmakelists = 'CMakeLists.txt'
-        self.path_main_cpp = 'main.cpp'
+        self.path_canopygen_header = os.path.join(
+            path_helios_dir, 'plugins/canopygenerator/include/CanopyGenerator.h')
+        self.path_canopygen_cpp = os.path.join(
+            path_helios_dir, 'plugins/canopygenerator/src/CanopyGenerator.cpp')
+        self.path_cmakelists = os.path.join(
+            os.path.dirname(os.path.dirname(__file__)), 'CMakeLists.txt')
+        self.path_main_cpp = os.path.join(
+            os.path.dirname(os.path.dirname(__file__)), 'main.cpp')
         self.canopy_types = self.get_canopy_types()
         self.canopy_params = self.get_canopy_params()
         self.canopy_param_ranges=self.set_initial_canopy_param_ranges()
@@ -328,7 +334,7 @@ class HeliosDataGenerator:
                     # image_list.sort() # not necessary but might help to debug
                     # masks = '/home/kudeshpa/CNN-Synth-Grape-PyTorch/src/data/frames_npy/'
 
-                    mapping=pd.read_csv(Frames_path + frame + '/'+'ID_mapping.txt', delim_whitespace=True, names=['ID', 'Class'])
+                    mapping=pd.read_csv(os.path.join(Frames_path + frame, 'ID_mapping.txt'), delim_whitespace=True, names=['ID', 'Class'])
 
                     category = imantics.Category(mapping['Class'].iloc[pixel_ID],color=imantics.Color([255,0,0])) # color for debug only
                     c = 0
@@ -352,10 +358,10 @@ class HeliosDataGenerator:
                     
                     images.append(im2) # collect the image objects after they get polygons
                 # %% Create Imantics dataset and export
-                ds = imantics.Dataset(name='test',images=images)
+                ds = imantics.Dataset(name='test', images=images)
                 obj = ds.coco()
-                with open('train.json','w') as json_file:
-                    json.dump(obj,json_file)
+                with open('train.json', 'w') as json_file:
+                    json.dump(obj, json_file)
 
                     # np.save('data/frames_npy/' + frame.split('.')[0] + '.npy', npy_arr)
                     
@@ -366,12 +372,12 @@ class HeliosDataGenerator:
             None
 
     def generate_npy_arr(self, Frames_path, frames_view_path):
-    
+
 
         Frame_paths = frames_view_path
         
         # Grab dimensions
-        render = imread(frames_view_path + '/RGB_rendering' + '.jpeg')
+        render = imread(os.path.join(frames_view_path, 'RGB_rendering' + '.jpeg'))
         render_xy_shape = (render.shape[0], render.shape[1])
         print(render_xy_shape)
 
@@ -384,7 +390,7 @@ class HeliosDataGenerator:
         print(n_instances)
 
         # Initialize numpy array of shape (x, y, n_instances)
-        npy_arr = np.zeros(shape=(render_xy_shape[0], render_xy_shape[1], n_instances[0]),dtype=np.bool_) # Make boolean dtype
+        npy_arr = np.zeros(shape=(render_xy_shape[0], render_xy_shape[1], n_instances[0]), dtype=np.bool_) # Make boolean dtype
 
         # Read frames as a list
         bboxes = []

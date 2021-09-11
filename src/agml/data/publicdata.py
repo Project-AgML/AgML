@@ -29,6 +29,11 @@ class PublicDataAPI:
         # Initialize attribute for storing dataset download path
         self.dataset_download_path = None
 
+    @property
+    def data_sources(self):
+        """Returns a list of AgML public data sources."""
+        return list(self.data_srcs.keys())
+
     def upload_dataset(self, dataset_dir, dataset_name):
         """
         Uploads dataset to agdata-data s3 file storage.
@@ -50,7 +55,7 @@ class PublicDataAPI:
 
         # Upload data to agdata-data bucket
         try:
-            with open(dataset_dir + '/' + dataset_name + '.zip', 'rb') as data:
+            with open(os.path.join(dataset_dir, dataset_name + '.zip'), 'rb') as data:
                 self.s3.upload_fileobj(Fileobj=data, 
                                        Bucket='agdata-data',
                                        Key=dataset_name + '.zip',
