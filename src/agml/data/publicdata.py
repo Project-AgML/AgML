@@ -5,6 +5,7 @@ import zipfile
 import warnings
 
 import boto3
+import botocore.exceptions
 from tqdm import tqdm
 
 class PublicDataAPI:
@@ -76,15 +77,26 @@ class PublicDataAPI:
         dest_dir : str
             path for saving downloaded dataset
         """
+        # Validate the dataset name.
+        if dataset_name not in self.data_sources:
+            raise ValueError(f"Invalid dataset '{dataset_name}.'")
+
         # Establish connection with s3 via boto
         self.s3 = boto3.client('s3')
         self.s3_resource = boto3.resource('s3')
 
         # Setup progress bar
-        self.pg = tqdm(
-            total=float(self.s3_resource.ObjectSummary(
-                bucket_name='agdata-data', key=dataset_name + '.zip').size),
-            file = sys.stdout, desc = f"Downloading {dataset_name}")
+        try:
+            self.pg = tqdm(
+                total=float(self.s3_resource.ObjectSummary(
+                    bucket_name='agdata-data', key=dataset_name + '.zip').size),
+                file = sys.stdout, desc = f"Downloading {dataset_name}")
+        except botocore.exceptions.ClientError as ce:
+            if "Not Found" in str(ce):
+                raise ValueError(
+                    f"The dataset '{dataset_name}' could not be found in "
+                    f"the bucket, perhaps it has not been uploaded yet.")
+            raise ce
 
         # File path of zipped dataset
         self.dataset_download_path = os.path.join(dest_dir, dataset_name + '.zip')
