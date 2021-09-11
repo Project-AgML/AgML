@@ -14,6 +14,8 @@ from skimage.morphology import closing
 import imantics
 import pandas as pd
 
+#%%
+#%%
 class HeliosDataGenerator:
 
     def __init__(self, path_helios_dir='../../Helios/'):
@@ -21,6 +23,7 @@ class HeliosDataGenerator:
         self.path_canopygen_header = path_helios_dir + 'plugins/canopygenerator/include/CanopyGenerator.h'
         self.path_canopygen_cpp = path_helios_dir + 'plugins/canopygenerator/src/CanopyGenerator.cpp'
         self.path_cmakelists = 'CMakeLists.txt'
+        self.path_main_cpp = 'main.cpp'
         self.canopy_types = self.get_canopy_types()
         self.canopy_params = self.get_canopy_params()
         self.canopy_param_ranges=self.set_initial_canopy_param_ranges()
@@ -115,7 +118,7 @@ class HeliosDataGenerator:
         return canopy_param_ranges
 
 
-    def generate_one_datapair(self, canopy_type, export_format='xml'):
+    def generate_one_datapair(self, canopy_type, simulation_type, export_format='xml'):
 
         assert canopy_type in self.canopy_types, 'Canopy type not available.'
 
@@ -129,10 +132,19 @@ class HeliosDataGenerator:
                                             'extent': '10 10',
                                             'texture_subtiles': '10 10',
                                             'texture_subpatches': '1 1',
-                                            'ground_texture_file': '"plugins/canopygenerator/textures/dirt.jpg"',
+                                            'ground_texture_file': '../../../Helios/plugins/canopygenerator/textures/dirt.jpg',
                                             'rotation': '0'}
 
         canopy_params_filtered = {'canopygenerator': canopy_params_filtered}
+
+        if simulation_type == 'lidar':
+            canopy_params_filtered['scan'] = {'ASCII_format': 'x y z target_index target_count object_label',
+                                            'origin': '0 0 0',
+                                            'size': '250 450',
+                                            'thetaMin': '30',
+                                            'thetaMax': '130',
+                                            'exitDiameter': '0.05',
+                                            'beamDivergence': '0'}
 
         canopy_params_filtered = {'helios': canopy_params_filtered}
 
@@ -160,7 +172,10 @@ class HeliosDataGenerator:
                 params[key]=' '.join(string_arr)
         
             self.canopy_params[canopy_type]=params
-            self.generate_one_datapair(canopy_type)
+            self.generate_one_datapair(canopy_type, simulation_type)
+
+            #### TEMPORARY
+            self.canopy_params[canopy_type]['plant_count'] = '1 1'
 
             # Modify cmake file for rgb versus lidar simulation
             with open(self.path_cmakelists) as f:
@@ -177,12 +192,91 @@ class HeliosDataGenerator:
             with open(self.path_cmakelists, 'w') as f:
                 f.writelines(cmakelists_txt)
 
+            # Modify maincpp file for rgb versus lidar simulation
+            with open(self.path_main_cpp) as f:
+                main_cpp = f.readlines() 
+            
+            print('ITERATION ' + str(n))
+            for i, string in enumerate(main_cpp):
+                if '#include "L' in string and simulation_type == 'lidar':
+                    main_cpp[i] = '#include "LiDAR.h"\n'
+
+                if '#include "L' in string and simulation_type == 'rgb':
+                    main_cpp[i] = '//#include "LiDAR.h"\n'
+                
+                if 'flag=' in string and simulation_type == 'lidar':
+                    main_cpp[i] = 'bool flag=true;\n'
+
+                if 'flag=' in string and simulation_type == 'rgb':
+                    main_cpp[i] = 'bool flag=false;\n'
+
+                if 'LiDARcloud lidarcloud' in string and simulation_type == 'lidar':
+                    main_cpp[i] = ' LiDARcloud lidarcloud;\n'
+
+                if 'LiDARcloud lidarcloud' in string and simulation_type == 'rgb':
+                    main_cpp[i] = ' //LiDARcloud lidarcloud;\n'
+
+                if 'lidarcloud.loadXML' in string and simulation_type == 'lidar':
+                    main_cpp[i] = ' lidarcloud.loadXML("../xmloutput_for_helios/tmp_canopy_params_image.xml");\n'
+
+                if 'lidarcloud.loadXML' in string and simulation_type == 'rgb':
+                    main_cpp[i] = ' //lidarcloud.loadXML("../xmloutput_for_helios/tmp_canopy_params_image.xml");\n'
+
+                if 'lidarcloud.syntheticScan' in string and simulation_type == 'lidar':
+                    main_cpp[i] = ' lidarcloud.syntheticScan( &context);\n'
+
+                if 'lidarcloud.syntheticScan' in string and simulation_type == 'rgb':
+                    main_cpp[i] = ' //lidarcloud.syntheticScan( &context);\n'
+
+                if 'lidarcloud.exportPointCloud' in string and simulation_type == 'lidar':
+                    main_cpp[i] = ' lidarcloud.exportPointCloud( "../output/point_cloud/synthetic_scan_' + str(n) + '.xyz" );\n'
+
+                if 'lidarcloud.exportPointCloud' in string and simulation_type == 'rgb':
+                    main_cpp[i] = ' //lidarcloud.exportPointCloud( "../output/point_cloud/synthetic_scan.xyz" );\n'
+
+                #Each run generate 10 images - then the geometry is changed
+                if simulation_type == 'rgb':
+
+                    if 'sprintf(outfile,"../output/images/RGB_rendering' in string:
+                        main_cpp[i] = '  sprintf(outfile,"../output/images/RGB_rendering_' + str(n) + '_%d.jpeg",view);\n'
+
+                    if 'sprintf(outfile,"../output/images/ID_mapping' in string:
+                        main_cpp[i] = '  sprintf(outfile,"../output/images/ID_mapping_' + str(n) + '_%d.txt",view);\n'
+
+                    if 'sprintf(outfile,"../output/images/pixelID_combined' in string:
+                        main_cpp[i] = '  sprintf(outfile,"../output/images/pixelID_combined_' + str(n) + '_%d.txt",view);\n'
+
+                    if 'sprintf(outfile,"../output/images/rectangular_labels_' in string:
+                        main_cpp[i] = '  sprintf(outfile,"../output/images/rectangular_labels_' + str(n) + '_%d.txt",view);\n'
+                        
+                    if 'sprintf(outfile,"../output/images/pixelID2' in string:
+                        main_cpp[i] = '  sprintf(outfile,"../output/images/pixelID2_' + str(n) + '_%d_%07d.txt",view,ID.at(p));\n'
+
+
+            # and write everything back
+            with open(self.path_main_cpp, 'w') as f:
+                f.writelines(main_cpp)
+
             # System call to helios @DARIO
             current_directory = os.getcwd()
             build_dir = os.path.join(current_directory, 'build')
+            output_dir = os.path.join(current_directory, 'output')
+            point_cloud_dir = os.path.join(current_directory, 'output/point_cloud/')
+            images_dir = os.path.join(current_directory, 'output/images/')
 
             if not os.path.exists(build_dir):
                 os.makedirs(build_dir)
+            
+            if not os.path.exists(output_dir):
+                os.makedirs(output_dir)
+
+            if simulation_type == 'lidar':
+                if not os.path.exists(point_cloud_dir):
+                    os.makedirs(point_cloud_dir)
+
+            if simulation_type == 'rgb':
+                if not os.path.exists(images_dir):
+                    os.makedirs(images_dir)
 
             exe = os.path.join(build_dir, 'executable')
 
@@ -191,7 +285,7 @@ class HeliosDataGenerator:
 
             if n==0:
                 subprocess.run(['cmake', ".."] + cmake_args, cwd=build_dir, check=True)
-                subprocess.run(['cmake', '--build', '.'], cwd=build_dir, check=True)
+            subprocess.run(['cmake', '--build', '.'], cwd=build_dir, check=True)
 
             subprocess.run([exe], cwd=build_dir)
 
