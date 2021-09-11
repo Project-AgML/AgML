@@ -84,8 +84,18 @@ class PreprocessData:
             save_dir_anno = os.path.join(self.data_processed_dir,dataset_name,'annotations')
             create_dir(save_dir_anno)
             output_json_file = os.path.join(save_dir_anno,'train.json')
+
+            general_info = {
+                "description": "fruits dataset",
+                "url": "https://drive.google.com/drive/folders/1CmsZb1caggLRN7ANfika8WuPiywo4mBb",
+                "version": "1.0",
+                "year": 2018,
+                "contributor": "Inkyu Sa",
+                "date_created": "2018/11/12"
+            }
+
             convert_txt_to_cocojson(
-                anno_data_all, label2id, output_json_file, False)
+                anno_data_all, label2id, output_json_file, general_info)
 
             # process img files. it can be replaced as opencv imread->imwrite function
             save_dir_imgs = os.path.join(self.data_processed_dir,dataset_name,'images')

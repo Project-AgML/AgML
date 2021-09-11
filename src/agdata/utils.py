@@ -61,6 +61,10 @@ def get_image_info(annotation_root, idx):
 
     return image_info
 
+
+'''
+Reference : https://github.com/roboflow-ai/voc2coco.git
+'''
 def get_coco_annotation_from_obj(obj, label2id):
     #Try to sublabel fist
     category_id = int(obj[4])
@@ -84,22 +88,13 @@ def get_coco_annotation_from_obj(obj, label2id):
 def convert_txt_to_cocojson(annotation: List[str],
                              label2id: Dict[str, int],
                              output_jsonpath: str,
-                             extract_num_from_imgid: bool = True):
+                             general_info):
     output_json_dict = {
         "images": [],
         "type": "instances",
         "annotations": [],
         "categories": [],
         "info":[],
-    }
-
-    general_info = {
-            "description": "fruits dataset",
-            "url": "https://drive.google.com/drive/folders/1CmsZb1caggLRN7ANfika8WuPiywo4mBb",
-            "version": "1.0",
-            "year": 2018,
-            "contributor": "Inkyu Sa",
-            "date_created": "2018/11/12"
     }
     
     output_json_dict['info'] = general_info
