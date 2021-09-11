@@ -1,29 +1,51 @@
 import os
-import csv
+import json
 
-class PreprocessData:
+class DataPreprocessor(object):
+    """
+    Preprocesses an AgML dataset.
 
+    Attributes
+    ----------
+    No user specified attributes.
+    """
     def __init__(self, data_dir):
+        # Set the default data directories
         self.data_dir = data_dir
-        self.data_original_dir = self.data_dir + 'original/'
-        self.data_processed_dir = self.data_dir + 'processed/'
+        self.data_original_dir = os.path.join(self.data_dir, 'original')
+        self.data_processed_dir = os.path.join(self.data_dir, 'processed')
+
+        # Get a list of all of the potential datasets
+        with open(os.path.join(
+                os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
+                'assets', 'public_datasources.json')) as f:
+            self.data_srcs = json.load(f)
 
     def preprocess(self, dataset_name):
+        """Preprocesses a dataset.
+
+        dataset_name : str
+            The name of the dataset to process.
+        """
+        # Validate the dataset name
+        if dataset_name not in self.data_srcs:
+            raise ValueError(f"Invalid dataset name {dataset_name}.")
 
         if dataset_name == 'bean_disease_uganda':
-            None
-        
-        if dataset_name == 'carrot_weeds_germany':
-            None
+            pass
 
-        if dataset_name == 'carrot_weeds_macedonia':
-            None
+        elif dataset_name == 'carrot_weeds_germany':
+            pass
 
-        if dataset_name == 'rangeland_weeds_australia':
-            dataset_dir = self.data_original_dir + dataset_name + '/'
-            imgs_dir = dataset_dir + 'images/'
-            labels_dir = dataset_dir + 'labels/'
-            labels_path = labels_dir + 'labels.csv'
+        elif dataset_name == 'carrot_weeds_macedonia':
+            pass
+
+        elif dataset_name == 'rangeland_weeds_australia':
+            dataset_dir = os.path.join(
+                self.data_original_dir, 'rangeland_weeds_australia')
+            imgs_dir = os.path.join(dataset_dir, 'images')
+            labels_dir = os.path.join(dataset_dir, 'labels')
+            labels_path = os.path.join(labels_dir, 'labels.csv')
             labels_unique = []
 
             # Make directories with class names
@@ -40,4 +62,5 @@ class PreprocessData:
                 if label not in labels_unique:
                     labels_unique.append(label)
                     os.mkdir(labels_dir + label)
-                os.rename(imgs_dir + img_names[k], labels_dir + label + '/' + img_names[k])
+                os.rename(imgs_dir + img_names[k], os.path.join(labels_dir, label, img_names[k]))
+
