@@ -16,9 +16,7 @@ import pandas as pd
 
 HELIOS_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'Helios')
 
-#%%
-#%%
-class HeliosDataGenerator:
+class HeliosDataGenerator(object):
 
     def __init__(self, path_helios_dir=HELIOS_PATH):
         
@@ -32,7 +30,7 @@ class HeliosDataGenerator:
             os.path.dirname(os.path.dirname(__file__)), 'main.cpp')
         self.canopy_types = self.get_canopy_types()
         self.canopy_params = self.get_canopy_params()
-        self.canopy_param_ranges=self.set_initial_canopy_param_ranges()
+        self.canopy_param_ranges = self.set_initial_canopy_param_ranges()
 
 
     def get_canopy_types(self):

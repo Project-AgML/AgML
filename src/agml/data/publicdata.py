@@ -8,7 +8,7 @@ import boto3
 import botocore.exceptions
 from tqdm import tqdm
 
-class PublicDataAPI:
+class PublicDataAPI(object):
     """
     A public API for working with AgML data.
 

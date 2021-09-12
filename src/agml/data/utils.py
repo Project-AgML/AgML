@@ -15,7 +15,6 @@ import numpy as np
 def get_filelist(filepath):
     return [f for f in listdir(filepath) if isfile(join(filepath, f))]
 
-
 def get_dirlist(filepath):
     return [f for f in listdir(filepath) if isdir(join(filepath, f))]
 
@@ -97,16 +96,10 @@ def convert_txt_to_cocojson(annotation: List[str],
                             output_jsonpath: str,
                             general_info):
     output_json_dict = {
-        "images": [],
-        "type": "instances",
-        "annotations": [],
-        "categories": [],
-        "info": [],
-    }
+        "images": [], "type": "instances", "annotations": [],
+        "categories": [], 'info': general_info}
 
-    output_json_dict['info'] = general_info
-
-    bnd_id = 1  # START_BOUNDING_BOX_ID, TODO input as args ?
+    bnd_id = 1  # START_BOUNDING_BOX_ID, TODO input as args?
     print('Start converting !')
     img_id_cnt = 1
 

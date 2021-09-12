@@ -15,21 +15,27 @@ class PreprocessData:
         self.data_processed_dir = os.path.join(self.data_dir, 'processed')
 
     def preprocess(self, dataset_name):
+        """Preprocesses the provided dataset.
 
+        Parameters
+        ----------
+        dataset_name : str
+            name of dataset to preprocess
+        """
         if dataset_name == 'bean_disease_uganda':
-            None
+            pass
 
-        if dataset_name == 'carrot_weeds_germany':
-            None
+        elif dataset_name == 'carrot_weeds_germany':
+            pass
 
-        if dataset_name == 'carrot_weeds_macedonia':
-            None
+        elif dataset_name == 'carrot_weeds_macedonia':
+            pass
 
-        if dataset_name == 'rangeland_weeds_australia':
-            dataset_dir = self.data_original_dir + dataset_name + '/'
-            imgs_dir = dataset_dir + 'images/'
-            labels_dir = dataset_dir + 'labels/'
-            labels_path = labels_dir + 'labels.csv'
+        elif dataset_name == 'rangeland_weeds_australia':
+            dataset_dir = os.path.join(self.data_original_dir, dataset_name)
+            imgs_dir = os.path.join(dataset_dir, 'images')
+            labels_dir = os.path.join(dataset_dir, 'labels')
+            labels_path = os.path.join(labels_dir, 'labels.csv')
             labels_unique = []
 
             # Make directories with class names
@@ -81,7 +87,7 @@ class PreprocessData:
 
                     anno_data_all += anno_data
 
-            # process files
+            # Process annotation files
             save_dir_anno = os.path.join(self.data_processed_dir, dataset_name, 'annotations')
             create_dir(save_dir_anno)
             output_json_file = os.path.join(save_dir_anno, 'train.json')
@@ -98,7 +104,7 @@ class PreprocessData:
             convert_txt_to_cocojson(
                 anno_data_all, label2id, output_json_file, general_info)
 
-            # process img files. it can be replaced as opencv imread->imwrite function
+            # Process image files
             save_dir_imgs = os.path.join(self.data_processed_dir, dataset_name, 'images')
             create_dir(save_dir_imgs)
             for anno in tqdm(anno_data_all):
@@ -111,7 +117,3 @@ class PreprocessData:
                     pass
 
 
-# Main function for debugging
-if __name__ == '__main__':
-    ppdata = PreprocessData(data_dir = '/mnt/nas/work/AgData_Datasets')
-    ppdata.preprocess(dataset_name = 'fruits_classification_worldwide')
