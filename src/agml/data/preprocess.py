@@ -1,11 +1,11 @@
 import os
 import csv
-from utils import get_filelist, get_dirlist, read_txt_file
-from utils import convert_txt_to_cocojson, get_label2id, create_dir
 
 from shutil import copyfile
 from tqdm import tqdm
 
+from .utils import get_filelist, get_dirlist, read_txt_file
+from .utils import convert_txt_to_cocojson, get_label2id, create_dir
 
 class PreprocessData:
 
@@ -31,6 +31,9 @@ class PreprocessData:
         elif dataset_name == 'carrot_weeds_macedonia':
             pass
 
+        elif dataset_name == 'leaf_counting_denmark':
+            pass
+
         elif dataset_name == 'rangeland_weeds_australia':
             dataset_dir = os.path.join(self.data_original_dir, dataset_name)
             imgs_dir = os.path.join(dataset_dir, 'images')
@@ -54,7 +57,7 @@ class PreprocessData:
                     os.mkdir(labels_dir + label)
                 os.rename(imgs_dir + img_names[k], labels_dir + label + '/' + img_names[k])
 
-        if dataset_name == 'fruits_classification_worldwide':
+        elif dataset_name == 'fruits_classification_worldwide':
             dataset_dir = os.path.join(self.data_original_dir, dataset_name, 'datasets')
 
             # get folder list

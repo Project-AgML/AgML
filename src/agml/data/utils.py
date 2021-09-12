@@ -19,9 +19,8 @@ def get_dirlist(filepath):
     return [f for f in listdir(filepath) if isdir(join(filepath, f))]
 
 
-def create_dir(dir):
-    if not os.path.exists(dir):
-        os.makedirs(dir)
+def create_dir(dir_):
+    os.makedirs(dir_, exist_ok = True)
 
 
 def read_txt_file(file_name):
