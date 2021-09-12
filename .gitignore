@@ -132,3 +132,6 @@ dmypy.json
 .DS_Store
 __MACOSX
 .idea/
+
+# Extra directories/files
+/**data*/
