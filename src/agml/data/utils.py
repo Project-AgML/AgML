@@ -18,18 +18,28 @@ def get_filelist(filepath):
 def get_dirlist(filepath):
     return [f for f in listdir(filepath) if isdir(join(filepath, f))]
 
+def get_dirlist_nested(filepath):
+    result = []
+    for f in listdir(filepath):
+        if isdir(join(filepath, f)):
+            result.append(f)
+            for ff in get_dirlist_nested(join(filepath, f)):
+                result.append(join(f,ff))
+    
+    return result
+
 
 def create_dir(dir):
     if not os.path.exists(dir):
         os.makedirs(dir)
 
 
-def read_txt_file(file_name):
+def read_txt_file(file_name, delimiter=' '):
     with open(file_name, newline = '\n') as txt_file:
-        txt_reader = csv.reader(txt_file, delimiter = ' ')
+        txt_reader = csv.reader(txt_file, delimiter = delimiter)
         txt_lines = []
         for line in txt_reader:
-            line = [x for x in line if x]  # To remove blank elements
+            line = [x.strip() for x in line if x.strip()]  # To remove blank elements
             txt_lines.append(line)
 
         return txt_lines
@@ -42,7 +52,7 @@ def get_label2id(labels_str: str) -> Dict[str, int]:
     return dict(zip(labels_str, labels_ids))
 
 
-def get_image_info(annotation_root, idx, resize = 1.0):
+def get_image_info(annotation_root, idx, resize = 1.0,make_unique_name=False):
     filename = annotation_root[0].split('/')[-1]
     try:
         img = cv2.imread(annotation_root[0])
@@ -55,6 +65,9 @@ def get_image_info(annotation_root, idx, resize = 1.0):
         width = size[1]
         height = size[0]
 
+        if make_unique_name:
+            filename = "{folder}_{img_name}".format(folder=annotation_root[0].split('/')[-2],img_name=annotation_root[0].split('/')[-1])
+ 
         image_info = {
             'file_name': filename,
             'height': height,
@@ -62,7 +75,8 @@ def get_image_info(annotation_root, idx, resize = 1.0):
             'id': idx + 1  # Use image order
         }
 
-    except:
+    except Exception as e:
+        print(e)
         print("Cannot open {file}".format(file = annotation_root[0]))
         image_info = None
         img = None
@@ -96,6 +110,24 @@ def get_coco_annotation_from_obj(obj, label2id, resize = 1.0):
     return ann
 
 
+'''
+Annotaion Format
+"image name" "the number of bounding boxes(bb)" "x1" "y1" "x2" "y2" "label" "score" "x1" "y1" "x2" "y2" ...
+For example, the following line can be matched as
+
+TRAIN_RGB/n12710693_12225.png 5 515 68 759 285 2 1.000 624 347 868 582 2 1.000 480 488 693 712 2 1.000 44 433 268 657 2 1.000 112 198 342 401 2 1.000
+
+image name=TRAIN_RGB/n12710693_12225.png
+the number of bb=5
+x1=515
+y1=68
+x2=759
+y2=285
+label=2 "0=background, 1=capsicum, 2=rockmelon..."
+score=1.000
+
+reference  "https://drive.google.com/drive/folders/1CmsZb1caggLRN7ANfika8WuPiywo4mBb"
+'''
 def convert_bbox_to_coco(annotation: List[str],
                             label2id: Dict[str, int],
                             output_jsonpath: str,
@@ -104,7 +136,8 @@ def convert_bbox_to_coco(annotation: List[str],
                             image_id_list = None,
                             bnd_id_list = None,
                             get_label_from_folder=False,
-                            resize = 1.0):
+                            resize = 1.0,
+                            make_unique_name=False):
     output_json_dict = {
         "images": [], "type": "instances", "annotations": [],
         "categories": [], 'info': general_info}
@@ -114,8 +147,9 @@ def convert_bbox_to_coco(annotation: List[str],
     else:
         img_id_cnt = 1
 
-    for img_idx, anno_line in tqdm(enumerate(annotation)):
-        img_info, img = get_image_info(annotation_root = anno_line, idx = img_id_cnt, resize=resize)
+    # TODO: Use multi thread to boost up the speed
+    for img_idx, anno_line in enumerate(tqdm(annotation)):
+        img_info, img = get_image_info(annotation_root=anno_line, idx=img_id_cnt, resize=resize, make_unique_name=make_unique_name)
 
         if img_info:
             if image_id_list:
@@ -153,8 +187,12 @@ def convert_bbox_to_coco(annotation: List[str],
                             obj[4] = label2id[category_name]
                     else:
                         pass
+                    
+                    try:
+                        ann = get_coco_annotation_from_obj(obj=obj, label2id=label2id, resize=resize)
+                    except:
+                        ann = None
 
-                    ann = get_coco_annotation_from_obj(obj=obj, label2id=label2id, resize=resize)
                     if ann:
                         if bnd_id_list:
                             bnd_idx = bnd_id_list[img_idx][bnd_idx]
@@ -166,9 +204,7 @@ def convert_bbox_to_coco(annotation: List[str],
             if image_id_list == None:
                 img_id_cnt = img_id_cnt + 1
 
-
-                           
-            img_name = anno_line[0].split('/')[-1]
+            img_name = img_info['file_name']
             dest_path = os.path.join(output_imgpath, img_name)
             try:
                 if resize == 1.0:

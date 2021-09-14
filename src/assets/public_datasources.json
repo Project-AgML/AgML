@@ -235,8 +235,7 @@
             "annotation_format": "txt",
             "n_images": "565",
             "docs_url": "https://drive.google.com/drive/folders/1CmsZb1caggLRN7ANfika8WuPiywo4mBb"
-    }
-    ,
+    },
     "plant_weeds_denmark":{
         "crop_types": {
             "1": "ALOMY",
@@ -287,10 +286,14 @@
             "46": "VIOAR",
             "47": "PPPMM",
             "48": "PPPDD",
-            "49": "OTHER"
+            "49": "1PLAK",
+            "50": "1COMF",
+            "51": "3UNCLK",
+            "52": "SONAS",
+            "53": "OTHER"
         },
-            "ml_task": "image_classification_object_detection",
-            "ag_task": "plant_detection",
+            "ml_task": "object_detection_image_classification",
+            "ag_task": "plant_detection_classification",
             "location":{
                     "continent": "europe",
                     "country": "denmark"
@@ -301,7 +304,24 @@
             "input_data_format": "jpg",
             "annotation_format": "OPPD",
             "n_images": "7590",
-            "docs_url": "https://gitlab.au.dk/AUENG-Vision/OPPD/-/archive/master/OPPD-master.zip"
+            "docs_url": "https://gitlab.au.dk/AUENG-Vision/OPPD"
+    },
+    "apple_detection_usa":{
+        "crop_types": {
+            "1": "apple"
+        },
+            "ml_task": "object_detection",
+            "ag_task": "fruit_detection",
+            "location": {
+                "continent": "north_america",
+                "country": "usa"
+            },
+            "sensor_modality": "rgb",
+            "real_synthetic": "real",
+            "platform": "ground",
+            "input_data_format": "png",
+            "annotation_format": "img_name x y w h ...",
+            "n_images": "2290",
+            "docs_url": "http://hdl.handle.net/2376/17721"
     }
-
 }
