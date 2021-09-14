@@ -1,10 +1,12 @@
 import os
 import csv
 from utils import get_filelist, get_dirlist, read_txt_file
-from utils import convert_txt_to_cocojson, get_label2id, create_dir
+from utils import convert_bbox_to_coco, get_label2id, create_dir
 
-from shutil import copyfile
+from shutil import copyfile, copytree
 from tqdm import tqdm
+
+import json
 
 
 class PreprocessData:
@@ -54,7 +56,7 @@ class PreprocessData:
                     os.mkdir(labels_dir + label)
                 os.rename(imgs_dir + img_names[k], labels_dir + label + '/' + img_names[k])
 
-        if dataset_name == 'fruits_classification_worldwide':
+        elif dataset_name == 'fruits_classification_worldwide':
             dataset_dir = os.path.join(self.data_original_dir, dataset_name, 'datasets')
 
             # get folder list
@@ -90,7 +92,7 @@ class PreprocessData:
             # Process annotation files
             save_dir_anno = os.path.join(self.data_processed_dir, dataset_name, 'annotations')
             create_dir(save_dir_anno)
-            output_json_file = os.path.join(save_dir_anno, 'train.json')
+            output_json_file = os.path.join(save_dir_anno, 'instances.json')
 
             general_info = {
                 "description": "fruits dataset",
@@ -101,19 +103,111 @@ class PreprocessData:
                 "date_created": "2018/11/12"
             }
 
-            convert_txt_to_cocojson(
-                anno_data_all, label2id, output_json_file, general_info)
-
             # Process image files
-            save_dir_imgs = os.path.join(self.data_processed_dir, dataset_name, 'images')
-            create_dir(save_dir_imgs)
-            for anno in tqdm(anno_data_all):
-                img_name = anno[0].split('/')[-1]
-                dest_path = os.path.join(save_dir_imgs, img_name)
-                try:
-                    copyfile(anno[0], dest_path)
-                except:
-                    # Cannot copy the image file
-                    pass
+            output_img_path = os.path.join(self.data_processed_dir, dataset_name, 'images')
+            create_dir(output_img_path)
+
+            convert_bbox_to_coco(
+                anno_data_all, label2id, output_json_file,output_img_path, general_info)
+
+
+        elif dataset_name == "plant_weeds_denmark":
+            
+            # resize the dataset
+            resize = 0.25
+
+            # Read public_datasources.json to get class information
+            datasource_file = os.path.join(os.path.dirname(__file__),"../../assets/public_datasources.json")
+            with open(datasource_file) as f:
+                data = json.load(f)
+                category_info = data[dataset_name]['crop_types']
+                labels_str = []
+                labels_ids = []
+                for info in category_info:
+                    labels_str.append(category_info[info])
+                    labels_ids.append(int(info))
+
+                label2id = dict(zip(labels_str, labels_ids))
+
+            # Task 1: Image classification
+            dataset_dir = os.path.join(self.data_original_dir, dataset_name, 'OPPD_tmp')
+            obj_Detection_data = os.path.join(dataset_dir, "DATA/images_full")
+
+            # get folders
+            plant_folders = get_dirlist(obj_Detection_data)
+
+            # do tasks along folders
+            anno_data_all = []
+            img_ids = []
+            bbox_ids = []
+            for folder in plant_folders:
+                # Get image file and xml file
+                full_path = os.path.join(obj_Detection_data,folder)
+                all_files = get_filelist(full_path)
+                anno_files = [x for x in all_files if "json" in x]
+                for anno_file in anno_files:
+                    anno_line = []
+                    anno_path = os.path.join(full_path,anno_file)
+                    # Opening JSON file
+                    with open(anno_path,) as f:
+                        # returns JSON object as 
+                        # a dictionary
+                        data = json.load(f)
+                        
+                        # Iterating through the json
+                        
+                        # get image file name
+                        image_file_name =  data['filename']
+
+                        # file name
+                        anno_line.append(os.path.join(full_path,image_file_name))
+                        img_ids.append(data['image_id'])
+                        # bbox cnt
+                        anno_line.append(len(data['plants']))
+                        # bboxes
+                        b_ids = []
+                        for plant in data['plants']:
+                            anno_line.append(plant['bndbox']['xmin'])
+                            anno_line.append(plant['bndbox']['ymin'])
+                            anno_line.append(plant['bndbox']['xmax'])
+                            anno_line.append(plant['bndbox']['ymax'])
+                            plant_name = plant['eppo'].strip() # strip() function will remove leading and trailing whitespaces.
+                            anno_line.append(label2id[plant_name])
+                            b_ids.append(plant['bndbox_id'])
+
+                        bbox_ids.append(b_ids)
+                        anno_data_all.append(anno_line)
+
+
+                # Process annotation files
+                save_dir_anno = os.path.join(self.data_processed_dir, dataset_name, 'annotations')
+                create_dir(save_dir_anno)
+                output_json_file = os.path.join(save_dir_anno, 'instances.json')
+
+                general_info = {
+                    "description": "plants dataset",
+                    "url": "https://gitlab.au.dk/AUENG-Vision/OPPD",
+                    "version": "1.0",
+                    "year": 2020,
+                    "contributor": "Madsen, Simon Leminen and Mathiassen, Solvejg Kopp and Dyrmann, Mads and Laursen, Morten Stigaard and Paz, Laura-Carlota and J{\o}rgensen, Rasmus Nyholm",
+                    "date_created": "2020/04/20"
+                }
+                
+
+                # Process image files
+                output_img_path = os.path.join(self.data_processed_dir, dataset_name, 'images')
+                create_dir(output_img_path)
+
+                convert_bbox_to_coco(anno_data_all,label2id,output_json_file, output_img_path, general_info,img_ids,bbox_ids,get_label_from_folder=False, resize=resize)
+
+                # classification
+                source_dir = os.path.join(dataset_dir, "DATA/images_plants")
+                output_img_path = os.path.join(self.data_processed_dir, dataset_name, 'classification')
+                create_dir(output_img_path)
+                plant_folders = get_dirlist(source_dir)
+                for folder in plant_folders:
+                    # copy cropped image folders into classification
+                    src = os.path.join(source_dir,folder)
+                    copytree(src, os.path.join(output_img_path,folder)) 
 
 
