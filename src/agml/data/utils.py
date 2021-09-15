@@ -40,32 +40,43 @@ def read_txt_file(file_name, delimiter=' '):
         for line in txt_reader:
             line = [x.strip() for x in line if x.strip()]  # To remove blank elements
             txt_lines.append(line)
-
         return txt_lines
 
 
-def get_label2id(labels_str: str) -> Dict[str, int]:
-    """id is 1 start"""
-
+def get_label2id(labels_str: list) -> Dict[str, int]:
+    """Enumerates a set of string labels (starting with 1)."""
     labels_ids = list(range(1, len(labels_str) + 1))
     return dict(zip(labels_str, labels_ids))
 
 
-def get_image_info(annotation_root, idx, resize = 1.0,make_unique_name=False):
-    filename = annotation_root[0].split('/')[-1]
+def get_image_info(annotation_root, idx, resize = 1.0, make_unique_name = False):
+    """Get information about an image for annotations."""
+    # Check if just the image filepath is passed, or a list of annotations
     try:
+        if os.path.exists(annotation_root):
+            img = cv2.imread(annotation_root)
+            filename = annotation_root
+
+        else:
+            filename = os.path.basename(annotation_root[0])
+            img = cv2.imread(annotation_root[0])
+    except:
+        filename = os.path.basename(annotation_root[0])
         img = cv2.imread(annotation_root[0])
 
-        if resize != 1.0:
-            dsize = [int(img.shape[1] * resize), int(img.shape[0] * resize)]
-            img = cv2.resize(img, dsize)
+    if resize != 1.0:
+        dsize = [int(img.shape[1] * resize), int(img.shape[0] * resize)]
+        img = cv2.resize(img, dsize)
 
+    try:
         size = img.shape
         width = size[1]
         height = size[0]
 
         if make_unique_name:
-            filename = "{folder}_{img_name}".format(folder=annotation_root[0].split('/')[-2],img_name=annotation_root[0].split('/')[-1])
+            filename = "{folder}_{img_name}".format(
+                folder=annotation_root[0].split('/')[-2],
+                img_name=annotation_root[0].split('/')[-1])
  
         image_info = {
             'file_name': filename,
@@ -86,19 +97,20 @@ def get_image_info(annotation_root, idx, resize = 1.0,make_unique_name=False):
 '''
 Reference : https://github.com/roboflow-ai/voc2coco.git
 '''
-
-
-def get_coco_annotation_from_obj(obj, label2id, resize = 1.0):
-    # Try to sublabel fist
+def get_coco_annotation_from_obj(obj, id_name = None):
+    # Calculate the area of the box
     category_id = int(obj[4])
-    xmin = int(float(obj[0]) * resize) 
-    ymin = int(float(obj[1]) * resize) 
-    xmax = int(float(obj[2]) * resize) 
-    ymax = int(float(obj[3]) * resize) 
-    assert xmax > xmin and ymax > ymin, f"Box size error !: (xmin, ymin, xmax, ymax): {xmin, ymin, xmax, ymax}"
-    o_width = xmax - xmin + 1
-    o_height = ymax - ymin + 1
-    ann = {
+    xmin = int(float(obj[0])) - 1
+    ymin = int(float(obj[1])) - 1
+    xmax = int(float(obj[2]))
+    ymax = int(float(obj[3]))
+    assert xmax > xmin and ymax > ymin, \
+        f"Box size error!: (xmin, ymin, xmax, ymax): {xmin, ymin, xmax, ymax}"
+    o_width = xmax - xmin
+    o_height = ymax - ymin
+
+    # Construct the annotation
+    ann = { # noqa
         'area': o_width * o_height,
         'iscrowd': 0,
         'bbox': [xmin, ymin, o_width, o_height],
@@ -106,6 +118,10 @@ def get_coco_annotation_from_obj(obj, label2id, resize = 1.0):
         'ignore': 0,
         'segmentation': []  # This script is not for segmentation
     }
+
+    # If there are multiple annotations per image, add the ID
+    if id_name is not None:
+        ann['id'] = id_name
     return ann
 
 
@@ -226,3 +242,4 @@ def convert_bbox_to_coco(annotation: List[str],
     with open(output_jsonpath, 'w') as f:
         output_json = json.dumps(output_json_dict)
         f.write(output_json)
+

@@ -1,16 +1,19 @@
 import os
-import csv
+import sys
 import json
+import shutil
+
+import numpy as np
 from tqdm import tqdm
 from shutil import copyfile, copytree
 from utils import get_filelist, get_dirlist, get_dirlist_nested, read_txt_file
 from utils import convert_bbox_to_coco, get_label2id, create_dir
-
+from utils import get_image_info, get_coco_annotation_from_obj
 
 class PreprocessData:
 
     def __init__(self, data_dir):
-        self.data_dir = data_dir
+        self.data_dir = os.path.abspath(data_dir)
         self.data_original_dir = os.path.join(self.data_dir, 'original')
         self.data_processed_dir = os.path.join(self.data_dir, 'processed')
 
@@ -300,5 +303,86 @@ class PreprocessData:
             create_dir(output_img_path)
 
             convert_bbox_to_coco(anno_data_all,label2id,output_json_file, output_img_path, general_info,None,None,get_label_from_folder=False, resize=resize, make_unique_name=True)
+            save_dir_imgs = os.path.join(self.data_processed_dir, dataset_name, 'images')
+            create_dir(save_dir_imgs)
+            for anno in tqdm(anno_data_all):
+                img_name = anno[0].split('/')[-1]
+                dest_path = os.path.join(save_dir_imgs, img_name)
+                try:
+                    shutil.copyfile(anno[0], dest_path)
+                except:
+                    # Cannot copy the image file
+                    pass
 
+        elif dataset_name == 'cotton_seedling_counting':
+            # Get all of the relevant data
+            dataset_dir = os.path.join(self.data_original_dir, dataset_name)
+            image_dir = os.path.join(dataset_dir, 'Images')
+            images = sorted([os.path.join(image_dir, i) for i in os.listdir(image_dir)])
+            with open(os.path.join(dataset_dir, 'Images.json'), 'r') as f:
+                annotations = json.load(f)
+
+            # Get all of the unique labels
+            labels = []
+            for label_set in annotations['frames'].values():
+                for individual_set in label_set:
+                    labels.extend(individual_set['tags'])
+            labels = np.unique(labels).tolist()
+            label2id = get_label2id(labels) # noqa
+
+            # Extract all of the bounding boxes and images
+            image_data = []
+            annotation_data = []
+            valid_paths = [] # some paths are not in the annotations, track the ones which are
+            for indx, (img_path, annotation) in enumerate(
+                    zip(tqdm(images, file = sys.stdout, desc = "Generating Data"),
+                        annotations['frames'].values())):
+                image_data.append(get_image_info(img_path, indx))
+                valid_paths.append(img_path)
+                for a_set in annotation:
+                    formatted_set = [
+                        a_set['x1'], a_set['y1'], a_set['x2'], a_set['y2'],
+                        label2id[a_set['tags'][0]]]
+                    base_annotation_data = get_coco_annotation_from_obj(formatted_set, a_set['name'])
+                    base_annotation_data['image_id'] = indx + 1
+                    annotation_data.append(base_annotation_data)
+
+            # Set up the annotation dictionary
+            all_annotation_data = {
+                "images": [], "type": "instances",
+                "annotations": [], "categories": [],
+                "info": {
+                    "description": "cotton seedling counting dataset",
+                    "url": "https://figshare.com/s/616956f8633c17ceae9b",
+                    "version": "1.0",
+                    "year": 2019,
+                    "contributor": "Yu Jiang",
+                    "date_created": "2019/11/23"
+                }
+            }
+
+            # Populate the annotation dictionary
+            for label, label_id in label2id.items():
+                category_info = {'supercategory': 'none', 'id': label_id, 'name': label}
+                all_annotation_data['categories'].append(category_info)
+            all_annotation_data['images'] = image_data
+            all_annotation_data['annotations'] = annotation_data
+
+            # Recreate the dataset and zip it
+            processed_dir = os.path.join(self.data_processed_dir, dataset_name)
+            processed_img_dir = os.path.join(processed_dir, 'images')
+            if os.path.exists(processed_dir):
+                shutil.rmtree(processed_dir)
+            os.makedirs(processed_dir, exist_ok = True)
+            os.makedirs(processed_img_dir, exist_ok = True)
+            for path in images:
+                if path not in valid_paths:
+                    continue
+                shutil.copyfile(path, os.path.join(processed_img_dir, os.path.basename(path)))
+            with open(os.path.join(processed_dir, 'labels.json'), 'w') as f:
+                json.dump(all_annotation_data, f, indent = 4)
+
+if __name__ == '__main__':
+    processer = PreprocessData('../../../data_new')
+    processer.preprocess('cotton_seedling_counting')
 
