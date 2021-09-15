@@ -235,5 +235,24 @@
             "annotation_format": "coco_json",
             "n_images": "565",
             "docs_url": "https://drive.google.com/drive/folders/1CmsZb1caggLRN7ANfika8WuPiywo4mBb"
+    },
+    "cotton_seedling_counting":{
+        "crop_types":{
+            "1": "Plant",
+            "2": "Weed"
+        },
+            "ml_task": "object_detection",
+            "ag_task": "seedling_counting",
+            "location":{
+                    "continent": "worldwide",
+                    "country": "worldwide"
+                },
+            "sensor_modality": "rgb",
+            "real_synthetic": "real",
+            "platform": "mixed",
+            "input_data_format": "jpg",
+            "annotation_format": "coco_json",
+            "n_images": "1511",
+            "docs_url": "https://github.com/UGA-BSAIL/deepseedling"
     }
 }
