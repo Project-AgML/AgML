@@ -73,10 +73,10 @@ class PreprocessData:
 
                     # Read annotations
                     try:
-                        anno_data = read_txt_file(os.path.join(dataset_path, anno_file_name))
+                        anno_data,_ = read_txt_file(os.path.join(dataset_path, anno_file_name))
                     except:
                         try:
-                            anno_data = read_txt_file(os.path.join(dataset_path, anno_file_name + '.txt'))
+                            anno_data,_ = read_txt_file(os.path.join(dataset_path, anno_file_name + '.txt'))
                         except:
                             raise
 
@@ -173,7 +173,7 @@ class PreprocessData:
                             anno_line.append(plant['bndbox']['xmax'])
                             anno_line.append(plant['bndbox']['ymax'])
                             if plant['eppo']:
-                            plant_name = plant['eppo'].strip() # strip() function will remove leading and trailing whitespaces.
+                                plant_name = plant['eppo'].strip() # strip() function will remove leading and trailing whitespaces.
                             else:
                                 plant_name = "OTHER"
 
@@ -184,37 +184,36 @@ class PreprocessData:
                         anno_data_all.append(anno_line)
 
 
-                # Process annotation files
-                save_dir_anno = os.path.join(self.data_processed_dir, dataset_name, 'annotations')
-                create_dir(save_dir_anno)
-                output_json_file = os.path.join(save_dir_anno, 'instances.json')
+            # Process annotation files
+            save_dir_anno = os.path.join(self.data_processed_dir, dataset_name, 'annotations')
+            create_dir(save_dir_anno)
+            output_json_file = os.path.join(save_dir_anno, 'instances.json')
 
-                general_info = {
-                    "description": "plants dataset",
-                    "url": "https://gitlab.au.dk/AUENG-Vision/OPPD",
-                    "version": "1.0",
-                    "year": 2020,
-                    "contributor": "Madsen, Simon Leminen and Mathiassen, Solvejg Kopp and Dyrmann, Mads and Laursen, Morten Stigaard and Paz, Laura-Carlota and J{\o}rgensen, Rasmus Nyholm",
-                    "date_created": "2020/04/20"
-                }
-                
+            general_info = {
+                "description": "plants dataset",
+                "url": "https://gitlab.au.dk/AUENG-Vision/OPPD",
+                "version": "1.0",
+                "year": 2020,
+                "contributor": "Madsen, Simon Leminen and Mathiassen, Solvejg Kopp and Dyrmann, Mads and Laursen, Morten Stigaard and Paz, Laura-Carlota and J{\o}rgensen, Rasmus Nyholm",
+                "date_created": "2020/04/20"
+            }
+            
 
-                # Process image files
-                output_img_path = os.path.join(self.data_processed_dir, dataset_name, 'images')
-                create_dir(output_img_path)
+            # Process image files
+            output_img_path = os.path.join(self.data_processed_dir, dataset_name, 'images')
+            create_dir(output_img_path)
 
-            print("Convert annotations into COCO JSON and process the images") 
-                convert_bbox_to_coco(anno_data_all,label2id,output_json_file, output_img_path, general_info,img_ids,bbox_ids,get_label_from_folder=False, resize=resize)
+            convert_bbox_to_coco(anno_data_all,label2id,output_json_file, output_img_path, general_info,img_ids,bbox_ids,get_label_from_folder=False, resize=resize)
 
-                # classification
-                source_dir = os.path.join(dataset_dir, "DATA/images_plants")
-                output_img_path = os.path.join(self.data_processed_dir, dataset_name, 'classification')
-                create_dir(output_img_path)
-                plant_folders = get_dirlist(source_dir)
-                for folder in plant_folders:
-                    # copy cropped image folders into classification
-                    src = os.path.join(source_dir,folder)
-                    copytree(src, os.path.join(output_img_path,folder)) 
+            # classification
+            source_dir = os.path.join(dataset_dir, "DATA/images_plants")
+            output_img_path = os.path.join(self.data_processed_dir, dataset_name, 'classification')
+            create_dir(output_img_path)
+            plant_folders = get_dirlist(source_dir)
+            for folder in plant_folders:
+                # copy cropped image folders into classification
+                src = os.path.join(source_dir,folder)
+                copytree(src, os.path.join(output_img_path,folder))
                 print("Copied {} to {}.".format(src,os.path.join(output_img_path,folder)))
 
 
@@ -257,7 +256,7 @@ class PreprocessData:
                     anno_line = []
                     anno_path = os.path.join(full_path,anno_file)
                     # Opening annotation file
-                    anno_data = read_txt_file(anno_path,delimiter=',')
+                    anno_data,_ = read_txt_file(anno_path,delimiter=',')
                     
                     for i, anno in enumerate(anno_data):
                         new_anno = []
@@ -299,6 +298,109 @@ class PreprocessData:
             output_img_path = os.path.join(self.data_processed_dir, dataset_name, 'images')
             create_dir(output_img_path)
 
-            convert_bbox_to_coco(anno_data_all,label2id,output_json_file, output_img_path, general_info,None,None,get_label_from_folder=False, resize=resize, make_unique_name=True)
+            convert_bbox_to_coco(anno_data_all,label2id,output_json_file, output_img_path, general_info,None,None,get_label_from_folder=False, resize=resize, add_foldername=True)
+
+        elif dataset_name == "friuts_detection_australia":
+            
+            # resize the dataset
+            resize = 1.0
+
+            # Read public_datasources.json to get class information
+            datasource_file = os.path.join(os.path.dirname(__file__),"../../assets/public_datasources.json")
+            with open(datasource_file) as f:
+                data = json.load(f)
+                category_info = data[dataset_name]['crop_types']
+                labels_str = []
+                labels_ids = []
+                for info in category_info:
+                    labels_str.append(category_info[info])
+                    labels_ids.append(int(info))
+
+                label2id = dict(zip(labels_str, labels_ids))
+
+            # Task 1: Image classification
+            dataset_dir = os.path.join(self.data_original_dir, dataset_name)
+            obj_Detection_data = os.path.join(dataset_dir, 'acfr-fruit-dataset')
+
+            # get folders
+            # plant_folders = get_dirlist(obj_Detection_data)
+            plant_folders = get_dirlist_nested(obj_Detection_data)
+
+            # do tasks along folders
+            anno_data_all = []
+            img_ids = []
+            bbox_ids = []
+            for folder in plant_folders:
+                # Get image file and xml file
+                full_path = os.path.join(obj_Detection_data,folder)
+                all_files = get_filelist(full_path)
+                anno_files = [x for x in all_files if "csv" in x]
+                if len(anno_files) > 0:
+                    for anno_file in anno_files:
+                        anno_line = []
+                        anno_path = os.path.join(full_path,anno_file)
+                        # Opening annotation file
+                        anno_data, headline = read_txt_file(anno_path,delimiter=',',header=True)
+                        
+                        new_anno = []
+                        # Add bbox count
+                        # Update image file path to abs path
+                        img_name = anno_file.split('/')[-1].replace('.csv','.png')
+                        img_parent = full_path.replace("annotations","images")
+                        new_anno.append(os.path.join(img_parent, img_name))
+                        bbox_cnt = len(anno_data)
+                        new_anno.append(str(bbox_cnt))
+                        label = full_path.split('/')[-2][:-1]
+                        for i, anno in enumerate(anno_data):
+                            
+                            if "radius" in headline:
+                                cx = float(anno[1])
+                                cy = float(anno[2])
+                                radi = float(anno[3])
+                                xmin = cx - radi/2  # xmin
+                                ymin = cy - radi/2  # ymin
+                                w = h = radi
+                            else:
+                                xmin = float(anno[1])
+                                ymin = float(anno[2])
+                                w = float(anno[3])
+                                h = float(anno[4])
+
+                            new_anno.append(str(xmin))  # xmin
+                            new_anno.append(str(ymin))  # ymin
+                            new_anno.append(str(xmin + w))  # xmax
+                            new_anno.append(str(ymin + h))  # ymax
+                            new_anno.append(label2id[label]) # label                   
+                        anno_data_all.append(new_anno)
+
+            # Process annotation files
+            save_dir_anno = os.path.join(self.data_processed_dir, dataset_name, 'annotations')
+            create_dir(save_dir_anno)
+            output_json_file = os.path.join(save_dir_anno, 'instances.json')
+
+            general_info = {
+                "description": "Deep Fruit Detection in Orchards",
+                "url": "http://data.acfr.usyd.edu.au/ag/treecrops/2016-multifruit/",
+                "version": "1.0",
+                "year": 2016,
+                "contributor": "Bargoti, Suchet and Underwood, James",
+                "date_created": "2016/10/12"
+            }
+            
+
+            # Process image files
+            output_img_path = os.path.join(self.data_processed_dir, dataset_name, 'images')
+            create_dir(output_img_path)
+
+            convert_bbox_to_coco(anno_data_all,label2id,output_json_file, output_img_path, general_info,None,None,get_label_from_folder=False, resize=resize, add_foldername=False, extract_num_from_imgid=True)
+
+
+# Main function for debugging
+if __name__ == '__main__':
+
+    ppdata = PreprocessData(data_dir='/data/heesup/datasets/AgML')
+    ppdata.preprocess(dataset_name='friuts_detection_australia')
+    
+
 
 

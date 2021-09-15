@@ -323,5 +323,26 @@
             "annotation_format": "img_name x y w h ...",
             "n_images": "2290",
             "docs_url": "http://hdl.handle.net/2376/17721"
+    },
+    "friuts_detection_australia":{
+        "crop_types": {
+            "1": "apple",
+            "2": "mangoe",
+            "3": "almond"
+        },
+            "ml_task": "object_detection_segmentation",
+            "ag_task": "fruit_detection",
+            "location": {
+                "continent": "australia",
+                "country": "australia"
+            },
+            "sensor_modality": "rgb",
+            "real_synthetic": "real",
+            "platform": "ground",
+            "input_data_format": "png",
+            "annotation_format": "#item,x,y,dx,dy,label",
+            "n_images": "3027",
+            "docs_url": "http://data.acfr.usyd.edu.au/ag/treecrops/2016-multifruit/"
     }
+
 }

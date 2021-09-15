@@ -34,15 +34,19 @@ def create_dir(dir):
         os.makedirs(dir)
 
 
-def read_txt_file(file_name, delimiter=' '):
+def read_txt_file(file_name, delimiter=' ', header=False):
     with open(file_name, newline = '\n') as txt_file:
         txt_reader = csv.reader(txt_file, delimiter = delimiter)
         txt_lines = []
-        for line in txt_reader:
+        headline = None
+        for idx, line in enumerate(txt_reader):
+            if header and idx == 0:
+                headline = line
+                continue
             line = [x.strip() for x in line if x.strip()]  # To remove blank elements
             txt_lines.append(line)
 
-        return txt_lines
+        return txt_lines, headline
 
 
 def get_label2id(labels_str: str) -> Dict[str, int]:
@@ -52,7 +56,7 @@ def get_label2id(labels_str: str) -> Dict[str, int]:
     return dict(zip(labels_str, labels_ids))
 
 
-def get_image_info(annotation_root, idx, resize = 1.0,make_unique_name=False):
+def get_image_info(annotation_root, idx, resize = 1.0,add_foldername=False):
     filename = annotation_root[0].split('/')[-1]
     try:
         img = cv2.imread(annotation_root[0])
@@ -65,14 +69,14 @@ def get_image_info(annotation_root, idx, resize = 1.0,make_unique_name=False):
         width = size[1]
         height = size[0]
 
-        if make_unique_name:
+        if add_foldername:
             filename = "{folder}_{img_name}".format(folder=annotation_root[0].split('/')[-2],img_name=annotation_root[0].split('/')[-1])
  
         image_info = {
             'file_name': filename,
             'height': height,
             'width': width,
-            'id': idx + 1  # Use image order
+            'id': idx # Use image order
         }
 
     except Exception as e:
@@ -137,7 +141,8 @@ def convert_bbox_to_coco(annotation: List[str],
                             bnd_id_list = None,
                             get_label_from_folder=False,
                             resize = 1.0,
-                            make_unique_name=False):
+                            add_foldername=False,
+                            extract_num_from_imgid=False):
     output_json_dict = {
         "images": [], "type": "instances", "annotations": [],
         "categories": [], 'info': general_info}
@@ -148,14 +153,21 @@ def convert_bbox_to_coco(annotation: List[str],
         img_id_cnt = 1
 
     # TODO: Use multi thread to boost up the speed
+    print("Convert annotations into COCO JSON and process the images") 
     for img_idx, anno_line in enumerate(tqdm(annotation)):
-        img_info, img = get_image_info(annotation_root=anno_line, idx=img_id_cnt, resize=resize, make_unique_name=make_unique_name)
+
+        if image_id_list:
+            img_unique_id = image_id_list[img_idx]
+        else:
+            if extract_num_from_imgid:
+                filename = anno_line[0].split('/')[-1]
+                img_unique_id = int(''.join(filter(str.isdigit, filename)))
+            else:
+                img_unique_id = img_idx + 1
+
+        img_info, img = get_image_info(annotation_root=anno_line, idx=img_unique_id, resize=resize, add_foldername=add_foldername)
 
         if img_info:
-            if image_id_list:
-                img_info['id'] = image_id_list[img_idx]
-            else:
-                img_info['id'] = img_id_cnt
 
             output_json_dict['images'].append(img_info)
 
@@ -198,11 +210,8 @@ def convert_bbox_to_coco(annotation: List[str],
                             bnd_idx = bnd_id_list[img_idx][bnd_idx]
                         else:
                             bnd_idx + 1
-                        ann.update({'image_id': img_id_cnt, 'id': bnd_idx})
+                        ann.update({'image_id': img_info['id'], 'id': bnd_idx})
                         output_json_dict['annotations'].append(ann)
-
-            if image_id_list == None:
-                img_id_cnt = img_id_cnt + 1
 
             img_name = img_info['file_name']
             dest_path = os.path.join(output_imgpath, img_name)
