@@ -2,12 +2,13 @@ import os
 import csv
 from utils import get_filelist, get_dirlist, get_dirlist_nested, read_txt_file
 from utils import convert_bbox_to_coco, get_label2id, create_dir
+from utils import create_sub_masks, create_sub_mask_annotation_per_bbox
 
 from shutil import copyfile, copytree
 from tqdm import tqdm
 
 import json
-
+from PIL import Image
 
 class PreprocessData:
 
@@ -331,7 +332,7 @@ class PreprocessData:
             img_ids = []
             bbox_ids = []
             for folder in plant_folders:
-                # Get image file and xml file
+                # Get image filse and annotation files
                 full_path = os.path.join(obj_Detection_data,folder)
                 all_files = get_filelist(full_path)
                 anno_files = [x for x in all_files if "csv" in x]
@@ -357,9 +358,9 @@ class PreprocessData:
                                 cx = float(anno[1])
                                 cy = float(anno[2])
                                 radi = float(anno[3])
-                                xmin = cx - radi/2  # xmin
-                                ymin = cy - radi/2  # ymin
-                                w = h = radi
+                                xmin = cx - radi  # xmin
+                                ymin = cy - radi  # ymin
+                                w = h = 2 * radi
                             else:
                                 xmin = float(anno[1])
                                 ymin = float(anno[2])
@@ -392,14 +393,40 @@ class PreprocessData:
             output_img_path = os.path.join(self.data_processed_dir, dataset_name, 'images')
             create_dir(output_img_path)
 
-            convert_bbox_to_coco(anno_data_all,label2id,output_json_file, output_img_path, general_info,None,None,get_label_from_folder=False, resize=resize, add_foldername=False, extract_num_from_imgid=True)
+            json_dict = convert_bbox_to_coco(anno_data_all,label2id,output_json_file, output_img_path, general_info,None,None,get_label_from_folder=False, resize=resize, add_foldername=False, extract_num_from_imgid=True)
+
+            # Add segmentation for apple
+            apple_seg_dir = os.path.join(obj_Detection_data,"apples/segmentations")
+            seg_imgs = get_filelist(apple_seg_dir)
+
+            # Define which colors match which categories in the images
+            apple_id = label2id['apple']
+            category_ids = {
+                label2id['apple']: {
+                    '(128, 0, 0)': apple_id,
+                },
+            }
+            is_crowd = 0
+            # Create the annotations
+            # These ids will be automatically increased as we go
+            print("Processing image segmentaitons..")
+            for seg_img in tqdm(seg_imgs):
+                annotation_id = 100 # Starts with 100
+                mask_image = Image.open(os.path.join(apple_seg_dir,seg_img))
+                sub_masks = create_sub_masks(mask_image)
+                image_id = int(''.join(filter(str.isdigit, seg_img)))
+                for color, sub_mask in sub_masks.items():
+                    category_id = label2id['apple']                   
+                    annotations = create_sub_mask_annotation_per_bbox(sub_mask, image_id, category_id, annotation_id, is_crowd)
+                    json_dict['annotations'] += annotations
+                    annotation_id += 1
+
+            # Rewrite json file
+            with open(output_json_file, 'w') as f:
+                output_json = json.dumps(json_dict)
+                f.write(output_json)
 
 
-# Main function for debugging
-if __name__ == '__main__':
-
-    ppdata = PreprocessData(data_dir='/data/heesup/datasets/AgML')
-    ppdata.preprocess(dataset_name='friuts_detection_australia')
     
 
 
