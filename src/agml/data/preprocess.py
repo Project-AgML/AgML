@@ -6,8 +6,8 @@ import shutil
 import numpy as np
 from tqdm import tqdm
 
-from utils import get_filelist, get_dirlist, read_txt_file, get_image_info
-from utils import convert_txt_to_cocojson, get_label2id, create_dir, get_coco_annotation_from_obj
+from .utils import get_filelist, get_dirlist, read_txt_file, get_image_info
+from .utils import convert_txt_to_cocojson, get_label2id, create_dir, get_coco_annotation_from_obj
 
 class PreprocessData:
 
@@ -186,7 +186,8 @@ class PreprocessData:
             with open(os.path.join(processed_dir, 'labels.json'), 'w') as f:
                 json.dump(all_annotation_data, f, indent = 4)
 
-if __name__ == '__main__':
-    processer = PreprocessData('../../../data_new')
-    processer.preprocess('cotton_seedling_counting')
+            # Zip the dataset
+            shutil.make_archive(
+                processed_dir, "zip", os.path.dirname(processed_dir))
+
 
