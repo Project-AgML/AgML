@@ -174,7 +174,7 @@ class PreprocessData:
                             anno_line.append(plant['bndbox']['xmax'])
                             anno_line.append(plant['bndbox']['ymax'])
                             if plant['eppo']:
-                            plant_name = plant['eppo'].strip() # strip() function will remove leading and trailing whitespaces.
+                                plant_name = plant['eppo'].strip() # strip() function will remove leading and trailing whitespaces.
                             else:
                                 plant_name = "OTHER"
 
@@ -204,7 +204,7 @@ class PreprocessData:
                 output_img_path = os.path.join(self.data_processed_dir, dataset_name, 'images')
                 create_dir(output_img_path)
 
-            print("Convert annotations into COCO JSON and process the images") 
+                print("Convert annotations into COCO JSON and process the images")
                 convert_bbox_to_coco(anno_data_all,label2id,output_json_file, output_img_path, general_info,img_ids,bbox_ids,get_label_from_folder=False, resize=resize)
 
                 # classification
@@ -217,7 +217,6 @@ class PreprocessData:
                     src = os.path.join(source_dir,folder)
                     copytree(src, os.path.join(output_img_path,folder)) 
                 print("Copied {} to {}.".format(src,os.path.join(output_img_path,folder)))
-
 
         elif dataset_name == "apple_detection_usa":
             
