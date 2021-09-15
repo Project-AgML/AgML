@@ -295,9 +295,9 @@
             "ml_task": "object_detection_image_classification",
             "ag_task": "plant_detection_classification",
             "location":{
-                    "continent": "europe",
-                    "country": "denmark"
-                },
+              "continent": "europe",
+              "country": "denmark"
+            },
             "sensor_modality": "rgb",
             "real_synthetic": "real",
             "platform": "ground_fixed",
@@ -305,7 +305,27 @@
             "annotation_format": "OPPD",
             "n_images": "7590",
             "docs_url": "https://gitlab.au.dk/AUENG-Vision/OPPD"
-    },
+},
+  "leaf_counting_denmark": {
+      "crop_types":{
+            "1": "1",
+            "2": "2",
+            "3": "3",
+            "4": "4",
+            "5": "5",
+            "6": "6",
+            "7": "7",
+            "8": "8",
+            "9": "9+"
+        },
+            "ml_task": "image_classification",
+            "ag_task": "leaf_counting",
+            "platform": "mixed",
+            "input_data_format": "png",
+            "annotation_format": "directory_names",
+            "n_images": "9372",
+            "docs_url": "https://vision.eng.au.dk/leaf-counting-dataset/"
+  }
     "apple_detection_usa":{
         "crop_types": {
             "1": "apple"
