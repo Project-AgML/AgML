@@ -3,7 +3,7 @@
 #-------- USER INPUTS ---------#
 
 #provide the path to Helios base directory, either as an absolute path or a path relative to the location of this file
-set( BASE_DIRECTORY "../../../Helios/" )
+set( BASE_DIRECTORY "../Helios" )
 
 #define the name of the executable to be created
 set( EXECUTABLE_NAME "executable" )

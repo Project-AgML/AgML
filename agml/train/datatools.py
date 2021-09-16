@@ -9,8 +9,8 @@ from torchvision.models.detection.mask_rcnn import MaskRCNNPredictor
 import albumentations as A
 
 
-from engine import train_one_epoch, evaluate, validate
-import utils
+from agml.train.engine import train_one_epoch, evaluate, validate
+import agml.train.utils
 import torchvision.transforms as tra
 from torchvision.transforms import functional as F
 import matplotlib.pyplot as plt
