@@ -504,7 +504,6 @@ class HeliosDataGenerator(object):
 
             exe = os.path.join(build_dir, 'executable')
 
-
             cmake_args = ['-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=' + build_dir]
             cmake_args += ['-G', 'Unix Makefiles']
             # current_directory = os.getcwd()
