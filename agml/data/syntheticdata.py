@@ -592,7 +592,7 @@ class HeliosDataGenerator:
                 continue
 
             else:
-                # Extract pixel id based off name of the file. We want the number between _ and . 
+                # Extract pixel id based off name of the file. We want the number between _ and .
 
                 pixel_id_tmp = int(file_grape_arr.split('_')[1].split('.')[0])
                 # print(pixel_id_tmp)
@@ -609,7 +609,7 @@ class HeliosDataGenerator:
                 # Load pixel positions from file
                 grape_arr_tmp = np.loadtxt(frames_view_path + file_grape_arr, skiprows = 1, ndmin = 2)
 
-                # 
+                #
                 grape_arr_tmp = (grape_arr_tmp == pixel_id_tmp)
 
                 npy_arr[bbox[2]:(bbox[3] + 1), bbox[0]:(bbox[1] + 1), i] = grape_arr_tmp
