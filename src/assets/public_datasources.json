@@ -302,7 +302,7 @@
             "real_synthetic": "real",
             "platform": "ground_fixed",
             "input_data_format": "jpg",
-            "annotation_format": "OPPD",
+            "annotation_format": "coco_json",
             "n_images": "7590",
             "docs_url": "https://gitlab.au.dk/AUENG-Vision/OPPD"
         },
@@ -363,5 +363,34 @@
             "annotation_format": "#item,x,y,dx,dy,label",
             "n_images": "3027",
             "docs_url": "http://data.acfr.usyd.edu.au/ag/treecrops/2016-multifruit/"
+    },
+    "datepalm_classification_saudi":{
+        "crop_types": {
+            "1": "Barhi",
+            "2": "Khalas",
+            "3": "Meneifi",
+            "4": "NabootSaif",
+            "5": "Sullaj",
+            "6": "Immature-1",
+            "7": "Immature-2",
+            "8": "Pre-Khalal",
+            "9": "Khalal",
+            "10": "KhalalwithRutab",
+            "11": "Pre-Tamar",
+            "12": "Tamar"
+        },
+            "ml_task": "image_classification",
+            "ag_task": "types_maturity_classification",
+            "location": {
+                "continent": "asia",
+                "country": "saudi_arabia"
+            },
+            "sensor_modality": "rgb",
+            "real_synthetic": "real",
+            "platform": "handheld",
+            "input_data_format": "jpg",
+            "annotation_format": "directory_names",
+            "n_images": "8079",
+            "docs_url": "https://ieee-dataport.org/open-access/date-fruit-dataset-automated-harvesting-and-visual-yield-estimation#files"
     }
 }
