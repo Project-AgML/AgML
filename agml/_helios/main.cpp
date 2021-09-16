@@ -268,7 +268,7 @@ bool flag=false;
     vis_RGB.setLightDirection( sphere2cart(make_SphericalCoord(30*M_PI/180.f,205*M_PI/180.f)) );
     vis_RGB.setLightingModel( Visualizer::LIGHTING_PHONG_SHADOWED );
 
-    vis_RGB.addSkyDomeByCenter( 50, make_vec3(0,0,0), 30, "../../../Helios/plugins/visualizer/textures/SkyDome_clouds.jpg" );
+    // vis_RGB.addSkyDomeByCenter( 50, make_vec3(0,0,0), 30, "../../../Helios/plugins/visualizer/textures/SkyDome_clouds.jpg" );
     //vis_RGB.plotInteractive();
 
     vis_RGB.plotUpdate();

@@ -152,11 +152,11 @@ class HeliosDataGenerator(object):
 
         canopy_params_filtered = {'helios': canopy_params_filtered}
 
-        if not os.path.exists('../agml/_helios/xmloutput_for_helios'):
-            os.makedirs('../agml/_helios/xmloutput_for_helios')
+        if not os.path.exists(os.path.join(os.path.dirname(__file__), '../_helios/xmloutput_for_helios')):
+            os.makedirs(os.path.join(os.path.dirname(__file__), '../_helios/xmloutput_for_helios'))
 
         if export_format == 'xml':
-            with open("../agml/_helios/xmloutput_for_helios/tmp_canopy_params_image.xml", "w") as f:
+            with open(os.path.join(os.path.dirname(__file__), '../_helios/xmloutput_for_helios/tmp_canopy_params_image.xml', "w")) as f:
                 f.write(dict2xml(canopy_params_filtered))
 
 
@@ -263,7 +263,7 @@ class HeliosDataGenerator(object):
 
             # System call to helios @DARIO
             # current_directory = os.getcwd()
-            helios_directory = '../agml/_helios'
+            helios_directory = os.path.join(os.path.dirname(__file__), '../_helios')
             build_dir = os.path.join(helios_directory, 'build')
             output_dir = os.path.join(helios_directory, 'output')
             point_cloud_dir = os.path.join(helios_directory, 'output/point_cloud/')
