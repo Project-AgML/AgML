@@ -48,22 +48,13 @@ def get_label2id(labels_str: list) -> Dict[str, int]:
     labels_ids = list(range(1, len(labels_str) + 1))
     return dict(zip(labels_str, labels_ids))
 
-
-<<<<<<< HEAD
 def get_image_info(annotation_root, idx, resize = 1.0, make_unique_name = False):
-=======
-def get_image_info(annotation_root, idx):
->>>>>>> ab6ed2e7ea2fc4c16b1d47c6f602772ad25fa0b5
     """Get information about an image for annotations."""
     # Check if just the image filepath is passed, or a list of annotations
     try:
         if os.path.exists(annotation_root):
             img = cv2.imread(annotation_root)
             filename = annotation_root
-<<<<<<< HEAD
-
-=======
->>>>>>> ab6ed2e7ea2fc4c16b1d47c6f602772ad25fa0b5
         else:
             filename = os.path.basename(annotation_root[0])
             img = cv2.imread(annotation_root[0])
@@ -71,13 +62,10 @@ def get_image_info(annotation_root, idx):
         filename = os.path.basename(annotation_root[0])
         img = cv2.imread(annotation_root[0])
 
-<<<<<<< HEAD
     if resize != 1.0:
         dsize = [int(img.shape[1] * resize), int(img.shape[0] * resize)]
         img = cv2.resize(img, dsize)
 
-=======
->>>>>>> ab6ed2e7ea2fc4c16b1d47c6f602772ad25fa0b5
     try:
         size = img.shape
         width = size[1]
