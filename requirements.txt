@@ -6,3 +6,5 @@ botocore
 opencv-python
 scikit-image
 imantics
+torch
+torchvision
