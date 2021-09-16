@@ -25,9 +25,9 @@ class HeliosDataGenerator(object):
         self.path_canopygen_cpp = os.path.join(
             path_helios_dir, 'plugins/canopygenerator/src/CanopyGenerator.cpp')
         self.path_cmakelists = os.path.join(
-            os.path.dirname(os.path.dirname(__file__)), 'CMakeLists.txt')
+            os.path.dirname(os.path.dirname(__file__)), '_helios/CMakeLists.txt')
         self.path_main_cpp = os.path.join(
-            os.path.dirname(os.path.dirname(__file__)), 'main.cpp')
+            os.path.dirname(os.path.dirname(__file__)), '_helios/main.cpp')
         self.canopy_types = self.get_canopy_types()
         self.canopy_params = self.get_canopy_params()
         self.canopy_param_ranges = self.set_initial_canopy_param_ranges()
@@ -152,11 +152,11 @@ class HeliosDataGenerator(object):
 
         canopy_params_filtered = {'helios': canopy_params_filtered}
 
-        if not os.path.exists('xmloutput_for_helios'):
-            os.makedirs('xmloutput_for_helios')
+        if not os.path.exists('../agml/_helios/xmloutput_for_helios'):
+            os.makedirs('../agml/_helios/xmloutput_for_helios')
 
         if export_format == 'xml':
-            with open("xmloutput_for_helios/tmp_canopy_params_image.xml", "w") as f:
+            with open("../agml/_helios/xmloutput_for_helios/tmp_canopy_params_image.xml", "w") as f:
                 f.write(dict2xml(canopy_params_filtered))
 
 
@@ -262,11 +262,12 @@ class HeliosDataGenerator(object):
                 f.writelines(main_cpp)
 
             # System call to helios @DARIO
-            current_directory = os.getcwd()
-            build_dir = os.path.join(current_directory, 'build')
-            output_dir = os.path.join(current_directory, 'output')
-            point_cloud_dir = os.path.join(current_directory, 'output/point_cloud/')
-            images_dir = os.path.join(current_directory, 'output/images/')
+            # current_directory = os.getcwd()
+            helios_directory = '../agml/_helios'
+            build_dir = os.path.join(helios_directory, 'build')
+            output_dir = os.path.join(helios_directory, 'output')
+            point_cloud_dir = os.path.join(helios_directory, 'output/point_cloud/')
+            images_dir = os.path.join(helios_directory, 'output/images/')
 
             if not os.path.exists(build_dir):
                 os.makedirs(build_dir)
