@@ -14,7 +14,7 @@ from skimage.morphology import closing
 import imantics
 import pandas as pd
 
-HELIOS_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'Helios')
+HELIOS_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), '_helios/Helios')
 
 class HeliosDataGenerator(object):
 
