@@ -16,6 +16,28 @@ import pandas as pd
 
 HELIOS_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), '_helios/Helios')
 
+def install_helios(overwrite = False):
+    """Installs Helios into AgML."""
+    import os as _os
+    import shutil as _shutil
+    if _os.path.exists(_os.path.join(
+            _os.path.dirname(_os.path.dirname(__file__)), '_helios/Helios')):
+        if not overwrite:
+            print("Found existing install of Helios.")
+            return
+        else:
+            _shutil.rmtree(_os.path.join(
+                _os.path.dirname(__file__), '_helios/Helios'))
+
+    import subprocess as _subprocess
+    _subprocess.call([
+        f"{_os.path.join(_os.path.dirname(__file__), 'helios_config.sh')}",
+        _os.path.dirname(__file__)])
+    del _os, _shutil, _subprocess
+
+# Install or check for an installation of Helios whenever this module is loaded.
+install_helios()
+
 class HeliosDataGenerator(object):
 
     def __init__(self, path_helios_dir=HELIOS_PATH):
