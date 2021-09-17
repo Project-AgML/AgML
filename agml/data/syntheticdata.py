@@ -136,7 +136,7 @@ class HeliosDataGenerator(object):
                                             'extent': '10 10',
                                             'texture_subtiles': '10 10',
                                             'texture_subpatches': '1 1',
-                                            'ground_texture_file': '../../../Helios/plugins/canopygenerator/textures/dirt.jpg',
+                                            'ground_texture_file': 'plugins/canopygenerator/textures/dirt.jpg',
                                             'rotation': '0'}
 
         canopy_params_filtered = {'canopygenerator': canopy_params_filtered}
@@ -152,11 +152,11 @@ class HeliosDataGenerator(object):
 
         canopy_params_filtered = {'helios': canopy_params_filtered}
 
-        if not os.path.exists(os.path.join(os.path.dirname(__file__), '../_helios/xmloutput_for_helios')):
-            os.makedirs(os.path.join(os.path.dirname(__file__), '../_helios/xmloutput_for_helios'))
+        if not os.path.exists(os.path.join(os.path.dirname(os.path.dirname(__file__)), '_helios/xmloutput_for_helios')):
+            os.makedirs(os.path.join(os.path.dirname(os.path.dirname(__file__)), '_helios/xmloutput_for_helios'))
 
         if export_format == 'xml':
-            with open(os.path.join(os.path.dirname(__file__), '../_helios/xmloutput_for_helios/tmp_canopy_params_image.xml', "w")) as f:
+            with open(os.path.join(os.path.dirname(os.path.dirname(__file__)), '_helios/xmloutput_for_helios/tmp_canopy_params_image.xml'), "w") as f:
                 f.write(dict2xml(canopy_params_filtered))
 
 
@@ -263,7 +263,7 @@ class HeliosDataGenerator(object):
 
             # System call to helios @DARIO
             # current_directory = os.getcwd()
-            helios_directory = os.path.join(os.path.dirname(__file__), '../_helios')
+            helios_directory = os.path.join(os.path.dirname(os.path.dirname(__file__)), '_helios')
             build_dir = os.path.join(helios_directory, 'build')
             output_dir = os.path.join(helios_directory, 'output')
             point_cloud_dir = os.path.join(helios_directory, 'output/point_cloud/')
