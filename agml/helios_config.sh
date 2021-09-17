@@ -14,15 +14,10 @@ else
 fi
 
 # Install Helios
-<<<<<<< HEAD
 echo "Installing Helios"
-if [ ! -d "$INSTALL_PATH"/_helios/Helios ]; then
+if [ ! -d "$INSTALL_PATH"/_helios/Helios]; then
   mkdir -p "$INSTALL_PATH"/_helios/Helios
   git clone https://github.com/PlantSimulationLab/Helios.git "$INSTALL_PATH"/_helios/Helios
 else
   git -C "$INSTALL_PATH"/_helios/Helios pull https://github.com/PlantSimulationLab/Helios.git
 fi
-=======
-mkdir "$INSTALL_PATH"/_helios/Helios
-git clone https://github.com/PlantSimulationLab/Helios.git $INSTALL_PATH/_helios/Helios
->>>>>>> 9d08b17... Moved out utils into an independent directory for global access
