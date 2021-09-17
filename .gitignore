@@ -137,3 +137,5 @@ __MACOSX
 /**data*/
 
 Helios
+agml/_helios/output
+agml/_helios/xmloutput_for_helios/

@@ -241,7 +241,7 @@ class HeliosDataGenerator:
                                             'extent': '10 10',
                                             'texture_subtiles': '10 10',
                                             'texture_subpatches': '1 1',
-                                            'ground_texture_file': '../../../Helios/plugins/canopygenerator/textures/dirt.jpg',
+                                            'ground_texture_file': 'plugins/canopygenerator/textures/dirt.jpg',
                                             'rotation': '0'}
 
         canopy_params_filtered = {'canopygenerator': canopy_params_filtered}
@@ -253,12 +253,11 @@ class HeliosDataGenerator:
             canopy_params_filtered[''] = self.camera_params
 
         canopy_params_filtered = {'helios': canopy_params_filtered}
-
-        if not os.path.exists('xmloutput_for_helios'):
-            os.makedirs('xmloutput_for_helios')
+        if not os.path.exists(os.path.join(os.path.dirname(os.path.dirname(__file__)), '_helios/xmloutput_for_helios')):
+            os.makedirs(os.path.join(os.path.dirname(os.path.dirname(__file__)), '_helios/xmloutput_for_helios'))
 
         if export_format == 'xml':
-            with open("xmloutput_for_helios/tmp_canopy_params_image.xml", "w") as f:
+            with open(os.path.join(os.path.dirname(os.path.dirname(__file__)), '_helios/xmloutput_for_helios/tmp_canopy_params_image.xml'), "w") as f:
                 f.write(dict2xml(canopy_params_filtered))
 
     def generate_data(self, n_imgs, canopy_type, simulation_type, output_directory = ""):
@@ -458,6 +457,22 @@ class HeliosDataGenerator:
             # System call to helios @DARIO
             cmake_args = ['-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=' + build_dir]
             cmake_args += ['-G', 'Unix Makefiles']
+            # current_directory = os.getcwd()
+            helios_directory = os.path.join(os.path.dirname(os.path.dirname(__file__)), '_helios')
+            build_dir = os.path.join(helios_directory, 'build')
+            output_dir = os.path.join(helios_directory, 'output')
+            point_cloud_dir = os.path.join(helios_directory, 'output/point_cloud/')
+            images_dir = os.path.join(helios_directory, 'output/images/')
+
+            if not os.path.exists(build_dir):
+                os.makedirs(build_dir)
+            
+            if not os.path.exists(output_dir):
+                os.makedirs(output_dir)
+
+            if simulation_type == 'lidar':
+                if not os.path.exists(point_cloud_dir):
+                    os.makedirs(point_cloud_dir)
 
             if n == 0:
                 subprocess.run(['cmake', ".."] + cmake_args, cwd = build_dir, check = True)
