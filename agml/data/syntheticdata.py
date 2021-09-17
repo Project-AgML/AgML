@@ -18,15 +18,41 @@ import xml.etree.ElementTree as ET
 
 HELIOS_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), '_helios/Helios')
 
-class HeliosDataGenerator:
+def install_helios(overwrite = False):
+    """Installs Helios into AgML."""
+    import os as _os
+    import shutil as _shutil
+    if _os.path.exists(_os.path.join(
+            _os.path.dirname(_os.path.dirname(__file__)), '_helios/Helios')):
+        if not overwrite:
+            print("Found existing install of Helios.")
+            return
+        else:
+            _shutil.rmtree(_os.path.join(
+                _os.path.dirname(__file__), '_helios/Helios'))
 
-    def __init__(self, path_helios_dir = HELIOS_PATH):
+    import subprocess as _subprocess
+    _subprocess.call([
+        f"{_os.path.join(_os.path.dirname(__file__), 'helios_config.sh')}",
+        _os.path.dirname(__file__)])
+    del _os, _shutil, _subprocess
 
-        self.path_canopygen_header = path_helios_dir + 'plugins/canopygenerator/include/CanopyGenerator.h'
-        self.path_canopygen_cpp = path_helios_dir + 'plugins/canopygenerator/src/CanopyGenerator.cpp'
-        self.path_lidar_cpp = path_helios_dir + 'plugins/lidar/src/LiDAR.cpp'
-        self.path_cmakelists = 'CMakeLists.txt'
-        self.path_main_cpp = 'main.cpp'
+# Install or check for an installation of Helios whenever this module is loaded.
+install_helios()
+
+class HeliosDataGenerator(object):
+
+    def __init__(self, path_helios_dir=HELIOS_PATH):
+        
+        self.path_canopygen_header = os.path.join(
+            path_helios_dir, 'plugins/canopygenerator/include/CanopyGenerator.h')
+        self.path_canopygen_cpp = os.path.join(
+            path_helios_dir, 'plugins/canopygenerator/src/CanopyGenerator.cpp')
+        self.path_cmakelists = os.path.join(
+            os.path.dirname(os.path.dirname(__file__)), '_helios/CMakeLists.txt')
+        self.path_main_cpp = os.path.join(
+            os.path.dirname(os.path.dirname(__file__)), '_helios/main.cpp')
+
         self.canopy_types = self.get_canopy_types()
         self.canopy_params = self.get_canopy_params()
         self.canopy_param_ranges = self.set_initial_canopy_param_ranges()
