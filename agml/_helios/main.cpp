@@ -133,7 +133,7 @@ bool flag=true;
 
     if (flag) { //LiDAR point cloud generation -- with labels --
     
-    cout << "Generating Synthetich LiDAR data \n";  
+    cout << "Generating Synthetic LiDAR data \n";
     
     vector<uint> UUID_trunk = canopygenerator.getTrunkUUIDs();
     vector<uint> UUID_shoot = canopygenerator.getBranchUUIDs();

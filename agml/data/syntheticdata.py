@@ -16,10 +16,11 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import xml.etree.ElementTree as ET
 
+HELIOS_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), '_helios/Helios')
 
 class HeliosDataGenerator:
 
-    def __init__(self, path_helios_dir = '../../../Helios/'):
+    def __init__(self, path_helios_dir = HELIOS_PATH):
 
         self.path_canopygen_header = path_helios_dir + 'plugins/canopygenerator/include/CanopyGenerator.h'
         self.path_canopygen_cpp = path_helios_dir + 'plugins/canopygenerator/src/CanopyGenerator.cpp'
