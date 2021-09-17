@@ -1,39 +1,15 @@
 import os
-from os import listdir
-from os.path import isfile, join, isdir
 import csv
-
-from typing import Dict, List
-from tqdm import tqdm
-import cv2
-import xml.etree.ElementTree as ET
 import json
+import shutil
+from typing import Dict, List
 
+import cv2
 import numpy as np
-from shutil import copyfile, copytree
-
-def get_filelist(filepath):
-    return [f for f in listdir(filepath) if isfile(join(filepath, f))]
-
-def get_dirlist(filepath):
-    return [f for f in listdir(filepath) if isdir(join(filepath, f))]
-
-def get_dirlist_nested(filepath):
-    result = []
-    for f in listdir(filepath):
-        if isdir(join(filepath, f)):
-            result.append(f)
-            for ff in get_dirlist_nested(join(filepath, f)):
-                result.append(join(f,ff))
-    
-    return result
+from tqdm import tqdm
 
 
-def create_dir(dir_):
-    os.makedirs(dir_, exist_ok = True)
-
-
-def read_txt_file(file_name, delimiter=' '):
+def read_txt_file(file_name, delimiter = ' '):
     with open(file_name, newline = '\n') as txt_file:
         txt_reader = csv.reader(txt_file, delimiter = delimiter)
         txt_lines = []
@@ -47,6 +23,7 @@ def get_label2id(labels_str: list) -> Dict[str, int]:
     """Enumerates a set of string labels (starting with 1)."""
     labels_ids = list(range(1, len(labels_str) + 1))
     return dict(zip(labels_str, labels_ids))
+
 
 def get_image_info(annotation_root, idx, resize = 1.0, make_unique_name = False):
     """Get information about an image for annotations."""
@@ -73,9 +50,9 @@ def get_image_info(annotation_root, idx, resize = 1.0, make_unique_name = False)
 
         if make_unique_name:
             filename = "{folder}_{img_name}".format(
-                folder=annotation_root[0].split('/')[-2],
-                img_name=annotation_root[0].split('/')[-1])
- 
+                folder = annotation_root[0].split('/')[-2],
+                img_name = annotation_root[0].split('/')[-1])
+
         image_info = {
             'file_name': filename,
             'height': height,
@@ -95,6 +72,8 @@ def get_image_info(annotation_root, idx, resize = 1.0, make_unique_name = False)
 '''
 Reference : https://github.com/roboflow-ai/voc2coco.git
 '''
+
+
 def get_coco_annotation_from_obj(obj, id_name = None):
     # Calculate the area of the box
     category_id = int(obj[4])
@@ -108,7 +87,7 @@ def get_coco_annotation_from_obj(obj, id_name = None):
     o_height = ymax - ymin
 
     # Construct the annotation
-    ann = { # noqa
+    ann = {  # noqa
         'area': o_width * o_height,
         'iscrowd': 0,
         'bbox': [xmin, ymin, o_width, o_height],
@@ -141,16 +120,18 @@ score=1.000
 
 reference  "https://drive.google.com/drive/folders/1CmsZb1caggLRN7ANfika8WuPiywo4mBb"
 '''
+
+
 def convert_bbox_to_coco(annotation: List[str],
-                            label2id: Dict[str, int],
-                            output_jsonpath: str,
-                            output_imgpath: str,
-                            general_info,
-                            image_id_list = None,
-                            bnd_id_list = None,
-                            get_label_from_folder=False,
-                            resize = 1.0,
-                            make_unique_name=False):
+                         label2id: Dict[str, int],
+                         output_jsonpath: str,
+                         output_imgpath: str,
+                         general_info,
+                         image_id_list = None,
+                         bnd_id_list = None,
+                         get_label_from_folder = False,
+                         resize = 1.0,
+                         make_unique_name = False):
     output_json_dict = {
         "images": [], "type": "instances", "annotations": [],
         "categories": [], 'info': general_info}
@@ -162,7 +143,8 @@ def convert_bbox_to_coco(annotation: List[str],
 
     # TODO: Use multi thread to boost up the speed
     for img_idx, anno_line in enumerate(tqdm(annotation)):
-        img_info, img = get_image_info(annotation_root=anno_line, idx=img_id_cnt, resize=resize, make_unique_name=make_unique_name)
+        img_info, img = get_image_info(annotation_root = anno_line, idx = img_id_cnt, resize = resize,
+                                       make_unique_name = make_unique_name)
 
         if img_info:
             if image_id_list:
@@ -200,9 +182,9 @@ def convert_bbox_to_coco(annotation: List[str],
                             obj[4] = label2id[category_name]
                     else:
                         pass
-                    
+
                     try:
-                        ann = get_coco_annotation_from_obj(obj=obj, label2id=label2id, resize=resize)
+                        ann = get_coco_annotation_from_obj(obj = obj, label2id = label2id, resize = resize)
                     except:
                         ann = None
 
@@ -221,13 +203,13 @@ def convert_bbox_to_coco(annotation: List[str],
             dest_path = os.path.join(output_imgpath, img_name)
             try:
                 if resize == 1.0:
-                    copyfile(anno_line[0], dest_path)
+                    shutil.copyfile(anno_line[0], dest_path)
                 else:
-                    cv2.imwrite(dest_path,img)
+                    cv2.imwrite(dest_path, img)
             except:
                 # Cannot copy the image file
                 pass
-                
+
         else:
             # Not valid image => Delete from anno
             # annotation.remove(anno_line)

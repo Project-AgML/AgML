@@ -7,11 +7,11 @@ import numpy as np
 from tqdm import tqdm
 from shutil import copyfile, copytree
 
-from .utils import get_filelist, get_dirlist, read_txt_file, get_image_info, get_dirlist_nested
-from .utils import convert_bbox_to_coco, get_label2id, create_dir, get_coco_annotation_from_obj
+from agml.utils.io import create_dir, nested_dir_list, get_dir_list, get_file_list
+from agml.utils.coco import read_txt_file, get_image_info, get_label2id
+from agml.utils.coco import convert_bbox_to_coco, get_coco_annotation_from_obj
 
 class PreprocessData:
-
     def __init__(self, data_dir):
         self.data_dir = os.path.abspath(data_dir)
         self.data_original_dir = os.path.join(self.data_dir, 'original')
@@ -64,7 +64,7 @@ class PreprocessData:
             dataset_dir = os.path.join(self.data_original_dir, dataset_name, 'datasets')
 
             # get folder list
-            dataset_folders = get_dirlist(dataset_dir)
+            dataset_folders = get_dir_list(dataset_dir)
             label2id = get_label2id(dataset_folders)
             anno_data_all = []
             for folder in dataset_folders:
@@ -138,7 +138,7 @@ class PreprocessData:
             obj_Detection_data = os.path.join(dataset_dir, "DATA/images_full")
 
             # get folders
-            plant_folders = get_dirlist(obj_Detection_data)
+            plant_folders = get_dir_list(obj_Detection_data)
 
             # do tasks along folders
             anno_data_all = []
@@ -148,7 +148,7 @@ class PreprocessData:
             for folder in tqdm(plant_folders):
                 # Get image file and xml file
                 full_path = os.path.join(obj_Detection_data,folder)
-                all_files = get_filelist(full_path)
+                all_files = get_file_list(full_path)
                 anno_files = [x for x in all_files if "json" in x]
                 for anno_file in anno_files:
                     anno_line = []
@@ -187,7 +187,6 @@ class PreprocessData:
                         bbox_ids.append(b_ids)
                         anno_data_all.append(anno_line)
 
-
                 # Process annotation files
                 save_dir_anno = os.path.join(self.data_processed_dir, dataset_name, 'annotations')
                 create_dir(save_dir_anno)
@@ -208,18 +207,20 @@ class PreprocessData:
                 create_dir(output_img_path)
 
                 print("Convert annotations into COCO JSON and process the images")
-                convert_bbox_to_coco(anno_data_all,label2id,output_json_file, output_img_path, general_info,img_ids,bbox_ids,get_label_from_folder=False, resize=resize)
+                convert_bbox_to_coco(
+                    anno_data_all, label2id, output_json_file, output_img_path,
+                    general_info, img_ids, bbox_ids, get_label_from_folder=False, resize=resize)
 
                 # classification
                 source_dir = os.path.join(dataset_dir, "DATA/images_plants")
                 output_img_path = os.path.join(self.data_processed_dir, dataset_name, 'classification')
                 create_dir(output_img_path)
-                plant_folders = get_dirlist(source_dir)
+                plant_folders = get_dir_list(source_dir)
                 for folder in plant_folders:
                     # copy cropped image folders into classification
-                    src = os.path.join(source_dir,folder)
-                    copytree(src, os.path.join(output_img_path,folder)) 
-                print("Copied {} to {}.".format(src,os.path.join(output_img_path,folder)))
+                    src = os.path.join(source_dir, folder)
+                    copytree(src, os.path.join(output_img_path, folder))
+                print("Copied {} to {}.".format(src, os.path.join(output_img_path,folder)))
 
         elif dataset_name == "apple_detection_usa":
             
@@ -244,8 +245,7 @@ class PreprocessData:
             obj_Detection_data = os.path.join(dataset_dir, 'Dataset')
 
             # get folders
-            # plant_folders = get_dirlist(obj_Detection_data)
-            plant_folders = get_dirlist_nested(obj_Detection_data)
+            plant_folders = nested_dir_list(obj_Detection_data)
 
             # do tasks along folders
             anno_data_all = []
@@ -254,7 +254,7 @@ class PreprocessData:
             for folder in plant_folders:
                 # Get image file and xml file
                 full_path = os.path.join(obj_Detection_data,folder)
-                all_files = get_filelist(full_path)
+                all_files = get_file_list(full_path)
                 anno_files = [x for x in all_files if "txt" in x]
                 for anno_file in anno_files:
                     anno_line = []
