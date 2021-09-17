@@ -22,6 +22,7 @@ def install_helios(overwrite = False):
         _os.path.dirname(__file__)])
     del _os, _shutil, _subprocess
 
+install_helios()
 
 
 

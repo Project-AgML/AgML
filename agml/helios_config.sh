@@ -14,5 +14,6 @@ else
 fi
 
 # Install Helios
+echo "Installing Helios"
 mkdir "$INSTALL_PATH"/_helios/Helios
-git clone https://github.com/PlantSimulationLab/Helios.git $INSTALL_PATH/_helios/Helios
+git clone "https://github.com/PlantSimulationLab/Helios.git" "$INSTALL_PATH/_helios/Helios"
