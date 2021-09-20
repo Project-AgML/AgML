@@ -14,11 +14,11 @@ from skimage.morphology import closing
 import imantics
 import pandas as pd
 import matplotlib.pyplot as plt
-
+import xml.etree.ElementTree as ET
 
 class HeliosDataGenerator:
 
-    def __init__(self, path_helios_dir='../../Helios/'):
+    def __init__(self, path_helios_dir='../../../Helios/'):
         
         self.path_canopygen_header = path_helios_dir + 'plugins/canopygenerator/include/CanopyGenerator.h'
         self.path_canopygen_cpp = path_helios_dir + 'plugins/canopygenerator/src/CanopyGenerator.cpp'
@@ -30,7 +30,8 @@ class HeliosDataGenerator:
         self.canopy_param_ranges=self.set_initial_canopy_param_ranges()
         self.lidar_params = self.get_lidar_params()
         self.lidar_param_ranges=self.set_initial_lidar_param_ranges()
-
+        self.camera_params = self.get_camera_params()
+        self.camera_param_ranges = self.set_initial_camera_param_ranges()
 
     def get_canopy_types(self):
 
@@ -158,6 +159,17 @@ class HeliosDataGenerator:
                     param_flag = 0
         return lidar_params
 
+    def get_camera_params(self):
+
+        # Initialize canopy parameters dictionary
+        camera_params = {}
+        #Initialization of image resolution and camera position
+        camera_params['image_resolution']  = '1000 800'
+
+        camera_params['camera_position']  = '[0, 0, 0]'
+
+        return camera_params
+
     def set_initial_lidar_param_ranges(self):
 
         lidar_param_ranges = copy.deepcopy(self.lidar_params)
@@ -188,6 +200,17 @@ class HeliosDataGenerator:
 
         return canopy_param_ranges
 
+    def set_initial_camera_param_ranges(self):
+
+        camera_param_ranges = copy.deepcopy(self.camera_params)
+
+        # Check if parameter is a path or number; this assumes that all strings will be paths
+        for i in camera_param_ranges.keys():
+
+            val=camera_param_ranges[i]
+            camera_param_ranges[i] = [(val.split(' ')[j]) for j in range(len(val.split()))]
+
+        return camera_param_ranges
 
     def generate_one_datapair(self, canopy_type, simulation_type, export_format='xml'):
 
@@ -227,6 +250,9 @@ class HeliosDataGenerator:
         if simulation_type == 'lidar':
             canopy_params_filtered['scan'] = self.lidar_params
 
+        if simulation_type == 'rgb':
+            canopy_params_filtered[''] = self.camera_params
+
         canopy_params_filtered = {'helios': canopy_params_filtered}
 
         if not os.path.exists('xmloutput_for_helios'):
@@ -257,6 +283,8 @@ class HeliosDataGenerator:
 
         lidar_ranges=self.lidar_param_ranges
 
+        camera_ranges = self.camera_param_ranges
+
         for n in range(n_imgs):
             params=self.canopy_params[canopy_type]
             lidar_params = self.lidar_params
@@ -276,7 +304,28 @@ class HeliosDataGenerator:
                 string_arr=[str(a) for a in arr]
                 self.lidar_params[key]=' '.join(string_arr)
 
+            #Camera parameters
+            for key in camera_ranges:
+                #param_vals=lidar_params[key].split(' ')
+                arr=[camera_ranges[key][i] for i in range(len(camera_ranges[key]))]
+                string_arr=[str(a).replace(',', '').replace('[', ' ').replace(']',' ') for a in arr]
+                self.camera_params[key]=' '.join(string_arr)
+
             self.generate_one_datapair(canopy_type, simulation_type)
+
+            #Re-writte tags of XML to have the expected Helios input
+            tree = ET.parse('xmloutput_for_helios/tmp_canopy_params_image.xml')
+            root = tree.getroot()
+            for child in root:
+                if child.tag == 'camera_position':
+                    child.tag = 'globaldata_vec3'
+                    child.set('label', 'camera_position')
+                if child.tag == 'image_resolution':
+                    child.tag = 'globaldata_int2'
+                    child.set('label', 'image_resolution')
+
+            tree.write('xmloutput_for_helios/tmp_canopy_params_image.xml')            
+
 
             # Modify cmake file for rgb versus lidar simulation
             with open(self.path_cmakelists) as f:

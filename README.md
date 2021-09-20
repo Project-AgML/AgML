@@ -37,23 +37,40 @@ Running this method will download the dataset which has been formatted in one of
 The `Helios Annotation API` assumes that you have cloned [`Helios`](https://github.com/PlantSimulationLab/Helios).
 
 ```
-# Import Helios Annotation API (i.e. haapi)
-from haapi import haapi
+# Import Helios Annotation API (i.e. syntheticdata)
+from data import syntheticdata
 
 # Initialize HeliosDataGenerator class (optionally specify path to Helios)
-hdg = haapi.HeliosDataGenerator(path_helios_dir='../../Helios/') 
+hdg = syntheticdata.HeliosDataGenerator(path_helios_dir='../../../Helios/') 
 
-# User can define a range of values for any parameter from which values are randomly sampled
-hdg.canopy_param_ranges['Tomato']['leaf_length'] = [[0.1, 0.3]]
-hdg.canopy_param_ranges['Tomato']['plant_count'] = [[1, 5], [1, 5]]
-hdg.canopy_param_ranges['Tomato']['canopy_origin'] = [[-1.0, 0.0], [0.5, 1.1], [0.2, 0.7]]
+# User can define a range of values for any parameter from which values are randomly sampled. For example:
+hdg.canopy_param_ranges['VSPGrapevine']['leaf_spacing_fraction'] = [[0.4, 0.8]]
+hdg.canopy_param_ranges['VSPGrapevine']['leaf_subdivisions'] = [[1, 5], [1, 5]]
+hdg.canopy_param_ranges['VSPGrapevine']['leaf_width'] = [[0.1, 0.3]]
+hdg.canopy_param_ranges['VSPGrapevine']['grape_color'] = [[0.15, 0.20], [0.15, 0.25], [0.2, 0.3]]
+hdg.canopy_param_ranges['VSPGrapevine']['cluster_radius'] = [[0.025, 0.035]]
 
+# User can generate synthetic data from a LiDAR and an RGB camera
+# ---------------- LiDAR PARAMETERS --------------------
+# For the LiDAR, the user can set all the metada. If not set, the default values will be used.
+hdg.lidar_param_ranges['ASCII_format'] = ['x y z object_label'] # Available: x, y,  z, zenith, azimuth, r, g, b, target_count, target_index, timestamp, deviation, intensity, object_label
+hdg.lidar_param_ranges['thetaMax'] = [130]
+hdg.lidar_param_ranges['thetaMin'] = [30]
+hdg.lidar_param_ranges['exitDiameter'] = [0.05]
+hdg.lidar_param_ranges['size'] = [250, 250]
+# ---------------- CAMERA PARAMETERS --------------------
+# For the RGB images, the can must set the camera positions and the desire image_resoution. (Expecting this changes in Helios to be effective)
+# Camera position are a set of triplets specifiying the -x, y, and z- cordinates.
+hdg.camera_param_ranges['camera_position'] = [[1,-1,2],[1,1,1]]
+hdg.camera_param_ranges['image_resolution'] = [1000, 500]
+# ---------------- GENERATE SYNTHETIC DATA -------------
 # Generate a user-specified number of simulated rgb/lidar outputs + annotations for a given canopy type in Helios
-# Note: simulation_type='lidar' requires a GPU with CUDA installed
-hdg.generate_data(n_imgs=10, canopy_type='Tomato', simulation_type='rgb')
-```
+# Note1: simulation_type='lidar' requires a GPU with CUDA installed
+# Note2: simulation_type='rgb' requieres access to Graphic interface
+# Note3: User can specified the output directory path. If it is not defined, the output data will be saved in the current directory.
+hdg.generate_data(n_imgs=10, canopy_type='VSPGrapevine', simulation_type='rgb', output_directory ="/home/username/Documents")
 
-Running this code block generates 10 xml files which will be used to initialize Helios crop geometries. The geometries are random combinations of the user specified range of values defined above. 
+Running this code block generates 10 synthetic data (point clouds or rgb images). 1 xml files is created on each iteration which will be used to initialize Helios crop geometries. The geometries are random combinations of the user specified range of values defined above. 
 
 ### Optional
 ```
