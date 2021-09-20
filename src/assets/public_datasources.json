@@ -340,9 +340,27 @@
             "real_synthetic": "real",
             "platform": "ground",
             "input_data_format": "png",
-            "annotation_format": "img_name x y w h ...",
+            "annotation_format": "coco_json",
             "n_images": "2290",
             "docs_url": "http://hdl.handle.net/2376/17721"
+        },
+    "apple_detection_spain":{
+        "crop_types": {
+            "1": "Poma"
+        },
+            "ml_task": "object_detection",
+            "ag_task": "fruit_detection",
+            "location": {
+                "continent": "europe",
+                "country": "spain"
+            },
+            "sensor_modality": "rgbd",
+            "real_synthetic": "real",
+            "platform": "ground",
+            "input_data_format": "jpg",
+            "annotation_format": "coco_json",
+            "n_images": "967",
+            "docs_url": "http://www.grap.udl.cat/en/publications/KFuji_RGBDS_database.html"
         },
     "friuts_detection_australia":{
         "crop_types": {
@@ -360,7 +378,7 @@
             "real_synthetic": "real",
             "platform": "ground",
             "input_data_format": "png",
-            "annotation_format": "#item,x,y,dx,dy,label",
+            "annotation_format": "coco_json",
             "n_images": "3027",
             "docs_url": "http://data.acfr.usyd.edu.au/ag/treecrops/2016-multifruit/"
     },

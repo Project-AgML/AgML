@@ -6,6 +6,7 @@ from shutil import copyfile, copytree
 from utils import get_filelist, get_dirlist, get_dirlist_nested, read_txt_file
 from utils import convert_bbox_to_coco, get_label2id, create_dir
 from utils import create_sub_masks, create_sub_mask_annotation_per_bbox
+from utils import get_annpaths, convert_xmls_to_cocojson
 
 from shutil import copyfile, copytree
 from tqdm import tqdm
@@ -431,7 +432,60 @@ class PreprocessData:
                 output_json = json.dumps(json_dict)
                 f.write(output_json)
 
+        elif dataset_name == "apple_detection_spain":
 
+            # resize the dataset
+            resize = 1.0
+
+            # Read public_datasources.json to get class information
+            datasource_file = os.path.join(os.path.dirname(__file__),"../../assets/public_datasources.json")
+            with open(datasource_file) as f:
+                data = json.load(f)
+                category_info = data[dataset_name]['crop_types']
+                labels_str = []
+                labels_ids = []
+                for info in category_info:
+                    labels_str.append(category_info[info])
+                    labels_ids.append(int(info))
+
+                label2id = dict(zip(labels_str, labels_ids))
+
+            dataset_dir = os.path.join(self.data_original_dir, dataset_name)
+            ann_dir = os.path.join(dataset_dir, "preprocessed data/square_annotations1")
+
+            # Get image file and xml file
+            all_files = get_filelist(ann_dir)
+            anno_files = [os.path.join(ann_dir,x) for x in all_files if "xml" in x]
+            img_files = [x.replace(".xml","hr.jpg").replace("square_annotations1","images") for x in anno_files]
+
+            # Process annotation files
+            save_dir_anno = os.path.join(self.data_processed_dir, dataset_name, 'annotations')
+            create_dir(save_dir_anno)
+            output_json_file = os.path.join(save_dir_anno, 'instances.json')
+
+            # Process image files
+            output_img_path = os.path.join(self.data_processed_dir, dataset_name, 'images')
+            create_dir(output_img_path)
+
+
+            general_info = {
+                "description": "KFuji RGB-DS database",
+                "url": "http://www.grap.udl.cat/en/publications/KFuji_RGBDS_database.html",
+                "version": "1.0",
+                "year": 2018,
+                "contributor": "Gené-Mola J, Vilaplana V, Rosell-Polo JR, Morros JR, Ruiz-Hidalgo J, Gregorio E",
+                "date_created": "2018/10/19"
+            }
+
+            convert_xmls_to_cocojson(
+                general_info,
+                annotation_paths=anno_files,
+                img_paths=img_files,
+                label2id=label2id,
+                output_jsonpath=output_json_file,
+                output_imgpath = output_img_path,
+                extract_num_from_imgid=True
+            )
     
 
 

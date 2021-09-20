@@ -58,8 +58,24 @@ def get_label2id(labels_str: str) -> Dict[str, int]:
     labels_ids = list(range(1, len(labels_str) + 1))
     return dict(zip(labels_str, labels_ids))
 
+def get_annpaths(ann_dir_path: str = None,
+                 ann_ids_path: str = None,
+                 ext: str = '',
+                 annpaths_list_path: str = None) -> List[str]:
+    # If use annotation paths list
+    if annpaths_list_path is not None:
+        with open(annpaths_list_path, 'r') as f:
+            ann_paths = f.read().split()
+        return ann_paths
 
-def get_image_info(annotation_root, idx, resize = 1.0,add_foldername=False):
+    # If use annotaion ids list
+    ext_with_dot = '.' + ext if ext != '' else ''
+    with open(ann_ids_path, 'r') as f:
+        ann_ids = f.read().split()
+    ann_paths = [os.path.join(ann_dir_path, aid+ext_with_dot) for aid in ann_ids]
+    return ann_paths
+
+def get_image_info_from_annoline(annotation_root, idx, resize = 1.0,add_foldername=False):
     filename = annotation_root[0].split('/')[-1]
     try:
         img = cv2.imread(annotation_root[0])
@@ -90,13 +106,48 @@ def get_image_info(annotation_root, idx, resize = 1.0,add_foldername=False):
 
     return image_info, img
 
+def get_image_info(annotation_root, idx, resize = 1.0,add_foldername=False):
+    path = annotation_root.findtext('path')
+    if path is None or True:
+        filename = annotation_root.findtext('filename')
+    else:
+        filename = os.path.basename(path)
+
+    try:
+        img = cv2.imread(filename)
+
+        if resize != 1.0:
+            dsize = [int(img.shape[1] * resize), int(img.shape[0] * resize)]
+            img = cv2.resize(img, dsize)
+
+        size = img.shape
+        width = size[1]
+        height = size[0]
+
+        if add_foldername:
+            filename = "{folder}_{img_name}".format(folder=filename.split('/')[-2],img_name=filename.split('/')[-1])
+ 
+        image_info = {
+            'file_name': filename.split('/')[-1],
+            'height': height,
+            'width': width,
+            'id': idx # Use image order
+        }
+
+    except Exception as e:
+        print(e)
+        print("Cannot open {file}".format(file = annotation_root[0]))
+        image_info = None
+        img = None
+
+    return image_info, img
 
 '''
 Reference : https://github.com/roboflow-ai/voc2coco.git
 '''
 
 
-def get_coco_annotation_from_obj(obj, label2id, resize = 1.0):
+def get_coco_annotation_from_annoline(obj, label2id, resize = 1.0):
     # Try to sublabel fist
     category_id = int(obj[4])
     xmin = int(float(obj[0]) * resize) 
@@ -116,6 +167,39 @@ def get_coco_annotation_from_obj(obj, label2id, resize = 1.0):
     }
     return ann
 
+def get_coco_annotation_from_obj(obj, label2id):
+    #Try to sublabel fist
+    label = obj.findtext('subname')
+    if label is None:
+        label = obj.findtext('name')
+        if not label in label2id:
+            ann = []
+            return ann
+            #assert label in label2id, f"Error: {label} is not in label2id !"
+    category_id = label2id[label]
+
+    bndbox = obj.find('bndbox')
+    if bndbox == None:
+        bndbox = obj.find('bbox')
+        if bndbox == None:
+            return None
+
+    xmin = int(float(bndbox.findtext('xmin'))) - 1
+    ymin = int(float(bndbox.findtext('ymin'))) - 1
+    xmax = int(float(bndbox.findtext('xmax')))
+    ymax = int(float(bndbox.findtext('ymax')))
+    assert xmax > xmin and ymax > ymin, f"Box size error !: (xmin, ymin, xmax, ymax): {xmin, ymin, xmax, ymax}"
+    o_width = xmax - xmin
+    o_height = ymax - ymin
+    ann = {
+        'area': o_width * o_height,
+        'iscrowd': 0,
+        'bbox': [xmin, ymin, o_width, o_height],
+        'category_id': category_id,
+        'ignore': 0,
+        'segmentation': []  # This script is not for segmentation
+    }
+    return ann
 
 '''
 Annotaion Format
@@ -168,7 +252,7 @@ def convert_bbox_to_coco(annotation: List[str],
             else:
                 img_unique_id = img_idx + 1
 
-        img_info, img = get_image_info(annotation_root=anno_line, idx=img_unique_id, resize=resize, add_foldername=add_foldername)
+        img_info, img = get_image_info_from_annoline(annotation_root=anno_line, idx=img_unique_id, resize=resize, add_foldername=add_foldername)
 
         if img_info:
 
@@ -204,7 +288,7 @@ def convert_bbox_to_coco(annotation: List[str],
                         pass
                     
                     try:
-                        ann = get_coco_annotation_from_obj(obj=obj, label2id=label2id, resize=resize)
+                        ann = get_coco_annotation_from_annoline(obj=obj, label2id=label2id, resize=resize)
                     except:
                         ann = None
 
@@ -243,6 +327,62 @@ def convert_bbox_to_coco(annotation: List[str],
     return output_json_dict
 
 
+def convert_xmls_to_cocojson(general_info,
+                             annotation_paths: List[str],
+                             img_paths: List[str],
+                             label2id: Dict[str, int],
+                             output_jsonpath: str,
+                             output_imgpath: str,
+                             extract_num_from_imgid: bool = True):
+    output_json_dict = {
+        "images": [],
+        "type": "instances",
+        "annotations": [],
+        "categories": [],
+        "info": general_info
+    }
+    bnd_id = 1  # START_BOUNDING_BOX_ID, TODO input as args ?
+    print('Start converting !')
+    for img_idx, a_path in enumerate(tqdm(annotation_paths)):
+        # Read annotation xml
+        ann_tree = ET.parse(a_path)
+        ann_root = ann_tree.getroot()
+
+        if extract_num_from_imgid:
+            filename = a_path.split('/')[-1]
+            img_unique_id = int(''.join(filter(str.isdigit, filename)))
+        else:
+            img_unique_id = img_idx + 1
+
+        if len(img_paths) == len(annotation_paths):
+            ann_root.find("filename").text = img_paths[img_idx]
+
+        img_info, img = get_image_info(annotation_root=ann_root, idx=img_unique_id, resize=1.0, add_foldername=False)
+        output_json_dict['images'].append(img_info)
+
+        for obj in ann_root.findall('object'):
+            ann = get_coco_annotation_from_obj(obj=obj, label2id=label2id)
+            if ann:
+                ann.update({'image_id': img_info['id'], 'id': bnd_id})
+                output_json_dict['annotations'].append(ann)
+                bnd_id = bnd_id + 1
+
+        # Process images
+        img_name = img_info['file_name']
+        dest_path = os.path.join(output_imgpath, img_name)
+        try:
+            cv2.imwrite(dest_path, img)
+        except:
+            # Cannot copy the image file
+            pass        
+
+    for label, label_id in label2id.items():
+        category_info = {'supercategory': 'none', 'id': label_id, 'name': label}
+        output_json_dict['categories'].append(category_info)
+
+    with open(output_jsonpath, 'w') as f:
+        output_json = json.dumps(output_json_dict)
+        f.write(output_json)
 '''
 Reference
 https://www.immersivelimit.com/create-coco-annotations-from-scratch
