@@ -346,7 +346,7 @@
         },
     "apple_detection_spain":{
         "crop_types": {
-            "1": "Poma"
+            "1": "apple"
         },
             "ml_task": "object_detection",
             "ag_task": "fruit_detection",

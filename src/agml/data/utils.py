@@ -167,11 +167,14 @@ def get_coco_annotation_from_annoline(obj, label2id, resize = 1.0):
     }
     return ann
 
-def get_coco_annotation_from_obj(obj, label2id):
+def get_coco_annotation_from_obj(obj, label2id, name_converter=None):
     #Try to sublabel fist
     label = obj.findtext('subname')
     if label is None:
         label = obj.findtext('name')
+        if name_converter:
+            if label in name_converter:
+                label = name_converter[label]
         if not label in label2id:
             ann = []
             return ann
@@ -331,6 +334,7 @@ def convert_xmls_to_cocojson(general_info,
                              annotation_paths: List[str],
                              img_paths: List[str],
                              label2id: Dict[str, int],
+                             name_converter,
                              output_jsonpath: str,
                              output_imgpath: str,
                              extract_num_from_imgid: bool = True):
@@ -361,7 +365,7 @@ def convert_xmls_to_cocojson(general_info,
         output_json_dict['images'].append(img_info)
 
         for obj in ann_root.findall('object'):
-            ann = get_coco_annotation_from_obj(obj=obj, label2id=label2id)
+            ann = get_coco_annotation_from_obj(obj=obj, label2id=label2id, name_converter=name_converter)
             if ann:
                 ann.update({'image_id': img_info['id'], 'id': bnd_id})
                 output_json_dict['annotations'].append(ann)

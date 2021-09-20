@@ -448,6 +448,7 @@ class PreprocessData:
                     labels_str.append(category_info[info])
                     labels_ids.append(int(info))
 
+                name_converter = dict(zip(["Poma"], ["apple"])) # src -> dst
                 label2id = dict(zip(labels_str, labels_ids))
 
             dataset_dir = os.path.join(self.data_original_dir, dataset_name)
@@ -482,6 +483,7 @@ class PreprocessData:
                 annotation_paths=anno_files,
                 img_paths=img_files,
                 label2id=label2id,
+                name_converter = name_converter,
                 output_jsonpath=output_json_file,
                 output_imgpath = output_img_path,
                 extract_num_from_imgid=True
