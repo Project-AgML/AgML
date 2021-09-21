@@ -423,7 +423,7 @@
             },
             "sensor_modality": "rgb",
             "real_synthetic": "real",
-            "platform": "ground",
+            "platform": "handheld",
             "input_data_format": "jpg",
             "annotation_format": "coco_json",
             "n_images": "1730",
