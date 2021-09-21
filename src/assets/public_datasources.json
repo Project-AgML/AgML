@@ -365,7 +365,7 @@
     "friuts_detection_australia":{
         "crop_types": {
             "1": "apple",
-            "2": "mangoe",
+            "2": "mango",
             "3": "almond"
         },
             "ml_task": "object_detection_segmentation",
@@ -379,7 +379,7 @@
             "platform": "ground",
             "input_data_format": "png",
             "annotation_format": "coco_json",
-            "n_images": "3027",
+            "n_images": "3704",
             "docs_url": "http://data.acfr.usyd.edu.au/ag/treecrops/2016-multifruit/"
     },
     "datepalm_classification_saudi":{

@@ -357,7 +357,15 @@ class PreprocessData:
                         new_anno.append(os.path.join(img_parent, img_name))
                         bbox_cnt = len(anno_data)
                         new_anno.append(str(bbox_cnt))
+                        if "mango" in full_path.split('/')[-2]:
+                            label = "mango"
+                        elif "apple" in full_path.split('/')[-2]:
+                            label = "apple"
+                        elif "almond" in full_path.split('/')[-2]:
+                            label = "almond"
+                        else:
                         label = full_path.split('/')[-2][:-1]
+
                         for i, anno in enumerate(anno_data):
                             
                             if "radius" in headline:
