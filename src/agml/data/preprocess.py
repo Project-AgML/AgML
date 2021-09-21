@@ -497,6 +497,63 @@ class PreprocessData:
                 extract_num_from_imgid=True
             )
     
+        elif dataset_name == "mango_detection_australia":
+            # resize the dataset
+            resize = 1.0
+
+            # Read public_datasources.json to get class information
+            datasource_file = os.path.join(os.path.dirname(__file__),"../../assets/public_datasources.json")
+            with open(datasource_file) as f:
+                data = json.load(f)
+                category_info = data[dataset_name]['crop_types']
+                labels_str = []
+                labels_ids = []
+                for info in category_info:
+                    labels_str.append(category_info[info])
+                    labels_ids.append(int(info))
+
+                name_converter = dict(zip(["M"], ["mango"])) # src -> dst
+                label2id = dict(zip(labels_str, labels_ids))
+
+
+
+            dataset_dir = os.path.join(self.data_original_dir, dataset_name)
+            ann_dir = os.path.join(dataset_dir, "VOCDevkit/VOC2007/Annotations")
+
+            # Get image file and xml file
+            all_files = get_filelist(ann_dir)
+            anno_files = [os.path.join(ann_dir,x) for x in all_files if "xml" in x]
+            img_files = [x.replace(".xml",".jpg").replace("Annotations","JPEGImages") for x in anno_files]
+
+            # Process annotation files
+            save_dir_anno = os.path.join(self.data_processed_dir, dataset_name, 'annotations')
+            create_dir(save_dir_anno)
+            output_json_file = os.path.join(save_dir_anno, 'instances.json')
+
+            # Process image files
+            output_img_path = os.path.join(self.data_processed_dir, dataset_name, 'images')
+            create_dir(output_img_path)
+
+
+            general_info = {
+                "description": "MangoYOLO data set",
+                "url": "https://researchdata.edu.au/mangoyolo-set/1697505",
+                "version": "1.0",
+                "year": 2019,
+                "contributor": "Anand Koirala, Kerry Walsh, Z Wang, C McCarthy",
+                "date_created": "2019/02/25"
+            }
+
+            convert_xmls_to_cocojson(
+                general_info,
+                annotation_paths=anno_files,
+                img_paths=img_files,
+                label2id=label2id,
+                name_converter = name_converter,
+                output_jsonpath=output_json_file,
+                output_imgpath = output_img_path,
+                extract_num_from_imgid=True
+            )
 
 
 
