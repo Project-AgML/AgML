@@ -3,7 +3,7 @@
 #include "Visualizer.h"
 #include <iomanip> 
 #include <random>
-//#include "LiDAR.h"
+#include "LiDAR.h"
 
 using namespace helios;
 using namespace std;
@@ -125,7 +125,7 @@ float rand_FloatRange(float a, float b)
 
   int main( void ){
     
-bool flag=false;
+bool flag=true;
     Context context;
     CanopyGenerator canopygenerator(&context);
     //Reading Geometry
@@ -149,16 +149,16 @@ bool flag=false;
     context.setPrimitiveData( UUID_leaf, "object_label", 4 );
     context.setPrimitiveData( UUID_fruit, "object_label", 5 );
     
- //LiDARcloud lidarcloud;
+ LiDARcloud lidarcloud;
 
- //lidarcloud.loadXML("../xmloutput_for_helios/tmp_canopy_params_image.xml");
+ lidarcloud.loadXML("../xmloutput_for_helios/tmp_canopy_params_image.xml");
     
     Timer timer;
     timer.tic();
- //lidarcloud.syntheticScan( &context);
+ lidarcloud.syntheticScan( &context);
     timer.toc("Time to run synthetic scan.");
 
- //lidarcloud.exportPointCloud( "/home/dguevara/Documents/AgML/src/agml/output/point_cloud/synthetic_scan_0.xyz" );
+ lidarcloud.exportPointCloud( "/home/dguevara/Documents/AgML/src/agml/output/point_cloud/synthetic_scan_2.xyz" );
     }
     else{ //Image Generation
 

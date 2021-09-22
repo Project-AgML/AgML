@@ -12,7 +12,7 @@ set( EXECUTABLE_NAME "executable" )
 set( SOURCE_FILES "main.cpp" )
 
 #specify which plug-ins to use (separate plug-in names with semicolon)
-set( PLUGINS "visualizer;canopygenerator;" )
+set( PLUGINS "lidar;visualizer;canopygenerator;" )
 
 #-------- MAIN CODE (Dont Modify) ---------#
 cmake_minimum_required(VERSION 2.4)
