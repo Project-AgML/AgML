@@ -58,6 +58,7 @@ hdg.lidar_param_ranges['thetaMax'] = [130]
 hdg.lidar_param_ranges['thetaMin'] = [30]
 hdg.lidar_param_ranges['exitDiameter'] = [0.05]
 hdg.lidar_param_ranges['size'] = [250, 250]
+hdg.lidar_param_ranges['origin'] = [[0, 0, 0],[1, 1, 1],[2, 2, 2]] # Multiple LiDAR's could be used, it is only need to defined the origin of each sensor
 # ---------------- CAMERA PARAMETERS --------------------
 # For the RGB images, the user can set the camera positions and the desire image_resoution. (Expecting this changes in Helios to be effective)
 # Camera position are a set of triplets specifiying the -x, y, and z- cordinates.
