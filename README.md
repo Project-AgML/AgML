@@ -59,7 +59,7 @@ hdg.lidar_param_ranges['thetaMin'] = [30]
 hdg.lidar_param_ranges['exitDiameter'] = [0.05]
 hdg.lidar_param_ranges['size'] = [250, 250]
 # ---------------- CAMERA PARAMETERS --------------------
-# For the RGB images, the can must set the camera positions and the desire image_resoution. (Expecting this changes in Helios to be effective)
+# For the RGB images, the user can set the camera positions and the desire image_resoution. (Expecting this changes in Helios to be effective)
 # Camera position are a set of triplets specifiying the -x, y, and z- cordinates.
 hdg.camera_param_ranges['camera_position'] = [[1,-1,2],[1,1,1]]
 hdg.camera_param_ranges['image_resolution'] = [1000, 500]
@@ -69,19 +69,32 @@ hdg.camera_param_ranges['image_resolution'] = [1000, 500]
 # Note2: simulation_type='rgb' requieres access to Graphic interface
 # Note3: User can specified the output directory path. If it is not defined, the output data will be saved in the current directory.
 hdg.generate_data(n_imgs=10, canopy_type='VSPGrapevine', simulation_type='rgb', output_directory ="/home/username/Documents")
+# ---------------- CONVERT HELIOS OUTPUT TO STANDARD COCO JSON FORMAT -------------
+# Generate a user-specified number of simulated rgb/lidar outputs + annotations for a given canopy type in Helios
+# Note1: simulation_type='lidar' requires a GPU with CUDA installed
+# Note2: simulation_type='rgb' requieres access to Graphic interface
+# Note3: User can specified the output directory path. If it is not defined, the output data will be saved in the current directory.
+output_directory ="/home/username/Documents/output/images/"
+hdg.convert_data(output_directory, annotation_format='object_detection')
 
 Running this code block generates 10 synthetic data (point clouds or rgb images). 1 xml files is created on each iteration which will be used to initialize Helios crop geometries. The geometries are random combinations of the user specified range of values defined above. 
-
-### Optional
 ```
-# Pass in a manual seed for consistency in parameter shuffling
+## Optional
+
+### Pass in a manual seed for consistency in parameter shuffling
+```
 seed=10
 hdg.set_seed(seed)
+```
+### CONVERT HELIOS OUTPUT TO STANDARD COCO JSON FORMAT 
+Given the path to the output of Helios, this method can be used to convert the data to a more standard format such as COCO JSON. Choose between 'instance segmentation' and object_detection'. The default is 'instance_segmentation'.
+```
+output_directory ="/home/username/Documents/output/images/"
+hdg.convert_data(output_directory, annotation_format='object_detection')
 ```
 
 ## To-Do
 - Code to run Helios using a system call to c++ here
-- Return data from Helios as a json file in standard annotation formats; i.e. segmentation, object detection, and instance segmentation.
 
 ### Standard annotation formats
 
