@@ -79,14 +79,14 @@ hdg.convert_data(output_directory, annotation_format='object_detection')
 
 Running this code block generates 10 synthetic data (point clouds or rgb images). 1 xml files is created on each iteration which will be used to initialize Helios crop geometries. The geometries are random combinations of the user specified range of values defined above. 
 ```
-### Optional
+## Optional
 
-# Pass in a manual seed for consistency in parameter shuffling
+### Pass in a manual seed for consistency in parameter shuffling
 ```
 seed=10
 hdg.set_seed(seed)
 ```
-# CONVERT HELIOS OUTPUT TO STANDARD COCO JSON FORMAT 
+### CONVERT HELIOS OUTPUT TO STANDARD COCO JSON FORMAT 
 Given the path to the output of Helios, this method can be used to convert the data to a more standard format such as COCO JSON. Choose between 'instance segmentation' and object_detection'. The default is 'instance_segmentation'.
 ```
 output_directory ="/home/username/Documents/output/images/"
