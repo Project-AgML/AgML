@@ -2,7 +2,8 @@
 #include "CanopyGenerator.h"
 #include "Visualizer.h"
 #include <iomanip> 
-//#include "LiDAR.h"
+#include <random>
+#include "LiDAR.h"
 
 using namespace helios;
 using namespace std;
@@ -112,12 +113,19 @@ void writePixelID( const char* filename, int labelminpixels, Visualizer* vis ){
 
 }
 
+float rand_FloatRange(float a, float b)
+{
+    random_device randdev;
+    mt19937 generator(randdev());
+    uniform_real_distribution<> distrib(a, b);
+    return (distrib(generator));
+}
 
 // Main code here
 
   int main( void ){
     
-bool flag=false;
+bool flag=true;
     Context context;
     CanopyGenerator canopygenerator(&context);
     //Reading Geometry
@@ -141,16 +149,16 @@ bool flag=false;
     context.setPrimitiveData( UUID_leaf, "object_label", 4 );
     context.setPrimitiveData( UUID_fruit, "object_label", 5 );
     
- //LiDARcloud lidarcloud;
+ LiDARcloud lidarcloud;
 
- //lidarcloud.loadXML("../xmloutput_for_helios/tmp_canopy_params_image.xml");
+ lidarcloud.loadXML("../xmloutput_for_helios/tmp_canopy_params_image.xml");
     
     Timer timer;
     timer.tic();
- //lidarcloud.syntheticScan( &context);
+ lidarcloud.syntheticScan( &context);
     timer.toc("Time to run synthetic scan.");
 
- //lidarcloud.exportPointCloud( "../output/point_cloud/synthetic_scan.xyz" );
+ lidarcloud.exportPointCloud( "/home/dguevara/Documents/AgML/src/agml/output/point_cloud/synthetic_scan_2.xyz" );
     }
     else{ //Image Generation
 
@@ -169,18 +177,11 @@ bool flag=false;
 
    //The 'camera' will stop at each of the (x,y,z) positions provided in this vector. It will always be pointed in the row-normal direction looking toward the center of the vineyard.
    std::vector<vec3> camera_pos;
-   camera_pos.push_back( make_vec3(0.3, -1.5, 1) );
-   camera_pos.push_back( make_vec3(0.5, -1.6, 0.9) );
-   camera_pos.push_back( make_vec3(0.7, -1.4, 0.8) );
-   camera_pos.push_back( make_vec3(0.9, -1.7, 0.9) );
-   camera_pos.push_back( make_vec3(0.1, -1.3, 0.8) );
-   camera_pos.push_back( make_vec3(1.1, -1.2, 1) );
-   camera_pos.push_back( make_vec3(0.6, -1.5, 0.8) );
-   camera_pos.push_back( make_vec3(0.98, -1.4, 0.9) );
-   camera_pos.push_back( make_vec3(1.2, -1.3, 1) );
-   camera_pos.push_back( make_vec3(1.1, -1.6, 1) );
-   camera_pos.push_back( make_vec3(1.3, -1.5, 1) );
-   //camera_pos.push_back( make_vec3(1.8, 4.6, 1.05) );
+   float x_camera = rand_FloatRange (  0.3, 1.3);
+   float y_camera = rand_FloatRange (  -1.2,  -1.7);
+   float z_camera = rand_FloatRange (  0.7,  1.1);
+
+   camera_pos.push_back( make_vec3(x_camera, y_camera, z_camera) );
 
   //testing the r-g-b encoding scheme here
   int ID1 = 77830;
@@ -233,9 +234,11 @@ bool flag=false;
   
   for( int view=0; view<camera_pos.size(); view++ ){
 
-    cout << "camera perspective # " << view << endl;
+    //cout << "camera perspective # " << view << endl;
 
-    char outfile[70];
+    cout << "Camera position -- x: " << x_camera << ", y: " << y_camera << ", z: " << z_camera << " -- " << endl;
+
+    char outfile[120];
     //sprintf(outfile,"mkdir ../output/images/",view);
     //system(outfile);
 
@@ -277,7 +280,7 @@ bool flag=false;
     
     
 
-  sprintf(outfile,"../output/images/RGB_rendering_0_%d.jpeg",view);
+  sprintf(outfile,"/home/dguevara/Documents/AgML/src/agml/output/images/Image_0/RGB_rendering.jpeg");
     vis_RGB.printWindow(outfile);
 
   
@@ -289,7 +292,7 @@ bool flag=false;
 
     vis.getFramebufferSize(framebufferW,framebufferH);
 
-  sprintf(outfile,"../output/images/ID_mapping_0_%d.txt",view);
+  sprintf(outfile,"/home/dguevara/Documents/AgML/src/agml/output/images/Image_0/ID_mapping.txt");
     std::ofstream mapping_file(outfile);
     
     int gID=0;
@@ -334,7 +337,7 @@ bool flag=false;
     
     vis.getWindowPixelsRGB( &pixels[0] );
 
-  sprintf(outfile,"../output/images/pixelID_combined_0_%d.txt",view);
+  sprintf(outfile,"/home/dguevara/Documents/AgML/src/agml/output/images/Image_0/pixelID_combined.txt");
     std::ofstream file(outfile);
     std::vector<int> ID;
     int t=0;
@@ -367,7 +370,7 @@ bool flag=false;
     //rectangular bounding box labels
     if( rectangularlabels ){
 
-  sprintf(outfile,"../output/images/rectangular_labels_0_%d.txt",view);
+  sprintf(outfile,"/home/dguevara/Documents/AgML/src/agml/output/images/Image_0/rectangular_labels.txt");
       std::ofstream labelfile(outfile);
       
       for( int p=0; p<ID.size(); p++ ){
@@ -442,7 +445,7 @@ bool flag=false;
         
         timer.toc("render");
         
-  sprintf(outfile,"../output/images/pixelID2_0_%d_%07d.txt",view,ID.at(p));
+  sprintf(outfile,"/home/dguevara/Documents/AgML/src/agml/output/images/Image_0/pixelID2_%07d.txt",ID.at(p));
         
         timer.tic();
         

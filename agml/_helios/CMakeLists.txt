@@ -3,7 +3,11 @@
 #-------- USER INPUTS ---------#
 
 #provide the path to Helios base directory, either as an absolute path or a path relative to the location of this file
+<<<<<<< HEAD:agml/_helios/CMakeLists.txt
 set( BASE_DIRECTORY "Helios" )
+=======
+set( BASE_DIRECTORY "../../../Helios/" )
+>>>>>>> main:src/agml/CMakeLists.txt
 
 #define the name of the executable to be created
 set( EXECUTABLE_NAME "executable" )
@@ -12,7 +16,7 @@ set( EXECUTABLE_NAME "executable" )
 set( SOURCE_FILES "main.cpp" )
 
 #specify which plug-ins to use (separate plug-in names with semicolon)
-set( PLUGINS "visualizer;canopygenerator;" )
+set( PLUGINS "lidar;visualizer;canopygenerator;" )
 
 #-------- MAIN CODE (Dont Modify) ---------#
 cmake_minimum_required(VERSION 2.4)
