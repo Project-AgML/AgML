@@ -525,8 +525,9 @@ def mask_annotation_per_bbox(anno_line, image_id, category_id, annotation_id, is
         # and subtract the padding pixel
         contour = []
         for i in range(len(mask_data['all_points_x'])):
-            contour.append((mask_data['all_points_x'][i],mask_data['all_points_y'][i]))
-
+            contour.append([int(mask_data['all_points_x'][i]),int(mask_data['all_points_y'][i])])
+        
+        contour = np.array(contour)
         # Make a polygon and simplify it
         poly = Polygon(contour)
         poly = poly.simplify(1.0, preserve_topology=False)
@@ -534,7 +535,7 @@ def mask_annotation_per_bbox(anno_line, image_id, category_id, annotation_id, is
         if 0:
             segmentation = np.array(poly.exterior.coords).ravel().tolist()
         else:
-            segmentation = contour
+            segmentation = contour.ravel().tolist()
 
         segmentations.append(segmentation)
 
