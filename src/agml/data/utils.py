@@ -12,15 +12,18 @@ import json
 import numpy as np
 from shutil import copyfile, copytree
 
-from PIL import Image # (pip install Pillow)                             
-from skimage import measure                        # (pip install scikit-image)
-from shapely.geometry import Polygon, MultiPolygon # (pip install Shapely)
+from PIL import Image  # (pip install Pillow)
+from skimage import measure  # (pip install scikit-image)
+from shapely.geometry import Polygon, MultiPolygon  # (pip install Shapely)
+
 
 def get_filelist(filepath):
     return [f for f in listdir(filepath) if isfile(join(filepath, f))]
 
+
 def get_dirlist(filepath):
     return [f for f in listdir(filepath) if isdir(join(filepath, f))]
+
 
 def get_dirlist_nested(filepath):
     result = []
@@ -28,8 +31,8 @@ def get_dirlist_nested(filepath):
         if isdir(join(filepath, f)):
             result.append(f)
             for ff in get_dirlist_nested(join(filepath, f)):
-                result.append(join(f,ff))
-    
+                result.append(join(f, ff))
+
     return result
 
 
@@ -37,7 +40,7 @@ def create_dir(dir_):
     os.makedirs(dir_, exist_ok = True)
 
 
-def read_txt_file(file_name, delimiter=' ', header=False):
+def read_txt_file(file_name, delimiter = ' ', header = False):
     with open(file_name, newline = '\n') as txt_file:
         txt_reader = csv.reader(txt_file, delimiter = delimiter)
         txt_lines = []
@@ -58,6 +61,7 @@ def get_label2id(labels_str: str) -> Dict[str, int]:
     labels_ids = list(range(1, len(labels_str) + 1))
     return dict(zip(labels_str, labels_ids))
 
+
 def get_annpaths(ann_dir_path: str = None,
                  ann_ids_path: str = None,
                  ext: str = '',
@@ -72,10 +76,11 @@ def get_annpaths(ann_dir_path: str = None,
     ext_with_dot = '.' + ext if ext != '' else ''
     with open(ann_ids_path, 'r') as f:
         ann_ids = f.read().split()
-    ann_paths = [os.path.join(ann_dir_path, aid+ext_with_dot) for aid in ann_ids]
+    ann_paths = [os.path.join(ann_dir_path, aid + ext_with_dot) for aid in ann_ids]
     return ann_paths
 
-def get_image_info_from_annoline(annotation_root, idx, resize = 1.0,add_foldername=False):
+
+def get_image_info_from_annoline(annotation_root, idx, resize = 1.0, add_foldername = False):
     filename = annotation_root[0].split('/')[-1]
     try:
         img = cv2.imread(annotation_root[0])
@@ -89,13 +94,14 @@ def get_image_info_from_annoline(annotation_root, idx, resize = 1.0,add_folderna
         height = size[0]
 
         if add_foldername:
-            filename = "{folder}_{img_name}".format(folder=annotation_root[0].split('/')[-2],img_name=annotation_root[0].split('/')[-1])
- 
+            filename = "{folder}_{img_name}".format(folder = annotation_root[0].split('/')[-2],
+                                                    img_name = annotation_root[0].split('/')[-1])
+
         image_info = {
             'file_name': filename,
             'height': height,
             'width': width,
-            'id': idx # Use image order
+            'id': idx  # Use image order
         }
 
     except Exception as e:
@@ -106,7 +112,8 @@ def get_image_info_from_annoline(annotation_root, idx, resize = 1.0,add_folderna
 
     return image_info, img
 
-def get_image_info(annotation_root, idx, resize = 1.0,add_foldername=False):
+
+def get_image_info(annotation_root, idx, resize = 1.0, add_foldername = False):
     path = annotation_root.findtext('path')
     if path is None or True:
         filename = annotation_root.findtext('filename')
@@ -125,13 +132,14 @@ def get_image_info(annotation_root, idx, resize = 1.0,add_foldername=False):
         height = size[0]
 
         if add_foldername:
-            filename = "{folder}_{img_name}".format(folder=filename.split('/')[-2],img_name=filename.split('/')[-1])
- 
+            filename = "{folder}_{img_name}".format(folder = filename.split('/')[-2],
+                                                    img_name = filename.split('/')[-1])
+
         image_info = {
             'file_name': filename.split('/')[-1],
             'height': height,
             'width': width,
-            'id': idx # Use image order
+            'id': idx  # Use image order
         }
 
     except Exception as e:
@@ -142,6 +150,7 @@ def get_image_info(annotation_root, idx, resize = 1.0,add_foldername=False):
 
     return image_info, img
 
+
 '''
 Reference : https://github.com/roboflow-ai/voc2coco.git
 '''
@@ -150,10 +159,10 @@ Reference : https://github.com/roboflow-ai/voc2coco.git
 def get_coco_annotation_from_annoline(obj, label2id, resize = 1.0):
     # Try to sublabel fist
     category_id = int(obj[4])
-    xmin = int(float(obj[0]) * resize) 
-    ymin = int(float(obj[1]) * resize) 
-    xmax = int(float(obj[2]) * resize) 
-    ymax = int(float(obj[3]) * resize) 
+    xmin = int(float(obj[0]) * resize)
+    ymin = int(float(obj[1]) * resize)
+    xmax = int(float(obj[2]) * resize)
+    ymax = int(float(obj[3]) * resize)
     assert xmax > xmin and ymax > ymin, f"Box size error !: (xmin, ymin, xmax, ymax): {xmin, ymin, xmax, ymax}"
     o_width = xmax - xmin + 1
     o_height = ymax - ymin + 1
@@ -167,8 +176,9 @@ def get_coco_annotation_from_annoline(obj, label2id, resize = 1.0):
     }
     return ann
 
-def get_coco_annotation_from_obj(obj, label2id, name_converter=None):
-    #Try to sublabel fist
+
+def get_coco_annotation_from_obj(obj, label2id, name_converter = None):
+    # Try to sublabel fist
     label = obj.findtext('subname')
     if label is None:
         label = obj.findtext('name')
@@ -178,7 +188,7 @@ def get_coco_annotation_from_obj(obj, label2id, name_converter=None):
         if not label in label2id:
             ann = []
             return ann
-            #assert label in label2id, f"Error: {label} is not in label2id !"
+            # assert label in label2id, f"Error: {label} is not in label2id !"
     category_id = label2id[label]
 
     bndbox = obj.find('bndbox')
@@ -204,13 +214,12 @@ def get_coco_annotation_from_obj(obj, label2id, name_converter=None):
     }
     return ann
 
+
 '''
 Annotaion Format
 "image name" "the number of bounding boxes(bb)" "x1" "y1" "x2" "y2" "label" "score" "x1" "y1" "x2" "y2" ...
 For example, the following line can be matched as
-
 TRAIN_RGB/n12710693_12225.png 5 515 68 759 285 2 1.000 624 347 868 582 2 1.000 480 488 693 712 2 1.000 44 433 268 657 2 1.000 112 198 342 401 2 1.000
-
 image name=TRAIN_RGB/n12710693_12225.png
 the number of bb=5
 x1=515
@@ -219,20 +228,21 @@ x2=759
 y2=285
 label=2 "0=background, 1=capsicum, 2=rockmelon..."
 score=1.000
-
 reference  "https://drive.google.com/drive/folders/1CmsZb1caggLRN7ANfika8WuPiywo4mBb"
 '''
+
+
 def convert_bbox_to_coco(annotation: List[str],
-                            label2id: Dict[str, int],
-                            output_jsonpath: str,
-                            output_imgpath: str,
-                            general_info,
-                            image_id_list = None,
-                            bnd_id_list = None,
-                            get_label_from_folder=False,
-                            resize = 1.0,
-                            add_foldername=False,
-                            extract_num_from_imgid=False):
+                         label2id: Dict[str, int],
+                         output_jsonpath: str,
+                         output_imgpath: str,
+                         general_info,
+                         image_id_list = None,
+                         bnd_id_list = None,
+                         get_label_from_folder = False,
+                         resize = 1.0,
+                         add_foldername = False,
+                         extract_num_from_imgid = False):
     output_json_dict = {
         "images": [], "type": "instances", "annotations": [],
         "categories": [], 'info': general_info}
@@ -243,7 +253,7 @@ def convert_bbox_to_coco(annotation: List[str],
         img_id_cnt = 1
 
     # TODO: Use multi thread to boost up the speed
-    print("Convert annotations into COCO JSON and process the images") 
+    print("Convert annotations into COCO JSON and process the images")
     for img_idx, anno_line in enumerate(tqdm(annotation)):
 
         if image_id_list:
@@ -255,7 +265,8 @@ def convert_bbox_to_coco(annotation: List[str],
             else:
                 img_unique_id = img_idx + 1
 
-        img_info, img = get_image_info_from_annoline(annotation_root=anno_line, idx=img_unique_id, resize=resize, add_foldername=add_foldername)
+        img_info, img = get_image_info_from_annoline(annotation_root = anno_line, idx = img_unique_id, resize = resize,
+                                                     add_foldername = add_foldername)
 
         if img_info:
 
@@ -289,9 +300,9 @@ def convert_bbox_to_coco(annotation: List[str],
                             obj[4] = label2id[category_name]
                     else:
                         pass
-                    
+
                     try:
-                        ann = get_coco_annotation_from_annoline(obj=obj, label2id=label2id, resize=resize)
+                        ann = get_coco_annotation_from_annoline(obj = obj, label2id = label2id, resize = resize)
                     except:
                         ann = None
 
@@ -309,11 +320,11 @@ def convert_bbox_to_coco(annotation: List[str],
                 if resize == 1.0:
                     copyfile(anno_line[0], dest_path)
                 else:
-                    cv2.imwrite(dest_path,img)
+                    cv2.imwrite(dest_path, img)
             except:
                 # Cannot copy the image file
                 pass
-                
+
         else:
             # Not valid image => Delete from anno
             # annotation.remove(anno_line)
@@ -361,11 +372,12 @@ def convert_xmls_to_cocojson(general_info,
         if len(img_paths) == len(annotation_paths):
             ann_root.find("filename").text = img_paths[img_idx]
 
-        img_info, img = get_image_info(annotation_root=ann_root, idx=img_unique_id, resize=1.0, add_foldername=False)
+        img_info, img = get_image_info(annotation_root = ann_root, idx = img_unique_id, resize = 1.0,
+                                       add_foldername = False)
         output_json_dict['images'].append(img_info)
 
         for obj in ann_root.findall('object'):
-            ann = get_coco_annotation_from_obj(obj=obj, label2id=label2id, name_converter=name_converter)
+            ann = get_coco_annotation_from_obj(obj = obj, label2id = label2id, name_converter = name_converter)
             if ann:
                 ann.update({'image_id': img_info['id'], 'id': bnd_id})
                 output_json_dict['annotations'].append(ann)
@@ -378,7 +390,7 @@ def convert_xmls_to_cocojson(general_info,
             cv2.imwrite(dest_path, img)
         except:
             # Cannot copy the image file
-            pass        
+            pass
 
     for label, label_id in label2id.items():
         category_info = {'supercategory': 'none', 'id': label_id, 'name': label}
@@ -387,10 +399,14 @@ def convert_xmls_to_cocojson(general_info,
     with open(output_jsonpath, 'w') as f:
         output_json = json.dumps(output_json_dict)
         f.write(output_json)
+
+
 '''
 Reference
 https://www.immersivelimit.com/create-coco-annotations-from-scratch
 '''
+
+
 def create_sub_masks(mask_image):
     width, height = mask_image.size
 
@@ -399,7 +415,7 @@ def create_sub_masks(mask_image):
     for x in range(width):
         for y in range(height):
             # Get the RGB values of the pixel
-            pixel = mask_image.getpixel((x,y))[:3]
+            pixel = mask_image.getpixel((x, y))[:3]
 
             # If the pixel is not black...
             if pixel != (0, 0, 0):
@@ -407,26 +423,29 @@ def create_sub_masks(mask_image):
                 pixel_str = str(pixel)
                 sub_mask = sub_masks.get(pixel_str)
                 if sub_mask is None:
-                   # Create a sub-mask (one bit per pixel) and add to the dictionary
+                    # Create a sub-mask (one bit per pixel) and add to the dictionary
                     # Note: we add 1 pixel of padding in each direction
                     # because the contours module doesn't handle cases
                     # where pixels bleed to the edge of the image
-                    sub_masks[pixel_str] = Image.new('1', (width+2, height+2))
+                    sub_masks[pixel_str] = Image.new('1', (width + 2, height + 2))
 
                 # Set the pixel value to 1 (default is 0), accounting for padding
-                sub_masks[pixel_str].putpixel((x+1, y+1), 1)
+                sub_masks[pixel_str].putpixel((x + 1, y + 1), 1)
 
     return sub_masks
+
 
 '''
 Reference
 https://www.immersivelimit.com/create-coco-annotations-from-scratch
 '''
+
+
 def create_sub_mask_annotation(sub_mask, image_id, category_id, annotation_id, is_crowd):
     # Find contours (boundary lines) around each sub-mask
     # Note: there could be multiple contours if the object
     # is partially occluded. (E.g. an elephant behind a tree)
-    contours = measure.find_contours(sub_mask, 0.5, positive_orientation='low')
+    contours = measure.find_contours(sub_mask, 0.5, positive_orientation = 'low')
 
     segmentations = []
     polygons = []
@@ -439,7 +458,7 @@ def create_sub_mask_annotation(sub_mask, image_id, category_id, annotation_id, i
 
         # Make a polygon and simplify it
         poly = Polygon(contour)
-        poly = poly.simplify(1.0, preserve_topology=False)
+        poly = poly.simplify(1.0, preserve_topology = False)
         polygons.append(poly)
         segmentation = np.array(poly.exterior.coords).ravel().tolist()
         segmentations.append(segmentation)
@@ -464,12 +483,13 @@ def create_sub_mask_annotation(sub_mask, image_id, category_id, annotation_id, i
 
     return annotation
 
+
 def create_sub_mask_annotation_per_bbox(sub_mask, image_id, category_id, annotation_id, is_crowd):
     # Find contours (boundary lines) around each sub-mask
     # Note: there could be multiple contours if the object
     # is partially occluded. (E.g. an elephant behind a tree)
     sub_mask_np = np.array(sub_mask)
-    contours = measure.find_contours(sub_mask_np, 0.5, positive_orientation='low')
+    contours = measure.find_contours(sub_mask_np, 0.5, positive_orientation = 'low')
 
     segmentations = []
     polygons = []
@@ -483,7 +503,7 @@ def create_sub_mask_annotation_per_bbox(sub_mask, image_id, category_id, annotat
 
         # Make a polygon and simplify it
         poly = Polygon(contour)
-        poly = poly.simplify(1.0, preserve_topology=False)
+        poly = poly.simplify(1.0, preserve_topology = False)
         polygons.append(poly)
         segmentation = np.array(poly.exterior.coords).ravel().tolist()
         segmentations.append(segmentation)
@@ -510,11 +530,12 @@ def create_sub_mask_annotation_per_bbox(sub_mask, image_id, category_id, annotat
 
     return annotations
 
+
 def mask_annotation_per_bbox(anno_line, image_id, category_id, annotation_id, is_crowd):
     # Find contours (boundary lines) around each sub-mask
     # Note: there could be multiple contours if the object
     # is partially occluded. (E.g. an elephant behind a tree)
- 
+
     segmentations = []
     polygons = []
     annotations = []
@@ -525,12 +546,12 @@ def mask_annotation_per_bbox(anno_line, image_id, category_id, annotation_id, is
         # and subtract the padding pixel
         contour = []
         for i in range(len(mask_data['all_points_x'])):
-            contour.append([int(mask_data['all_points_x'][i]),int(mask_data['all_points_y'][i])])
-        
+            contour.append([int(mask_data['all_points_x'][i]), int(mask_data['all_points_y'][i])])
+
         contour = np.array(contour)
         # Make a polygon and simplify it
         poly = Polygon(contour)
-        poly = poly.simplify(1.0, preserve_topology=False)
+        poly = poly.simplify(1.0, preserve_topology = False)
         polygons.append(poly)
         if 0:
             segmentation = np.array(poly.exterior.coords).ravel().tolist()

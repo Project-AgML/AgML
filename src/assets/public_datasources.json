@@ -325,17 +325,36 @@
             "annotation_format": "directory_names",
             "n_images": "9372",
             "docs_url": "https://vision.eng.au.dk/leaf-counting-dataset/"
-        },
-    "apple_detection_usa":{
+  },
+    "apple_detection_usa": {
         "crop_types": {
-            "1": "apple"
+          "1": "apple"
+        },
+        "ml_task": "object_detection",
+        "ag_task": "fruit_detection",
+        "location": {
+          "continent": "north_america",
+          "country": "usa"
+        },
+        "sensor_modality": "rgb",
+        "real_synthetic": "real",
+        "platform": "ground",
+        "input_data_format": "png",
+        "annotation_format": "img_name x y w h ...",
+        "n_images": "2290",
+        "docs_url": "http://hdl.handle.net/2376/17721"
+    },
+    "cotton_seedling_counting":{
+        "crop_types":{
+            "1": "Plant",
+            "2": "Weed"
         },
             "ml_task": "object_detection",
-            "ag_task": "fruit_detection",
-            "location": {
-                "continent": "north_america",
-                "country": "usa"
-            },
+            "ag_task": "seedling_counting",
+            "location":{
+                    "continent": "worldwide",
+                    "country": "worldwide"
+                },
             "sensor_modality": "rgb",
             "real_synthetic": "real",
             "platform": "ground",
@@ -445,6 +464,11 @@
             "input_data_format": "jpg",
             "annotation_format": "coco_json",
             "n_images": "1730",
-            "docs_url": "https://researchdata.edu.au/mangoyolo-set/1697505"
+            "docs_url": "https://researchdata.edu.au/mangoyolo-set/1697505",
+            "platform": "mixed",
+            "input_data_format": "jpg",
+            "annotation_format": "coco_json",
+            "n_images": "1511",
+            "docs_url": "https://github.com/UGA-BSAIL/deepseedling"
     }
 }
