@@ -16,12 +16,14 @@ from PIL import Image
 from agml.utils.io import create_dir, nested_dir_list, get_dir_list, get_file_list
 from agml.utils.coco import read_txt_file, get_image_info, get_label2id
 from agml.utils.coco import convert_bbox_to_coco, get_coco_annotation_from_obj
+from agml.utils.general import load_public_sources
 
 class PreprocessData:
     def __init__(self, data_dir):
         self.data_dir = os.path.abspath(data_dir)
         self.data_original_dir = os.path.join(self.data_dir, 'original')
         self.data_processed_dir = os.path.join(self.data_dir, 'processed')
+        self.data_sources = load_public_sources()
 
     def preprocess(self, dataset_name):
         """Preprocesses the provided dataset.
@@ -120,24 +122,19 @@ class PreprocessData:
             convert_bbox_to_coco(
                 anno_data_all, label2id, output_json_file,output_img_path, general_info)
 
-
         elif dataset_name == "plant_weeds_denmark":
-            
             # resize the dataset
             resize = 0.25
 
             # Read public_datasources.json to get class information
-            datasource_file = os.path.join(os.path.dirname(__file__),"../../assets/public_datasources.json")
-            with open(datasource_file) as f:
-                data = json.load(f)
-                category_info = data[dataset_name]['crop_types']
-                labels_str = []
-                labels_ids = []
-                for info in category_info:
-                    labels_str.append(category_info[info])
-                    labels_ids.append(int(info))
+            category_info = self.data_sources[dataset_name]['crop_types']
+            labels_str = []
+            labels_ids = []
+            for info in category_info:
+                labels_str.append(category_info[info])
+                labels_ids.append(int(info))
 
-                label2id = dict(zip(labels_str, labels_ids))
+            label2id = dict(zip(labels_str, labels_ids))
 
             # Task 1: Image classification
             dataset_dir = os.path.join(self.data_original_dir, dataset_name, 'OPPD-master')
@@ -271,17 +268,14 @@ class PreprocessData:
             resize = 1.0
 
             # Read public_datasources.json to get class information
-            datasource_file = os.path.join(os.path.dirname(__file__),"../../assets/public_datasources.json")
-            with open(datasource_file) as f:
-                data = json.load(f)
-                category_info = data[dataset_name]['crop_types']
-                labels_str = []
-                labels_ids = []
-                for info in category_info:
-                    labels_str.append(category_info[info])
-                    labels_ids.append(int(info))
+            category_info = self.data_sources[dataset_name]['crop_types']
+            labels_str = []
+            labels_ids = []
+            for info in category_info:
+                labels_str.append(category_info[info])
+                labels_ids.append(int(info))
 
-                label2id = dict(zip(labels_str, labels_ids))
+            label2id = dict(zip(labels_str, labels_ids))
 
             # Task 1: Image classification
             dataset_dir = os.path.join(self.data_original_dir, dataset_name)

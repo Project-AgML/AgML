@@ -19,8 +19,8 @@ class PublicDataAPI(object):
     def __init__(self):
         # Read in metadata for data sources file
         self.data_srcs_path = os.path.join(
-            os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
-            'assets', 'public_datasources.json')
+            os.path.dirname(os.path.dirname(__file__)),
+            '_assets', 'public_datasources.json')
         with open(self.data_srcs_path) as f:
             self.data_srcs = json.load(f)
 
@@ -107,6 +107,7 @@ class PublicDataAPI(object):
                                      Key=dataset_name + '.zip', 
                                      Fileobj=data,
                                      Callback=lambda x: self.pg.update(x))
+        self.pg.close()
 
         # Unzip downloaded dataset
         with zipfile.ZipFile(self.dataset_download_path, 'r') as z:

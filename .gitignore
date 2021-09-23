@@ -139,8 +139,15 @@ __MACOSX
 agml/_helios/Helios/
 agml/_helios/output/
 agml/_helios/xmloutput_for_helios/
+<<<<<<< HEAD
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 **/**test*.*
 =======
 >>>>>>> 324bbd3... WIP for Dario
+=======
+=======
+/**test*.*
+>>>>>>> d31ab95... Complete redesign of AgML API and image classification dataloader
+>>>>>>> ceaac51... Complete redesign of AgML API and image classification dataloader

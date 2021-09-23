@@ -26,7 +26,8 @@ def nested_dir_list(fpath):
     dirs = []
     for f in os.scandir(fpath): # type: os.DirEntry
         if f.is_dir():
-            dirs.append(os.path.join(fpath, f.path))
+            if not os.path.basename(f.path).startswith('.'):
+                dirs.append(os.path.join(fpath, f.path))
     if len(dirs) != 0:
         for dir_ in dirs:
             dirs.extend(nested_dir_list(dir_))
@@ -37,7 +38,9 @@ def nested_file_list(fpath):
     files = []
     dirs = nested_dir_list(fpath)
     for dir_ in dirs:
-        files.extend([i for i in os.listdir(dir_) if _is_valid_file(i)])
+        files.extend([os.path.join(dir_, i) for i in os.listdir(dir_)
+                      if _is_valid_file(os.path.join(dir_, i))])
+    return files
 
 def create_dir(dir_):
     """Creates a directory (or does nothing if it exists)."""
