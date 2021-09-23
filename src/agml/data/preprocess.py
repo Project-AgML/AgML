@@ -5,7 +5,7 @@ from tqdm import tqdm
 from shutil import copyfile, copytree
 from utils import get_filelist, get_dirlist, get_dirlist_nested, read_txt_file
 from utils import convert_bbox_to_coco, get_label2id, create_dir
-from utils import create_sub_masks, create_sub_mask_annotation_per_bbox
+from utils import create_sub_masks, create_sub_mask_annotation_per_bbox, mask_annotation_per_bbox
 from utils import get_annpaths, convert_xmls_to_cocojson
 
 from shutil import copyfile, copytree
@@ -81,21 +81,21 @@ class PreprocessData:
 
                     # Read annotations
                     try:
-                        anno_data,_ = read_txt_file(os.path.join(dataset_path, anno_file_name))
+                        anno_lines,_ = read_txt_file(os.path.join(dataset_path, anno_file_name))
                     except:
                         try:
-                            anno_data,_ = read_txt_file(os.path.join(dataset_path, anno_file_name + '.txt'))
+                            anno_lines,_ = read_txt_file(os.path.join(dataset_path, anno_file_name + '.txt'))
                         except:
                             raise
 
                     # Concat fruit name at head of line
-                    for i, anno in enumerate(anno_data):
+                    for i, anno in enumerate(anno_lines):
                         # Change to test path if the text file is test
                         if "test" in anno_file_name and "TRAIN" in anno[0]:
-                            anno_data[i][0] = anno[0].replace("TRAIN", "TEST")
-                        anno_data[i][0] = os.path.join(dataset_path, anno_data[i][0])
+                            anno_lines[i][0] = anno[0].replace("TRAIN", "TEST")
+                        anno_lines[i][0] = os.path.join(dataset_path, anno_lines[i][0])
 
-                    anno_data_all += anno_data
+                    anno_data_all += anno_lines
 
             # Process annotation files
             save_dir_anno = os.path.join(self.data_processed_dir, dataset_name, 'annotations')
@@ -263,14 +263,14 @@ class PreprocessData:
                     anno_line = []
                     anno_path = os.path.join(full_path,anno_file)
                     # Opening annotation file
-                    anno_data,_ = read_txt_file(anno_path,delimiter=',')
+                    anno_lines,_ = read_txt_file(anno_path,delimiter=',')
                     
-                    for i, anno in enumerate(anno_data):
+                    for i, anno in enumerate(anno_lines):
                         new_anno = []
                         # Add bbox count
                         # Update image file path to abs path
-                        new_anno.append(os.path.join(dataset_dir, anno_data[i][0]))
-                        bbox_cnt = int((len(anno_data[i]) - 1) / 4)
+                        new_anno.append(os.path.join(dataset_dir, anno_lines[i][0]))
+                        bbox_cnt = int((len(anno_lines[i]) - 1) / 4)
                         new_anno.append(str(bbox_cnt))
                         for idx in range(bbox_cnt):
                             xmin = int(anno[1 + 4 * idx])
@@ -283,8 +283,8 @@ class PreprocessData:
                             new_anno.append(str(xmin + w))  # xmax
                             new_anno.append(str(ymin + h))  # ymax
                             new_anno.append(str(1)) # label
-                        anno_data[i] = new_anno                      
-                    anno_data_all += anno_data
+                        anno_lines[i] = new_anno                      
+                    anno_data_all += anno_lines
 
             # Process annotation files
             save_dir_anno = os.path.join(self.data_processed_dir, dataset_name, 'annotations')
@@ -347,7 +347,7 @@ class PreprocessData:
                         anno_line = []
                         anno_path = os.path.join(full_path,anno_file)
                         # Opening annotation file
-                        anno_data, headline = read_txt_file(anno_path,delimiter=',',header=True)
+                        anno_lines, headline = read_txt_file(anno_path,delimiter=',',header=True)
                         
                         new_anno = []
                         # Add bbox count
@@ -355,7 +355,7 @@ class PreprocessData:
                         img_name = anno_file.split('/')[-1].replace('.csv','.png')
                         img_parent = full_path.replace("annotations","images")
                         new_anno.append(os.path.join(img_parent, img_name))
-                        bbox_cnt = len(anno_data)
+                        bbox_cnt = len(anno_lines)
                         new_anno.append(str(bbox_cnt))
                         if "mango" in full_path.split('/')[-2]:
                             label = "mango"
@@ -366,7 +366,7 @@ class PreprocessData:
                         else:
                         label = full_path.split('/')[-2][:-1]
 
-                        for i, anno in enumerate(anno_data):
+                        for i, anno in enumerate(anno_lines):
                             
                             if "radius" in headline:
                                 cx = float(anno[1])
@@ -555,5 +555,95 @@ class PreprocessData:
                 extract_num_from_imgid=True
             )
 
+        elif dataset_name == "apple_segmentation_spain":
+
+            # resize the dataset
+            resize = 1.0
+
+            # Read public_datasources.json to get class information
+            datasource_file = os.path.join(os.path.dirname(__file__),"../../assets/public_datasources.json")
+            with open(datasource_file) as f:
+                data = json.load(f)
+                category_info = data[dataset_name]['crop_types']
+                labels_str = []
+                labels_ids = []
+                for info in category_info:
+                    labels_str.append(category_info[info])
+                    labels_ids.append(int(info))
+
+                label2id = dict(zip(labels_str, labels_ids))
+
+
+            dataset_dir = os.path.join(self.data_original_dir, dataset_name)
+
+            # Get image file and xml file
+            all_files = get_filelist(dataset_dir)
+            anno_files = [os.path.join(dataset_dir,x) for x in all_files if "csv" in x]
+
+            # do tasks along folders
+            anno_data_all = []
+            img_ids = []
+            bbox_ids = []
+
+            if len(anno_files) > 0:
+                for anno_file in anno_files:
+                    anno_line = []
+                    anno_path = os.path.join(dataset_dir, anno_file)
+                    # Opening annotation file
+                   
+                    new_anno = []
+                    # Add bbox count
+                    # Update image file path to abs path
+                    img_name = anno_file.replace(".csv",".jpg").replace("mask__","_")
+                    new_anno.append(os.path.join(dataset_dir, img_name))
+                    bbox_cnt = 0
+                    new_anno.append(str(bbox_cnt))
+
+                    anno_data_all.append(new_anno)
+
+                    
+
+            # Process annotation files
+            save_dir_anno = os.path.join(self.data_processed_dir, dataset_name, 'annotations')
+            create_dir(save_dir_anno)
+            output_json_file = os.path.join(save_dir_anno, 'instances.json')
+
+            general_info = {
+                "description": "Fuji-SfM dataset",
+                "url": "http://www.grap.udl.cat/en/publications/Fuji-SfM_dataset.html",
+                "version": "1.0",
+                "year": 2020,
+                "contributor": "Gené-Mola J, Sanz-Cortiella R, Rosell-Polo JR, Morros J-R, Ruiz-Hidalgo J, Vilaplana V, , Gregorio E.",
+                "date_created": "2020/04/24"
+            }
+            
+
+            # Process image files
+            output_img_path = os.path.join(self.data_processed_dir, dataset_name, 'images')
+            create_dir(output_img_path)
+
+            json_dict = convert_bbox_to_coco(anno_data_all,label2id,output_json_file, output_img_path, general_info,None,None,get_label_from_folder=False, resize=resize, add_foldername=False, extract_num_from_imgid=True)
+
+            # Add segmentation for apple
+            is_crowd = 0
+            # Create the annotations
+            # These ids will be automatically increased as we go
+            print("Processing image segmentaitons..")
+            for anno_path in tqdm(anno_files):
+                annotation_id = 100 # Starts with 100
+                # Read CSV
+                anno_lines, headline = read_txt_file(anno_path,delimiter=',',header=True)
+                # print(headline, anno_lines)
+                image_id = int(''.join(filter(str.isdigit, anno_path.split('/')[-1])))
+                for anno_line in anno_lines:
+                    category_id = label2id['apple']                   
+                    annotations = mask_annotation_per_bbox(anno_line, image_id, category_id, annotation_id, is_crowd)
+                    json_dict['annotations'] += annotations
+                    annotation_id += 1
+
+            # Rewrite json file
+            with open(output_json_file, 'w') as f:
+                output_json = json.dumps(json_dict)
+                f.write(output_json)
 
 

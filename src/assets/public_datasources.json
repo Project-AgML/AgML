@@ -362,6 +362,24 @@
             "n_images": "967",
             "docs_url": "http://www.grap.udl.cat/en/publications/KFuji_RGBDS_database.html"
         },
+    "apple_segmentation_spain":{
+            "crop_types": {
+                "1": "apple"
+            },
+                "ml_task": "object_segmentation",
+                "ag_task": "fruit_segmentation",
+                "location": {
+                    "continent": "europe",
+                    "country": "spain"
+                },
+                "sensor_modality": "rgb",
+                "real_synthetic": "real",
+                "platform": "ground",
+                "input_data_format": "jpg",
+                "annotation_format": "coco_json",
+                "n_images": "288",
+                "docs_url": "http://www.grap.udl.cat/en/publications/Fuji-SfM_dataset.html"
+            },
     "friuts_detection_australia":{
         "crop_types": {
             "1": "apple",

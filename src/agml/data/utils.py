@@ -509,3 +509,52 @@ def create_sub_mask_annotation_per_bbox(sub_mask, image_id, category_id, annotat
             annotations.append(annotation)
 
     return annotations
+
+def mask_annotation_per_bbox(anno_line, image_id, category_id, annotation_id, is_crowd):
+    # Find contours (boundary lines) around each sub-mask
+    # Note: there could be multiple contours if the object
+    # is partially occluded. (E.g. an elephant behind a tree)
+ 
+    segmentations = []
+    polygons = []
+    annotations = []
+    mask_data = json.loads(anno_line[5])
+
+    if len(mask_data['all_points_x']) > 3:
+        # Flip from (row, col) representation to (x, y)
+        # and subtract the padding pixel
+        contour = []
+        for i in range(len(mask_data['all_points_x'])):
+            contour.append((mask_data['all_points_x'][i],mask_data['all_points_y'][i]))
+
+        # Make a polygon and simplify it
+        poly = Polygon(contour)
+        poly = poly.simplify(1.0, preserve_topology=False)
+        polygons.append(poly)
+        if 0:
+            segmentation = np.array(poly.exterior.coords).ravel().tolist()
+        else:
+            segmentation = contour
+
+        segmentations.append(segmentation)
+
+        if poly.area > 0:
+            # Combine the polygons to calculate the bounding box and area
+            x, y, max_x, max_y = poly.bounds
+            width = max_x - x
+            height = max_y - y
+            bbox = (x, y, width, height)
+            area = poly.area
+
+            annotation = {
+                'segmentation': [segmentation],
+                'iscrowd': is_crowd,
+                'image_id': image_id,
+                'category_id': category_id,
+                'id': annotation_id,
+                'bbox': bbox,
+                'area': area
+            }
+            annotations.append(annotation)
+
+    return annotations
