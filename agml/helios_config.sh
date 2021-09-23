@@ -15,7 +15,7 @@ fi
 
 # Install Helios
 echo "Installing Helios"
-if [ ! -d "$INSTALL_PATH"/_helios/Helios]; then
+if [ ! -d "$INSTALL_PATH"/_helios/Helios ]; then
   mkdir -p "$INSTALL_PATH"/_helios/Helios
   git clone https://github.com/PlantSimulationLab/Helios.git "$INSTALL_PATH"/_helios/Helios
 else

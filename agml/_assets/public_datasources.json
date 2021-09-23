@@ -1,0 +1,364 @@
+{
+    "bean_disease_uganda": {
+        "crop_types": {
+            "0": "bean"
+        },
+        "ml_task": "image_classification",
+        "ag_task": "disease_classification",
+        "location": {
+            "continent": "africa",
+            "country": "uganda"
+        },
+        "sensor_modality": "rgb",
+        "real_synthetic": "real",
+        "platform": "handheld",
+        "input_data_format": "jpg",
+        "annotation_format": "directory_names",
+        "n_images": "1296",
+        "docs_url": "https://github.com/AI-Lab-Makerere/ibean/"
+    },
+    "carrot_weeds_germany": {
+        "crop_types": {
+            "0": "carrot",
+            "1": "weeds"
+        },
+        "ml_task": "semantic_segmentation",
+        "ag_task": "weed_segmentation",
+        "location": {
+            "continent": "europe",
+            "country": "germany"
+        },
+        "sensor_modality": "rgb",
+        "real_synthetic": "real",
+        "platform": "ground_mobile",
+        "input_data_format": "png",
+        "annotation_format": "image",
+        "n_images": "60",
+        "docs_url": "https://github.com/cwfid/dataset"
+    },
+    "carrot_weeds_macedonia": {
+        "crop_types": {
+            "0": "carrot",
+            "1": "weeds"
+        },
+        "ml_task": "semantic_segmentation",
+        "ag_task": "weed_segmentation",
+        "location": {
+            "continent": "europe",
+            "country": "macedonia"
+        },
+        "sensor_modality": "rgb",
+        "real_synthetic": "real",
+        "platform": "handheld",
+        "input_data_format": "jpg",
+        "annotation_format": "image",
+        "n_images": "39",
+        "docs_url": "https://github.com/lameski/rgbweeddetection"
+    },
+    "plant_seedlings_aarhus": {
+        "crop_types": {
+            "0": "zea_mays",
+            "1": "triticum_aestivum",
+            "2": "beta_vulgaris",
+            "3": "matricaria_perforata",
+            "4": "stellaria_media",
+            "5": "capsella_bursapastoris",
+            "6": "galium_aparine",
+            "7": "sinapsis_arvensis",
+            "8": "chenopodium_album",
+            "9": "geranium_pusillium",
+            "10": "alopecurus_myosuroides",
+            "11": "apera_spicaventi"
+        },
+        "ml_task": "image_classification",
+        "ag_task": "weed_classification",
+        "location": {
+            "continent": "europe",
+            "country": "denmark"
+        },
+        "sensor_modality": "rgb",
+        "real_synthetic": "real",
+        "platform": "ground_fixed",
+        "input_data_format": "png",
+        "annotation_format": "directory_names",
+        "n_images": "5588",
+        "docs_url": "https://vision.eng.au.dk/plant-seedlings-dataset/"
+    },
+    "soybean_weed_uav_brazil": {
+        "crop_types": {
+            "0": "glycine_max",
+            "1": "broadleaf_weeds",
+            "2": "grass_weeds",
+            "3": "bare_soil"
+        },
+        "ml_task": "image_classification",
+        "ag_task": "weed_classification",
+        "location": {
+            "continent": "south_america",
+            "country": "brazil"
+        },
+        "sensor_modality": "rgb",
+        "real_synthetic": "real",
+        "platform": "uav",
+        "input_data_format": "tif",
+        "annotation_format": "directory_names",
+        "docs_url": "https://data.mendeley.com/datasets/3fmjm7ncc6/2",
+        "n_images": "15336"
+    },
+    "sugarcanebillets_damage_usa": {
+        "crop_types": {
+            "0": "cracked",
+            "1": "crushed",
+            "2": "no_buds",
+            "3": "two_buds",
+            "4": "single_damaged_buds",
+            "5": "no_damage"
+        },
+        "ml_task": "image_classification",
+        "ag_task": "damage_classification",
+        "location": {
+            "continent": "north_america",
+            "country": "usa"
+        },
+        "sensor_modality": "rgb",
+        "platform": "ground_fixed",
+        "input_data_format": "bmp",
+        "annotation_format": "directory_names",
+        "docs_url": "https://github.com/plant-ai-biophysics-lab/AgData"
+    },
+    "crop_weeds_greece": {
+        "crop_types": {
+            "0": "black_nightsade",
+            "1": "velvet_leaf",
+            "2": "cotton",
+            "3": "tomato"
+        },
+        "ml_task": "image_classification",
+        "ag_task": "weed_classification",
+        "location": {
+            "continent": "europe",
+            "country": "greece"
+        },
+        "sensor_modality": "rgb",
+        "platform": "handheld",
+        "input_data_format": "jpg",
+        "annotation_format": "directory_names",
+        "n_images": "508",
+        "docs_url": "https://github.com/AUAgroup/early-crop-weed"
+    },
+    "sugarbeet_weeds_synthetic": {
+        "crop_types": {
+            "0": "sugar_beet",
+            "1": "random_weeds"
+        },
+        "ml_task": "semantic_segmentation",
+        "ag_task": "weed_segmentation",
+        "location": {
+            "continent": "none",
+            "country": "none"
+        },
+        "sensor_modality": "rgb",
+        "real_synthetic": "synthetic",
+        "platform": "ground",
+        "input_data_format": "png",
+        "annotation_format": "image",
+        "n_images": "1252",
+        "docs_url": "http://www.diag.uniroma1.it//~labrococo/fds/syntheticdatasets.html"
+    },
+    "sugarbeet_weeds_germany": {
+        "crop_types": {
+            "0": "sugar_beet",
+            "1": "random_weeds"
+        },
+        "ml_task": "semantic_segmentation",
+        "ag_task": "weed_segmentation",
+        "location": {
+            "continent": "none",
+            "country": "none"
+        },
+        "sensor_modality": "rgb",
+        "real_synthetic": "real",
+        "platform": "ground",
+        "input_data_format": "png",
+        "annotation_format": "image",
+        "n_images": "1931",
+        "docs_url": "http://www.diag.uniroma1.it//~labrococo/fds/syntheticdatasets.html"
+    },
+    "rangeland_weeds_australia": {
+        "crop_types": {
+            "0": "no_weeds",
+            "1": "chinee_apple",
+            "2": "lantana",
+            "3": "parkinsonia",
+            "4": "parthenium",
+            "5": "prickly_acacia",
+            "6": "rubber_vine",
+            "7": "siam_weed",
+            "8": "snake_weed"
+        },
+        "ml_task": "image_classification",
+        "ag_task": "weed_classification",
+        "location": {
+            "continent": "australia",
+            "country": "australia"
+        },
+        "sensor_modality": "rgb",
+        "real_synthetic": "real",
+        "platform": "ground",
+        "input_data_format": "jpg",
+        "annotation_format": "directory_names",
+        "n_images": "17509",
+        "docs_url": "https://github.com/AlexOlsen/DeepWeeds"
+    },
+    "fruits_classification_worldwide": {
+        "crop_types": {
+            "0": "avocado",
+            "1": "rockmelon",
+            "2": "apple",
+            "3": "orange",
+            "4": "strawberry",
+            "5": "mango",
+            "6": "capsicum"
+        },
+        "ml_task": "image_classification",
+        "ag_task": "fruit_classification",
+        "location": {
+            "continent": "worldwide",
+            "country": "worldwide"
+        },
+        "sensor_modality": "rgb",
+        "real_synthetic": "real",
+        "platform": "mixed",
+        "input_data_format": "jpg",
+        "annotation_format": "txt",
+        "n_images": "565",
+        "docs_url": "https://drive.google.com/drive/folders/1CmsZb1caggLRN7ANfika8WuPiywo4mBb"
+    },
+    "plant_weeds_denmark": {
+        "crop_types": {
+            "0": "ALOMY",
+            "1": "ANGAR",
+            "2": "APESV",
+            "3": "ARTVU",
+            "4": "AVEFA",
+            "5": "BROST",
+            "6": "BRSNN",
+            "7": "CAPBP",
+            "8": "CENCY",
+            "9": "CHEAL",
+            "10": "CHYSE",
+            "11": "CIRAR",
+            "12": "CONAR",
+            "13": "EPHHE",
+            "14": "EPHPE",
+            "15": "EROCI",
+            "16": "FUMOF",
+            "17": "GALAP",
+            "18": "GERMO",
+            "19": "LAPCO",
+            "20": "LOLMU",
+            "21": "LYCAR",
+            "22": "MATCH",
+            "23": "MATIN",
+            "24": "MELNO",
+            "25": "MYOAR",
+            "26": "PAPRH",
+            "27": "PLALA",
+            "28": "PLAMA",
+            "29": "POAAN",
+            "30": "POLAV",
+            "31": "POLCO",
+            "32": "POLLA",
+            "33": "POLPE",
+            "34": "RUMCR",
+            "35": "SENVU",
+            "36": "SINAR",
+            "37": "SOLNI",
+            "38": "SONOL",
+            "39": "STEME",
+            "40": "THLAR",
+            "41": "URTUR",
+            "42": "VERAR",
+            "43": "VERPE",
+            "44": "VICHI",
+            "45": "VIOAR",
+            "46": "PPPMM",
+            "47": "PPPDD",
+            "48": "1PLAK",
+            "49": "1COMF",
+            "50": "3UNCLK",
+            "51": "SONAS",
+            "52": "OTHER"
+        },
+        "ml_task": "object_detection_image_classification",
+        "ag_task": "plant_detection_classification",
+        "location": {
+            "continent": "europe",
+            "country": "denmark"
+        },
+        "sensor_modality": "rgb",
+        "real_synthetic": "real",
+        "platform": "ground_fixed",
+        "input_data_format": "jpg",
+        "annotation_format": "OPPD",
+        "n_images": "7590",
+        "docs_url": "https://gitlab.au.dk/AUENG-Vision/OPPD"
+    },
+    "leaf_counting_denmark": {
+        "crop_types": {
+            "0": "1",
+            "1": "2",
+            "2": "3",
+            "3": "4",
+            "4": "5",
+            "5": "6",
+            "6": "7",
+            "7": "8",
+            "8": "9+"
+        },
+        "ml_task": "image_classification",
+        "ag_task": "leaf_counting",
+        "platform": "mixed",
+        "input_data_format": "png",
+        "annotation_format": "directory_names",
+        "n_images": "9372",
+        "docs_url": "https://vision.eng.au.dk/leaf-counting-dataset/"
+    },
+    "apple_detection_usa": {
+        "crop_types": {
+            "0": "apple"
+        },
+        "ml_task": "object_detection",
+        "ag_task": "fruit_detection",
+        "location": {
+            "continent": "north_america",
+            "country": "usa"
+        },
+        "sensor_modality": "rgb",
+        "real_synthetic": "real",
+        "platform": "ground",
+        "input_data_format": "png",
+        "annotation_format": "img_name x y w h ...",
+        "n_images": "2290",
+        "docs_url": "http://hdl.handle.net/2376/17721"
+    },
+    "cotton_seedling_counting": {
+        "crop_types": {
+            "0": "Plant",
+            "1": "Weed"
+        },
+        "ml_task": "object_detection",
+        "ag_task": "seedling_counting",
+        "location": {
+            "continent": "worldwide",
+            "country": "worldwide"
+        },
+        "sensor_modality": "rgb",
+        "real_synthetic": "real",
+        "platform": "mixed",
+        "input_data_format": "jpg",
+        "annotation_format": "coco_json",
+        "n_images": "1511",
+        "docs_url": "https://github.com/UGA-BSAIL/deepseedling"
+    }
+}
