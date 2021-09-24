@@ -158,7 +158,7 @@ bool flag=true;
  lidarcloud.syntheticScan( &context);
     timer.toc("Time to run synthetic scan.");
 
- lidarcloud.exportPointCloud( "/home/dguevara/Documents/AgML/src/agml/output/point_cloud/synthetic_scan_0.xyz" );
+ lidarcloud.exportPointCloud( "../output/point_cloud/synthetic_scan_0.xyz" );
     }
     else{ //Image Generation
 
@@ -280,7 +280,7 @@ bool flag=true;
     
     
 
-  sprintf(outfile,"/home/dguevara/Documents/AgML/src/agml/output/images/Image_0/RGB_rendering.jpeg");
+  sprintf(outfile,"../output/images/Image_0/RGB_rendering.jpeg");
     vis_RGB.printWindow(outfile);
 
   
@@ -292,7 +292,7 @@ bool flag=true;
 
     vis.getFramebufferSize(framebufferW,framebufferH);
 
-  sprintf(outfile,"/home/dguevara/Documents/AgML/src/agml/output/images/Image_0/ID_mapping.txt");
+  sprintf(outfile,"../output/images/Image_0/ID_mapping.txt");
     std::ofstream mapping_file(outfile);
     
     int gID=0;
@@ -337,7 +337,7 @@ bool flag=true;
     
     vis.getWindowPixelsRGB( &pixels[0] );
 
-  sprintf(outfile,"/home/dguevara/Documents/AgML/src/agml/output/images/Image_0/pixelID_combined.txt");
+  sprintf(outfile,"../output/images/Image_0/pixelID_combined.txt");
     std::ofstream file(outfile);
     std::vector<int> ID;
     int t=0;
@@ -370,7 +370,7 @@ bool flag=true;
     //rectangular bounding box labels
     if( rectangularlabels ){
 
-  sprintf(outfile,"/home/dguevara/Documents/AgML/src/agml/output/images/Image_0/rectangular_labels.txt");
+  sprintf(outfile,"../output/images/Image_0/rectangular_labels.txt");
       std::ofstream labelfile(outfile);
       
       for( int p=0; p<ID.size(); p++ ){
@@ -445,7 +445,7 @@ bool flag=true;
         
         timer.toc("render");
         
-  sprintf(outfile,"/home/dguevara/Documents/AgML/src/agml/output/images/Image_0/pixelID2_%07d.txt",ID.at(p));
+  sprintf(outfile,"../output/images/Image_0/pixelID2_%07d.txt",ID.at(p));
         
         timer.tic();
         
