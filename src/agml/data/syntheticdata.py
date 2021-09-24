@@ -285,30 +285,33 @@ class HeliosDataGenerator:
 
         camera_ranges = self.camera_param_ranges
 
-        #LiDAR parameters
-        for key in lidar_ranges:
-            #param_vals=lidar_params[key].split(' ')
-            arr=[lidar_ranges[key][i] for i in range(len(lidar_ranges[key]))]
-            string_arr=[str(a) for a in arr]
-            self.lidar_params[key]=' '.join(string_arr)
-        # Mutiple LiDAR
-        LiDARs = []
-        for i in range(len(lidar_ranges['origin'])):
+        if simulation_type == 'lidar':
+            #LiDAR parameters
             for key in lidar_ranges:
-                if key == 'origin':
-                    arr=[lidar_ranges[key][i] for i in range(len(lidar_ranges[key]))]
-                    arr = arr[i]
-                    string_arr=[str(a) for a in arr]
-                    self.lidar_params[key]=' '.join(string_arr)
-                A = copy.deepcopy(self.lidar_params)
-            LiDARs.append(A) 
-        self.lidar_params = LiDARs
-        #Camera parameters
-        for key in camera_ranges:
-            #param_vals=lidar_params[key].split(' ')
-            arr=[camera_ranges[key][i] for i in range(len(camera_ranges[key]))]
-            string_arr=[str(a).replace(',', '').replace('[', ' ').replace(']',' ') for a in arr]
-            self.camera_params[key]=' '.join(string_arr)
+                #param_vals=lidar_params[key].split(' ')
+                arr=[lidar_ranges[key][i] for i in range(len(lidar_ranges[key]))]
+                string_arr=[str(a) for a in arr]
+                self.lidar_params[key]=' '.join(string_arr)
+            # Mutiple LiDAR
+            LiDARs = []
+            for i in range(len(lidar_ranges['origin'])):
+                for key in lidar_ranges:
+                    if key == 'origin':
+                        arr=[lidar_ranges[key][i] for i in range(len(lidar_ranges[key]))]
+                        arr = arr[i]
+                        string_arr=[str(a) for a in arr]
+                        self.lidar_params[key]=' '.join(string_arr)
+                    A = copy.deepcopy(self.lidar_params)
+                LiDARs.append(A) 
+            self.lidar_params = LiDARs
+
+        if simulation_type == 'rgb':
+            #Camera parameters
+            for key in camera_ranges:
+                #param_vals=lidar_params[key].split(' ')
+                arr=[camera_ranges[key][i] for i in range(len(camera_ranges[key]))]
+                string_arr=[str(a).replace(',', '').replace('[', ' ').replace(']',' ') for a in arr]
+                self.camera_params[key]=' '.join(string_arr)
 
         for n in range(n_imgs):
             params=self.canopy_params[canopy_type]

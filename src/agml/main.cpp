@@ -158,7 +158,7 @@ bool flag=true;
  lidarcloud.syntheticScan( &context);
     timer.toc("Time to run synthetic scan.");
 
- lidarcloud.exportPointCloud( "/home/dguevara/Documents/AgML/src/agml/output/point_cloud/synthetic_scan_2.xyz" );
+ lidarcloud.exportPointCloud( "/home/dguevara/Documents/AgML/src/agml/output/point_cloud/synthetic_scan_0.xyz" );
     }
     else{ //Image Generation
 
