@@ -399,7 +399,7 @@
                 "n_images": "288",
                 "docs_url": "http://www.grap.udl.cat/en/publications/Fuji-SfM_dataset.html"
             },
-    "friuts_detection_australia":{
+    "fruits_detection_australia":{
         "crop_types": {
             "1": "apple",
             "2": "mango",
@@ -464,11 +464,6 @@
             "input_data_format": "jpg",
             "annotation_format": "coco_json",
             "n_images": "1730",
-            "docs_url": "https://researchdata.edu.au/mangoyolo-set/1697505",
-            "platform": "mixed",
-            "input_data_format": "jpg",
-            "annotation_format": "coco_json",
-            "n_images": "1511",
-            "docs_url": "https://github.com/UGA-BSAIL/deepseedling"
+            "docs_url": "https://researchdata.edu.au/mangoyolo-set/1697505"
     }
 }

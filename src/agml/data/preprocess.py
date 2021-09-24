@@ -310,7 +310,7 @@ class PreprocessData:
 
             convert_bbox_to_coco(anno_data_all,label2id,output_json_file, output_img_path, general_info,None,None,get_label_from_folder=False, resize=resize, add_foldername=True)
 
-        elif dataset_name == "friuts_detection_australia":
+        elif dataset_name == "fruits_detection_australia":
             
             # resize the dataset
             resize = 1.0
