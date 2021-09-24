@@ -43,7 +43,6 @@ install_helios()
 class HeliosDataGenerator(object):
 
     def __init__(self, path_helios_dir=HELIOS_PATH):
-        
         self.path_canopygen_header = os.path.join(
             path_helios_dir, 'plugins/canopygenerator/include/CanopyGenerator.h')
         self.path_canopygen_cpp = os.path.join(
@@ -279,6 +278,7 @@ class HeliosDataGenerator(object):
             canopy_params_filtered[''] = self.camera_params
 
         canopy_params_filtered = {'helios': canopy_params_filtered}
+
         if not os.path.exists(os.path.join(os.path.dirname(os.path.dirname(__file__)), '_helios/xmloutput_for_helios')):
             os.makedirs(os.path.join(os.path.dirname(os.path.dirname(__file__)), '_helios/xmloutput_for_helios'))
 
@@ -481,6 +481,30 @@ class HeliosDataGenerator(object):
                 f.writelines(main_cpp)
 
             # System call to helios @DARIO
+            # current_directory = os.getcwd()
+            helios_directory = os.path.join(os.path.dirname(os.path.dirname(__file__)), '_helios')
+            build_dir = os.path.join(helios_directory, 'build')
+            output_dir = os.path.join(helios_directory, 'output')
+            point_cloud_dir = os.path.join(helios_directory, 'output/point_cloud/')
+            images_dir = os.path.join(helios_directory, 'output/images/')
+
+            if not os.path.exists(build_dir):
+                os.makedirs(build_dir)
+            
+            if not os.path.exists(output_dir):
+                os.makedirs(output_dir)
+
+            if simulation_type == 'lidar':
+                if not os.path.exists(point_cloud_dir):
+                    os.makedirs(point_cloud_dir)
+
+            if simulation_type == 'rgb':
+                if not os.path.exists(images_dir):
+                    os.makedirs(images_dir)
+
+            exe = os.path.join(build_dir, 'executable')
+
+
             cmake_args = ['-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=' + build_dir]
             cmake_args += ['-G', 'Unix Makefiles']
             # current_directory = os.getcwd()
@@ -520,9 +544,9 @@ class HeliosDataGenerator(object):
         """
 
         if annotation_format == 'object_detection':
-            None  # YOLO @PRANAV
+            pass  # YOLO @PRANAV
         if annotation_format == 'semantic_segmentation':
-            None  # single channel + mapping @PRANAV
+            pass  # single channel + mapping @PRANAV
         if annotation_format == 'instance_segmentation' or annotation_format == 'object_detection':
 
             # data_path = sorted(os.listdir(data_path))
@@ -588,9 +612,9 @@ class HeliosDataGenerator(object):
 
             # COCO json @PRANAV
         if annotation_format == 'panoptic_segmentation':
-            None
+            pass
         if annotation_format == 'regression':
-            None
+            pass
 
     def generate_npy_arr(self, Frames_path, frames_view_path):
 
