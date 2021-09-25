@@ -10,7 +10,6 @@ from tqdm import tqdm
 
 from shutil import copyfile, copytree
 from tqdm import tqdm
-
 from PIL import Image
 
 from agml.utils.io import create_dir, nested_dir_list, get_dir_list, get_file_list
@@ -815,7 +814,6 @@ class PreprocessData:
                 cv2.imwrite(out_image_path.replace('.png', '.jpg'), image)
                 cv2.imwrite(out_label_path, label)
             
-
 
 
 
