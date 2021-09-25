@@ -1,5 +1,6 @@
 import os
 import abc
+import json
 
 import cv2
 import numpy as np
@@ -130,7 +131,15 @@ class AgMLDataLoader(TorchDataset, TFSequenceDataset):
         """
         return self._info
 
+    def shuffle(self):
+        """Shuffles the data in this loader."""
+        self._reshuffle()
+
     #### OVERWRITTEN PARAMETERS BY BASE CLASSES ####
+
+    @abc.abstractmethod
+    def _reshuffle(self, *args, **kwargs):
+        raise NotImplementedError()
 
     @abc.abstractmethod
     def split(self, *args, **kwargs):
@@ -142,6 +151,14 @@ class AgMLDataLoader(TorchDataset, TFSequenceDataset):
 
     @abc.abstractmethod
     def export_contents(self, *args, **kwargs):
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def torch(self, *args, **kwargs):
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def tensorflow(self, *args, **kwargs):
         raise NotImplementedError()
 
 
@@ -173,9 +190,6 @@ class AgMLImageClassificationDataLoader(AgMLDataLoader):
 
         self._preprocessing_enabled = True
         self._transform_pipeline = None
-
-    def __iter__(self):
-        return iter(self)
 
     def __getitem__(self, indx):
         """Returns one element or one batch of data from the loader."""
@@ -634,7 +648,7 @@ class AgMLImageClassificationDataLoader(AgMLDataLoader):
         _check_image_classification_transform(preprocessing)
 
         # Create the dataset object with relevant preprocessing.
-        def _preprocess_fn(path, label):
+        def _image_load_preprocess_fn(path, label):
             image = tf.image.decode_jpeg(tf.io.read_file(path))
             image = tf.cast(tf.image.resize(image, image_size), tf.int32)
             return image, label
@@ -642,7 +656,7 @@ class AgMLImageClassificationDataLoader(AgMLDataLoader):
         images, labels = tf.constant(images), tf.constant(labels)
         ds = tf.data.Dataset.from_tensor_slices((images, labels))
         ds = ds.shuffle(len(images))
-        ds = ds.map(_preprocess_fn)
+        ds = ds.map(_image_load_preprocess_fn)
         if preprocessing is not None:
             def _map_preprocessing_fn(image, label):
                 return preprocessing(image), label

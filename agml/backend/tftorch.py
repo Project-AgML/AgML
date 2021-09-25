@@ -5,6 +5,7 @@ importing of either library (which takes a significant amount of time).
 """
 import types
 import inspect
+import logging
 import importlib
 import functools
 
@@ -69,25 +70,23 @@ def set_backend(backend):
                 "TensorFlow not found on system, cannot be used as "
                 "backend. Try running `pip install tensorflow`.")
         _BACKEND = 'tensorflow'
+        log("Switched backend to TensorFlow.")
     elif backend in ['torch', 'pytorch'] and _BACKEND != 'torch':
         if not _HAS_TORCH:
             raise ImportError(
                 "PyTorch not found on system, cannot be used as "
                 "backend. Try running `pip install torch`.")
         _BACKEND = 'torch'
+        log("Switched backend to PyTorch.", level = logging.INFO)
     _set_global_torch_tf_datasets()
 
 def _was_backend_changed():
     """Returns whether the backend has been manually changed."""
     return _USER_SET_BACKEND
 
-# Ported from https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/util/lazy_loader.py.
+# Ported from https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/util/lazy_loader.py
 class LazyLoader(types.ModuleType):
-  """Lazily import a module, mainly to avoid pulling in large dependencies.
-
-  `contrib`, and `ffmpeg` are examples of modules that are large and not always
-  needed, and this allows them to only be loaded when they are used.
-  """
+  """Lazily import a module, mainly to avoid pulling in large dependencies.  """
   def __init__(self, local_name, parent_module_globals, name):
     self._local_name = local_name
     self._parent_module_globals = parent_module_globals
@@ -124,8 +123,6 @@ tf = LazyLoader('tensorflow', globals(), 'tensorflow')
 def _convert_image_to_torch(image):
     """Converts an image (np.ndarray) to a torch Tensor."""
     return torch.from_numpy(image).long()
-
-
 
 ######### AGMLDATALOADER METHODS #########
 
