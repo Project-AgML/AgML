@@ -1,30 +1,37 @@
 # AgML
+
+AgML is a comprehensive library for agricultural deep learning.
+
+
+
 Currently AgML provides access to publicly available and synthetic agricultural datasets for deep learning model training. In the future, we aim to provide full pipelines for data access, model training, and evaluation.
 
-## Downloading publicly available agricultural datasets
-### Getting started
+## AgML Data Sources
+
+### Getting Started
 All of the publicly available datasources available in AgML, along with their associated meta-data, are described within [`data_sources.json`](/src/assets/data_sources.json). 
 
 You can also view this information, along with available datasets, via the public data API.
 
-```
-from agdata import agdata
-adapi = agdata.AgDataAPI()
-adapi.data_srcs
-```
-
-You can see the specific dataset names available like this:
-
-```
-adapi.data_srcs.keys()
+```python
+import agml
+print(agml.public_data_sources())
 ```
 
-```
-output:
-> dict_keys(['bean_disease_uganda', 'carrot_weeds_germany', 'carrot_weeds_macedonia', 'plant_seedlings_aarhus', 'soybean_weed_uav_brazil'])
+You can filter the sources by a number of different filters, such as the ML or agricultural task, the location
+the data was collected, or the number of images:
+
+```python
+# Get all of the data sources with over 1,000 images.
+print(agml.public_data_sources(n_images = '>1000'))
+
+# Get all of the object detection data sources.
+print(agml.public_data_sources(ml_task = 'object_detection'))
 ```
 
-You can download the [`bean_disease_uganda`](https://github.com/AI-Lab-Makerere/ibean/) dataset like this:
+The core of AgML's public data pipeline is the [`AgMLDataLoader`](/agml/data/loader.py), which provides direct
+access to the public data sources, and provides integration methods to use data sources in a variety of methods, including
+an AgML training pipeline, but also existing TensorFlow or PyTorch pipelines.
 
 ```
 adapi.download_dataset(dataset_name='bean_disease_uganda', dest_dir='DESTINATION_DIRECTORY_PATH_HERE')
