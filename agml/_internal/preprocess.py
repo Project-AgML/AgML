@@ -5,17 +5,19 @@ import shutil
 
 import cv2
 import numpy as np
+import pandas as pd
 from tqdm import tqdm
 
 from shutil import copyfile, copytree
 from tqdm import tqdm
 
-import json
 from PIL import Image
 
 from agml.utils.io import create_dir, nested_dir_list, get_dir_list, get_file_list
 from agml.utils.coco import read_txt_file, get_image_info, get_label2id
-from agml.utils.coco import convert_bbox_to_coco, get_coco_annotation_from_obj
+from agml.utils.coco import convert_bbox_to_coco, get_coco_annotation_from_obj, convert_xmls_to_cocojson
+from agml.utils.coco import mask_annotation_per_bbox
+from agml.utils.coco import create_sub_masks, create_sub_mask_annotation_per_bbox, create_sub_mask_annotation
 from agml.utils.general import load_public_sources
 
 class PreprocessData:
@@ -342,7 +344,7 @@ class PreprocessData:
             resize = 1.0
 
             # Read public_datasources.json to get class information
-            datasource_file = os.path.join(os.path.dirname(__file__),"../../assets/public_datasources.json")
+            datasource_file = os.path.join(os.path.dirname(__file__), "../_assets/public_datasources.json")
             with open(datasource_file) as f:
                 data = json.load(f)
                 category_info = data[dataset_name]['crop_types']
@@ -475,7 +477,7 @@ class PreprocessData:
             resize = 1.0
 
             # Read public_datasources.json to get class information
-            datasource_file = os.path.join(os.path.dirname(__file__),"../../assets/public_datasources.json")
+            datasource_file = os.path.join(os.path.dirname(__file__), "../_assets/public_datasources.json")
             with open(datasource_file) as f:
                 data = json.load(f)
                 category_info = data[dataset_name]['crop_types']
@@ -492,7 +494,7 @@ class PreprocessData:
             ann_dir = os.path.join(dataset_dir, "preprocessed data/square_annotations1")
 
             # Get image file and xml file
-            all_files = get_filelist(ann_dir)
+            all_files = get_file_list(ann_dir)
             anno_files = [os.path.join(ann_dir,x) for x in all_files if "xml" in x]
             img_files = [x.replace(".xml","hr.jpg").replace("square_annotations1","images") for x in anno_files]
 
@@ -531,7 +533,7 @@ class PreprocessData:
             resize = 1.0
 
             # Read public_datasources.json to get class information
-            datasource_file = os.path.join(os.path.dirname(__file__),"../../assets/public_datasources.json")
+            datasource_file = os.path.join(os.path.dirname(__file__), "../_assets/public_datasources.json")
             with open(datasource_file) as f:
                 data = json.load(f)
                 category_info = data[dataset_name]['crop_types']
@@ -550,7 +552,7 @@ class PreprocessData:
             ann_dir = os.path.join(dataset_dir, "VOCDevkit/VOC2007/Annotations")
 
             # Get image file and xml file
-            all_files = get_filelist(ann_dir)
+            all_files = get_file_list(ann_dir)
             anno_files = [os.path.join(ann_dir,x) for x in all_files if "xml" in x]
             img_files = [x.replace(".xml",".jpg").replace("Annotations","JPEGImages") for x in anno_files]
 
@@ -590,7 +592,7 @@ class PreprocessData:
             resize = 1.0
 
             # Read public_datasources.json to get class information
-            datasource_file = os.path.join(os.path.dirname(__file__),"../../assets/public_datasources.json")
+            datasource_file = os.path.join(os.path.dirname(__file__), "../_assets/public_datasources.json")
             with open(datasource_file) as f:
                 data = json.load(f)
                 category_info = data[dataset_name]['crop_types']
@@ -606,7 +608,7 @@ class PreprocessData:
             dataset_dir = os.path.join(self.data_original_dir, dataset_name)
 
             # Get image file and xml file
-            all_files = get_filelist(dataset_dir)
+            all_files = get_file_list(dataset_dir)
             anno_files = [os.path.join(dataset_dir,x) for x in all_files if "csv" in x]
 
             # do tasks along folders
@@ -657,7 +659,7 @@ class PreprocessData:
             is_crowd = 0
             # Create the annotations
             # These ids will be automatically increased as we go
-            print("Processing image segmentaitons..")
+            print("Processing image segmentations..")
             for anno_path in tqdm(anno_files):
                 annotation_id = 100 # Starts with 100
                 # Read CSV
