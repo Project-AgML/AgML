@@ -3,9 +3,9 @@ import sys
 import json
 import shutil
 
+import cv2
 import numpy as np
 from tqdm import tqdm
-from shutil import copyfile, copytree
 
 from agml.utils.io import create_dir, nested_dir_list, get_dir_list, get_file_list
 from agml.utils.coco import read_txt_file, get_image_info, get_label2id
@@ -219,7 +219,7 @@ class PreprocessData:
                 for folder in plant_folders:
                     # copy cropped image folders into classification
                     src = os.path.join(source_dir, folder)
-                    copytree(src, os.path.join(output_img_path, folder))
+                    shutil.copytree(src, os.path.join(output_img_path, folder))
                 print("Copied {} to {}.".format(src, os.path.join(output_img_path,folder)))
 
         elif dataset_name == "apple_detection_usa":
@@ -385,5 +385,66 @@ class PreprocessData:
             # Zip the dataset
             shutil.make_archive(
                 processed_dir, "zip", os.path.dirname(processed_dir))
+
+        elif dataset_name == 'apple_flower_segmentation':
+            # Get all of the relevant data.
+            dataset_dir = os.path.join(self.data_original_dir, dataset_name)
+            apple_a_dir = os.path.join(dataset_dir, 'FlowerImages')
+            apple_a_images = os.listdir(apple_a_dir)
+            apple_a_label_dir = os.path.join(dataset_dir, 'AppleA_Labels')
+            apple_a_labels = os.listdir(apple_a_label_dir)
+            apple_b_dir = os.path.join(dataset_dir, 'AppleB')
+            apple_b_images = os.listdir(apple_b_dir)
+            apple_b_label_dir = os.path.join(dataset_dir, 'AppleB_Labels')
+            apple_b_labels = os.listdir(apple_b_label_dir)
+
+            # Map image filenames with their corresponding labels.
+            fname_map_a, fname_map_b = {}, {}
+            for fname in apple_a_images:
+                fname_id = str(int(float(
+                    os.path.splitext(fname)[0].split('_')[-1]))) + ".png"
+                if fname_id in apple_a_labels:
+                    fname_map_a[os.path.join(apple_a_dir, fname)] \
+                        = os.path.join(apple_a_label_dir, fname_id)
+            for fname in apple_b_images:
+                fname_id = str(int(float(
+                    os.path.splitext(fname)[0].split('_')[-1]))) + ".png"
+                if fname_id in apple_b_labels:
+                    fname_map_b[os.path.join(apple_b_dir, fname)] \
+                        = os.path.join(apple_b_label_dir, fname_id)
+
+            # Process and move the images.
+            processed_dir = os.path.join(
+                self.data_processed_dir, dataset_name)
+            os.makedirs(processed_dir, exist_ok = True)
+            processed_image_dir = os.path.join(processed_dir, 'images')
+            os.makedirs(processed_image_dir, exist_ok = True)
+            processed_annotation_dir = os.path.join(processed_dir, 'annotations')
+            os.makedirs(processed_annotation_dir, exist_ok = True)
+            for image_path, label_path in tqdm(
+                    fname_map_a.items(), desc = "Processing Part A", file = sys.stdout):
+                image = cv2.resize(cv2.imread(image_path), (2074, 1382))
+                label = cv2.resize(cv2.imread(label_path), (2074, 1382)) // 255
+                label_path = os.path.basename(label_path)
+                out_image_path = os.path.join(processed_image_dir, label_path)
+                out_label_path = os.path.join(processed_annotation_dir, label_path)
+                cv2.imwrite(out_image_path.replace('.png', '.jpg'), image)
+                cv2.imwrite(out_label_path, label)
+            for image_path, label_path in tqdm(
+                    fname_map_b.items(), desc = "Processing Part B", file = sys.stdout):
+                image = cv2.resize(cv2.imread(image_path), (2074, 1382))
+                label = cv2.resize(cv2.imread(label_path), (2074, 1382)) // 255
+                label_path = os.path.basename(label_path)
+                out_image_path = os.path.join(processed_image_dir, label_path)
+                out_label_path = os.path.join(processed_annotation_dir, label_path)
+                cv2.imwrite(out_image_path.replace('.png', '.jpg'), image)
+                cv2.imwrite(out_label_path, label)
+            
+
+
+if __name__ == '__main__':
+    p = PreprocessData('../../data_new')
+    p.preprocess('apple_flower_segmentation')
+
 
 

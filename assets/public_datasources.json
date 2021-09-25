@@ -465,5 +465,24 @@
             "annotation_format": "coco_json",
             "n_images": "1730",
             "docs_url": "https://researchdata.edu.au/mangoyolo-set/1697505"
-    }
+    },
+    "apple_flower_segmentation":{
+            "crop_types":{
+                    "1": "apple"
+                }
+            ,
+            "ml_task": "semantic_segmentation",
+            "ag_task": "flower_segmentation",
+            "location":{
+                    "continent": "north_america",
+                    "country": "usa"
+                },
+            "sensor_modality": "rgb",
+            "real_synthetic": "real",
+            "platform": "ground",
+            "input_data_format": "jpg",
+            "annotation_format": "image",
+            "n_images": "148",
+            "docs_url": "https://data.nal.usda.gov/dataset/data-multi-species-fruit-flower-detection-using-refined-semantic-segmentation-network"
+        }
 }
