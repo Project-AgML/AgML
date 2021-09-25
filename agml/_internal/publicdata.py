@@ -8,7 +8,7 @@ import boto3
 import botocore.exceptions
 from tqdm import tqdm
 
-class PublicDataAPI(object):
+class InternalAgMLS3API(object):
     """
     A public API for working with AgML data.
 
@@ -51,7 +51,7 @@ class PublicDataAPI(object):
 
         # Setup progress bar
         self.pg = tqdm(
-            total=os.stat(os.path.join(dataset_dir, dataset_name + '.zip')).st_size,
+            total=os.stat(os.path.abspath(os.path.join(dataset_dir, dataset_name + '.zip'))).st_size,
             file = sys.stdout, desc = f"Uploading {dataset_name}")
 
         # Upload data to agdata-data bucket

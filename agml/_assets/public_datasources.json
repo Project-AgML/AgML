@@ -185,7 +185,7 @@
     },
     "rangeland_weeds_australia": {
         "crop_types": {
-            "1": "no_weeds",
+            "1": "negative",
             "2": "chinee_apple",
             "3": "lantana",
             "4": "parkinsonia",

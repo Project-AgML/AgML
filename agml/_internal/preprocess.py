@@ -46,27 +46,23 @@ class PreprocessData:
             pass
 
         elif dataset_name == 'rangeland_weeds_australia':
+            # Get the file information.
             dataset_dir = os.path.join(self.data_original_dir, dataset_name)
-            imgs_dir = os.path.join(dataset_dir, 'images')
-            labels_dir = os.path.join(dataset_dir, 'labels')
-            labels_path = os.path.join(labels_dir, 'labels.csv')
-            labels_unique = []
+            images = get_file_list(os.path.join(dataset_dir, 'images'))
+            df = pd.read_csv(os.path.join(dataset_dir, 'labels.csv'))
 
-            # Make directories with class names
-            with open(labels_path) as f:
-                next(f)
-                labels = [row.split(',')[2] for row in f]
-
-            with open(labels_path) as f:
-                next(f)
-                img_names = [row.split(',')[0].strip().replace(' ', '_') for row in f]
-
-            # Read through list, keep only unique classes, and create directories for each class name
-            for k, label in enumerate(labels):
-                if label not in labels_unique:
-                    labels_unique.append(label)
-                    os.mkdir(labels_dir + label)
-                os.rename(imgs_dir + img_names[k], labels_dir + label + '/' + img_names[k])
+            # Construct the new structure.
+            processed_dir = os.path.join(self.data_processed_dir, dataset_name)
+            unique_labels = np.unique(df['Species'])
+            for unique_label in unique_labels:
+                os.makedirs(os.path.join(
+                    processed_dir, unique_label.title()), exist_ok = True)
+            for file in tqdm(images, desc = "Moving Images", file = sys.stdout):
+                save_dir = df.loc[df['Filename'] == file]['Species'].values[0].title()
+                shutil.copyfile(
+                    os.path.join(dataset_dir, 'images', file),
+                    os.path.join(processed_dir, save_dir, file)
+                )
 
         elif dataset_name == 'fruits_classification_worldwide':
             dataset_dir = os.path.join(self.data_original_dir, dataset_name, 'datasets')
