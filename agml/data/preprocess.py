@@ -442,9 +442,5 @@ class PreprocessData:
             
 
 
-if __name__ == '__main__':
-    p = PreprocessData('../../data_new')
-    p.preprocess('apple_flower_segmentation')
-
 
 
