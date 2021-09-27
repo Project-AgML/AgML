@@ -23,10 +23,11 @@ def download_dataset(dataset_name, dest_dir):
 
     # Setup progress bar
     try:
+        ds_size = float(s3_resource.ObjectSummary(
+            bucket_name = 'agdata-data', key = dataset_name + '.zip').size)
         pg = tqdm(
-            total = float(s3_resource.ObjectSummary(
-                bucket_name = 'agdata-data', key = dataset_name + '.zip').size),
-            file = sys.stdout, desc = f"Downloading {dataset_name}")
+            total = ds_size, file = sys.stdout,
+            desc = f"Downloading {dataset_name} (size = {round(ds_size / 1000000, 1)} MB)")
     except botocore.exceptions.ClientError as ce:
         if "Not Found" in str(ce):
             raise ValueError(
