@@ -156,12 +156,6 @@ _set_global_torch_tf_datasets()
 
 ######### `AgMLImageClassificationDataLoader.transform()` #########
 
-def _torch_preprocessing_base(transforms):
-    def _torch_preprocessing_base_internal(image):
-        """Base method for torchvision transformations."""
-        return transforms(_convert_image_to_torch(image))
-    return _torch_preprocessing_base_internal
-
 def _check_image_classification_transform(transform):
     """Check the image classification transform pipeline."""
     if transform is None:
@@ -216,3 +210,31 @@ def _torch_check_torchvision_preprocessing_pipeline(transforms):
                     "preprocessing model while backend was set to PyTorch.")
     return transforms
 
+
+######### `AgMLSemanticSegmentationDataLoader.transform()` #########
+
+def _check_semantic_segmentation_transform(transform, target_transform, dual_transform):
+    """Checks the semantic segmentation transform pipeline."""
+    if transform is None and target_transform is None and dual_transform is None:
+        return None, None, None
+    if dual_transform is not None:
+        _check_image_classification_transform(dual_transform)
+        if isinstance(transform, types.FunctionType) and target_transform is None:  # noqa
+            _check_function_type_transform_segmentation(transform)
+    else:
+        old_backend = get_backend()
+        _check_image_classification_transform(transform)
+        current_backend = get_backend()
+        _check_image_classification_transform(target_transform)
+        new_backend = get_backend()
+        if old_backend == new_backend and old_backend != current_backend:
+            raise ValueError(
+                "Transform and target transform use methods from different backends.")
+        return transform, target_transform
+
+def _check_function_type_transform_segmentation(transform):
+    if len(inspect.signature(transform)) != 2:  # noqa
+        raise ValueError(
+            "If passing a function for `transform`, it should accept "
+            "two arguments, the input image and annotation.")
+    return transform

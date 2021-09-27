@@ -170,6 +170,10 @@ class AgMLDataLoader(TorchDataset, TFSequenceDataset):
         raise NotImplementedError()
 
     @abc.abstractmethod
+    def transform(self, *args, **kwargs):
+        raise NotImplementedError()
+
+    @abc.abstractmethod
     def export_contents(self, *args, **kwargs):
         raise NotImplementedError()
 

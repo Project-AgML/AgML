@@ -1,7 +1,36 @@
+"""
+A tools module for `agml.viz`, which also serves as almost a
+mini-backend to control ops such as the colormap being used.
+"""
+import os
+import json
+import functools
+
 import numpy as np
 from PIL import Image
 
+import matplotlib.colors as mcolors
+
 from agml.backend.tftorch import tf, torch
+
+# Sets the colormaps used in the other `agml.viz` methods.
+@functools.cache
+def _load_colormaps():
+    with open(os.path.join(os.path.dirname(os.path.dirname(__file__)),
+                           '_assets', 'viz_colormaps.json'), 'r') as f:
+        cmaps = json.load(f)
+    ret_dict = {}
+    for map_ in cmaps.items():
+        ret_dict[map_[0]] = {int(k): v for k, v in map_[1].items()}
+    return ret_dict
+
+_COLORMAPS = _load_colormaps()
+_COLORMAP_CHOICE = 'default'
+
+def get_colormap():
+    """Returns the current AgML colormap."""
+    global _COLORMAPS, _COLORMAP_CHOICE
+    return _COLORMAPS[_COLORMAP_CHOICE]
 
 def format_image(img):
     """Formats an image to be used in a Matplotlib visualization.
@@ -18,7 +47,7 @@ def format_image(img):
 
     Returns
     -------
-     An np.ndarray formatted correctly for a Matplotlib visualization.
+    An np.ndarray formatted correctly for a Matplotlib visualization.
     """
     if isinstance(img, Image.Image):
         img = np.array(img.getdata())
@@ -34,6 +63,12 @@ def format_image(img):
             f"tf.Tensor, or PIL.Image, got {type(img)}.")
 
     # Convert channels_first to channels_last.
+    if img.ndim == 4:
+        if img.shape[0] > 1:
+            raise ValueError(
+                f"Got a batch of images with shape {img.shape}, "
+                f"expected at most a batch of one image.")
+        img = np.squeeze(img)
     if img.shape[0] <= 3:
         img = np.transpose(img, (1, 2, 0))
 

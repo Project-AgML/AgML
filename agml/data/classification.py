@@ -5,7 +5,7 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 
 from agml._internal.downloads import download_dataset  # noqa
-from agml.backend.tftorch import set_backend
+from agml.backend.tftorch import set_backend, get_backend
 from agml.backend.tftorch import (
     _check_image_classification_transform, TorchDataset, TFSequenceDataset  # noqa
 )
@@ -324,7 +324,7 @@ class AgMLImageClassificationDataLoader(AgMLDataLoader):
 
         This method exports the internal contents of the actual dataset: a
         mapping between image file paths and their image classification labels.
-        Data can then be processed as desired,and used in other pipelines.
+        Data can then be processed as desired, and used in other pipelines.
 
         Parameters
         ---------
@@ -404,6 +404,9 @@ class AgMLImageClassificationDataLoader(AgMLDataLoader):
         from torch.utils.data import Dataset, DataLoader
         set_backend('torch')
         _check_image_classification_transform(preprocessing)
+        if get_backend() != 'torch':
+            raise ValueError(
+                "Using a non-PyTorch transform for `AgMLDataLoader.torch()`.")
 
         # Create the simplified `torch.utils.data.Dataset` subclass.
         class _DummyDataset(Dataset):
@@ -478,6 +481,9 @@ class AgMLImageClassificationDataLoader(AgMLDataLoader):
         import tensorflow as tf
         set_backend('tensorflow')
         _check_image_classification_transform(preprocessing)
+        if get_backend() != 'tensorflow':
+            raise ValueError(
+                "Using a non-TensorFlow transform for `AgMLDataLoader.tensorflow()`.")
 
         # Create the dataset object with relevant preprocessing.
         def _image_load_preprocess_fn(path, label):
@@ -494,3 +500,4 @@ class AgMLImageClassificationDataLoader(AgMLDataLoader):
                 return preprocessing(image), label
             ds = ds.map(_map_preprocessing_fn)
         return ds
+
