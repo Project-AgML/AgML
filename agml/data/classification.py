@@ -4,7 +4,6 @@ import cv2
 import numpy as np
 from sklearn.model_selection import train_test_split
 
-from agml._internal.downloads import download_dataset  # noqa
 from agml.backend.tftorch import set_backend, get_backend
 from agml.backend.tftorch import (
     _check_image_classification_transform, TorchDataset, TFSequenceDataset  # noqa

@@ -55,7 +55,13 @@ class AgMLDataLoader(TorchDataset, TFSequenceDataset):
                 import AgMLSemanticSegmentationDataLoader
             return AgMLSemanticSegmentationDataLoader(
                 dataset, skip_init = True, **kwargs)
-        return super(AgMLDataLoader, cls).__new__(cls)
+        elif ml_task_type == 'object_detection':
+            from agml.data.detection import \
+                AgMLObjectDetectionDataLoader
+            return AgMLObjectDetectionDataLoader(
+                dataset, skip_init = True, **kwargs)
+        raise ValueError(
+            f"Unsupported ML task: {ml_task_type}. Please report this error.")
 
     def __init__(self, dataset, **kwargs):
         # Setup and find the dataset.

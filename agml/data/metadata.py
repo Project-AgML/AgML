@@ -34,7 +34,7 @@ class DatasetMetadata(object):
     def data(self):
         return self._metadata
 
-    @functools.cache
+    @functools.lru_cache(maxsize = None)
     def _load_source_info(self, name):
         """Loads the data source metadata into the class."""
         source_info = load_public_sources()

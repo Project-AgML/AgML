@@ -15,7 +15,7 @@ from agml.utils.logging import log
 _HAS_TENSORFLOW: bool
 _HAS_TORCH: bool
 
-@functools.cache
+@functools.lru_cache(maxsize = None)
 def _check_tf_torch():
     global _HAS_TENSORFLOW, _HAS_TORCH
     try:

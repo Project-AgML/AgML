@@ -5,7 +5,6 @@ import cv2
 import numpy as np
 from sklearn.model_selection import train_test_split
 
-from agml._internal.downloads import download_dataset # noqa
 from agml.backend.tftorch import set_backend, get_backend
 from agml.backend.tftorch import (
     _check_semantic_segmentation_transform, _convert_image_to_torch # noqa
@@ -89,6 +88,7 @@ class AgMLSemanticSegmentationDataLoader(AgMLDataLoader):
                 = os.path.join(annotation_dir, annotation_path)
         self._image_paths = list(image_annotation_map.keys())
         self._data = image_annotation_map
+        self._reshuffle()
 
     def _reshuffle(self):
         """Reshuffles the data if allowed to."""
