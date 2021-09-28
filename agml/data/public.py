@@ -8,7 +8,6 @@ from agml.utils.general import load_public_sources
 from agml.data.metadata import DatasetMetadata
 from agml.backend.config import default_data_save_path
 
-@functools.lru_cache(maxsize=None)
 class _PublicSourceFilter(object):
     """Filters public datasets based on the input filters."""
     _sources = load_public_sources()
@@ -17,6 +16,7 @@ class _PublicSourceFilter(object):
     def __init__(self):
         pass
 
+    @functools.lru_cache(maxsize = None)
     def apply_filters(self, **filters):
         if len(filters) == 0:
             self._current_filtered_source = self._sources.keys()
