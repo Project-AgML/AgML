@@ -8,10 +8,10 @@ from agml.utils.general import load_public_sources
 from agml.data.metadata import DatasetMetadata
 from agml.backend.config import default_data_save_path
 
+@functools.lru_cache(maxsize=None)
 class _PublicSourceFilter(object):
     """Filters public datasets based on the input filters."""
     _sources = load_public_sources()
-    _filtered_sources = {} # stores various filters to prevent re-computation.
     _current_filtered_source = []
 
     def __init__(self):
@@ -21,8 +21,6 @@ class _PublicSourceFilter(object):
         if len(filters) == 0:
             self._current_filtered_source = self._sources.keys()
             return self
-        if self._filtered_sources.get(hash(tuple(filters.items())), False):
-            return self._filtered_sources[hash(tuple(filters.items()))]
         source_sets = []
         for key, value in filters.items():
             if key not in list(self._sources.values())[0].keys():
@@ -46,8 +44,6 @@ class _PublicSourceFilter(object):
             source_sets.append(internal_set)
         self._current_filtered_source \
             = functools.reduce(np.intersect1d, source_sets)
-        self._filtered_sources[hash(tuple(filters.items()))] \
-            = self._current_filtered_source
         return self
 
     def _location_case(self, desired, value_set):
