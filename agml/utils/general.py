@@ -3,7 +3,7 @@ import re
 import json
 import functools
 
-@functools.cache
+@functools.lru_cache(maxsize = None)
 def load_public_sources():
     """Loads the public data sources JSON file."""
     with open(os.path.join(

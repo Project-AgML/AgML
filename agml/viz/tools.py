@@ -14,7 +14,7 @@ import matplotlib.colors as mcolors
 from agml.backend.tftorch import tf, torch
 
 # Sets the colormaps used in the other `agml.viz` methods.
-@functools.cache
+@functools.lru_cache(maxsize = None)
 def _load_colormaps():
     with open(os.path.join(os.path.dirname(os.path.dirname(__file__)),
                            '_assets', 'viz_colormaps.json'), 'r') as f:
