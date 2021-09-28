@@ -1,7 +1,9 @@
 import os
+import sys
 from os import listdir
 from os.path import isfile, join, isdir
 import csv
+import shutil
 
 from typing import Dict, List
 from tqdm import tqdm
@@ -11,6 +13,7 @@ import json
 
 import numpy as np
 from shutil import copyfile, copytree
+
 
 from PIL import Image  # (pip install Pillow)
 from skimage import measure  # (pip install scikit-image)
@@ -580,3 +583,31 @@ def mask_annotation_per_bbox(anno_line, image_id, category_id, annotation_id, is
             annotations.append(annotation)
 
     return annotations
+
+def move_segmentation_dataset(
+        out_dir, dataset_name, train_images, annotation_images, train_dir,
+        annotation_dir, train_preprocess_fn = None, annotation_preprocess_fn = None):
+    """Moves segmentation images and annotations to a new location."""
+    processed_dir = os.path.join(out_dir, dataset_name)
+    os.makedirs(processed_dir, exist_ok = True)
+    processed_image_dir = os.path.join(processed_dir, 'images')
+    os.makedirs(processed_image_dir, exist_ok = True)
+    processed_annotation_dir = os.path.join(processed_dir, 'annotations')
+    os.makedirs(processed_annotation_dir, exist_ok = True)
+    for image_path, annotation_path in zip(
+            tqdm(train_images, desc = "Processing Images",
+                 file = sys.stdout), annotation_images):
+        orig_image_path = os.path.join(train_dir, image_path)
+        orig_annotation_path = os.path.join(annotation_dir, annotation_path)
+        out_image_path = os.path.join(
+            processed_image_dir, image_path)
+        out_label_path = os.path.join(
+            processed_annotation_dir, annotation_path)
+        if train_preprocess_fn is None:
+            shutil.copyfile(orig_image_path, out_image_path)
+        else:
+            train_preprocess_fn(orig_image_path, out_image_path)
+        if annotation_preprocess_fn is None:
+            shutil.copyfile(orig_annotation_path, out_label_path)
+        else:
+            annotation_preprocess_fn(orig_annotation_path, out_label_path)

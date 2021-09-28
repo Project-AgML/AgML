@@ -15,7 +15,7 @@ from PIL import Image
 from agml.utils.io import create_dir, nested_dir_list, get_dir_list, get_file_list
 from agml.utils.coco import read_txt_file, get_image_info, get_label2id
 from agml.utils.coco import convert_bbox_to_coco, get_coco_annotation_from_obj, convert_xmls_to_cocojson
-from agml.utils.coco import mask_annotation_per_bbox
+from agml.utils.coco import mask_annotation_per_bbox, move_segmentation_dataset
 from agml.utils.coco import create_sub_masks, create_sub_mask_annotation_per_bbox, create_sub_mask_annotation
 from agml.utils.general import load_public_sources
 
@@ -35,9 +35,6 @@ class PreprocessData:
             name of dataset to preprocess
         """
         if dataset_name == 'bean_disease_uganda':
-            pass
-
-        elif dataset_name == 'carrot_weeds_germany':
             pass
 
         elif dataset_name == 'carrot_weeds_macedonia':
@@ -192,7 +189,6 @@ class PreprocessData:
                 create_dir(save_dir_anno)
                 output_json_file = os.path.join(save_dir_anno, 'instances.json')
 
-
             # Process annotation files
             save_dir_anno = os.path.join(self.data_processed_dir, dataset_name, 'annotations')
             create_dir(save_dir_anno)
@@ -237,7 +233,6 @@ class PreprocessData:
                     "contributor": "Madsen, Simon Leminen and Mathiassen, Solvejg Kopp and Dyrmann, Mads and Laursen, Morten Stigaard and Paz, Laura-Carlota and J{\o}rgensen, Rasmus Nyholm",
                     "date_created": "2020/04/20"
                 }
-                
 
                 # Process image files
                 output_img_path = os.path.join(self.data_processed_dir, dataset_name, 'images')
@@ -260,7 +255,6 @@ class PreprocessData:
                 print("Copied {} to {}.".format(src, os.path.join(output_img_path,folder)))
 
         elif dataset_name == "apple_detection_usa":
-            
             # resize the dataset
             resize = 1.0
 
@@ -330,7 +324,6 @@ class PreprocessData:
                 "contributor": "Bhusal, Santosh, Karkee, Manoj, Zhang, Qin",
                 "date_created": "2019/04/20"
             }
-            
 
             # Process image files
             output_img_path = os.path.join(self.data_processed_dir, dataset_name, 'images')
@@ -338,7 +331,6 @@ class PreprocessData:
             convert_bbox_to_coco(anno_data_all,label2id,output_json_file, output_img_path, general_info,None,None,get_label_from_folder=False, resize=resize, add_foldername=True)
 
         elif dataset_name == "fruits_detection_australia":
-            
             # resize the dataset
             resize = 1.0
 
@@ -471,7 +463,6 @@ class PreprocessData:
                 f.write(output_json)
 
         elif dataset_name == "apple_detection_spain":
-
             # resize the dataset
             resize = 1.0
 
@@ -506,7 +497,6 @@ class PreprocessData:
             output_img_path = os.path.join(self.data_processed_dir, dataset_name, 'images')
             create_dir(output_img_path)
 
-
             general_info = {
                 "description": "KFuji RGB-DS database",
                 "url": "http://www.grap.udl.cat/en/publications/KFuji_RGBDS_database.html",
@@ -532,7 +522,8 @@ class PreprocessData:
             resize = 1.0
 
             # Read public_datasources.json to get class information
-            datasource_file = os.path.join(os.path.dirname(__file__), "../_assets/public_datasources.json")
+            datasource_file = os.path.join(
+                os.path.dirname(__file__), "../_assets/public_datasources.json")
             with open(datasource_file) as f:
                 data = json.load(f)
                 category_info = data[dataset_name]['crop_types']
@@ -545,25 +536,26 @@ class PreprocessData:
                 name_converter = dict(zip(["M"], ["mango"])) # src -> dst
                 label2id = dict(zip(labels_str, labels_ids))
 
-
-
             dataset_dir = os.path.join(self.data_original_dir, dataset_name)
             ann_dir = os.path.join(dataset_dir, "VOCDevkit/VOC2007/Annotations")
 
             # Get image file and xml file
             all_files = get_file_list(ann_dir)
-            anno_files = [os.path.join(ann_dir,x) for x in all_files if "xml" in x]
-            img_files = [x.replace(".xml",".jpg").replace("Annotations","JPEGImages") for x in anno_files]
+            anno_files = [os.path.join(ann_dir, x) for x in all_files if "xml" in x]
+            img_files = [x.replace(".xml", ".jpg").replace(
+                "Annotations", "JPEGImages") for x in anno_files]
 
             # Process annotation files
-            save_dir_anno = os.path.join(self.data_processed_dir, dataset_name, 'annotations')
+            save_dir_anno = os.path.join(
+                self.data_processed_dir, dataset_name, 'annotations')
             create_dir(save_dir_anno)
-            output_json_file = os.path.join(save_dir_anno, 'instances.json')
+            output_json_file = os.path.join(
+                save_dir_anno, 'instances.json')
 
             # Process image files
-            output_img_path = os.path.join(self.data_processed_dir, dataset_name, 'images')
+            output_img_path = os.path.join(
+                self.data_processed_dir, dataset_name, 'images')
             create_dir(output_img_path)
-
 
             general_info = {
                 "description": "MangoYOLO data set",
@@ -586,12 +578,12 @@ class PreprocessData:
             )
 
         elif dataset_name == "apple_segmentation_spain":
-
             # resize the dataset
             resize = 1.0
 
             # Read public_datasources.json to get class information
-            datasource_file = os.path.join(os.path.dirname(__file__), "../_assets/public_datasources.json")
+            datasource_file = os.path.join(os.path.dirname(__file__),
+                                           "../_assets/public_datasources.json")
             with open(datasource_file) as f:
                 data = json.load(f)
                 category_info = data[dataset_name]['crop_types']
@@ -603,10 +595,8 @@ class PreprocessData:
 
                 label2id = dict(zip(labels_str, labels_ids))
 
-
-            dataset_dir = os.path.join(self.data_original_dir, dataset_name)
-
             # Get image file and xml file
+            dataset_dir = os.path.join(self.data_original_dir, dataset_name)
             all_files = get_file_list(dataset_dir)
             anno_files = [os.path.join(dataset_dir,x) for x in all_files if "csv" in x]
 
@@ -631,8 +621,6 @@ class PreprocessData:
 
                     anno_data_all.append(new_anno)
 
-                    
-
             # Process annotation files
             save_dir_anno = os.path.join(self.data_processed_dir, dataset_name, 'annotations')
             create_dir(save_dir_anno)
@@ -643,7 +631,8 @@ class PreprocessData:
                 "url": "http://www.grap.udl.cat/en/publications/Fuji-SfM_dataset.html",
                 "version": "1.0",
                 "year": 2020,
-                "contributor": "Gené-Mola J, Sanz-Cortiella R, Rosell-Polo JR, Morros J-R, Ruiz-Hidalgo J, Vilaplana V, , Gregorio E.",
+                "contributor": ("Gené-Mola J, Sanz-Cortiella R, Rosell-Polo JR, Morros J-R, "
+                               "Ruiz-Hidalgo J, Vilaplana V, , Gregorio E."),
                 "date_created": "2020/04/24"
             }
             
@@ -652,7 +641,10 @@ class PreprocessData:
             output_img_path = os.path.join(self.data_processed_dir, dataset_name, 'images')
             create_dir(output_img_path)
 
-            json_dict = convert_bbox_to_coco(anno_data_all,label2id,output_json_file, output_img_path, general_info,None,None,get_label_from_folder=False, resize=resize, add_foldername=False, extract_num_from_imgid=True)
+            json_dict = convert_bbox_to_coco(
+                anno_data_all, label2id, output_json_file, output_img_path, general_info,
+                None, None, get_label_from_folder=False, resize=resize,
+                add_foldername=False, extract_num_from_imgid=True)
 
             # Add segmentation for apple
             is_crowd = 0
@@ -676,7 +668,9 @@ class PreprocessData:
                 output_json = json.dumps(json_dict)
                 f.write(output_json)
 
-            convert_bbox_to_coco(anno_data_all,label2id,output_json_file, output_img_path, general_info,None,None,get_label_from_folder=False, resize=resize, make_unique_name=True)
+            convert_bbox_to_coco(
+                anno_data_all, label2id, output_json_file, output_img_path, general_info,
+                None, None, get_label_from_folder=False, resize=resize, make_unique_name=True)
             save_dir_imgs = os.path.join(self.data_processed_dir, dataset_name, 'images')
             create_dir(save_dir_imgs)
             for anno in tqdm(anno_data_all):
@@ -813,6 +807,46 @@ class PreprocessData:
                 out_label_path = os.path.join(processed_annotation_dir, label_path)
                 cv2.imwrite(out_image_path.replace('.png', '.jpg'), image)
                 cv2.imwrite(out_label_path, label)
+
+        elif dataset_name == "sugarbeet_weed_segmentation":
+            # Get all of the relevant data
+            dataset_dir = os.path.join(self.data_original_dir, dataset_name)
+            train_dir = os.path.join(dataset_dir, 'train')
+            train_images = sorted(get_file_list(train_dir))
+            annotation_dir = os.path.join(dataset_dir, 'trainannot') # noqa
+            annotation_images = sorted(get_file_list(annotation_dir))
+
+            # Move the images to the new directory
+            move_segmentation_dataset(
+                self.data_processed_dir, dataset_name, train_images,
+                annotation_images, train_dir, annotation_dir)
+
+        elif dataset_name == 'carrot_weeds_germany':
+            # Get all of the relevant data.
+            dataset_dir = os.path.join(self.data_original_dir, dataset_name)
+            train_dir = os.path.join(dataset_dir, 'images')
+            train_images = sorted(get_file_list(train_dir))
+            annotation_dir = os.path.join(dataset_dir, 'annotations')
+            annotation_images = sorted(get_file_list(annotation_dir, ext = 'png'))
+
+            # Move the images to the new directory
+            def _annotation_preprocess_fn(annotation_path, out_path):
+                an_img = cv2.cvtColor(cv2.imread(annotation_path), cv2.COLOR_BGR2RGB)
+                crop, weed = (0, 255, 0), (255, 0, 0)
+                out_annotation = np.zeros(shape = an_img.shape[:-1])
+                crop_indices = np.stack(np.where(np.all(an_img == crop, axis = -1))).T
+                weed_indices = np.stack(np.where(np.all(an_img == weed, axis = -1))).T
+                for indxs in crop_indices:
+                    out_annotation[indxs[0]][indxs[1]] = 1
+                for indxs in weed_indices:
+                    out_annotation[indxs[0]][indxs[1]] = 2
+                return cv2.imwrite(out_path, out_annotation.astype(np.int8))
+            move_segmentation_dataset(
+                self.data_processed_dir, dataset_name, train_images,
+                annotation_images, train_dir, annotation_dir,
+                annotation_preprocess_fn = _annotation_preprocess_fn)
+
+
             
 
 

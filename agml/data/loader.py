@@ -80,6 +80,10 @@ class AgMLDataLoader(TorchDataset, TFSequenceDataset):
                f"[task = {self._info.tasks.ml}]>")
         return fmt
 
+    def __iter__(self):
+        for indx in range(len(self)):
+            yield self[indx]
+
     def _find_dataset(self, **kwargs):
         """Searches for or downloads the dataset in this loader."""
         if not kwargs.get('overwrite', False):

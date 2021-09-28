@@ -164,7 +164,7 @@
         "n_images": "1252",
         "docs_url": "http://www.diag.uniroma1.it//~labrococo/fds/syntheticdatasets.html"
     },
-    "sugarbeet_weeds_germany": {
+    "sugarbeet_weed_segmentation": {
         "crop_types": {
             "1": "sugar_beet",
             "2": "random_weeds"
@@ -181,7 +181,7 @@
         "input_data_format": "png",
         "annotation_format": "image",
         "n_images": "1931",
-        "docs_url": "http://www.diag.uniroma1.it//~labrococo/fds/syntheticdatasets.html"
+        "docs_url": "https://github.com/inkyusa/weedNetl"
     },
     "rangeland_weeds_australia": {
         "crop_types": {
