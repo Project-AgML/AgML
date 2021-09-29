@@ -1,7 +1,9 @@
 {
     "bean_disease_uganda": {
         "crop_types": {
-            "1": "bean"
+            "1": "angular_leaf_spot",
+            "2": "bean_rust",
+            "3": "healthy"
         },
         "ml_task": "image_classification",
         "ag_task": "disease_classification",
@@ -193,7 +195,8 @@
             "6": "prickly_acacia",
             "7": "rubber_vine",
             "8": "siam_weed",
-            "9": "snake_weed"
+            "9": "snake_weed",
+            "10": "negative"
         },
         "ml_task": "image_classification",
         "ag_task": "weed_classification",
