@@ -33,7 +33,7 @@ def install_helios(overwrite = False):
 
     import subprocess as _subprocess
     _subprocess.call([
-        f"{_os.path.join(_os.path.dirname(__file__), 'helios_config.sh')}",
+        f"{_os.path.join(os.path.dirname(_os.path.dirname(__file__)), '_helios/helios_config.sh')}",
         _os.path.dirname(__file__)])
     del _os, _shutil, _subprocess
 
