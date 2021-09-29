@@ -55,8 +55,8 @@ class HeliosDataGenerator(object):
         self.canopy_types = self.get_canopy_types()
         self.canopy_params = self.get_canopy_params()
         self.canopy_param_ranges = self.set_initial_canopy_param_ranges()
-        self.lidar_params = self.get_lidar_params()
-        self.lidar_param_ranges = self.set_initial_lidar_param_ranges()
+        # self.lidar_params = self.get_lidar_params()
+        # self.lidar_param_ranges = self.set_initial_lidar_param_ranges()
         self.camera_params = self.get_camera_params()
         self.camera_param_ranges = self.set_initial_camera_param_ranges()
 
@@ -303,7 +303,7 @@ class HeliosDataGenerator(object):
 
         param_ranges = self.canopy_param_ranges[canopy_type]
 
-        lidar_ranges = copy.deepcopy(self.lidar_param_ranges)
+        # lidar_ranges = copy.deepcopy(self.lidar_param_ranges)
 
         camera_ranges = self.camera_param_ranges
 
@@ -337,7 +337,7 @@ class HeliosDataGenerator(object):
 
         for n in range(n_imgs):
             params = self.canopy_params[canopy_type]
-            lidar_params = self.lidar_params
+            # lidar_params = self.lidar_params
 
             # Context parameters
             for key in param_ranges:
