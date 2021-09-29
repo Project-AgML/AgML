@@ -88,10 +88,10 @@
     },
     "soybean_weed_uav_brazil": {
         "crop_types": {
-            "1": "glycine_max",
-            "2": "broadleaf_weeds",
-            "3": "grass_weeds",
-            "4": "bare_soil"
+            "1": "broadleaf",
+            "2": "grass",
+            "3": "soybean",
+            "4": "soil"
         },
         "ml_task": "image_classification",
         "ag_task": "weed_classification",
