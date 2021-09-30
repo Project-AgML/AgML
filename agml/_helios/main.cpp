@@ -158,7 +158,7 @@ bool flag=false;
  //lidarcloud.syntheticScan( &context);
     timer.toc("Time to run synthetic scan.");
 
- //lidarcloud.exportPointCloud( "agml/_helios/output/point_cloud/synthetic_scan_1.xyz" );
+ //lidarcloud.exportPointCloud( "/Users/pranavraja/Documents/Helios Synthetic Data Project/AgML/agml/_helios/output/point_cloud/synthetic_scan_0.xyz" );
     }
     else{ //Image Generation
 
@@ -280,7 +280,7 @@ bool flag=false;
     
     
 
-  sprintf(outfile,"agml/_helios/output/images/Image_1/RGB_rendering.jpeg");
+  sprintf(outfile,"/Users/pranavraja/Documents/Helios Synthetic Data Project/AgML/agml/_helios/output/images/Image_0/RGB_rendering.jpeg");
     vis_RGB.printWindow(outfile);
 
   
@@ -292,7 +292,7 @@ bool flag=false;
 
     vis.getFramebufferSize(framebufferW,framebufferH);
 
-  sprintf(outfile,"agml/_helios/output/images/Image_1/ID_mapping.txt");
+  sprintf(outfile,"/Users/pranavraja/Documents/Helios Synthetic Data Project/AgML/agml/_helios/output/images/Image_0/ID_mapping.txt");
     std::ofstream mapping_file(outfile);
     
     int gID=0;
@@ -337,7 +337,7 @@ bool flag=false;
     
     vis.getWindowPixelsRGB( &pixels[0] );
 
-  sprintf(outfile,"agml/_helios/output/images/Image_1/pixelID_combined.txt");
+  sprintf(outfile,"/Users/pranavraja/Documents/Helios Synthetic Data Project/AgML/agml/_helios/output/images/Image_0/pixelID_combined.txt");
     std::ofstream file(outfile);
     std::vector<int> ID;
     int t=0;
@@ -370,7 +370,7 @@ bool flag=false;
     //rectangular bounding box labels
     if( rectangularlabels ){
 
-  sprintf(outfile,"agml/_helios/output/images/Image_1/rectangular_labels.txt");
+  sprintf(outfile,"/Users/pranavraja/Documents/Helios Synthetic Data Project/AgML/agml/_helios/output/images/Image_0/rectangular_labels.txt");
       std::ofstream labelfile(outfile);
       
       for( int p=0; p<ID.size(); p++ ){
@@ -445,7 +445,7 @@ bool flag=false;
         
         timer.toc("render");
         
-  sprintf(outfile,"agml/_helios/output/images/Image_1/pixelID2_%07d.txt",ID.at(p));
+  sprintf(outfile,"/Users/pranavraja/Documents/Helios Synthetic Data Project/AgML/agml/_helios/output/images/Image_0/pixelID2_%07d.txt",ID.at(p));
         
         timer.tic();
         
