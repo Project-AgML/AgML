@@ -286,16 +286,8 @@ class HeliosDataGenerator(object):
             with open(os.path.join(os.path.dirname(os.path.dirname(__file__)), '_helios/xmloutput_for_helios/tmp_canopy_params_image.xml'), "w") as f:
                 f.write(dict2xml(canopy_params_filtered))
 
-<<<<<<< HEAD
-<<<<<<< HEAD
     def generate_data(self, n_imgs, canopy_type, simulation_type, output_directory = "./agml/_helios"):
 
-=======
-    def generate_data(self, n_imgs, canopy_type, simulation_type, output_directory = "agml/_helios"):
->>>>>>> WIP almost generating images
-=======
-    def generate_data(self, n_imgs, canopy_type, simulation_type, output_directory = "agml/_helios"):
->>>>>>> WIP almost generating images
 
         """
         Given the path to the output of Helios, this method can be used to convert the data to a more standard format such as COCO JSON
