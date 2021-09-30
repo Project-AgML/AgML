@@ -158,7 +158,11 @@ bool flag=false;
  //lidarcloud.syntheticScan( &context);
     timer.toc("Time to run synthetic scan.");
 
+<<<<<<< HEAD
  //lidarcloud.exportPointCloud( "/Users/pranavraja/Documents/Helios Synthetic Data Project/AgML/agml/_helios/output/point_cloud/synthetic_scan_0.xyz" );
+=======
+ //lidarcloud.exportPointCloud( "agml/_helios/output/point_cloud/synthetic_scan_1.xyz" );
+>>>>>>> 3bd341c... WIP almost generating images
     }
     else{ //Image Generation
 
@@ -280,7 +284,11 @@ bool flag=false;
     
     
 
+<<<<<<< HEAD
   sprintf(outfile,"/Users/pranavraja/Documents/Helios Synthetic Data Project/AgML/agml/_helios/output/images/Image_0/RGB_rendering.jpeg");
+=======
+  sprintf(outfile,"agml/_helios/output/images/Image_1/RGB_rendering.jpeg");
+>>>>>>> 3bd341c... WIP almost generating images
     vis_RGB.printWindow(outfile);
 
   
@@ -292,7 +300,11 @@ bool flag=false;
 
     vis.getFramebufferSize(framebufferW,framebufferH);
 
+<<<<<<< HEAD
   sprintf(outfile,"/Users/pranavraja/Documents/Helios Synthetic Data Project/AgML/agml/_helios/output/images/Image_0/ID_mapping.txt");
+=======
+  sprintf(outfile,"agml/_helios/output/images/Image_1/ID_mapping.txt");
+>>>>>>> 3bd341c... WIP almost generating images
     std::ofstream mapping_file(outfile);
     
     int gID=0;
@@ -337,7 +349,11 @@ bool flag=false;
     
     vis.getWindowPixelsRGB( &pixels[0] );
 
+<<<<<<< HEAD
   sprintf(outfile,"/Users/pranavraja/Documents/Helios Synthetic Data Project/AgML/agml/_helios/output/images/Image_0/pixelID_combined.txt");
+=======
+  sprintf(outfile,"agml/_helios/output/images/Image_1/pixelID_combined.txt");
+>>>>>>> 3bd341c... WIP almost generating images
     std::ofstream file(outfile);
     std::vector<int> ID;
     int t=0;
@@ -370,7 +386,11 @@ bool flag=false;
     //rectangular bounding box labels
     if( rectangularlabels ){
 
+<<<<<<< HEAD
   sprintf(outfile,"/Users/pranavraja/Documents/Helios Synthetic Data Project/AgML/agml/_helios/output/images/Image_0/rectangular_labels.txt");
+=======
+  sprintf(outfile,"agml/_helios/output/images/Image_1/rectangular_labels.txt");
+>>>>>>> 3bd341c... WIP almost generating images
       std::ofstream labelfile(outfile);
       
       for( int p=0; p<ID.size(); p++ ){
@@ -444,8 +464,8 @@ bool flag=false;
         vis.plotUpdate();
         
         timer.toc("render");
-        
-  sprintf(outfile,"/Users/pranavraja/Documents/Helios Synthetic Data Project/AgML/agml/_helios/output/images/Image_0/pixelID2_%07d.txt",ID.at(p));
+
+  sprintf(outfile,"agml/_helios/output/images/Image_1/pixelID2_%07d.txt",ID.at(p));
         
         timer.tic();
         
