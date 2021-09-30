@@ -286,7 +286,7 @@ class HeliosDataGenerator(object):
             with open(os.path.join(os.path.dirname(os.path.dirname(__file__)), '_helios/xmloutput_for_helios/tmp_canopy_params_image.xml'), "w") as f:
                 f.write(dict2xml(canopy_params_filtered))
 
-    def generate_data(self, n_imgs, canopy_type, simulation_type, output_directory = ""):
+    def generate_data(self, n_imgs, canopy_type, simulation_type, output_directory = "agml/_helios"):
 
         """
         Given the path to the output of Helios, this method can be used to convert the data to a more standard format such as COCO JSON
@@ -350,8 +350,8 @@ class HeliosDataGenerator(object):
 
             self.generate_one_datapair(canopy_type, simulation_type)
 
-            # Re-writte tags of XML to have the expected Helios input
-            tree = ET.parse('xmloutput_for_helios/tmp_canopy_params_image.xml')
+            # Re-write tags of XML to have the expected Helios input
+            tree = ET.parse(os.path.join(os.path.dirname(os.path.dirname(__file__)), '_helios/xmloutput_for_helios', 'tmp_canopy_params_image.xml'))
             root = tree.getroot()
             for child in root:
                 if child.tag == 'camera_position':
@@ -361,7 +361,7 @@ class HeliosDataGenerator(object):
                     child.tag = 'globaldata_int2'
                     child.set('label', 'image_resolution')
 
-            tree.write('xmloutput_for_helios/tmp_canopy_params_image.xml')
+            tree.write(os.path.join(os.path.dirname(os.path.dirname(__file__)), '_helios/xmloutput_for_helios', 'tmp_canopy_params_image.xml'))
 
             # Modify cmake file for rgb versus lidar simulation
             with open(self.path_cmakelists) as f:
@@ -384,7 +384,7 @@ class HeliosDataGenerator(object):
 
                 # Define paths for CMAKE compilation and output files
             current_directory = os.getcwd()
-            build_dir = os.path.join(current_directory, 'build')
+            build_dir = os.path.join(current_directory, 'agml/_helios/build')
             if output_directory == "":
                 output_dir = os.path.join(current_directory, 'output')
             else:
