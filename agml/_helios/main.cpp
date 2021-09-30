@@ -158,7 +158,7 @@ bool flag=false;
  //lidarcloud.syntheticScan( &context);
     timer.toc("Time to run synthetic scan.");
 
- //lidarcloud.exportPointCloud( "/Users/pranavraja/Documents/Helios Synthetic Data Project/AgML/agml/_helios/output/point_cloud/synthetic_scan_0.xyz" );
+ //lidarcloud.exportPointCloud( "agml/_helios/output/point_cloud/synthetic_scan_1.xyz" );
     }
     else{ //Image Generation
 
