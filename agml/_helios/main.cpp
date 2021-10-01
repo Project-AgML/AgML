@@ -158,7 +158,7 @@ bool flag=false;
  //lidarcloud.syntheticScan( &context);
     timer.toc("Time to run synthetic scan.");
 
- //lidarcloud.exportPointCloud( "agml/_helios/output/point_cloud/synthetic_scan_1.xyz" );
+ //lidarcloud.exportPointCloud( "/Users/jmearles/Library/Mobile Documents/com~apple~CloudDocs/Documents/ucd/projects/AgML/agml/_helios/output/point_cloud/synthetic_scan_0.xyz" );
     }
     else{ //Image Generation
 
@@ -177,9 +177,9 @@ bool flag=false;
 
    //The 'camera' will stop at each of the (x,y,z) positions provided in this vector. It will always be pointed in the row-normal direction looking toward the center of the vineyard.
    std::vector<vec3> camera_pos;
-   float x_camera = rand_FloatRange (  0.3, 1.3);
-   float y_camera = rand_FloatRange (  -1.2,  -1.7);
-   float z_camera = rand_FloatRange (  0.7,  1.1);
+   float x_camera = rand_FloatRange (  -0.05, 0.05);
+   float y_camera = rand_FloatRange (  -1.0, -1.0);
+   float z_camera = rand_FloatRange (  0.25,  0.25);
 
    camera_pos.push_back( make_vec3(x_camera, y_camera, z_camera) );
 
@@ -247,14 +247,16 @@ bool flag=false;
       std::string type;
       if( context.doesPrimitiveDataExist( UUIDs_all.at(p),"element_type" ) ){
 	context.getPrimitiveData(UUIDs_all.at(p),"element_type",type);
+
+
 	if( type.compare("grape")==0 ){
 	  context.getPrimitivePointer(UUIDs_all.at(p))->setColor( grape_color );
 	}
       }else{
-	std::cout << "WARNING: Primitive data ""element_type"" does not exist for primitive " << UUIDs_all.at(p) << std::endl;
+        cout << type << endl;
+	// std::cout << "WARNING: Primitive data ""element_type"" does not exist for primitive " << UUIDs_all.at(p) << std::endl;
       }
     }
-
     
     Visualizer vis_RGB(windowW,windowH,8,false);
 
@@ -280,7 +282,7 @@ bool flag=false;
     
     
 
-  sprintf(outfile,"agml/_helios/output/images/Image_1/RGB_rendering.jpeg");
+  sprintf(outfile,"/Users/jmearles/Library/Mobile Documents/com~apple~CloudDocs/Documents/ucd/projects/AgML/agml/_helios/output/images/Image_0/RGB_rendering.jpeg");
     vis_RGB.printWindow(outfile);
 
   
@@ -292,7 +294,7 @@ bool flag=false;
 
     vis.getFramebufferSize(framebufferW,framebufferH);
 
-  sprintf(outfile,"agml/_helios/output/images/Image_1/ID_mapping.txt");
+  sprintf(outfile,"/Users/jmearles/Library/Mobile Documents/com~apple~CloudDocs/Documents/ucd/projects/AgML/agml/_helios/output/images/Image_0/ID_mapping.txt");
     std::ofstream mapping_file(outfile);
     
     int gID=0;
@@ -337,7 +339,7 @@ bool flag=false;
     
     vis.getWindowPixelsRGB( &pixels[0] );
 
-  sprintf(outfile,"agml/_helios/output/images/Image_1/pixelID_combined.txt");
+  sprintf(outfile,"/Users/jmearles/Library/Mobile Documents/com~apple~CloudDocs/Documents/ucd/projects/AgML/agml/_helios/output/images/Image_0/pixelID_combined.txt");
     std::ofstream file(outfile);
     std::vector<int> ID;
     int t=0;
@@ -370,7 +372,7 @@ bool flag=false;
     //rectangular bounding box labels
     if( rectangularlabels ){
 
-  sprintf(outfile,"agml/_helios/output/images/Image_1/rectangular_labels.txt");
+  sprintf(outfile,"/Users/jmearles/Library/Mobile Documents/com~apple~CloudDocs/Documents/ucd/projects/AgML/agml/_helios/output/images/Image_0/rectangular_labels.txt");
       std::ofstream labelfile(outfile);
       
       for( int p=0; p<ID.size(); p++ ){
@@ -445,7 +447,7 @@ bool flag=false;
         
         timer.toc("render");
         
-  sprintf(outfile,"agml/_helios/output/images/Image_1/pixelID2_%07d.txt",ID.at(p));
+  sprintf(outfile,"/Users/jmearles/Library/Mobile Documents/com~apple~CloudDocs/Documents/ucd/projects/AgML/agml/_helios/output/images/Image_0/pixelID2_%07d.txt",ID.at(p));
         
         timer.tic();
         
