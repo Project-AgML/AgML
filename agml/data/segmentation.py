@@ -43,7 +43,7 @@ class AgMLSemanticSegmentationDataLoader(AgMLDataLoader):
         self._dual_transform_pipeline = None
 
     def __len__(self):
-        """Returns the number of images in the dataset."""
+        """Returns the number of images or batches in the dataset."""
         if self._is_batched:
             return len(self._batched_data)
         return len(self._data)
@@ -370,7 +370,7 @@ class AgMLSemanticSegmentationDataLoader(AgMLDataLoader):
 
         # Convert the batched data internally and return it.
         self._batched_data = [
-            {k: int(v) for k, v in batch} for batch in batches]
+            {k: v for k, v in batch} for batch in batches]
         if batch_size != 1:
             self._is_batched = True
         return self._convert_nested_dict_to_arrays(self._batched_data)
@@ -617,6 +617,7 @@ class AgMLSemanticSegmentationDataLoader(AgMLDataLoader):
                 "Using a non-TensorFlow transform for `AgMLDataLoader.tensorflow()`.")
 
         # Create the dataset object with relevant preprocessing.
+        @tf.function
         def _image_load_preprocess_fn(image, annotation):
             image = tf.image.decode_jpeg(tf.io.read_file(image))
             image = tf.cast(tf.image.resize(image, image_size), tf.int32)
@@ -630,9 +631,11 @@ class AgMLSemanticSegmentationDataLoader(AgMLDataLoader):
         ds = ds.map(_image_load_preprocess_fn)
         if dual_transform is not None:
             if isinstance(dual_transform, types.FunctionType):  # noqa
+                @tf.function
                 def _map_preprocess_fn(image_, annotation_):
                     return dual_transform(image_, annotation_)
             else:
+                @tf.function
                 def _map_preprocess_fn(image_, annotation_):
                     seed = np.random.randint(2147483647)
                     set_seed(seed); tf.random.set_seed(seed) # noqa
@@ -645,17 +648,20 @@ class AgMLSemanticSegmentationDataLoader(AgMLDataLoader):
             _map_preprocess_fn = None
         elif self._transform_pipeline is not None \
                 and self._target_transform_pipeline is not None:
+            @tf.function
             def _map_preprocess_fn(image_, annotation_):
                 image_ = self._transform_pipeline(image_)
                 annotation_ = self._target_transform_pipeline(annotation_)
                 return image_, annotation_
         elif self._transform_pipeline is not None \
                 and self._target_transform_pipeline is None:
+            @tf.function
             def _map_preprocess_fn(image_, annotation_):
                 image_ = self._transform_pipeline(image_)
                 return image_, annotation_
         elif self._transform_pipeline is None \
                 and self._target_transform_pipeline is not None:
+            @tf.function
             def _map_preprocess_fn(image_, annotation_):
                 annotation_ = self._target_transform_pipeline(annotation_)
                 return image_, annotation_

@@ -6,7 +6,7 @@ from sklearn.model_selection import train_test_split
 
 from agml.backend.tftorch import set_backend, get_backend
 from agml.backend.tftorch import (
-    _check_image_classification_transform, TorchDataset, TFSequenceDataset  # noqa
+    _check_image_classification_transform # noqa
 )
 
 from agml.utils.io import get_dir_list, get_file_list
@@ -39,7 +39,7 @@ class AgMLImageClassificationDataLoader(AgMLDataLoader):
         self._transform_pipeline = None
 
     def __len__(self):
-        """Returns the number of images in the dataset."""
+        """Returns the number of images or batches in the dataset."""
         if self._is_batched:
             return len(self._batched_data)
         return len(self._data)
@@ -378,7 +378,7 @@ class AgMLImageClassificationDataLoader(AgMLDataLoader):
             return self._data
         return self._convert_dict_to_arrays(self._data)
 
-    def transform(self, transforms = None):
+    def transform(self, *, transform = None):
         """Applies vision transformations to the input data.
 
         This method creates a transformation pipeline which is applied to
@@ -392,11 +392,11 @@ class AgMLImageClassificationDataLoader(AgMLDataLoader):
 
         Parameters
         ----------
-        transforms : Any
+        transform : Any
             Any of the above cases.
         """
-        _check_image_classification_transform(transforms)
-        self._transform_pipeline = transforms
+        _check_image_classification_transform(transform)
+        self._transform_pipeline = transform
 
     def torch(self, *, image_size = (512, 512), preprocessing = None, **loader_kwargs):
         """Returns a PyTorch DataLoader with this dataset's content.
@@ -475,7 +475,7 @@ class AgMLImageClassificationDataLoader(AgMLDataLoader):
         return DataLoader(_DummyDataset(
             self._data, transform = transform_), **loader_kwargs)
 
-    def tensorflow(self, image_size = (512, 512), preprocessing = None):
+    def tensorflow(self, image_size = (512, 512), transform = None):
         """Returns a `tf.data.Dataset` with this dataset's contents.
 
         This method allows the exportation of the data inside this
@@ -501,7 +501,7 @@ class AgMLImageClassificationDataLoader(AgMLDataLoader):
         image_size : tuple
             A tuple of two values containing the output
             image size. This defaults to `(512, 512)`.
-        preprocessing : Any
+        transform : Any
             One of the following:
                 1. A `keras.models.Sequential` model with
                    preprocessing layers.
@@ -523,6 +523,7 @@ class AgMLImageClassificationDataLoader(AgMLDataLoader):
                 "Using a non-TensorFlow transform for `AgMLDataLoader.tensorflow()`.")
 
         # Create the dataset object with relevant preprocessing.
+        @tf.function
         def _image_load_preprocess_fn(path, label):
             image = tf.image.decode_jpeg(tf.io.read_file(path))
             image = tf.cast(tf.image.resize(image, image_size), tf.int32)
@@ -532,9 +533,10 @@ class AgMLImageClassificationDataLoader(AgMLDataLoader):
         ds = tf.data.Dataset.from_tensor_slices((images, labels))
         ds = ds.shuffle(len(images))
         ds = ds.map(_image_load_preprocess_fn)
-        if preprocessing is not None:
+        if transform is not None:
+            @tf.function
             def _map_preprocessing_fn(image, label):
-                return preprocessing(image), label
+                return transform(image), label
             ds = ds.map(_map_preprocessing_fn)
         return ds
 

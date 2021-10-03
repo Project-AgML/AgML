@@ -153,13 +153,17 @@ def _set_global_torch_tf_datasets():
 # Run upon loading the backend.
 _set_global_torch_tf_datasets()
 
+###################################################################
+############### TRANSFORM CHECKS FOR AGMLDATALOADER ###############
+###################################################################
+
 ######### `AgMLImageClassificationDataLoader.transform()` #########
 
 def _check_image_classification_transform(transform):
     """Check the image classification transform pipeline."""
     if transform is None:
         return None
-    if isinstance(transform, types.FunctionType): # noqa
+    if isinstance(transform, (types.FunctionType, functools.partial)): # noqa
         return transform
     if get_backend() == 'tensorflow':
         _tf_check_sequential_preprocessing_pipeline(transform)
@@ -209,7 +213,6 @@ def _torch_check_torchvision_preprocessing_pipeline(transforms):
                     "preprocessing model while backend was set to PyTorch.")
     return transforms
 
-
 ######### `AgMLSemanticSegmentationDataLoader.transform()` #########
 
 def _check_semantic_segmentation_transform(transform, target_transform, dual_transform):
@@ -219,7 +222,7 @@ def _check_semantic_segmentation_transform(transform, target_transform, dual_tra
     if dual_transform is not None:
         _check_image_classification_transform(dual_transform)
         if isinstance(transform, types.FunctionType) and target_transform is None:  # noqa
-            _check_function_type_transform_segmentation(transform)
+            _check_function_type_transform(transform)
     else:
         old_backend = get_backend()
         _check_image_classification_transform(transform)
@@ -231,9 +234,21 @@ def _check_semantic_segmentation_transform(transform, target_transform, dual_tra
                 "Transform and target transform use methods from different backends.")
         return transform, target_transform
 
-def _check_function_type_transform_segmentation(transform):
+def _check_function_type_transform(transform):
     if len(inspect.signature(transform)) != 2:  # noqa
         raise ValueError(
             "If passing a function for `transform`, it should accept "
             "two arguments, the input image and annotation.")
     return transform
+
+######### `AgMLObjectDetectionDataLoader.transform()` #########
+
+def _check_object_detection_transform(transform, dual_transform):
+    """Checks the object detection transform pipeline."""
+    if transform is None and dual_transform is None:
+        return None, None, None
+    if dual_transform is not None:
+        _check_function_type_transform(dual_transform)
+    else:
+        _check_image_classification_transform(transform)
+

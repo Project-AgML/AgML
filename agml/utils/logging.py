@@ -1,3 +1,5 @@
+import os
+import sys
 import time
 import inspect
 import logging
@@ -37,7 +39,23 @@ def log(msg, level = logging.WARNING):
     _GIVEN_WARNINGS[save_hash] = msg
 
 
+class no_print(object):
+    """Doesn't print anything when this is used.
+
+    This should be used in a `with` statement for context, namely
+
+    > with no_print():
+    >   print("This won't be printed.")
+    > print("This will be printed.")
+    This will be printed.
+    """
+    def __enter__(self):
+        self._stdout_reset = sys.stdout
+        sys.stdout = open(os.devnull, 'w')
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        sys.stdout.close()
+        sys.stdout = self._stdout_reset
 
 
-
-
+from tensorflow.python import tf2
