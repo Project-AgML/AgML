@@ -31,8 +31,8 @@ def download_dataset(dataset_name, dest_dir):
     except botocore.exceptions.ClientError as ce:
         if "Not Found" in str(ce):
             raise ValueError(
-                f"The dataset '{dataset_name}' could not be found in "
-                f"the bucket, perhaps it has not been uploaded yet.")
+                f"The dataset '{dataset_name}' could not be found in the bucket, "
+                f"perhaps it has not been uploaded yet. Please report this issue.")
         raise ce
 
     # File path of zipped dataset
@@ -60,4 +60,5 @@ def download_dataset(dataset_name, dest_dir):
         print('Done!')
 
     # Delete zipped file
-    os.remove(dataset_download_path)
+    if os.path.exists(dataset_download_path):
+        os.remove(dataset_download_path)

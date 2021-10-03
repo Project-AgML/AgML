@@ -17,9 +17,17 @@ class DatasetMetadata(object):
     - The image and sensor modality, and
     - The data and annotation formats.
 
-    Most attributed of the dataset will be directly available as a
+    Generally, this can be used as follows:
+
+    > ds = agml.AgMLDataLoader('<dataset-name>')
+    > ds.info
+    <dataset-name>
+    > ds.info.annotation_format
+    <annotation-format>
+
+    Most attributes of the dataset will be directly available as a
     property of this class, but any additional info that is not can
-    be found in the internal dictionary and access by using getitem.
+    be accessed by treating the `info` object as a dictionary.
     """
     def __init__(self, name):
         self._load_source_info(name)

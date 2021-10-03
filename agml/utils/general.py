@@ -22,3 +22,19 @@ def resolve_list_value(l):
         return l[0]
     return l
 
+def resolve_tuple_pair(inp1, inp2, custom_error = None):
+    """Determines whether `inp1` contains two values or
+    they are distributed amongst `inp1` and `inp2`."""
+    if isinstance(inp1, (list, tuple)) and not inp2:
+        try:
+            image, mask = inp1
+        except ValueError:
+            if custom_error is not None:
+                raise ValueError(custom_error)
+            else:
+                raise ValueError(
+                    "Expected either a tuple with two values "
+                    "or two values across two arguments.")
+        else:
+            return inp1
+    return inp1, inp2

@@ -42,6 +42,12 @@ class AgMLSemanticSegmentationDataLoader(AgMLDataLoader):
         self._target_transform_pipeline = None
         self._dual_transform_pipeline = None
 
+    def __len__(self):
+        """Returns the number of images in the dataset."""
+        if self._is_batched:
+            return len(self._batched_data)
+        return len(self._data)
+
     def __getitem__(self, indx):
         """Returns one element or one batch of data from the loader."""
         # Different cases for batched vs. non-batched data.
@@ -71,6 +77,35 @@ class AgMLSemanticSegmentationDataLoader(AgMLDataLoader):
                 raise KeyError(
                     f"Index out of range: got {indx}, "
                     f"expected one in range 0 - {len(self)}.")
+
+    def _wrap_reduced_data(self, split):
+        """Wraps the reduced class information for `_from_extant_data`."""
+        data_meta = getattr(self, f'_{split}_data')
+        meta_dict = {
+            'name': self.name,
+            'data': data_meta,
+            'image_paths': list(data_meta.keys()),
+            'transform_pipeline': self._transform_pipeline,
+            'target_transform_pipeline': self._target_transform_pipeline,
+            'dual_transform_pipeline': self._dual_transform_pipeline
+        }
+        return meta_dict
+
+    @classmethod
+    def _from_extant_data(cls, meta_dict, meta_kwargs):
+        """Initializes the class from a subset of data.
+
+        This method is used internally for the `split` method, and
+        generates DataLoaders with a specific subset of the data.
+        """
+        loader = cls(meta_dict['name'], **meta_kwargs)
+        loader._data = meta_dict['data']
+        loader._image_paths = meta_dict['image_paths']
+        loader._transform_pipeline = meta_dict['transform_pipeline']
+        loader._target_transform_pipeline = meta_dict['target_transform_pipeline']
+        loader._dual_transform_pipeline = meta_dict['dual_transform_pipeline']
+        loader._block_split = True
+        return loader
 
     def _load_images_and_annotations(self):
         """Loads semantic segmentation data for the loader.
@@ -103,6 +138,8 @@ class AgMLSemanticSegmentationDataLoader(AgMLDataLoader):
         """Converts dictionaries mapping images to classes into arrays."""
         arrays = []
         for dict_ in dicts:
+            if dict_ is None:
+                continue
             img_fpaths, ann_fpaths = dict_.keys(), dict_.values()
             arrays.append([np.array(list(img_fpaths)),
                            np.array(list(ann_fpaths))])
@@ -195,6 +232,15 @@ class AgMLSemanticSegmentationDataLoader(AgMLDataLoader):
         -------
         A tuple with the three data splits.
         """
+        if self._is_batched:
+            raise NotImplementedError(
+                "Cannot split data after it has been batched. "
+                "Run split before batching, and use the relevant"
+                "properties to access the split data.")
+        if hasattr(self, '_block_split'):
+            raise NotImplementedError(
+                "Cannot further split already split data.")
+
         args = [train, val, test]
         if all([i is None for i in args]):
             self._training_data = None
@@ -229,24 +275,24 @@ class AgMLSemanticSegmentationDataLoader(AgMLDataLoader):
             elif len(splits) == 2:
                 split_1, split_2 = train_test_split(
                     tts, train_size = splits[0],
-                    test_size = splits[1], shuffle = False)
+                    test_size = splits[1], shuffle = shuffle)
                 setattr(self, split_names[0],
-                        {k: int(v) for k, v in np.array(
+                        {k: v for k, v in np.array(
                             list(self._data.items()))[split_1]})
                 setattr(self, split_names[1],
-                        {k: int(v) for k, v in np.array(
+                        {k: v for k, v in np.array(
                             list(self._data.items()))[split_2]})
             else:
                 split_1, split_overflow = train_test_split(
                     tts, train_size = splits[0],
-                    test_size = splits[1] + splits[2], shuffle = False)
+                    test_size = splits[1] + splits[2], shuffle = shuffle)
                 split_2, split_3 = train_test_split(
                     split_overflow,
                     train_size = splits[1] / (splits[1] + splits[2]),
-                    test_size = splits[2] / (splits[1] + splits[2]))
+                    test_size = splits[2] / (splits[1] + splits[2]), shuffle = shuffle)
                 for name, dec_split in zip(split_names, [split_1, split_2, split_3]):
                     setattr(self, name,
-                            {k: int(v) for k, v in np.array(
+                            {k: v for k, v in np.array(
                                 list(self._data.items()))[dec_split]})
         elif any([isinstance(i, int) for i in args]):
             args = [0 if arg is None else arg for arg in args]
@@ -273,10 +319,10 @@ class AgMLSemanticSegmentationDataLoader(AgMLDataLoader):
             elif len(splits) == 2:
                 split_1, split_2 = tts[:splits[0]], tts[splits[0]]
                 setattr(self, split_names[0],
-                        {k: int(v) for k, v in np.array(
+                        {k: v for k, v in np.array(
                             list(self._data.items()))[split_1]})
                 setattr(self, split_names[1],
-                        {k: int(v) for k, v in np.array(
+                        {k: v for k, v in np.array(
                             list(self._data.items()))[split_2]})
             else:
                 split_1 = tts[:splits[0]]
@@ -284,7 +330,7 @@ class AgMLSemanticSegmentationDataLoader(AgMLDataLoader):
                 split_3 = tts[splits[0] + splits[1]:]
                 for name, dec_split in zip(split_names, [split_1, split_2, split_3]):
                     setattr(self, name,
-                            {k: int(v) for k, v in np.array(
+                            {k: v for k, v in np.array(
                                 list(self._data.items()))[dec_split]})
 
         # Return the splits.

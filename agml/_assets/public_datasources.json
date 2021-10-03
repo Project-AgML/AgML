@@ -1,7 +1,9 @@
 {
     "bean_disease_uganda": {
         "crop_types": {
-            "1": "bean"
+            "1": "angular_leaf_spot",
+            "2": "bean_rust",
+            "3": "healthy"
         },
         "ml_task": "image_classification",
         "ag_task": "disease_classification",
@@ -36,39 +38,20 @@
         "n_images": "60",
         "docs_url": "https://github.com/cwfid/dataset"
     },
-    "carrot_weeds_macedonia": {
-        "crop_types": {
-            "1": "carrot",
-            "2": "weeds"
-        },
-        "ml_task": "semantic_segmentation",
-        "ag_task": "weed_segmentation",
-        "location": {
-            "continent": "europe",
-            "country": "macedonia"
-        },
-        "sensor_modality": "rgb",
-        "real_synthetic": "real",
-        "platform": "handheld",
-        "input_data_format": "jpg",
-        "annotation_format": "image",
-        "n_images": "39",
-        "docs_url": "https://github.com/lameski/rgbweeddetection"
-    },
     "plant_seedlings_aarhus": {
         "crop_types": {
-            "1": "zea_mays",
-            "2": "triticum_aestivum",
-            "3": "beta_vulgaris",
-            "4": "matricaria_perforata",
-            "5": "stellaria_media",
-            "6": "capsella_bursapastoris",
-            "7": "galium_aparine",
-            "8": "sinapsis_arvensis",
-            "9": "chenopodium_album",
-            "10": "geranium_pusillium",
-            "11": "alopecurus_myosuroides",
-            "12": "apera_spicaventi"
+            "1": "maize",
+            "2": "common_wheat",
+            "3": "sugar_beet",
+            "4": "scentless_mayweed",
+            "5": "common_chickweed",
+            "6": "shepherds_purse",
+            "7": "cleavers",
+            "8": "charlock",
+            "9": "fat_hen",
+            "10": "smallflowered_cranesbill",
+            "11": "black_grass",
+            "12": "loose_silkybent"
         },
         "ml_task": "image_classification",
         "ag_task": "weed_classification",
@@ -86,10 +69,10 @@
     },
     "soybean_weed_uav_brazil": {
         "crop_types": {
-            "1": "glycine_max",
-            "2": "broadleaf_weeds",
-            "3": "grass_weeds",
-            "4": "bare_soil"
+            "1": "broadleaf",
+            "2": "grass",
+            "3": "soybean",
+            "4": "soil"
         },
         "ml_task": "image_classification",
         "ag_task": "weed_classification",
@@ -102,10 +85,10 @@
         "platform": "uav",
         "input_data_format": "tif",
         "annotation_format": "directory_names",
-        "docs_url": "https://data.mendeley.com/datasets/3fmjm7ncc6/2",
-        "n_images": "15336"
+        "n_images": "15336",
+        "docs_url": "https://data.mendeley.com/datasets/3fmjm7ncc6/2"
     },
-    "sugarcanebillets_damage_usa": {
+    "sugarcane_damage_usa": {
         "crop_types": {
             "1": "cracked",
             "2": "crushed",
@@ -124,11 +107,12 @@
         "platform": "ground_fixed",
         "input_data_format": "bmp",
         "annotation_format": "directory_names",
-        "docs_url": "https://github.com/plant-ai-biophysics-lab/AgData"
+        "n_images": "154",
+        "docs_url": "https://github.com/The77Lab/SugarcaneBilletsDataset"
     },
     "crop_weeds_greece": {
         "crop_types": {
-            "1": "black_nightsade",
+            "1": "black_nightshade",
             "2": "velvet_leaf",
             "3": "cotton",
             "4": "tomato"
@@ -143,26 +127,8 @@
         "platform": "handheld",
         "input_data_format": "jpg",
         "annotation_format": "directory_names",
+        "n_images": "508",
         "docs_url": "https://github.com/AUAgroup/early-crop-weed"
-    },
-    "sugarbeet_weeds_synthetic": {
-        "crop_types": {
-            "1": "sugar_beet",
-            "2": "random_weeds"
-        },
-        "ml_task": "semantic_segmentation",
-        "ag_task": "weed_segmentation",
-        "location": {
-            "continent": "none",
-            "country": "none"
-        },
-        "sensor_modality": "rgb",
-        "real_synthetic": "synthetic",
-        "platform": "ground",
-        "input_data_format": "png",
-        "annotation_format": "image",
-        "n_images": "1252",
-        "docs_url": "http://www.diag.uniroma1.it//~labrococo/fds/syntheticdatasets.html"
     },
     "sugarbeet_weed_segmentation": {
         "crop_types": {
@@ -193,7 +159,8 @@
             "6": "prickly_acacia",
             "7": "rubber_vine",
             "8": "siam_weed",
-            "9": "snake_weed"
+            "9": "snake_weed",
+            "10": "negative"
         },
         "ml_task": "image_classification",
         "ag_task": "weed_classification",
@@ -209,7 +176,7 @@
         "n_images": "17509",
         "docs_url": "https://github.com/AlexOlsen/DeepWeeds"
     },
-    "fruits_classification_worldwide": {
+    "fruit_detection_worldwide": {
         "crop_types": {
             "1": "avocado",
             "2": "rockmelon",
@@ -219,8 +186,8 @@
             "6": "mango",
             "7": "capsicum"
         },
-        "ml_task": "image_classification",
-        "ag_task": "fruit_classification",
+        "ml_task": "object_detection",
+        "ag_task": "fruit_detection",
         "location": {
             "continent": "worldwide",
             "country": "worldwide"
@@ -337,7 +304,7 @@
         "real_synthetic": "real",
         "platform": "ground",
         "input_data_format": "png",
-        "annotation_format": "img_name x y w h ...",
+        "annotation_format": "coco_json",
         "n_images": "2290",
         "docs_url": "http://hdl.handle.net/2376/17721"
     },

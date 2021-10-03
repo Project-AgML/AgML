@@ -102,6 +102,9 @@ def public_data_sources(**filters):
     > public_data_sources(n_images = 1000)
     > public_data_sources(n_images = ">1500")
 
+    This method returns a list of `DatasetMetadata` objects, which can
+    then be further inspected by additional conditions.
+
     Parameters
     ----------
     filters : Any

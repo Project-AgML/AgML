@@ -36,11 +36,13 @@ class AgMLImageClassificationDataLoader(AgMLDataLoader):
         self._load_data_by_directory()
 
         # Other attributes which may or may not be initialized.
-        self._training_data = None
-        self._validation_data = None
-        self._test_data = None
-
         self._transform_pipeline = None
+
+    def __len__(self):
+        """Returns the number of images in the dataset."""
+        if self._is_batched:
+            return len(self._batched_data)
+        return len(self._data)
 
     def __getitem__(self, indx):
         """Returns one element or one batch of data from the loader."""
@@ -89,6 +91,31 @@ class AgMLImageClassificationDataLoader(AgMLDataLoader):
                     f"Index out of range: got {indx}, "
                     f"expected one in range 0 - {len(self)}.")
 
+    def _wrap_reduced_data(self, split):
+        """Wraps the reduced class information for `_from_extant_data`."""
+        data_meta = getattr(self, f'_{split}_data')
+        meta_dict = {
+            'name': self.name,
+            'data': data_meta,
+            'image_paths': list(data_meta.keys()),
+            'transform_pipeline': self._transform_pipeline
+        }
+        return meta_dict
+
+    @classmethod
+    def _from_extant_data(cls, meta_dict, meta_kwargs):
+        """Initializes the class from a subset of data.
+
+        This method is used internally for the `split` method, and
+        generates DataLoaders with a specific subset of the data.
+        """
+        loader = cls(meta_dict['name'], **meta_kwargs)
+        loader._data = meta_dict['data']
+        loader._image_paths = meta_dict['image_paths']
+        loader._transform_pipeline = meta_dict['transform_pipeline']
+        loader._block_split = True
+        return loader
+
     @property
     def labels(self):
         return self._labels
@@ -128,6 +155,8 @@ class AgMLImageClassificationDataLoader(AgMLDataLoader):
         """Converts dictionaries mapping images to classes into arrays."""
         arrays = []
         for dict_ in dicts:
+            if dict_ is None:
+                continue
             fpaths, labels = dict_.keys(), dict_.values()
             arrays.append([np.array(list(fpaths)),
                            np.array(list(labels))])
@@ -177,13 +206,22 @@ class AgMLImageClassificationDataLoader(AgMLDataLoader):
             The split for validation data.
         test : {int, float}
             The split for testing data.
-        shuffle : {bool}
+        shuffle : bool
             Whether to shuffle the split data.
 
         Returns
         -------
         A tuple with the three data splits.
         """
+        if self._is_batched:
+            raise NotImplementedError(
+                "Cannot split data after it has been batched. "
+                "Run split before batching, and use the relevant"
+                "properties to access the split data.")
+        if hasattr(self, '_block_split'):
+            raise NotImplementedError(
+                "Cannot further split already split data.")
+
         args = [train, val, test]
         if all([i is None for i in args]):
             self._training_data = None
@@ -218,7 +256,7 @@ class AgMLImageClassificationDataLoader(AgMLDataLoader):
             elif len(splits) == 2:
                 split_1, split_2 = train_test_split(
                     tts, train_size = splits[0],
-                    test_size = splits[1], shuffle = False)
+                    test_size = splits[1], shuffle = shuffle)
                 setattr(self, split_names[0],
                         {k: int(v) for k, v in np.array(
                             list(self._data.items()))[split_1]})
@@ -228,11 +266,11 @@ class AgMLImageClassificationDataLoader(AgMLDataLoader):
             else:
                 split_1, split_overflow = train_test_split(
                     tts, train_size = splits[0],
-                    test_size = splits[1] + splits[2], shuffle = False)
+                    test_size = splits[1] + splits[2], shuffle = shuffle)
                 split_2, split_3 = train_test_split(
                     split_overflow,
                     train_size = splits[1] / (splits[1] + splits[2]),
-                    test_size = splits[2] / (splits[1] + splits[2]))
+                    test_size = splits[2] / (splits[1] + splits[2]), shuffle = shuffle)
                 for name, dec_split in zip(split_names, [split_1, split_2, split_3]):
                     setattr(self, name,
                             {k: int(v) for k, v in np.array(

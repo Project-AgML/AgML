@@ -50,17 +50,16 @@ def set_backend(backend):
 
     This method allows a user to automatically set the backend.
     """
-    global _USER_SET_BACKEND
+    global _USER_SET_BACKEND, _BACKEND
     # Check whether the user has modified the backend.
     mod = inspect.getmodule(inspect.stack()[1][0])
     if 'agml.' not in mod.__name__:
         _USER_SET_BACKEND = True
 
     # If the backend is the same, don't do anything.
-    if backend == _USER_SET_BACKEND:
+    if backend == _BACKEND:
         return
 
-    global _BACKEND
     _check_tf_torch()
     if backend not in ['tensorflow', 'tf', 'torch', 'pytorch']:
         raise ValueError(f"Invalid backend: {backend}.")
@@ -70,7 +69,7 @@ def set_backend(backend):
                 "TensorFlow not found on system, cannot be used as "
                 "backend. Try running `pip install tensorflow`.")
         _BACKEND = 'tensorflow'
-        log("Switched backend to TensorFlow.")
+        log("Switched backend to TensorFlow.", level = logging.INFO)
     elif backend in ['torch', 'pytorch'] and _BACKEND != 'torch':
         if not _HAS_TORCH:
             raise ImportError(

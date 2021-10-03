@@ -37,3 +37,9 @@ def clear_all_datasets():
     print(f"Deleted datasets {deleted_datasets}.")
     log("Exiting AgML interactive dataset deletion mode.", logging.WARNING)
 
+def downloaded_datasets():
+    """Lists downloaded datasets in ~/.agml/datasets"""
+    return [d for d in os.listdir(
+        default_data_save_path()) if os.path.isdir(
+        os.path.join(default_data_save_path(), d))]
+

@@ -29,6 +29,13 @@ class AgMLDataLoader(TorchDataset, TFSequenceDataset):
     in. See the relevant guides and the method documentations for
     additional info on how to use these methods.
 
+    Notes
+    -----
+    See the derived classes `AgMLImageClassificationDataLoader`,
+    `AgMLObjectDetectionDataLoader`, and `AgMLSemanticSegmentationDataLoader`
+    for information on the specific functionalities of the data loader
+    for the different types of ML tasks supported in AgML.
+
     Parameters
     ----------
     dataset : str
@@ -55,6 +62,11 @@ class AgMLDataLoader(TorchDataset, TFSequenceDataset):
                 import AgMLSemanticSegmentationDataLoader
             return AgMLSemanticSegmentationDataLoader(
                 dataset, skip_init = True, **kwargs)
+        elif ml_task_type == 'object_detection':
+            from agml.data.detection \
+                import AgMLObjectDetectionDataLoader
+            return AgMLObjectDetectionDataLoader(
+                dataset, skip_init = True, **kwargs)
         raise ValueError(
             f"Unsupported ML task: {ml_task_type}. Please report this error.")
 
@@ -70,6 +82,11 @@ class AgMLDataLoader(TorchDataset, TFSequenceDataset):
 
         self._preprocessing_enabled = True
 
+        self._training_data = None
+        self._validation_data = None
+        self._test_data = None
+
+    @abc.abstractmethod
     def __len__(self):
         """Returns the number of images in the dataset."""
         if self._is_batched:
@@ -78,7 +95,10 @@ class AgMLDataLoader(TorchDataset, TFSequenceDataset):
 
     def __str__(self):
         fmt = (f"<AgMLDataLoader [{self._info.name}] "
-               f"[task = {self._info.tasks.ml}]>")
+               f"[task = {self._info.tasks.ml}]")
+        if hasattr(self, '_split_name'):
+            fmt += f" [split = {getattr(self, '_split_name')}]"
+        fmt += ">"
         return fmt
 
     def __iter__(self):
@@ -87,6 +107,7 @@ class AgMLDataLoader(TorchDataset, TFSequenceDataset):
 
     def _find_dataset(self, **kwargs):
         """Searches for or downloads the dataset in this loader."""
+        self._stored_kwargs_for_init = kwargs
         if not kwargs.get('overwrite', False):
             if kwargs.get('dataset_path', False):
                 self._dataset_root = kwargs['dataset_path']
@@ -160,7 +181,52 @@ class AgMLDataLoader(TorchDataset, TFSequenceDataset):
         """
         self._preprocessing_enabled = True
 
-    #### OVERWRITTEN PARAMETERS BY BASE CLASSES ####
+    @property
+    def training_data(self):
+        if self._training_data is not None:
+            ret_cls = self.__class__._from_extant_data(
+                self._wrap_reduced_data('training'),
+                self._stored_kwargs_for_init)
+            ret_cls._split_name = 'train'
+            return ret_cls
+        raise NotImplementedError(
+            "You need to run `split()` with a nonzero 'train' "
+            "parameter to use the `training_data` property.")
+
+    @property
+    def validation_data(self):
+        if self._validation_data is not None:
+            ret_cls = self.__class__._from_extant_data(
+                self._wrap_reduced_data('validation'),
+                self._stored_kwargs_for_init)
+            ret_cls._split_name = 'validation'
+            return ret_cls
+        raise NotImplementedError(
+            "You need to run `split()` with a nonzero 'val' "
+            "parameter to use the `validation_data` property.")
+
+    @property
+    def test_data(self):
+        if self._test_data is not None:
+            ret_cls = self.__class__._from_extant_data(
+                self._wrap_reduced_data('test'),
+                self._stored_kwargs_for_init)
+            ret_cls._split_name = 'test'
+            return ret_cls
+        raise NotImplementedError(
+            "You need to run `split()` with a nonzero 'test' "
+            "parameter to use the `test_data` property.")
+
+    @abc.abstractmethod
+    def _wrap_reduced_data(self, *args, **kwargs):
+        raise NotImplementedError()
+
+    @classmethod
+    @abc.abstractmethod
+    def _from_extant_data(cls, *args, **kwargs):
+        raise NotImplementedError()
+
+    #### API METHODS - OVERWRITTEN BY DERIVED CLASSES ####
 
     @abc.abstractmethod
     def _reshuffle(self, *args, **kwargs):
@@ -189,6 +255,7 @@ class AgMLDataLoader(TorchDataset, TFSequenceDataset):
     @abc.abstractmethod
     def tensorflow(self, *args, **kwargs):
         raise NotImplementedError()
+
 
 
 
