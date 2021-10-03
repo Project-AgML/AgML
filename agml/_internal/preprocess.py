@@ -62,7 +62,7 @@ class PreprocessData:
                     os.path.join(processed_dir, save_dir, file)
                 )
 
-        elif dataset_name == 'fruits_classification_worldwide':
+        elif dataset_name == 'fruit_detection_worldwide':
             dataset_dir = os.path.join(self.data_original_dir, dataset_name, 'datasets')
 
             # get folder list
@@ -330,7 +330,7 @@ class PreprocessData:
             create_dir(output_img_path)
             convert_bbox_to_coco(anno_data_all,label2id,output_json_file, output_img_path, general_info,None,None,get_label_from_folder=False, resize=resize, add_foldername=True)
 
-        elif dataset_name == "fruits_detection_australia":
+        elif dataset_name == "fruit_detection_australia":
             # resize the dataset
             resize = 1.0
 
@@ -577,7 +577,7 @@ class PreprocessData:
                 extract_num_from_imgid=True
             )
 
-        elif dataset_name == "apple_segmentation_spain":
+        elif dataset_name == "apple_detection_spain":
             # resize the dataset
             resize = 1.0
 

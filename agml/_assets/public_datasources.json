@@ -165,7 +165,7 @@
         "ml_task": "image_classification",
         "ag_task": "weed_classification",
         "location": {
-            "continent": "australia",
+            "continent": "oceania",
             "country": "australia"
         },
         "sensor_modality": "rgb",
@@ -345,11 +345,11 @@
         "n_images": "967",
         "docs_url": "http://www.grap.udl.cat/en/publications/KFuji_RGBDS_database.html"
     },
-    "apple_segmentation_spain": {
+    "apple_detection_spain": {
         "crop_types": {
             "1": "apple"
         },
-        "ml_task": "object_segmentation",
+        "ml_task": "object_detection",
         "ag_task": "fruit_segmentation",
         "location": {
             "continent": "europe",
@@ -363,16 +363,16 @@
         "n_images": "288",
         "docs_url": "http://www.grap.udl.cat/en/publications/Fuji-SfM_dataset.html"
     },
-    "fruits_detection_australia": {
+    "fruit_detection_australia": {
         "crop_types": {
             "1": "apple",
             "2": "mango",
             "3": "almond"
         },
-        "ml_task": "object_detection_segmentation",
+        "ml_task": "object_detection",
         "ag_task": "fruit_detection",
         "location": {
-            "continent": "australia",
+            "continent": "oceania",
             "country": "australia"
         },
         "sensor_modality": "rgb",

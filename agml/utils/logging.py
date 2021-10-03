@@ -57,5 +57,3 @@ class no_print(object):
         sys.stdout.close()
         sys.stdout = self._stdout_reset
 
-
-from tensorflow.python import tf2
