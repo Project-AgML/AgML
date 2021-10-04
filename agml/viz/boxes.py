@@ -49,6 +49,8 @@ def annotate_bboxes_on_image(image, bboxes = None, labels = None):
                       get_colormap()[as_scalar(label)], 2)
     return image
 
+
+@auto_resolve_image
 def visualize_image_and_boxes(image, bboxes = None, labels = None):
     """Visualizes an image with annotated bounding boxes.
 

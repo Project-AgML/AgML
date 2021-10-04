@@ -20,8 +20,7 @@ def _preprocess_mask(mask):
         coords = np.stack([x_values, y_values]).T
         if coords.size == 0:
             break
-        for c in coords:
-            mask[c[0]][c[1]] = get_colormap()[label_indx]
+        mask[tuple([*coords.T])] = get_colormap()[label_indx]
         label_indx += 1
     return mask
 
@@ -156,7 +155,7 @@ def overlay_segmentation_masks(image, mask = None, border = True):
 
 
 @auto_resolve_image
-def visualize_overlaid_masks(image, mask = None):
+def visualize_overlaid_masks(image, mask = None, border = True):
     """Displays an image with segmentation masks overlaid on it.
 
     See `overlay_segmentation_masks` for an explanation of procedure.
@@ -168,13 +167,15 @@ def visualize_overlaid_masks(image, mask = None):
         and its mask (if using a DataLoader, for example).
     mask : np.ndarray
         The output mask (should be an array with dimension 2).
+    border : bool
+        Whether to add a border to the segmentation overlay.
 
     Returns
     -------
     A `np.ndarray` representing the image.
     """
     # Plot the segmentation masks over the image
-    image = overlay_segmentation_masks(image, mask)
+    image = overlay_segmentation_masks(image, mask, border)
 
     # Plot the figure
     plt.figure(figsize = (10, 10))

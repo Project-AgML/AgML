@@ -45,6 +45,8 @@ def as_scalar(inp):
     if isinstance(inp, (int, float)):
         return inp
     import numpy as np
+    if np.isscalar(inp):
+        return inp.item()
     if isinstance(inp, np.ndarray):
         return inp.item()
     from agml.backend.tftorch import torch

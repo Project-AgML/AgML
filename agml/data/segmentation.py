@@ -164,6 +164,7 @@ class AgMLSemanticSegmentationDataLoader(AgMLDataLoader):
         """Preprocesses images and annotations with transformations/other methods."""
         if self._preprocessing_enabled:
             try:
+                annotation = np.expand_dims(annotation, axis = -1)
                 if self._dual_transform_pipeline is not None:
                     if isinstance(self._dual_transform_pipeline, types.FunctionType): # noqa
                         image, annotation = \
@@ -194,6 +195,7 @@ class AgMLSemanticSegmentationDataLoader(AgMLDataLoader):
                 elif self._transform_pipeline is None \
                         and self._target_transform_pipeline is not None:
                     annotation = self._target_transform_pipeline(annotation)
+                annotation = np.squeeze(annotation)
             except TypeError as te:
                 if "PIL" in str(te):
                     raise ValueError(
@@ -397,9 +399,13 @@ class AgMLSemanticSegmentationDataLoader(AgMLDataLoader):
         2. To apply a single transform pipeline to both the image and
            target annotation, use `dual_transform`. This argument can
            consist of anything from the above list, except for (c), where
-           the input and output should be two arrays. Note that if this
-           consists of (a) and (b), then the pipeline will be applied to
-           both the image and the annotation by using the same random seed.
+           the input and output should be two arrays, and (b), since TensorFlow
+           uses different graph-level and operation-level seeds. To use Keras
+           preprocessing layers for dual transform, you can use the helper
+           method `agml.data.experimental.generate_keras_dual_transform`, see
+           that method for information about how to manually write it. Note
+           that  if (a), is passed then the pipeline will be applied to both
+           the image and the annotation by using the same random seed.
 
         Parameters
         ----------

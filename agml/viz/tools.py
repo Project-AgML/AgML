@@ -35,6 +35,7 @@ def get_colormap():
 
 def auto_resolve_image(f):
     """Resolves an image path or image into a read-in image."""
+    @functools.wraps(f)
     def _resolver(image, *args, **kwargs):
         if isinstance(image, (str, bytes, os.PathLike)):
             if not os.path.exists(image):
