@@ -299,7 +299,7 @@ class AgMLObjectDetectionDataLoader(AgMLDataLoader):
                 raise TypeError(
                     "Got some split parameters as proportions and "
                     "others as whole numbers. Provide one or the other.")
-            if not sum(args) == 1.0:
+            if not round(sum(args), 3) == 1.0:
                 raise ValueError(
                     f"The sum of the split proportions "
                     f"should be 100% (1.0): got {sum(args)}.")
