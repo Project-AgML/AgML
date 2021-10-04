@@ -6,6 +6,7 @@ import os
 import json
 import functools
 
+import cv2
 import numpy as np
 from PIL import Image
 
@@ -31,6 +32,17 @@ def get_colormap():
     """Returns the current AgML colormap."""
     global _COLORMAPS, _COLORMAP_CHOICE
     return _COLORMAPS[_COLORMAP_CHOICE]
+
+def auto_resolve_image(f):
+    """Resolves an image path or image into a read-in image."""
+    def _resolver(image, *args, **kwargs):
+        if isinstance(image, (str, bytes, os.PathLike)):
+            if not os.path.exists(image):
+                raise FileNotFoundError(
+                    f"The provided image file {image} does not exist.")
+            image = cv2.imread(image)
+        return f(image, *args, **kwargs)
+    return _resolver
 
 def format_image(img):
     """Formats an image to be used in a Matplotlib visualization.

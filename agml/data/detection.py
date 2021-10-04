@@ -526,13 +526,29 @@ class AgMLObjectDetectionDataLoader(AgMLDataLoader):
                     return self._dual_transform_pipeline(image, annotation)
                 return image, annotation
 
+            @staticmethod
+            def _resize_image_and_box(image, annotations):
+                y_scale, x_scale = image.shape[0:2]
+                for a_set in annotations:
+                    x1, y1, width, height = a_set['bbox']
+                    a_set['bbox'] = [
+                        x1 / x_scale, y1 / y_scale,
+                        width / x_scale, height / y_scale]
+                image = cv2.resize(image, image_size, cv2.INTER_NEAREST)
+                y_new, x_new = image.shape[0:2]
+                for a_set in annotations:
+                    x1, y1, width, height = a_set['bbox']
+                    a_set['bbox'] = [
+                        x1 * x_new, y1 * y_new, width * x_new, height * y_new]
+                return _convert_image_to_torch(image), annotations
+
             def __getitem__(self, indx):
                 image, annotations = list(self._coco_mapping.items())[indx]
                 image = cv2.cvtColor(
                     cv2.imread(os.path.join(self._root, 'images', image)),
                     cv2.COLOR_BGR2RGB)
-                image = _convert_image_to_torch(cv2.resize(
-                    image, image_size, cv2.INTER_NEAREST))
+                image, annotations = \
+                    self._resize_image_and_box(image, annotations)
                 annotation = {'bboxes': [], 'labels': [], 'area': [],
                               'image_id': "", 'iscrowd': [], 'segmentation': []}
                 for a_set in annotations:
@@ -626,15 +642,36 @@ class AgMLObjectDetectionDataLoader(AgMLDataLoader):
         ds.shuffle(len(images))
 
         # Map the relevant preprocessing methods.
+        def _resize_image_and_bboxes(image, coco_boxes):
+            y_scale, x_scale = image.shape[0:2]
+            stack_boxes = tf.stack(
+                [coco_boxes[:, 0] / x_scale,
+                 coco_boxes[:, 1] / y_scale,
+                 coco_boxes[:, 2] / x_scale,
+                 coco_boxes[:, 3] / y_scale], axis = -1)
+            image = tf.cast(tf.image.resize(
+                image, image_size), tf.int32)
+            y_new, x_new = image.shape[0:2]
+            new_stack = tf.cast(tf.stack(
+                [stack_boxes[:, 0] * x_new,
+                 stack_boxes[:, 1] * y_new,
+                 stack_boxes[:, 2] * x_new,
+                 stack_boxes[:, 3] * y_new], axis = -1
+            ), tf.int32)
+            return image, new_stack
+
         @tf.function
-        def _image_coco_load_preprocess_fn(image, coco):
+        def _image_coco_load_preprocess_fn(image, coco): # noqa
             image = tf.image.decode_jpeg(tf.io.read_file(image))
-            image = tf.cast(tf.image.resize(image, image_size), tf.int32)
             ret_coco = coco.copy()
             for key in coco.keys():
                 try:
                     ret_coco[key] = coco[key].to_tensor()
                 except: pass
+            image, ret_coco_boxes = tf.py_function(
+                _resize_image_and_bboxes,
+                [image, ret_coco['bboxes']], [tf.int32, tf.int32])
+            ret_coco['bboxes'] = ret_coco_boxes
             return image, ret_coco
         ds = ds.map(_image_coco_load_preprocess_fn)
         if dual_transform is not None:

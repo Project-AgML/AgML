@@ -5,8 +5,8 @@ import numpy as np
 
 import matplotlib.pyplot as plt
 
-from agml.utils.general import resolve_tuple_pair
-from agml.viz.tools import format_image, get_colormap
+from agml.utils.general import resolve_tuple_values
+from agml.viz.tools import format_image, get_colormap, auto_resolve_image
 
 def _preprocess_mask(mask):
     """Preprocesses a mask with a distinct colorscheme."""
@@ -64,6 +64,7 @@ def output_to_mask(mask):
     return _preprocess_mask(mask)
 
 
+@auto_resolve_image
 def visualize_image_and_mask(image, mask = None):
     """Visualizes an image and its corresponding segmentation mask.
 
@@ -83,7 +84,7 @@ def visualize_image_and_mask(image, mask = None):
     -------
     The matplotlib figure with the images.
     """
-    image, mask = resolve_tuple_pair(
+    image, mask = resolve_tuple_values(
         image, mask, custom_error =
         "If `image` is a tuple/list, it should contain "
         "two values: the image and its mask.")
@@ -100,6 +101,7 @@ def visualize_image_and_mask(image, mask = None):
     return fig
 
 
+@auto_resolve_image
 def overlay_segmentation_masks(image, mask = None, border = True):
     """Overlays segmentation masks over an image.
 
@@ -122,7 +124,7 @@ def overlay_segmentation_masks(image, mask = None, border = True):
     -------
     A `np.ndarray` representing the image.
     """
-    image, mask = resolve_tuple_pair(
+    image, mask = resolve_tuple_values(
         image, mask, custom_error =
         "If `image` is a tuple/list, it should contain "
         "two values: the image and its mask.")
@@ -148,10 +150,12 @@ def overlay_segmentation_masks(image, mask = None, border = True):
             image = cv2.addWeighted(overlay, 0.3, image, 0.7, 0)
             if border:
                 image = cv2.polylines(
-                    image, pts = [contour], isClosed = True, color = color, thickness = 2)
+                    image, pts = [contour], isClosed = True,
+                    color = color, thickness = 2)
     return image
 
 
+@auto_resolve_image
 def visualize_overlaid_masks(image, mask = None):
     """Displays an image with segmentation masks overlaid on it.
 
@@ -173,7 +177,7 @@ def visualize_overlaid_masks(image, mask = None):
     image = overlay_segmentation_masks(image, mask)
 
     # Plot the figure
-    fig = plt.figure(figsize = (10, 10))
+    plt.figure(figsize = (10, 10))
     plt.imshow(image)
     plt.gca().axis('off')
     plt.gca().set_aspect('equal')

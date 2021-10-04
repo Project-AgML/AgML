@@ -4,3 +4,7 @@ from .masks import (
     overlay_segmentation_masks,
     visualize_overlaid_masks
 )
+from .boxes import (
+    annotate_bboxes_on_image,
+    visualize_image_and_boxes
+)

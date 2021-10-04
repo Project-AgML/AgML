@@ -22,19 +22,39 @@ def resolve_list_value(l):
         return l[0]
     return l
 
-def resolve_tuple_pair(inp1, inp2, custom_error = None):
-    """Determines whether `inp1` contains two values or
-    they are distributed amongst `inp1` and `inp2`."""
-    if isinstance(inp1, (list, tuple)) and not inp2:
-        try:
-            image, mask = inp1
-        except ValueError:
+def resolve_tuple_values(*inputs, custom_error = None):
+    """Determines whether `inputs[0]` contains two values or
+    they are distributed amongst the values in `inputs`. """
+    if isinstance(inputs[0], (list, tuple)) and all(c is None for c in inputs[1:]):
+        if len(inputs[0]) != len(inputs):
+            # special case for COCO JSON
+            if len(inputs) == 3 and len(inputs[0]) == 2 and isinstance(inputs[0][1], dict):
+                return inputs[0][0], inputs[0][1]['bboxes'], inputs[0][1]['labels']
             if custom_error is not None:
                 raise ValueError(custom_error)
             else:
                 raise ValueError(
-                    "Expected either a tuple with two values "
-                    "or two values across two arguments.")
+                    f"Expected either a tuple with {len(inputs)} values "
+                    f"or {len(inputs)} values across two arguments.")
         else:
-            return inp1
-    return inp1, inp2
+            return inputs[0]
+    return inputs
+
+def as_scalar(inp):
+    """Converts an input value to a scalar."""
+    if isinstance(inp, (int, float)):
+        return inp
+    import numpy as np
+    if isinstance(inp, np.ndarray):
+        return inp.item()
+    from agml.backend.tftorch import torch
+    if isinstance(inp, torch.Tensor):
+        return inp.item()
+    from agml.backend.tftorch import tf
+    if isinstance(inp, tf.Tensor):
+        return inp.numpy()
+    raise TypeError(f"Unsupported variable type {type(inp)}.")
+
+def scalar_unpack(inp):
+    """Unpacks a 1-d array into a list of scalars."""
+    return [as_scalar(item) for item in inp]
