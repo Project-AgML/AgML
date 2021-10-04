@@ -1,7 +1,7 @@
 import os
 import abc
 
-from agml._internal.downloads import download_dataset  # noqa
+from agml.utils.downloads import download_dataset  # noqa
 from agml.backend.config import default_data_save_path
 from agml.backend.tftorch import TorchDataset, TFSequenceDataset
 from agml.data.metadata import DatasetMetadata

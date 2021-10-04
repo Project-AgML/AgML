@@ -24,19 +24,23 @@ def download_dataset(dataset_name, dest_dir):
     # Setup progress bar
     try:
         ds_size = float(s3_resource.ObjectSummary(
-            bucket_name = 'agdata-data', key = dataset_name + '.zip').size)
+            bucket_name = 'agdata-data',
+            key = dataset_name + '.zip').size)
         pg = tqdm(
             total = ds_size, file = sys.stdout,
-            desc = f"Downloading {dataset_name} (size = {round(ds_size / 1000000, 1)} MB)")
+            desc = f"Downloading {dataset_name} "
+                   f"(size = {round(ds_size / 1000000, 1)} MB)")
     except botocore.exceptions.ClientError as ce:
         if "Not Found" in str(ce):
             raise ValueError(
-                f"The dataset '{dataset_name}' could not be found in the bucket, "
-                f"perhaps it has not been uploaded yet. Please report this issue.")
+                f"The dataset '{dataset_name}' could not be found "
+                f"in the bucket, perhaps it has not been uploaded "
+                f"yet. Please report this issue.")
         raise ce
 
     # File path of zipped dataset
-    dataset_download_path = os.path.join(dest_dir, dataset_name + '.zip')
+    dataset_download_path = os.path.join(
+        dest_dir, dataset_name + '.zip')
 
     # Upload data to agdata-data bucket
     try:

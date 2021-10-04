@@ -1,9 +1,8 @@
-import os
 import functools
 
 import numpy as np
 
-from agml._internal.downloads import download_dataset as _download # noqa
+from agml.utils.downloads import download_dataset as _download # noqa
 from agml.utils.general import load_public_sources
 from agml.data.metadata import DatasetMetadata
 from agml.backend.config import default_data_save_path
