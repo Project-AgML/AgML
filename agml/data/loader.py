@@ -3,10 +3,10 @@ import abc
 
 from agml.utils.downloads import download_dataset  # noqa
 from agml.backend.config import default_data_save_path
-from agml.backend.tftorch import TorchDataset, TFSequenceDataset
+from agml.backend.tftorch import _swap_loader_mro
 from agml.data.metadata import DatasetMetadata
 
-class AgMLDataLoader(TorchDataset, TFSequenceDataset):
+class AgMLDataLoader(object):
     """Loads and processes a dataset from the AgML public repository.
 
     An `AgMLDataLoader` contains data from one public data source in
@@ -75,6 +75,14 @@ class AgMLDataLoader(TorchDataset, TFSequenceDataset):
         self._info = DatasetMetadata(dataset)
         self._find_dataset(**kwargs)
 
+        # Process internal logic.
+        self._shuffle = True
+        if not kwargs.get('shuffle', True):
+            self._shuffle = False
+        self._default_image_size = (512, 512)
+        if not kwargs.get('image_size', True):
+            self._default_image_size = kwargs['image_size']
+
         # Parameters that may or may not be changed. If not, they are
         # here just for consistency in the class and internal methods.
         self._is_batched = False
@@ -85,6 +93,8 @@ class AgMLDataLoader(TorchDataset, TFSequenceDataset):
         self._training_data = None
         self._validation_data = None
         self._test_data = None
+
+        self._getitem_as_batch = False
 
     @abc.abstractmethod
     def __len__(self):
@@ -216,6 +226,14 @@ class AgMLDataLoader(TorchDataset, TFSequenceDataset):
         raise NotImplementedError(
             "You need to run `split()` with a nonzero 'test' "
             "parameter to use the `test_data` property.")
+
+    def as_keras_sequence(self):
+        _swap_loader_mro(self, 'tf')
+        self._getitem_as_batch = True
+
+    def as_torch_dataset(self):
+        _swap_loader_mro(self, 'torch')
+        self._getitem_as_batch = True
 
     @abc.abstractmethod
     def _wrap_reduced_data(self, *args, **kwargs):
