@@ -28,6 +28,11 @@ class AgMLObjectDetectionDataLoader(AgMLDataLoader):
             return
         super(AgMLObjectDetectionDataLoader, self).__init__(dataset)
 
+        # Process internal logic.
+        self._shuffle = True
+        if not kwargs.get('shuffle', True):
+            self._shuffle = False
+
         # Build the data.
         self._find_images_and_annotations()
 
@@ -67,11 +72,6 @@ class AgMLObjectDetectionDataLoader(AgMLDataLoader):
                     cv2.imread(image_path), cv2.COLOR_BGR2RGB)
                 annotations = self._stack_annotations(annotations)
                 image, annotations = self._preprocess_data(image, annotations)
-                if self._getitem_as_batch:
-                    if self._default_image_size != 'default':
-                        image, annotations = \
-                            self._resize_image_and_boxes(image, annotations)
-                    return np.expand_dims(image, axis = 0), annotations
                 return image, annotations
             except KeyError:
                 raise KeyError(
@@ -166,29 +166,6 @@ class AgMLObjectDetectionDataLoader(AgMLDataLoader):
                 out = out.item()
             annotation[key] = out
         return annotation
-
-    def _resize_image_and_boxes(self, image, annotations):
-        y_scale, x_scale = image.shape[0:2]
-        bboxes = annotations['bboxes']
-        processed_bboxes = []
-        for bbox in bboxes:
-            x1, y1, width, height = bbox
-            processed_bboxes.append([
-                x1 / x_scale, y1 / y_scale,
-                width / x_scale, height / y_scale])
-        image = cv2.resize(
-            image, self._default_image_size, cv2.INTER_NEAREST)
-        y_new, x_new = image.shape[0:2]
-        final_processed_bboxes = []
-        for bbox in processed_bboxes:
-            x1, y1, width, height = bbox
-            final_processed_bboxes.append([
-                x1 * x_new, y1 * y_new,
-                width * x_new, height * y_new])
-        final_processed_bboxes = \
-            np.array(final_processed_bboxes).astype(np.int32)
-        annotations['bboxes'] = final_processed_bboxes
-        return image, annotations
 
     def export_coco(self):
         """Exports the dataset contents in the COCO format.
