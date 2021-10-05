@@ -77,7 +77,6 @@ def set_backend(backend):
                 "backend. Try running `pip install torch`.")
         _BACKEND = 'torch'
         log("Switched backend to PyTorch.", level = logging.INFO)
-    _set_global_torch_tf_datasets()
 
 def _was_backend_changed():
     """Returns whether the backend has been manually changed."""
@@ -134,33 +133,17 @@ def _postprocess_torch_annotation(image):
 
 ######### AGMLDATALOADER METHODS #########
 
-class _DummyTorchDataset(object):
-    pass
-
-class _DummyTFSequenceDataset(object):
-    pass
-
-TorchDataset = _DummyTorchDataset
-TFSequenceDataset = _DummyTFSequenceDataset
-
-def _set_global_torch_tf_datasets():
-    """Sets the global dataset classes for the data loader.
-
-    If PyTorch (default) is chosen as the backend, then it sets
-    the `TorchDataset` class to `torch.utils.data.Dataset`.
-    Otherwise, if TensorFlow is chosen as the backend, it sets
-    `TFSequenceDataset` to `tf.keras.utils.Sequence`.
-    """
-    global TorchDataset, TFSequenceDataset
-    if get_backend() == 'tensorflow':
-        TFSequenceDataset = tf.keras.utils.Sequence
-        TorchDataset = _DummyTorchDataset
-    elif get_backend() == 'torch':
-        TorchDataset = torch_data.Dataset
-        TFSequenceDataset = _DummyTFSequenceDataset
-
-# Run upon loading the backend.
-_set_global_torch_tf_datasets()
+def _swap_loader_mro(inst, mode):
+    if mode == 'tf':
+        if not get_backend() == 'tf':
+            set_backend('tf')
+        inst.__class__.__bases__ = \
+            inst.__class__.__bases__ + (tf.keras.utils.Sequence,)
+    if mode == 'torch':
+        if not get_backend() == 'torch':
+            set_backend('torch')
+        inst.__class__.__bases__ = \
+            inst.__class__.__bases__ + (torch_data.Dataset,)
 
 ###################################################################
 ############### TRANSFORM CHECKS FOR AGMLDATALOADER ###############
