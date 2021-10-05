@@ -27,6 +27,11 @@ class AgMLImageClassificationDataLoader(AgMLDataLoader):
             return
         super(AgMLImageClassificationDataLoader, self).__init__(dataset)
 
+        # Process internal logic.
+        self._shuffle = True
+        if not kwargs.get('shuffle', True):
+            self._shuffle = False
+
         # Set up the class data.
         self._load_data_by_directory()
 
@@ -80,12 +85,6 @@ class AgMLImageClassificationDataLoader(AgMLDataLoader):
                             ".ToTensor() in a transform pipeline.")
                     else:
                         raise te
-                if self._getitem_as_batch:
-                    if self._default_image_size != 'default':
-                        image = cv2.resize(
-                            image, self._default_image_size, cv2.INTER_NEAREST)
-                    return np.expand_dims(image, axis = 0), \
-                           np.expand_dims(np.array(label), axis = 0)
                 return image, label
             except KeyError:
                 raise KeyError(
