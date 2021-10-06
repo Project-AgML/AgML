@@ -153,6 +153,7 @@ class DatasetMetadata(object):
         content = re.sub('<\\|>(.*?)<\\|>', _bold(r'\1'), content)
         header = '=' * 20 + ' DATASET SUMMARY ' + '=' * 20
         print(header)
+        print(_bold("Name") + f": {self._name}")
         print(content, end = '')
         print('=' * 57)
 
