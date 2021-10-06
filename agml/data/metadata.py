@@ -1,4 +1,6 @@
-import json
+import io
+import re
+import yaml
 import functools
 import collections
 
@@ -113,5 +115,45 @@ class DatasetMetadata(object):
         mapping = self._metadata['crop_types']
         nums = [int(float(i)) for i in mapping.keys()]
         return dict(zip(mapping.values(), nums))
+
+    def summary(self):
+        """Prints out a summary of the dataset information.
+
+        For all of the properties of information defined in this
+        metadata class, this method will print out a summary of all
+        of the information in a visually understandable table. Note
+        that this does not return anything, so it shouldn't be called
+        as `print(loader.info.summary())`, just `loader.info.summary()`.
+        """
+        def _bold(msg):
+            return '\033[1m' + msg + '\033[0m'
+        def _bold_yaml(msg): # noqa
+            return '<|>' + msg + '<|>'
+
+        _SWITCH_NAMES = {
+            'ml_task': "Machine Learning Task",
+            'ag_task': "Agricultural Task",
+            'real_synthetic': 'Real Or Synthetic',
+            'n_images': "Number of Images",
+            'docs_url': "Documentation"
+        }
+
+        formatted_metadata = {}
+        for key, value in self._metadata.items():
+            name = key.replace('_', ' ').title()
+            if key in _SWITCH_NAMES.keys():
+                name = _SWITCH_NAMES[key]
+            if name == 'Crop Types':
+                value = {int(k): v for k, v in value.items()}
+            formatted_metadata[_bold_yaml(name)] = value
+
+        stream = io.StringIO()
+        yaml.dump(formatted_metadata, stream, sort_keys = False)
+        content = stream.getvalue()
+        content = re.sub('<\\|>(.*?)<\\|>', _bold(r'\1'), content)
+        header = '=' * 20 + ' DATASET SUMMARY ' + '=' * 20
+        print(header)
+        print(content, end = '')
+        print('=' * 57)
 
 
