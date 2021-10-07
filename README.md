@@ -58,6 +58,7 @@ hdg.canopy_param_ranges['VSPGrapevine']['grape_color'] = [[0.15, 0.20], [0.15, 0
 hdg.canopy_param_ranges['VSPGrapevine']['cluster_radius'] = [[0.025, 0.035]]
 
 # User can generate synthetic data from a LiDAR and an RGB camera
+
 # ---------------- LiDAR PARAMETERS --------------------
 # For the LiDAR, the user can set all the metada. If not set, the default values will be used.
 hdg.lidar_param_ranges['ASCII_format'] = ['x y z object_label'] # Available: x, y,  z, zenith, azimuth, r, g, b, target_count, target_index, timestamp, deviation, intensity, object_label
@@ -66,17 +67,20 @@ hdg.lidar_param_ranges['thetaMin'] = [30]
 hdg.lidar_param_ranges['exitDiameter'] = [0.05]
 hdg.lidar_param_ranges['size'] = [250, 250]
 hdg.lidar_param_ranges['origin'] = [[0, 0, 0],[1, 1, 1],[2, 2, 2]] # Multiple LiDAR's could be used, it is only need to defined the origin of each sensor
+
 # ---------------- CAMERA PARAMETERS --------------------
 # For the RGB images, the user can set the camera positions and the desire image_resoution. (Expecting this changes in Helios to be effective)
 # Camera position are a set of triplets specifiying the -x, y, and z- cordinates.
 hdg.camera_param_ranges['camera_position'] = [[1,-1,2],[1,1,1]]
 hdg.camera_param_ranges['image_resolution'] = [1000, 500]
+
 # ---------------- GENERATE SYNTHETIC DATA -------------
 # Generate a user-specified number of simulated rgb/lidar outputs + annotations for a given canopy type in Helios
 # Note1: simulation_type='lidar' requires a GPU with CUDA installed
 # Note2: simulation_type='rgb' requieres access to Graphic interface
 # Note3: User can specified the output directory path. If it is not defined, the output data will be saved in the current directory.
 hdg.generate_data(n_imgs=10, canopy_type='VSPGrapevine', simulation_type='rgb', output_directory ="/home/username/Documents")
+
 # ---------------- CONVERT HELIOS OUTPUT TO STANDARD COCO JSON FORMAT -------------
 # Generate a user-specified number of simulated rgb/lidar outputs + annotations for a given canopy type in Helios
 # Note1: simulation_type='lidar' requires a GPU with CUDA installed
