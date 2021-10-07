@@ -1,6 +1,7 @@
 import os
 import re
 import json
+import difflib
 import functools
 
 @functools.lru_cache(maxsize = None)
@@ -16,11 +17,20 @@ def to_camel_case(s):
     s = re.sub(r"(_|-)+", " ", s).title().replace(" ", "") # noqa
     return ''.join(s)
 
-def resolve_list_value(l):
+
+def maybe_you_meant(name, msg):
+    """Suggests potential correct spellings for an invalid name."""
+    suggestion = difflib.get_close_matches(
+        name, load_public_sources().keys())
+    if len(suggestion) == 0:
+        return msg
+    return msg + f" Maybe you meant: {suggestion[0]}?"
+
+def resolve_list_value(val):
     """Determines whether a list contains one or multiple values."""
-    if len(l) == 1:
-        return l[0]
-    return l
+    if len(val) == 1:
+        return val[0]
+    return val
 
 def resolve_tuple_values(*inputs, custom_error = None):
     """Determines whether `inputs[0]` contains two values or
@@ -60,3 +70,5 @@ def as_scalar(inp):
 def scalar_unpack(inp):
     """Unpacks a 1-d array into a list of scalars."""
     return [as_scalar(item) for item in inp]
+
+
