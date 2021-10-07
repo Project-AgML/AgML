@@ -8,3 +8,6 @@ from .boxes import (
     annotate_bboxes_on_image,
     visualize_image_and_boxes
 )
+from .labels import (
+    visualize_images_with_labels
+)
