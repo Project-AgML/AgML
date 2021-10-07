@@ -1,7 +1,6 @@
 import io
 import re
 import yaml
-import functools
 import collections
 
 import agml.utils.logging as logging
@@ -40,11 +39,15 @@ class DatasetMetadata(object):
     def __str__(self):
         return self._name
 
+    def __eq__(self, other):
+        if isinstance(other, DatasetMetadata):
+            return self._name == other._name
+        return False
+
     @property
     def data(self):
         return self._metadata
 
-    @functools.lru_cache(maxsize = None)
     def _load_source_info(self, name):
         """Loads the data source metadata into the class."""
         source_info = load_public_sources()

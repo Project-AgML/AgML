@@ -39,6 +39,9 @@ def download_dataset(dataset_name, dest_dir):
         raise ce
 
     # File path of zipped dataset
+    if dataset_name in dest_dir:
+        dest_dir = os.path.dirname(dest_dir)
+    os.makedirs(dest_dir, exist_ok = True)
     dataset_download_path = os.path.join(
         dest_dir, dataset_name + '.zip')
 

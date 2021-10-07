@@ -419,7 +419,7 @@
         "ml_task": "object_detection",
         "ag_task": "fruit_detection",
         "location": {
-            "continent": "australia",
+            "continent": "oceania",
             "country": "australia"
         },
         "sensor_modality": "rgb",
