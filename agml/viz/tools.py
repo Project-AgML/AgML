@@ -42,6 +42,17 @@ def auto_resolve_image(f):
                 raise FileNotFoundError(
                     f"The provided image file {image} does not exist.")
             image = cv2.imread(image)
+        elif isinstance(image, (list, tuple)):
+            if not isinstance(image[0], (str, bytes, os.PathLike)):
+                pass
+            else:
+                processed_images = []
+                for image_path in image:
+                    if isinstance(image_path, (str, bytes, os.PathLike)):
+                        processed_images.append(cv2.imread(image_path))
+                    else:
+                        processed_images.append(image_path)
+                image = processed_images
         return f(image, *args, **kwargs)
     return _resolver
 

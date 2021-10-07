@@ -1,3 +1,0 @@
-sugarcanebillets_damage_usa --> the zip file is named `sugarcanebillets_damage_usa.zip` but the directory is
-    `sugarcane_damage_usa`, we need to use a consistent name, either sugarcanebillets_damage_usa, or sugarcane_damage_usa
-crop_weeds_greece --> the sugarcanebillets_damage_usa dataset has been zipped into the crop_weeds_greece_dataset.zip file.
