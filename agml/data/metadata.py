@@ -4,7 +4,7 @@ import yaml
 import collections
 
 import agml.utils.logging as logging
-from agml.utils.general import load_public_sources
+from agml.utils.general import load_public_sources, maybe_you_meant
 
 class DatasetMetadata(object):
     """Stores metadata about a certain AgML dataset.
@@ -53,7 +53,9 @@ class DatasetMetadata(object):
         source_info = load_public_sources()
         if name not in source_info.keys():
             if name.replace('-', '_') not in source_info.keys():
-                raise ValueError(f"Received invalid public source: {name}.")
+                msg = f"Received invalid public source: {name}."
+                msg = maybe_you_meant(name, msg)
+                raise ValueError(msg)
             else:
                 logging.log(
                     f"Interpreted dataset '{name}' as '{name.replace('-', '_')}.'")
