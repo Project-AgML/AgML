@@ -57,7 +57,7 @@ def test_coco_formatting_rearrange(coco_example):
 
 def test_coco_formatting_minmax():
     eg_box = [[100, 500, 200, 700]]
-    eg_output = [[100, 200, 400, 200]]
+    eg_output = [[100, 200, 400, 500]]
     assert np.all(agdata.convert_bbox_format(
         eg_box, 'x1 x2 y1 y2') == eg_output)
 
