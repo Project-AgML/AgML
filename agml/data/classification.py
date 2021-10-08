@@ -268,7 +268,7 @@ class AgMLImageClassificationDataLoader(AgMLDataLoader):
             else:
                 split_1, split_overflow = train_test_split(
                     tts, train_size = splits[0],
-                    test_size = splits[1] + splits[2], shuffle = shuffle)
+                    test_size = round(splits[1] + splits[2], 2), shuffle = shuffle)
                 split_2, split_3 = train_test_split(
                     split_overflow,
                     train_size = splits[1] / (splits[1] + splits[2]),
