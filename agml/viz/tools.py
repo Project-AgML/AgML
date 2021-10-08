@@ -10,8 +10,6 @@ import cv2
 import numpy as np
 from PIL import Image
 
-import matplotlib.colors as mcolors
-
 from agml.backend.tftorch import tf, torch
 
 # Sets the colormaps used in the other `agml.viz` methods.
