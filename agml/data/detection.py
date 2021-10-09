@@ -1,6 +1,5 @@
 import os
 import json
-import decimal
 
 import cv2
 import numpy as np

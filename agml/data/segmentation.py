@@ -134,7 +134,7 @@ class AgMLSemanticSegmentationDataLoader(AgMLDataLoader):
             return
         items = list(self._data.items())
         np.random.shuffle(items)
-        self._data = dict(items)
+        self._data = dict(items) # noqa
         self._image_paths = list(self._data.keys())
 
     @staticmethod
