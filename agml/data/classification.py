@@ -518,7 +518,7 @@ class AgMLImageClassificationDataLoader(AgMLDataLoader):
         """
         import tensorflow as tf
         set_backend('tensorflow')
-        _check_image_classification_transform(preprocessing)
+        _check_image_classification_transform(transform)
         if get_backend() != 'tensorflow':
             raise ValueError(
                 "Using a non-TensorFlow transform for `AgMLDataLoader.tensorflow()`.")
