@@ -6,7 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from agml.utils.general import resolve_tuple_values
-from agml.viz.tools import format_image, get_colormap, auto_resolve_image
+from agml.viz.tools import format_image, get_colormap, auto_resolve_image, show_when_allowed
 
 def _preprocess_mask(mask):
     """Preprocesses a mask with a distinct colorscheme."""
@@ -43,6 +43,7 @@ def _mask_2d_to_3d(mask):
         iter_idx += 1
     return out
 
+
 def output_to_mask(mask):
     """Converts an output annotation mask into a visual segmentation mask.
 
@@ -63,6 +64,7 @@ def output_to_mask(mask):
     return _preprocess_mask(mask)
 
 
+@show_when_allowed
 @auto_resolve_image
 def visualize_image_and_mask(image, mask = None):
     """Visualizes an image and its corresponding segmentation mask.
@@ -96,7 +98,6 @@ def visualize_image_and_mask(image, mask = None):
     for ax in axes:
         ax.set_aspect('equal')
         ax.axis('off')
-    plt.show()
     return fig
 
 
@@ -154,6 +155,7 @@ def overlay_segmentation_masks(image, mask = None, border = True):
     return image
 
 
+@show_when_allowed
 @auto_resolve_image
 def visualize_overlaid_masks(image, mask = None, border = True):
     """Displays an image with segmentation masks overlaid on it.
@@ -182,7 +184,6 @@ def visualize_overlaid_masks(image, mask = None, border = True):
     plt.imshow(image)
     plt.gca().axis('off')
     plt.gca().set_aspect('equal')
-    plt.show()
     return image
 
 

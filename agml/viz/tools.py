@@ -9,6 +9,7 @@ import functools
 import cv2
 import numpy as np
 from PIL import Image
+import matplotlib.pyplot as plt
 
 from agml.backend.tftorch import tf, torch
 
@@ -53,6 +54,23 @@ def auto_resolve_image(f):
                 image = processed_images
         return f(image, *args, **kwargs)
     return _resolver
+
+def show_when_allowed(f):
+    """Stops running `plt.show()` when in a Jupyter Notebook."""
+    _in_notebook = False
+    try:
+        shell = eval("get_ipython().__class__.__name__")
+        if shell == 'ZMQInteractiveShell':
+            _in_notebook = True
+    except:
+        pass
+
+    def _cancel_display(*args, **kwargs):
+        res = f(*args, **kwargs)
+        if not _in_notebook:
+            plt.show()
+        return res
+    return _cancel_display
 
 def format_image(img):
     """Formats an image to be used in a Matplotlib visualization.

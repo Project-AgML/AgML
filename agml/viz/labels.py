@@ -3,7 +3,7 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 
-from agml.viz.tools import auto_resolve_image
+from agml.viz.tools import auto_resolve_image, show_when_allowed
 
 def _inference_best_shape(n_images):
     """Inferences the best matplotlib row/column layout.
@@ -20,6 +20,7 @@ def _inference_best_shape(n_images):
             b = n_images // a
     return [b, a]
 
+@show_when_allowed
 @auto_resolve_image
 def visualize_images_with_labels(images, labels = None, *, info = None, shape = None):
     """Visualizes a set of images with their classification labels.
@@ -50,10 +51,10 @@ def visualize_images_with_labels(images, labels = None, *, info = None, shape = 
     -------
     The matplotlib figure with the plotted info.
     """
-    if images and labels is None:
+    if images is not None and labels is None:
         if isinstance(images[0], np.ndarray):
             if images[0].ndim >= 3:
-                images = images[0], labels = images[1]
+                images, labels = images[0], images[1]
             else:
                 raise ValueError(
                     "If passing a numpy array for images, expected at "
@@ -71,6 +72,8 @@ def visualize_images_with_labels(images, labels = None, *, info = None, shape = 
     if labels is None:
         raise TypeError(
             "Invalid format for `images` and `labels`, see documentation.")
+    if isinstance(images, np.ndarray) and images.shape[0] > 100:
+        images, labels = [images], [labels]
 
     # If a prime number is passed, e.g. 23, then the `_inference_best_shape`
     # method will return the shape of (23, 1). Likely, the user is expecting
@@ -103,7 +106,7 @@ def visualize_images_with_labels(images, labels = None, *, info = None, shape = 
         plt.setp(ax.spines.values(), visible = False)
         ax.set_xlabel(label)
 
-    plt.show()
+    fig.tight_layout()
     return fig
 
 
