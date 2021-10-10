@@ -60,7 +60,8 @@ def show_when_allowed(f):
     _in_notebook = False
     try:
         shell = eval("get_ipython().__class__.__name__")
-        if shell == 'ZMQInteractiveShell':
+        cls = eval("get_ipython().__class__")
+        if shell == 'ZMQInteractiveShell' or 'colab' in cls:
             _in_notebook = True
     except:
         pass

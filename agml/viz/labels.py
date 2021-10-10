@@ -68,7 +68,7 @@ def visualize_images_with_labels(images, labels = None, *, info = None, shape = 
                         _labels.append(content[1])
                     images, labels = _images, _labels
                 else:
-                    images = images[0], labels = images[1]
+                    images, labels = images[0], images[1]
     if labels is None:
         raise TypeError(
             "Invalid format for `images` and `labels`, see documentation.")
