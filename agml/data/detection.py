@@ -614,7 +614,13 @@ class AgMLObjectDetectionDataLoader(AgMLDataLoader):
         -------
         A configured `tf.data.Dataset` with the data.
         """
+        # Note on `tf.config.run_functions_eagerly(True)`. To use this specific mode,
+        # that is, `loader.tensorflow()` for object detection, a COCO annotation dictionary
+        # is returned and processed in the pipeline, and since TensorFlow in graph mode
+        # runs into multiple errors, we have to prevent this by running the dataset
+        # in eager mode. To change this behavior, you have to write your own dataset.
         import tensorflow as tf
+        tf.config.run_functions_eagerly(True)
         set_backend('tensorflow')
         _check_object_detection_transform(transform, dual_transform)
         if get_backend() != 'tensorflow':
