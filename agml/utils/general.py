@@ -17,7 +17,6 @@ def to_camel_case(s):
     s = re.sub(r"(_|-)+", " ", s).title().replace(" ", "") # noqa
     return ''.join(s)
 
-
 def maybe_you_meant(name, msg):
     """Suggests potential correct spellings for an invalid name."""
     suggestion = difflib.get_close_matches(

@@ -3,6 +3,7 @@ import sys
 import zipfile
 
 import boto3
+import botocore.client
 import botocore.exceptions
 from tqdm import tqdm
 
@@ -18,7 +19,8 @@ def download_dataset(dataset_name, dest_dir):
         path for saving downloaded dataset
     """
     # Establish connection with s3 via boto
-    s3 = boto3.client('s3')
+    s3 = boto3.client('s3', config = botocore.client.Config(
+        signature_version = botocore.UNSIGNED))
     s3_resource = boto3.resource('s3')
 
     # Setup progress bar
