@@ -2,10 +2,6 @@ import os
 import sys
 import zipfile
 
-import boto3
-import botocore.client
-import botocore.exceptions
-
 import requests
 from tqdm import tqdm
 
@@ -21,22 +17,7 @@ def download_dataset(dataset_name, dest_dir):
         path for saving downloaded dataset
     """
     # Connect to S3 and generate unsigned URL for bucket object
-    try:
-        s3 = boto3.client('s3', region_name = 'us-west-1')
-        url = s3.generate_presigned_url(
-            'get_object', Params = {
-                'Bucket': 'agdata-data',
-                'Key': dataset_name + '.zip'
-            },
-            ExpiresIn = 3600
-        )
-    except botocore.exceptions.ClientError as ce:
-        if "Not Found" in str(ce):
-            raise ValueError(
-                f"The dataset '{dataset_name}' could not be found "
-                f"in the bucket, perhaps it has not been uploaded "
-                f"yet. Please report this issue.")
-        raise ce
+    url = f"https://agdata-data.s3.us-west-1.amazonaws.com/{dataset_name}.zip"
 
     # File path of zipped dataset
     if dataset_name in dest_dir:
