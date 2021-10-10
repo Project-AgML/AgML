@@ -43,6 +43,8 @@ into a single training pipeline. To this end, we provide annotations in the foll
 - **Object Detection**: [COCO JSON](https://cocodataset.org/#format-data)
 - **Semantic Segmentation**: Dense Pixel-Wise
 
+## Optional
+
 We aim to provide additional datasets for different deep learning tasks in the future.
 
 ## Vision
