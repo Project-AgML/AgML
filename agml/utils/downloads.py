@@ -5,6 +5,8 @@ import zipfile
 import boto3
 import botocore.client
 import botocore.exceptions
+
+import requests
 from tqdm import tqdm
 
 def download_dataset(dataset_name, dest_dir):
@@ -18,20 +20,16 @@ def download_dataset(dataset_name, dest_dir):
     dest_dir : str
         path for saving downloaded dataset
     """
-    # Establish connection with s3 via boto
-    s3 = boto3.client('s3', config = botocore.client.Config(
-        signature_version = botocore.UNSIGNED))
-    s3_resource = boto3.resource('s3')
-
-    # Setup progress bar
+    # Connect to S3 and generate unsigned URL for bucket object
     try:
-        ds_size = float(s3_resource.ObjectSummary(
-            bucket_name = 'agdata-data',
-            key = dataset_name + '.zip').size)
-        pg = tqdm(
-            total = ds_size, file = sys.stdout,
-            desc = f"Downloading {dataset_name} "
-                   f"(size = {round(ds_size / 1000000, 1)} MB)")
+        s3 = boto3.client('s3', region_name = 'us-west-1')
+        url = s3.generate_presigned_url(
+            'get_object', Params = {
+                'Bucket': 'agdata-data',
+                'Key': dataset_name + '.zip'
+            },
+            ExpiresIn = 3600
+        )
     except botocore.exceptions.ClientError as ce:
         if "Not Found" in str(ce):
             raise ValueError(
@@ -47,14 +45,20 @@ def download_dataset(dataset_name, dest_dir):
     dataset_download_path = os.path.join(
         dest_dir, dataset_name + '.zip')
 
-    # Upload data to agdata-data bucket
+    # Download object from bucket
     try:
-        with open(dataset_download_path, 'wb') as data:
-            s3.download_fileobj(Bucket = 'agdata-data',
-                                Key = dataset_name + '.zip',
-                                Fileobj = data,
-                                Callback = lambda x: pg.update(x))
-        pg.close()
+        with requests.Session() as sess:
+            r = sess.get(url, stream = True)
+            r.raise_for_status()
+            content_size = int(r.headers['Content-Length'])
+            pg = tqdm(total = content_size, file = sys.stdout,
+                      desc = f"Downloading {dataset_name} "
+                             f"(size = {round(content_size/ 1000000, 1)} MB)")
+            with open(dataset_download_path, 'wb') as f:
+                for chunk in r.iter_content(chunk_size = 8192):
+                    f.write(chunk)
+                    pg.update(8192)
+            pg.close()
     except BaseException as e:
         pg.close()
         if os.path.exists(dataset_download_path):
@@ -63,8 +67,7 @@ def download_dataset(dataset_name, dest_dir):
 
     # Unzip downloaded dataset
     with zipfile.ZipFile(dataset_download_path, 'r') as z:
-        z.printdir()
-        print('Extracting files...')
+        print(f'[AgML Download]: Extracting files for {dataset_name}... ', end = '')
         z.extractall(path = dest_dir)
         print('Done!')
 
