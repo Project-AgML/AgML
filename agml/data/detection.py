@@ -26,7 +26,7 @@ class AgMLObjectDetectionDataLoader(AgMLDataLoader):
         # Take care of the `__new__` initialization logic.
         if kwargs.get('skip_init', False):
             return
-        super(AgMLObjectDetectionDataLoader, self).__init__(dataset)
+        super(AgMLObjectDetectionDataLoader, self).__init__(dataset, **kwargs)
 
         # Build the data.
         self._find_images_and_annotations()

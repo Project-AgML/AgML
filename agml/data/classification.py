@@ -25,7 +25,7 @@ class AgMLImageClassificationDataLoader(AgMLDataLoader):
         # Take care of the `__new__` initialization logic.
         if kwargs.get('skip_init', False):
             return
-        super(AgMLImageClassificationDataLoader, self).__init__(dataset)
+        super(AgMLImageClassificationDataLoader, self).__init__(dataset, **kwargs)
 
         # Set up the class data.
         self._load_data_by_directory()

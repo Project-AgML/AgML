@@ -28,7 +28,7 @@ class AgMLSemanticSegmentationDataLoader(AgMLDataLoader):
         # Take care of the `__new__` initialization logic.
         if kwargs.get('skip_init', False):
             return
-        super(AgMLSemanticSegmentationDataLoader, self).__init__(dataset)
+        super(AgMLSemanticSegmentationDataLoader, self).__init__(dataset, **kwargs)
 
         # Load internal data.
         self._load_images_and_annotations()
