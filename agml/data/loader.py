@@ -184,7 +184,7 @@ class AgMLDataLoader(TorchDataset, TFSequenceDataset):
     @property
     def training_data(self):
         if self._training_data is not None:
-            ret_cls = self.__class__._from_extant_data(
+            ret_cls = self.__class__._from_data_subset(
                 self._wrap_reduced_data('training'),
                 self._stored_kwargs_for_init)
             ret_cls._split_name = 'train'
@@ -196,7 +196,7 @@ class AgMLDataLoader(TorchDataset, TFSequenceDataset):
     @property
     def validation_data(self):
         if self._validation_data is not None:
-            ret_cls = self.__class__._from_extant_data(
+            ret_cls = self.__class__._from_data_subset(
                 self._wrap_reduced_data('validation'),
                 self._stored_kwargs_for_init)
             ret_cls._split_name = 'validation'
@@ -208,7 +208,7 @@ class AgMLDataLoader(TorchDataset, TFSequenceDataset):
     @property
     def test_data(self):
         if self._test_data is not None:
-            ret_cls = self.__class__._from_extant_data(
+            ret_cls = self.__class__._from_data_subset(
                 self._wrap_reduced_data('test'),
                 self._stored_kwargs_for_init)
             ret_cls._split_name = 'test'
@@ -223,7 +223,7 @@ class AgMLDataLoader(TorchDataset, TFSequenceDataset):
 
     @classmethod
     @abc.abstractmethod
-    def _from_extant_data(cls, *args, **kwargs):
+    def _from_data_subset(cls, *args, **kwargs):
         raise NotImplementedError()
 
     #### API METHODS - OVERWRITTEN BY DERIVED CLASSES ####

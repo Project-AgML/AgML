@@ -80,7 +80,7 @@ class AgMLSemanticSegmentationDataLoader(AgMLDataLoader):
                     f"expected one in range 0 - {len(self)}.")
 
     def _wrap_reduced_data(self, split):
-        """Wraps the reduced class information for `_from_extant_data`."""
+        """Wraps the reduced class information for `_from_data_subset`."""
         data_meta = getattr(self, f'_{split}_data')
         meta_dict = {
             'name': self.name,
@@ -93,7 +93,7 @@ class AgMLSemanticSegmentationDataLoader(AgMLDataLoader):
         return meta_dict
 
     @classmethod
-    def _from_extant_data(cls, meta_dict, meta_kwargs):
+    def _from_data_subset(cls, meta_dict, meta_kwargs):
         """Initializes the class from a subset of data.
 
         This method is used internally for the `split` method, and
