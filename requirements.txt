@@ -9,3 +9,4 @@ imantics
 Shapely
 torch
 torchvision
+pyyaml

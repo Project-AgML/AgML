@@ -9,7 +9,7 @@ with open(os.path.join(os.path.dirname(__file__), 'README.md'), 'r') as f:
 # ============ PACKAGE REQUIREMENTS =============
 
 install_requires = [
-
+    'pyyaml>=5.4.1'
 ]
 
 tests_require = [

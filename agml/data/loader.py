@@ -158,7 +158,7 @@ class AgMLDataLoader(object):
             if os.path.basename(download_path) != self._info.name:
                 download_path = os.path.join(download_path, self._info.name)
         else:
-            download_path = default_data_save_path()
+            download_path = os.path.join(default_data_save_path(), self._info.name)
         print(f"[AgML Download]: Downloading dataset `{self._info.name}` "
               f"to {download_path}.")
         download_dataset(self._info.name, download_path)
