@@ -424,8 +424,8 @@ class AgMLSemanticSegmentationDataLoader(AgMLDataLoader):
             transform, target_transform, dual_transform)
         if dual_transform is not None:
             self._dual_transform_pipeline = dual_transform
-            self._transform_pipeline = None
-            self._target_transform_pipeline = None
+            self._transform_pipeline = transform
+            self._target_transform_pipeline = target_transform
             return
         self._transform_pipeline = transform
         self._target_transform_pipeline = target_transform

@@ -228,10 +228,11 @@ def _check_semantic_segmentation_transform(transform, target_transform, dual_tra
     """Checks the semantic segmentation transform pipeline."""
     if transform is None and target_transform is None and dual_transform is None:
         return None, None, None
-    if dual_transform is not None:
-        _check_image_classification_transform(dual_transform)
+    if transform is not None:
         if isinstance(transform, types.FunctionType) and target_transform is None:  # noqa
             _check_function_type_transform(transform)
+    if dual_transform is not None:
+        _check_image_classification_transform(dual_transform)
     else:
         old_backend = get_backend()
         _check_image_classification_transform(transform)
@@ -244,10 +245,10 @@ def _check_semantic_segmentation_transform(transform, target_transform, dual_tra
         return transform, target_transform
 
 def _check_function_type_transform(transform):
-    if len(inspect.signature(transform)) != 2:  # noqa
+    if len(inspect.signature(transform).parameters) != 1:  # noqa
         raise ValueError(
-            "If passing a function for `transform`, it should accept "
-            "two arguments, the input image and annotation.")
+            "If passing a function for `transform`, it "
+            "should accept one argument, the input image.")
     return transform
 
 ######### `AgMLObjectDetectionDataLoader.transform()` #########
@@ -261,3 +262,9 @@ def _check_object_detection_transform(transform, dual_transform):
     else:
         _check_image_classification_transform(transform)
 
+def _check_dual_function_type_transform(transform):
+    if len(inspect.signature(transform).parameters) != 2:  # noqa
+        raise ValueError(
+            "If passing a function for `transform`, it should accept "
+            "two arguments, the input image and annotation.")
+    return transform
