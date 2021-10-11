@@ -7,7 +7,8 @@ from sklearn.model_selection import train_test_split
 
 from agml.backend.tftorch import set_backend, get_backend
 from agml.backend.tftorch import (
-    _check_semantic_segmentation_transform, _convert_image_to_torch # noqa
+    _check_semantic_segmentation_transform, # noqa
+    _convert_image_to_torch, _postprocess_torch_annotation # noqa
 )
 from agml.backend.learn import set_seed
 
@@ -176,6 +177,8 @@ class AgMLSemanticSegmentationDataLoader(AgMLDataLoader):
                         image = self._dual_transform_pipeline(image)
                         set_seed(seed)
                         annotation = self._dual_transform_pipeline(annotation)
+                        if get_backend() == 'torch':
+                            annotation = _postprocess_torch_annotation(annotation)
                 if self._transform_pipeline is None \
                         and self._target_transform_pipeline is None:
                     return image, annotation
@@ -529,6 +532,7 @@ class AgMLSemanticSegmentationDataLoader(AgMLDataLoader):
                         image = self._dual_transform_pipeline(image)
                         set_seed(seed)
                         annotation = self._dual_transform_pipeline(annotation)
+                        annotation = _postprocess_torch_annotation(annotation)
                 if self._transform_pipeline is None \
                         and self._target_transform_pipeline is None:
                     return image, annotation

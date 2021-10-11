@@ -3,7 +3,7 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 
-from agml.viz.tools import auto_resolve_image, show_when_allowed
+from agml.viz.tools import auto_resolve_image, show_when_allowed, format_image
 
 def _inference_best_shape(n_images):
     """Inferences the best matplotlib row/column layout.
@@ -93,7 +93,7 @@ def visualize_images_with_labels(images, labels = None, *, info = None, shape = 
     except AttributeError: # If showing only a single image.
         iter_ax = [axes]
     for image, label, ax in zip(images, labels, iter_ax):
-        ax.imshow(image)
+        ax.imshow(format_image(image))
         ax.set_aspect(1)
         if info is not None:
             label = info.num_to_class[label]

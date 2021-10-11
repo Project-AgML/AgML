@@ -123,6 +123,15 @@ def _convert_image_to_torch(image):
     """Converts an image (np.ndarray) to a torch Tensor."""
     return torch.from_numpy(image).long()
 
+def _postprocess_torch_annotation(image):
+    """Post-processes a spatially augmented torch annotation."""
+    try:
+        if image.dtype.is_floating_point:
+            image = (image * 255).int()
+    except AttributeError:
+        pass
+    return image
+
 ######### AGMLDATALOADER METHODS #########
 
 class _DummyTorchDataset(object):
