@@ -400,7 +400,7 @@ class AgMLImageClassificationDataLoader(AgMLDataLoader):
         _check_image_classification_transform(transform)
         self._transform_pipeline = transform
 
-    def torch(self, *, image_size = (512, 512), preprocessing = None, **loader_kwargs):
+    def torch(self, *, image_size = (512, 512), transform = None, **loader_kwargs):
         """Returns a PyTorch DataLoader with this dataset's content.
 
         This method allows the exportation of the data inside this
@@ -423,7 +423,7 @@ class AgMLImageClassificationDataLoader(AgMLDataLoader):
         image_size : tuple
             A tuple of two values containing the output
             image size. This defaults to `(512, 512)`.
-        preprocessing : Any
+        transform : Any
             One of the following:
                 1. A set of `torchvision.transforms`.
                 2. A method which takes in one input array (the
@@ -442,14 +442,14 @@ class AgMLImageClassificationDataLoader(AgMLDataLoader):
         """
         from torch.utils.data import Dataset, DataLoader
         set_backend('torch')
-        _check_image_classification_transform(preprocessing)
+        _check_image_classification_transform(transform)
         if get_backend() != 'torch':
             raise ValueError(
                 "Using a non-PyTorch transform for `AgMLDataLoader.torch()`.")
 
         # Create the simplified `torch.utils.data.Dataset` subclass.
         class _DummyDataset(Dataset):
-            def __init__(self, image_label_mapping, transform = None):
+            def __init__(self, image_label_mapping, transform = None): # noqa
                 self._mapping = image_label_mapping
                 self._transform = transform
 
@@ -470,8 +470,8 @@ class AgMLImageClassificationDataLoader(AgMLDataLoader):
             f"{self._info.name}_dataset")
         transform_ = None
         if self._preprocessing_enabled:
-            transform_ = preprocessing \
-                if preprocessing is not None \
+            transform_ = transform \
+                if transform is not None \
                 else (self._transform_pipeline
                       if self._transform_pipeline is not None else None)
         return DataLoader(_DummyDataset(

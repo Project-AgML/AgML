@@ -137,13 +137,15 @@ def _swap_loader_mro(inst, mode):
     if mode == 'tf':
         if not get_backend() == 'tf':
             set_backend('tf')
-        inst.__class__.__bases__ = \
-            inst.__class__.__bases__ + (tf.keras.utils.Sequence,)
+        if tf.keras.utils.Sequence not in inst.__class__.__bases__:
+            inst.__class__.__bases__ = \
+                inst.__class__.__bases__ + (tf.keras.utils.Sequence,)
     if mode == 'torch':
         if not get_backend() == 'torch':
             set_backend('torch')
-        inst.__class__.__bases__ = \
-            inst.__class__.__bases__ + (torch_data.Dataset,)
+        if torch_data.Dataset not in inst.__class__.__bases__:
+            inst.__class__.__bases__ = \
+                inst.__class__.__bases__ + (torch_data.Dataset,)
 
 ###################################################################
 ############### TRANSFORM CHECKS FOR AGMLDATALOADER ###############
