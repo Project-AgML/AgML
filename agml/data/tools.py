@@ -1,5 +1,7 @@
 import numpy as np
 
+from agml.utils.general import resolve_list_value
+
 def _resolve_coco_annotations(annotations):
     """Resolves COCO annotations to a standard format.
 
@@ -96,6 +98,8 @@ def convert_bbox_format(annotations_or_bboxes, fmt):
         annotations = annotations_or_bboxes['bboxes']
     else:
         annotations = annotations_or_bboxes
+        if isinstance(annotations[0], (int, float)):
+            annotations = [annotations]
     if isinstance(fmt, str):
         if ',' in fmt:
             fmt = fmt.split(',')
@@ -150,5 +154,5 @@ def convert_bbox_format(annotations_or_bboxes, fmt):
         res = annotations_or_bboxes.copy()
         res['bboxes'] = formatted_annotations
         return res
-    return formatted_annotations
+    return resolve_list_value(formatted_annotations)
 
