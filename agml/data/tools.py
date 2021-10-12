@@ -1,5 +1,7 @@
 import numpy as np
 
+from agml.utils.general import resolve_list_value
+
 def _resolve_coco_annotations(annotations):
     """Resolves COCO annotations to a standard format.
 
@@ -8,6 +10,8 @@ def _resolve_coco_annotations(annotations):
     e.g. multiple bounding boxes and areas, or a list of multiple COCO
     dictionaries. This method resolves it into the former case.
     """
+    if isinstance(annotations, np.ndarray):
+        return annotations
     if isinstance(annotations, list):
         if not isinstance(annotations[0], dict):
             return annotations
@@ -94,6 +98,13 @@ def convert_bbox_format(annotations_or_bboxes, fmt):
         annotations = annotations_or_bboxes['bboxes']
     else:
         annotations = annotations_or_bboxes
+        if isinstance(annotations[0], (int, float)):
+            annotations = [annotations]
+    if isinstance(fmt, str):
+        if ',' in fmt:
+            fmt = fmt.split(',')
+        else:
+            fmt = fmt.split(' ')
     if len(fmt) != 4:
         raise ValueError(f"Argument 'fmt' should contain 4 values, got {len(fmt)}.")
     
@@ -110,14 +121,18 @@ def convert_bbox_format(annotations_or_bboxes, fmt):
         xmin, ymin, width, height = annotation
         x1, y1 = xmin, ymin - height
         return [x1, y1, width, height]
-    
+    def _x1_y1_width_height_to_coco(annotation): # noqa
+        return annotation # This is just here for reordering.
+
     # Resolve the format
     fmt_bases = [['x1', 'x2', 'y1', 'y2'],
                  ['x_min', 'y_min', 'x_max', 'y_max'],
-                 ['x_min', 'y_min', 'width', 'height']]
+                 ['x_min', 'y_min', 'width', 'height'],
+                 ['x1', 'y1', 'width', 'height']]
     fmt_map = {0: _x1_x2_y1_y2_to_coco,
                1: _xmin_ymin_xmax_ymax_to_coco,
-               2: _xmin_ymin_width_height_to_coco}
+               2: _xmin_ymin_width_height_to_coco,
+               3: _x1_y1_width_height_to_coco}
     fmt_found = False
     map_fmt, select_order = None, None
     for indx, base in enumerate(fmt_bases):
@@ -139,5 +154,5 @@ def convert_bbox_format(annotations_or_bboxes, fmt):
         res = annotations_or_bboxes.copy()
         res['bboxes'] = formatted_annotations
         return res
-    return formatted_annotations
+    return resolve_list_value(formatted_annotations)
 

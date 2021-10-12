@@ -15,7 +15,6 @@ class _PublicSourceFilter(object):
     def __init__(self):
         pass
 
-    @functools.lru_cache(maxsize = None)
     def apply_filters(self, **filters):
         if len(filters) == 0:
             self._current_filtered_source = self._sources.keys()

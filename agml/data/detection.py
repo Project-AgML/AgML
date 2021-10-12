@@ -26,7 +26,7 @@ class AgMLObjectDetectionDataLoader(AgMLDataLoader):
         # Take care of the `__new__` initialization logic.
         if kwargs.get('skip_init', False):
             return
-        super(AgMLObjectDetectionDataLoader, self).__init__(dataset)
+        super(AgMLObjectDetectionDataLoader, self).__init__(dataset, **kwargs)
 
         # Build the data.
         self._find_images_and_annotations()
@@ -79,7 +79,7 @@ class AgMLObjectDetectionDataLoader(AgMLDataLoader):
                     f"expected one in range 0 - {len(self)}.")
 
     def _wrap_reduced_data(self, split):
-        """Wraps the reduced class information for `_from_extant_data`."""
+        """Wraps the reduced class information for `_from_data_subset`."""
         data_meta = getattr(self, f'_{split}_data')
         meta_dict = {
             'name': self.name,
@@ -90,7 +90,7 @@ class AgMLObjectDetectionDataLoader(AgMLDataLoader):
         return meta_dict
 
     @classmethod
-    def _from_extant_data(cls, meta_dict, meta_kwargs):
+    def _from_data_subset(cls, meta_dict, meta_kwargs):
         """Initializes the class from a subset of data.
 
         This method is used internally for the `split` method, and
@@ -352,7 +352,7 @@ class AgMLObjectDetectionDataLoader(AgMLDataLoader):
             else:
                 split_1, split_overflow = train_test_split(
                     tts, train_size = splits[0],
-                    test_size = splits[1] + splits[2], shuffle = shuffle)
+                    test_size = round(splits[1] + splits[2], 2), shuffle = shuffle)
                 split_2, split_3 = train_test_split(
                     split_overflow,
                     train_size = splits[1] / (splits[1] + splits[2]),
@@ -637,7 +637,13 @@ class AgMLObjectDetectionDataLoader(AgMLDataLoader):
         -------
         A configured `tf.data.Dataset` with the data.
         """
+        # Note on `tf.config.run_functions_eagerly(True)`. To use this specific mode,
+        # that is, `loader.tensorflow()` for object detection, a COCO annotation dictionary
+        # is returned and processed in the pipeline, and since TensorFlow in graph mode
+        # runs into multiple errors, we have to prevent this by running the dataset
+        # in eager mode. To change this behavior, you have to write your own dataset.
         import tensorflow as tf
+        tf.config.run_functions_eagerly(True)
         set_backend('tensorflow')
         _check_object_detection_transform(transform, dual_transform)
         if get_backend() != 'tensorflow':

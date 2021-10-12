@@ -7,7 +7,8 @@ from sklearn.model_selection import train_test_split
 
 from agml.backend.tftorch import set_backend, get_backend
 from agml.backend.tftorch import (
-    _check_semantic_segmentation_transform, _convert_image_to_torch # noqa
+    _check_semantic_segmentation_transform, # noqa
+    _convert_image_to_torch, _postprocess_torch_annotation # noqa
 )
 from agml.backend.learn import set_seed
 
@@ -27,7 +28,7 @@ class AgMLSemanticSegmentationDataLoader(AgMLDataLoader):
         # Take care of the `__new__` initialization logic.
         if kwargs.get('skip_init', False):
             return
-        super(AgMLSemanticSegmentationDataLoader, self).__init__(dataset)
+        super(AgMLSemanticSegmentationDataLoader, self).__init__(dataset, **kwargs)
 
         # Load internal data.
         self._load_images_and_annotations()
@@ -82,7 +83,7 @@ class AgMLSemanticSegmentationDataLoader(AgMLDataLoader):
                     f"expected one in range 0 - {len(self)}.")
 
     def _wrap_reduced_data(self, split):
-        """Wraps the reduced class information for `_from_extant_data`."""
+        """Wraps the reduced class information for `_from_data_subset`."""
         data_meta = getattr(self, f'_{split}_data')
         meta_dict = {
             'name': self.name,
@@ -95,7 +96,7 @@ class AgMLSemanticSegmentationDataLoader(AgMLDataLoader):
         return meta_dict
 
     @classmethod
-    def _from_extant_data(cls, meta_dict, meta_kwargs):
+    def _from_data_subset(cls, meta_dict, meta_kwargs):
         """Initializes the class from a subset of data.
 
         This method is used internally for the `split` method, and
@@ -134,7 +135,8 @@ class AgMLSemanticSegmentationDataLoader(AgMLDataLoader):
             return
         items = list(self._data.items())
         np.random.shuffle(items)
-        self._data = dict(items)
+        self._data = dict(items) # noqa
+        self._image_paths = list(self._data.keys())
 
     @staticmethod
     def _convert_dict_to_arrays(*dicts):
@@ -178,6 +180,8 @@ class AgMLSemanticSegmentationDataLoader(AgMLDataLoader):
                         image = self._dual_transform_pipeline(image)
                         set_seed(seed)
                         annotation = self._dual_transform_pipeline(annotation)
+                        if get_backend() == 'torch':
+                            annotation = _postprocess_torch_annotation(annotation)
                 if self._transform_pipeline is None \
                         and self._target_transform_pipeline is None:
                     return image, annotation
@@ -290,7 +294,7 @@ class AgMLSemanticSegmentationDataLoader(AgMLDataLoader):
             else:
                 split_1, split_overflow = train_test_split(
                     tts, train_size = splits[0],
-                    test_size = splits[1] + splits[2], shuffle = shuffle)
+                    test_size = round(splits[1] + splits[2], 2), shuffle = shuffle)
                 split_2, split_3 = train_test_split(
                     split_overflow,
                     train_size = splits[1] / (splits[1] + splits[2]),
@@ -423,8 +427,8 @@ class AgMLSemanticSegmentationDataLoader(AgMLDataLoader):
             transform, target_transform, dual_transform)
         if dual_transform is not None:
             self._dual_transform_pipeline = dual_transform
-            self._transform_pipeline = None
-            self._target_transform_pipeline = None
+            self._transform_pipeline = transform
+            self._target_transform_pipeline = target_transform
             return
         self._transform_pipeline = transform
         self._target_transform_pipeline = target_transform
@@ -531,6 +535,7 @@ class AgMLSemanticSegmentationDataLoader(AgMLDataLoader):
                         image = self._dual_transform_pipeline(image)
                         set_seed(seed)
                         annotation = self._dual_transform_pipeline(annotation)
+                        annotation = _postprocess_torch_annotation(annotation)
                 if self._transform_pipeline is None \
                         and self._target_transform_pipeline is None:
                     return image, annotation

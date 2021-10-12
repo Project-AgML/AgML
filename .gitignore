@@ -141,3 +141,4 @@ agml/_helios/output/
 agml/_helios/xmloutput_for_helios/
 
 **/**test*.*
+!tests/*/*
