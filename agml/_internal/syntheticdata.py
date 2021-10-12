@@ -287,8 +287,12 @@ class HeliosDataGenerator(object):
                 f.write(dict2xml(canopy_params_filtered))
 
 <<<<<<< HEAD
+<<<<<<< HEAD
     def generate_data(self, n_imgs, canopy_type, simulation_type, output_directory = "./agml/_helios"):
 
+=======
+    def generate_data(self, n_imgs, canopy_type, simulation_type, output_directory = "agml/_helios"):
+>>>>>>> WIP almost generating images
 =======
     def generate_data(self, n_imgs, canopy_type, simulation_type, output_directory = "agml/_helios"):
 >>>>>>> WIP almost generating images
