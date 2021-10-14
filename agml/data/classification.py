@@ -42,6 +42,12 @@ class AgMLImageClassificationDataLoader(AgMLDataLoader):
     def __getitem__(self, indx):
         """Returns one element or one batch of data from the loader."""
         # Different cases for batched vs. non-batched data.
+        if isinstance(indx, slice):
+            content_length = len(self._data)
+            if self._is_batched:
+                content_length = len(self._batched_data)
+            contents = range(content_length)[indx]
+            return [self[c] for c in contents]
         if self._is_batched:
             try:
                 item = self._batched_data[indx]

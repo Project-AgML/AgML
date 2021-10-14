@@ -44,6 +44,12 @@ class AgMLObjectDetectionDataLoader(AgMLDataLoader):
     def __getitem__(self, indx):
         """Returns one element or one batch of data from the loader."""
         # Different cases for batched vs. non-batched data.
+        if isinstance(indx, slice):
+            content_length = len(self._coco_annotation_map)
+            if self._is_batched:
+                content_length = len(self._batched_data)
+            contents = range(content_length)[indx]
+            return [self[c] for c in contents]
         if self._is_batched:
             item = self._batched_data[indx]
             images, annotations = [], []
@@ -161,7 +167,11 @@ class AgMLObjectDetectionDataLoader(AgMLDataLoader):
             annotation['area'].append(a_set['area'])
             annotation['image_id'] = a_set['image_id']
         for key, value in annotation.items():
-            out = np.array(value)
+            # Creating nested sequences from ragged arrays (see numpy).
+            if key in ['segmentation']:
+                out = np.array(value, dtype = object)
+            else:
+                out = np.array(value)
             if np.isscalar(out):
                 out = out.item()
             annotation[key] = out
@@ -345,10 +355,12 @@ class AgMLObjectDetectionDataLoader(AgMLDataLoader):
                     test_size = splits[1], shuffle = shuffle)
                 setattr(self, split_names[0],
                         {k: v for k, v in np.array(
-                            list(self._coco_annotation_map.items()))[split_1]})
+                            list(self._coco_annotation_map.items()),
+                            dtype = object)[split_1]})
                 setattr(self, split_names[1],
                         {k: v for k, v in np.array(
-                            list(self._coco_annotation_map.items()))[split_2]})
+                            list(self._coco_annotation_map.items()),
+                            dtype = object)[split_2]})
             else:
                 split_1, split_overflow = train_test_split(
                     tts, train_size = splits[0],
@@ -360,7 +372,8 @@ class AgMLObjectDetectionDataLoader(AgMLDataLoader):
                 for name, dec_split in zip(split_names, [split_1, split_2, split_3]):
                     setattr(self, name,
                             {k: v for k, v in np.array(
-                                list(self._coco_annotation_map.items()))[dec_split]})
+                                list(self._coco_annotation_map.items()),
+                                dtype = object)[dec_split]})
         elif any([isinstance(i, int) for i in args]):
             args = [0 if arg is None else arg for arg in args]
             if not all([isinstance(i, int) for i in args]):
@@ -389,10 +402,12 @@ class AgMLObjectDetectionDataLoader(AgMLDataLoader):
                 split_1, split_2 = tts[:splits[0]], tts[splits[0]]
                 setattr(self, split_names[0],
                         {k: v for k, v in np.array(
-                            list(self._coco_annotation_map.items()))[split_1]})
+                            list(self._coco_annotation_map.items()),
+                            dtype = object)[split_1]})
                 setattr(self, split_names[1],
                         {k: v for k, v in np.array(
-                            list(self._coco_annotation_map.items()))[split_2]})
+                            list(self._coco_annotation_map.items()),
+                            dtype = object)[split_2]})
             else:
                 split_1 = tts[:splits[0]]
                 split_2 = tts[splits[0]: splits[0] + splits[1]]
@@ -400,7 +415,8 @@ class AgMLObjectDetectionDataLoader(AgMLDataLoader):
                 for name, dec_split in zip(split_names, [split_1, split_2, split_3]):
                     setattr(self, name,
                             {k: v for k, v in np.array(
-                                list(self._coco_annotation_map.items()))[dec_split]})
+                                list(self._coco_annotation_map.items()),
+                                dtype = object)[dec_split]})
 
         # Return the splits.
         return self._training_data, self._validation_data, self._test_data

@@ -45,6 +45,7 @@ def annotate_bboxes_on_image(image, bboxes = None, labels = None):
     for bbox, label in zip(bboxes, labels):
         x1, y1, width, height = scalar_unpack(bbox)
         x2, y2 = x1 + width, y1 + height
+        print(x1, y1, x2, y2)
         image = cv2.rectangle(image, (x1, y1), (x2, y2),
                       get_colormap()[as_scalar(label)], 2)
     return image
