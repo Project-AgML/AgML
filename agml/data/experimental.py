@@ -74,7 +74,7 @@ def generate_keras_segmentation_dual_transform(*layers):
 
     def _execute_preprocessing(layers_, use_seeds_):
         def _execute(image, annotation):
-            for p_layer, seed_ in layers_, use_seeds_:
+            for p_layer, seed_ in zip(layers_, use_seeds_):
                 seed = np.random.randint(2147483647) if seed_ else None
                 image, annotation = p_layer(image, annotation, seed = seed)
             return image, annotation
