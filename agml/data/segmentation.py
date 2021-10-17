@@ -173,7 +173,7 @@ class AgMLSemanticSegmentationDataLoader(AgMLDataLoader):
                 image = cv2.resize(
                     image, self._image_resize, cv2.INTER_NEAREST)
                 annotation = cv2.resize(
-                    image, self._image_resize, cv2.INTER_NEAREST)
+                    annotation, self._image_resize, cv2.INTER_NEAREST)
             try:
                 annotation = np.expand_dims(annotation, axis = -1)
                 if self._dual_transform_pipeline is not None:
