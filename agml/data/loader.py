@@ -271,6 +271,10 @@ class AgMLDataLoader(object):
         _swap_loader_mro(self, 'torch')
         self._getitem_as_batch = True
 
+    def on_epoch_end(self):
+        # Used for a Keras Sequence
+        self._reshuffle()
+
     @abc.abstractmethod
     def _wrap_reduced_data(self, *args, **kwargs):
         raise NotImplementedError()
