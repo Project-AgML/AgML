@@ -1,5 +1,3 @@
-import os
-
 import cv2
 import numpy as np
 
@@ -8,8 +6,15 @@ import matplotlib.pyplot as plt
 from agml.utils.general import resolve_tuple_values
 from agml.viz.tools import format_image, get_colormap, auto_resolve_image, show_when_allowed
 
+def _reduce_categorical_mask(mask):
+    """Reduces a categorical mask label to one-dimensional."""
+    return np.argmax(mask)
+
 def _preprocess_mask(mask):
     """Preprocesses a mask with a distinct colorscheme."""
+    if mask.ndim == 3:
+        if not np.all(mask[:, :, 0] == mask[:, :, 1]):
+            mask = _reduce_categorical_mask(mask)
     if mask.ndim == 2:
         mask = np.dstack((mask, mask, mask))
 
@@ -96,6 +101,50 @@ def visualize_image_and_mask(image, mask = None):
     axes[0].imshow(image)
     axes[1].imshow(mask)
     for ax in axes:
+        ax.set_aspect('equal')
+        ax.axis('off')
+    return fig
+
+
+@show_when_allowed
+@auto_resolve_image
+def visualize_image_mask_and_predicted(image, mask = None, predicted = None):
+    """Visualizes an image, its segmentation mask, and a predicted mask.
+
+    Creates a 1 row, 3 column frame and displays an image with
+    its corresponding segmentation mask and a predicted segmentation
+    mask as given in `predicted`. This figure includes axis titles
+    for the image, mask, and predicted mask, for differentiation.
+
+    Parameters
+    ----------
+    image : Any
+        Either the original image, or a tuple containing the image
+        and its mask (if using a DataLoader, for example).
+    mask : np.ndarray
+        The output mask.
+    predicted : np.ndarray
+        The predicted mask.
+
+    Returns
+    -------
+    The matplotlib figure with the images.
+    """
+    image, mask, predicted = resolve_tuple_values(
+        image, mask, predicted, custom_error =
+        "If `image` is a tuple/list, it should contain three "
+        "values: the image, its mask, and a predicted mask.")
+    image = format_image(image)
+    mask = _preprocess_mask(format_image(mask))
+    predicted = _preprocess_mask(format_image(predicted))
+
+    fig, axes = plt.subplots(1, 3, figsize = (10, 5))
+    for im, ax, label in zip(
+        [image, mask, predicted], axes,
+        ['Input Image', 'Ground Truth Mask', 'Predicted Mask']
+    ):
+        ax.imshow(im)
+        ax.set_title(label)
         ax.set_aspect('equal')
         ax.axis('off')
     return fig
