@@ -201,6 +201,7 @@ class AgMLDataLoader(object):
         To re-enable preprocessing, run `enable_preprocessing()`.
         """
         self._preprocessing_enabled = False
+        self._getitem_as_batch = False
 
     def enable_preprocessing(self):
         """Re-enables internal processing for `__getitem__`.
@@ -209,6 +210,7 @@ class AgMLDataLoader(object):
         `disable_preprocessing()`, this method re-enables preprocessing.
         """
         self._preprocessing_enabled = True
+        self._getitem_as_batch = True
 
     def resize_images(self, shape = None):
         """Toggles resizing of images when accessing from the loader.
