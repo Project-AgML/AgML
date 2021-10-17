@@ -74,9 +74,6 @@ class AgMLObjectDetectionDataLoader(AgMLDataLoader):
                 annotations = self._stack_annotations(annotations)
                 image, annotations = self._preprocess_data(image, annotations)
                 if self._getitem_as_batch:
-                    if self._default_image_size != 'default':
-                        image, annotations = \
-                            self._resize_image_and_boxes(image, annotations)
                     return np.expand_dims(image, axis = 0), annotations
                 return image, annotations
             except KeyError:
@@ -145,13 +142,17 @@ class AgMLObjectDetectionDataLoader(AgMLDataLoader):
 
     def _preprocess_data(self, image, annotation):
         """Preprocesses images and annotations with transformations/other methods."""
-        if (self._transform_pipeline is None and
-                self._dual_transform_pipeline is None):
-            return image, annotation
-        if self._transform_pipeline is not None:
-            return self._transform_pipeline(image), annotation
-        if self._dual_transform_pipeline is not None:
-            return self._dual_transform_pipeline(image, annotation)
+        if self._preprocessing_enabled:
+            if (self._transform_pipeline is None and
+                    self._dual_transform_pipeline is None):
+                return image, annotation
+            if self._transform_pipeline is not None:
+                return self._transform_pipeline(image), annotation
+            if self._dual_transform_pipeline is not None:
+                return self._dual_transform_pipeline(image, annotation)
+            if self._image_resize is not None:
+                image, annotations = \
+                    self._resize_image_and_boxes(image, annotation)
         return image, annotation
 
     @staticmethod
@@ -187,7 +188,7 @@ class AgMLObjectDetectionDataLoader(AgMLDataLoader):
                 x1 / x_scale, y1 / y_scale,
                 width / x_scale, height / y_scale])
         image = cv2.resize(
-            image, self._default_image_size, cv2.INTER_NEAREST)
+            image, self._image_resize, cv2.INTER_NEAREST)
         y_new, x_new = image.shape[0:2]
         final_processed_bboxes = []
         for bbox in processed_bboxes:

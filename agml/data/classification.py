@@ -87,9 +87,6 @@ class AgMLImageClassificationDataLoader(AgMLDataLoader):
                     else:
                         raise te
                 if self._getitem_as_batch:
-                    if self._default_image_size != 'default':
-                        image = cv2.resize(
-                            image, self._default_image_size, cv2.INTER_NEAREST)
                     return np.expand_dims(image, axis = 0), \
                            np.expand_dims(np.array(label), axis = 0)
                 return image, label
@@ -188,6 +185,9 @@ class AgMLImageClassificationDataLoader(AgMLDataLoader):
     def _preprocess_image(self, image):
         """Preprocesses an image with transformations/other methods."""
         if self._preprocessing_enabled:
+            if self._image_resize is not None:
+                image = cv2.resize(
+                    image, self._image_resize, cv2.INTER_NEAREST)
             if self._transform_pipeline is not None:
                 image = self._transform_pipeline(image)
         return image

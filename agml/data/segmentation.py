@@ -75,11 +75,6 @@ class AgMLSemanticSegmentationDataLoader(AgMLDataLoader):
                     annotation = annotation[:, :, 0]
                 image, annotation = self._preprocess_data(image, annotation)
                 if self._getitem_as_batch:
-                    if self._default_image_size != 'default':
-                        image = cv2.resize(
-                            image, self._default_image_size, cv2.INTER_NEAREST)
-                        annotation = cv2.resize(
-                            image, self._default_image_size, cv2.INTER_NEAREST)
                     return np.expand_dims(image, axis = 0), \
                            np.expand_dims(np.array(annotation), axis = 0)
                 return image, annotation
@@ -174,6 +169,11 @@ class AgMLSemanticSegmentationDataLoader(AgMLDataLoader):
     def _preprocess_data(self, image, annotation):
         """Preprocesses images and annotations with transformations/other methods."""
         if self._preprocessing_enabled:
+            if self._image_resize is not None:
+                image = cv2.resize(
+                    image, self._image_resize, cv2.INTER_NEAREST)
+                annotation = cv2.resize(
+                    image, self._image_resize, cv2.INTER_NEAREST)
             try:
                 annotation = np.expand_dims(annotation, axis = -1)
                 if self._dual_transform_pipeline is not None:
