@@ -79,7 +79,7 @@ class AgMLDataLoader(object):
         self._shuffle = True
         if not kwargs.get('shuffle', True):
             self._shuffle = False
-        self._default_image_size = (512, 512)
+        self._default_image_size = 'default'
         if not kwargs.get('image_size', True):
             self._default_image_size = kwargs['image_size']
 
