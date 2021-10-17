@@ -102,7 +102,8 @@ class AgMLImageClassificationDataLoader(AgMLDataLoader):
             'name': self.name,
             'data': data_meta,
             'image_paths': list(data_meta.keys()),
-            'transform_pipeline': self._transform_pipeline
+            'transform_pipeline': self._transform_pipeline,
+            'image_resize': self._image_resize
         }
         return meta_dict
 
@@ -117,6 +118,7 @@ class AgMLImageClassificationDataLoader(AgMLDataLoader):
         loader._data = meta_dict['data']
         loader._image_paths = meta_dict['image_paths']
         loader._transform_pipeline = meta_dict['transform_pipeline']
+        loader._image_resize = meta_dict['image_resize']
         loader._block_split = True
         return loader
 

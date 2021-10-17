@@ -88,7 +88,8 @@ class AgMLObjectDetectionDataLoader(AgMLDataLoader):
             'name': self.name,
             'coco_annotation_map': data_meta,
             'transform_pipeline': self._transform_pipeline,
-            'dual_transform_pipeline': self._dual_transform_pipeline
+            'dual_transform_pipeline': self._dual_transform_pipeline,
+            'image_resize': self._image_resize
         }
         return meta_dict
 
@@ -103,6 +104,7 @@ class AgMLObjectDetectionDataLoader(AgMLDataLoader):
         loader._coco_annotation_map = meta_dict['coco_annotation_map']
         loader._transform_pipeline = meta_dict['transform_pipeline']
         loader._dual_transform_pipeline = meta_dict['dual_transform_pipeline']
+        loader._image_resize = meta_dict['image_resize']
         loader._block_split = True
         return loader
 

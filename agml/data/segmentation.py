@@ -92,7 +92,8 @@ class AgMLSemanticSegmentationDataLoader(AgMLDataLoader):
             'image_paths': list(data_meta.keys()),
             'transform_pipeline': self._transform_pipeline,
             'target_transform_pipeline': self._target_transform_pipeline,
-            'dual_transform_pipeline': self._dual_transform_pipeline
+            'dual_transform_pipeline': self._dual_transform_pipeline,
+            'image_resize': self._image_resize
         }
         return meta_dict
 
@@ -109,6 +110,7 @@ class AgMLSemanticSegmentationDataLoader(AgMLDataLoader):
         loader._transform_pipeline = meta_dict['transform_pipeline']
         loader._target_transform_pipeline = meta_dict['target_transform_pipeline']
         loader._dual_transform_pipeline = meta_dict['dual_transform_pipeline']
+        loader._image_resize = meta_dict['image_resize']
         loader._block_split = True
         return loader
 
