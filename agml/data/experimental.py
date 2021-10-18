@@ -53,27 +53,33 @@ def generate_keras_segmentation_dual_transform(*layers):
     def _single_preprocessing_layer_base(layer_, build_dict):
         def _internal(image, annotation, seed):
             instantiated_layer = functools.partial(layer_, **build_dict)
-            image = instantiated_layer(seed = seed)(image)
-            annotation = instantiated_layer(seed = seed)(annotation)
+            seed_update = {}
+            if seed is not None:
+                seed_update['seed'] = seed
+            image = instantiated_layer(**seed_update)(image)
+            annotation = instantiated_layer(**seed_update)(annotation)
             return image, annotation
         return _internal
 
-    preprocessing_methods = []
+    preprocessing_methods, use_seeds = [], []
     for layer in layers:
         config = layer.get_config()
         if 'seed' in config:
             config.pop('seed')
+            use_seeds.append(True)
+        else:
+            use_seeds.append(False)
         preprocessing_methods.append(
             _single_preprocessing_layer_base(layer.__class__, config))
 
-    def _execute_preprocessing(layers_):
+    def _execute_preprocessing(layers_, use_seeds_):
         def _execute(image, annotation):
-            for p_layer in layers_:
-                seed = np.random.randint(2147483647)
+            for p_layer, seed_ in zip(layers_, use_seeds_):
+                seed = np.random.randint(2147483647) if seed_ else None
                 image, annotation = p_layer(image, annotation, seed = seed)
             return image, annotation
         return _execute
-    return _execute_preprocessing(preprocessing_methods)
+    return _execute_preprocessing(preprocessing_methods, use_seeds)
 
 
 

@@ -79,9 +79,6 @@ class AgMLDataLoader(object):
         self._shuffle = True
         if not kwargs.get('shuffle', True):
             self._shuffle = False
-        self._default_image_size = (512, 512)
-        if not kwargs.get('image_size', True):
-            self._default_image_size = kwargs['image_size']
 
         # Parameters that may or may not be changed. If not, they are
         # here just for consistency in the class and internal methods.
@@ -95,6 +92,8 @@ class AgMLDataLoader(object):
         self._test_data = None
 
         self._getitem_as_batch = False
+
+        self._image_resize = None
 
     @abc.abstractmethod
     def __len__(self):
@@ -202,6 +201,7 @@ class AgMLDataLoader(object):
         To re-enable preprocessing, run `enable_preprocessing()`.
         """
         self._preprocessing_enabled = False
+        self._getitem_as_batch = False
 
     def enable_preprocessing(self):
         """Re-enables internal processing for `__getitem__`.
@@ -210,6 +210,22 @@ class AgMLDataLoader(object):
         `disable_preprocessing()`, this method re-enables preprocessing.
         """
         self._preprocessing_enabled = True
+        self._getitem_as_batch = True
+
+    def resize_images(self, shape = None):
+        """Toggles resizing of images when accessing from the loader.
+
+        Passing `shape` in this method will, if preprocessing is enabled,
+        automatically resize the images to `shape`. If image resizing
+        has been enabled, then passing `None` in place of `shape` will
+        disable the resizing and return images in their original shape.
+
+        Parameters
+        ----------
+        shape: {list, tuple}
+            A two-value list or tuple with the new shape.
+        """
+        self._image_resize = shape
 
     @property
     def training_data(self):
@@ -254,6 +270,10 @@ class AgMLDataLoader(object):
     def as_torch_dataset(self):
         _swap_loader_mro(self, 'torch')
         self._getitem_as_batch = True
+
+    def on_epoch_end(self):
+        # Used for a Keras Sequence
+        self._reshuffle()
 
     @abc.abstractmethod
     def _wrap_reduced_data(self, *args, **kwargs):

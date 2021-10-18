@@ -44,6 +44,12 @@ class AgMLObjectDetectionDataLoader(AgMLDataLoader):
     def __getitem__(self, indx):
         """Returns one element or one batch of data from the loader."""
         # Different cases for batched vs. non-batched data.
+        if isinstance(indx, slice):
+            content_length = len(self._coco_annotation_map)
+            if self._is_batched:
+                content_length = len(self._batched_data)
+            contents = range(content_length)[indx]
+            return [self[c] for c in contents]
         if self._is_batched:
             item = self._batched_data[indx]
             images, annotations = [], []
@@ -68,9 +74,6 @@ class AgMLObjectDetectionDataLoader(AgMLDataLoader):
                 annotations = self._stack_annotations(annotations)
                 image, annotations = self._preprocess_data(image, annotations)
                 if self._getitem_as_batch:
-                    if self._default_image_size != 'default':
-                        image, annotations = \
-                            self._resize_image_and_boxes(image, annotations)
                     return np.expand_dims(image, axis = 0), annotations
                 return image, annotations
             except KeyError:
@@ -85,7 +88,8 @@ class AgMLObjectDetectionDataLoader(AgMLDataLoader):
             'name': self.name,
             'coco_annotation_map': data_meta,
             'transform_pipeline': self._transform_pipeline,
-            'dual_transform_pipeline': self._dual_transform_pipeline
+            'dual_transform_pipeline': self._dual_transform_pipeline,
+            'image_resize': self._image_resize
         }
         return meta_dict
 
@@ -100,6 +104,7 @@ class AgMLObjectDetectionDataLoader(AgMLDataLoader):
         loader._coco_annotation_map = meta_dict['coco_annotation_map']
         loader._transform_pipeline = meta_dict['transform_pipeline']
         loader._dual_transform_pipeline = meta_dict['dual_transform_pipeline']
+        loader._image_resize = meta_dict['image_resize']
         loader._block_split = True
         return loader
 
@@ -139,13 +144,17 @@ class AgMLObjectDetectionDataLoader(AgMLDataLoader):
 
     def _preprocess_data(self, image, annotation):
         """Preprocesses images and annotations with transformations/other methods."""
-        if (self._transform_pipeline is None and
-                self._dual_transform_pipeline is None):
-            return image, annotation
-        if self._transform_pipeline is not None:
-            return self._transform_pipeline(image), annotation
-        if self._dual_transform_pipeline is not None:
-            return self._dual_transform_pipeline(image, annotation)
+        if self._preprocessing_enabled:
+            if (self._transform_pipeline is None and
+                    self._dual_transform_pipeline is None):
+                return image, annotation
+            if self._transform_pipeline is not None:
+                return self._transform_pipeline(image), annotation
+            if self._dual_transform_pipeline is not None:
+                return self._dual_transform_pipeline(image, annotation)
+            if self._image_resize is not None:
+                image, annotations = \
+                    self._resize_image_and_boxes(image, annotation)
         return image, annotation
 
     @staticmethod
@@ -161,7 +170,11 @@ class AgMLObjectDetectionDataLoader(AgMLDataLoader):
             annotation['area'].append(a_set['area'])
             annotation['image_id'] = a_set['image_id']
         for key, value in annotation.items():
-            out = np.array(value)
+            # Creating nested sequences from ragged arrays (see numpy).
+            if key in ['segmentation']:
+                out = np.array(value, dtype = object)
+            else:
+                out = np.array(value)
             if np.isscalar(out):
                 out = out.item()
             annotation[key] = out
@@ -177,7 +190,7 @@ class AgMLObjectDetectionDataLoader(AgMLDataLoader):
                 x1 / x_scale, y1 / y_scale,
                 width / x_scale, height / y_scale])
         image = cv2.resize(
-            image, self._default_image_size, cv2.INTER_NEAREST)
+            image, self._image_resize, cv2.INTER_NEAREST)
         y_new, x_new = image.shape[0:2]
         final_processed_bboxes = []
         for bbox in processed_bboxes:
@@ -345,10 +358,12 @@ class AgMLObjectDetectionDataLoader(AgMLDataLoader):
                     test_size = splits[1], shuffle = shuffle)
                 setattr(self, split_names[0],
                         {k: v for k, v in np.array(
-                            list(self._coco_annotation_map.items()))[split_1]})
+                            list(self._coco_annotation_map.items()),
+                            dtype = object)[split_1]})
                 setattr(self, split_names[1],
                         {k: v for k, v in np.array(
-                            list(self._coco_annotation_map.items()))[split_2]})
+                            list(self._coco_annotation_map.items()),
+                            dtype = object)[split_2]})
             else:
                 split_1, split_overflow = train_test_split(
                     tts, train_size = splits[0],
@@ -360,7 +375,8 @@ class AgMLObjectDetectionDataLoader(AgMLDataLoader):
                 for name, dec_split in zip(split_names, [split_1, split_2, split_3]):
                     setattr(self, name,
                             {k: v for k, v in np.array(
-                                list(self._coco_annotation_map.items()))[dec_split]})
+                                list(self._coco_annotation_map.items()),
+                                dtype = object)[dec_split]})
         elif any([isinstance(i, int) for i in args]):
             args = [0 if arg is None else arg for arg in args]
             if not all([isinstance(i, int) for i in args]):
@@ -389,10 +405,12 @@ class AgMLObjectDetectionDataLoader(AgMLDataLoader):
                 split_1, split_2 = tts[:splits[0]], tts[splits[0]]
                 setattr(self, split_names[0],
                         {k: v for k, v in np.array(
-                            list(self._coco_annotation_map.items()))[split_1]})
+                            list(self._coco_annotation_map.items()),
+                            dtype = object)[split_1]})
                 setattr(self, split_names[1],
                         {k: v for k, v in np.array(
-                            list(self._coco_annotation_map.items()))[split_2]})
+                            list(self._coco_annotation_map.items()),
+                            dtype = object)[split_2]})
             else:
                 split_1 = tts[:splits[0]]
                 split_2 = tts[splits[0]: splits[0] + splits[1]]
@@ -400,7 +418,8 @@ class AgMLObjectDetectionDataLoader(AgMLDataLoader):
                 for name, dec_split in zip(split_names, [split_1, split_2, split_3]):
                     setattr(self, name,
                             {k: v for k, v in np.array(
-                                list(self._coco_annotation_map.items()))[dec_split]})
+                                list(self._coco_annotation_map.items()),
+                                dtype = object)[dec_split]})
 
         # Return the splits.
         return self._training_data, self._validation_data, self._test_data
