@@ -6,7 +6,7 @@ import os
 import json
 
 SOURCE_PATH = os.path.join(os.path.dirname(
-    os.path.dirname(__file__)), '_assets', 'public_datasources.json')
+    os.path.dirname(__file__)), 'agml', '_assets', 'public_datasources.json')
 
 with open(SOURCE_PATH, 'r') as f:
     contents = json.load(f)

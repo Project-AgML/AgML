@@ -332,24 +332,6 @@
             "1": "apple"
         },
         "ml_task": "object_detection",
-        "ag_task": "fruit_detection",
-        "location": {
-            "continent": "europe",
-            "country": "spain"
-        },
-        "sensor_modality": "rgbd",
-        "real_synthetic": "real",
-        "platform": "ground",
-        "input_data_format": "jpg",
-        "annotation_format": "coco_json",
-        "n_images": "967",
-        "docs_url": "http://www.grap.udl.cat/en/publications/KFuji_RGBDS_database.html"
-    },
-    "apple_detection_spain": {
-        "crop_types": {
-            "1": "apple"
-        },
-        "ml_task": "object_detection",
         "ag_task": "fruit_segmentation",
         "location": {
             "continent": "europe",

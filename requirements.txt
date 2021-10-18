@@ -1,12 +1,8 @@
 numpy
 pandas
 tqdm
-boto3
-botocore
 opencv-python
-scikit-image
-imantics
-Shapely
 torch
 torchvision
-pyyaml
+tensorflow
+pyyaml>=5.4.1
