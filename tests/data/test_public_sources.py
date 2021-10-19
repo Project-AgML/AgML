@@ -4,7 +4,7 @@ import shutil
 import pytest
 
 import agml.data as agdata
-from agml.utils.general import load_public_sources
+from agml.utils.data import load_public_sources
 
 def test_location_filters():
     uganda_filter = agdata.public_data_sources(

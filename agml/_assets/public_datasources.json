@@ -147,7 +147,7 @@
         "input_data_format": "png",
         "annotation_format": "image",
         "n_images": "1931",
-        "docs_url": "https://github.com/inkyusa/weedNetl"
+        "docs_url": "https://github.com/inkyusa/weedNet"
     },
     "rangeland_weeds_australia": {
         "crop_types": {
@@ -306,7 +306,7 @@
         "input_data_format": "png",
         "annotation_format": "coco_json",
         "n_images": "2290",
-        "docs_url": "http://hdl.handle.net/2376/17721"
+        "docs_url": "https://hdl.handle.net/2376/17721"
     },
     "cotton_seedling_counting": {
         "crop_types": {
@@ -325,7 +325,7 @@
         "input_data_format": "png",
         "annotation_format": "coco_json",
         "n_images": "2290",
-        "docs_url": "http://hdl.handle.net/2376/17721"
+        "docs_url": "https://github.com/UGA-BSAIL/deepseedling"
     },
     "apple_detection_spain": {
         "crop_types": {

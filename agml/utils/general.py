@@ -1,29 +1,9 @@
-import os
 import re
-import json
-import difflib
-import functools
-
-@functools.lru_cache(maxsize = None)
-def load_public_sources():
-    """Loads the public data sources JSON file."""
-    with open(os.path.join(
-            os.path.dirname(os.path.dirname(__file__)),
-            '_assets/public_datasources.json')) as f:
-        return json.load(f)
 
 def to_camel_case(s):
     """Converts a given string `s` to camel case."""
     s = re.sub(r"(_|-)+", " ", s).title().replace(" ", "") # noqa
     return ''.join(s)
-
-def maybe_you_meant(name, msg):
-    """Suggests potential correct spellings for an invalid name."""
-    suggestion = difflib.get_close_matches(
-        name, load_public_sources().keys())
-    if len(suggestion) == 0:
-        return msg
-    return msg + f" Maybe you meant: {suggestion[0]}?"
 
 def resolve_list_value(val):
     """Determines whether a list contains one or multiple values."""

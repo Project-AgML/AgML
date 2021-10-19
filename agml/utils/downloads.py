@@ -5,6 +5,11 @@ import zipfile
 import requests
 from tqdm import tqdm
 
+from agml.utils.data import (
+    load_public_sources, maybe_you_meant, copyright_print
+)
+from agml.utils.logging import log
+
 def download_dataset(dataset_name, dest_dir):
     """
     Downloads dataset from agdata-data s3 file storage.
@@ -16,6 +21,18 @@ def download_dataset(dataset_name, dest_dir):
     dest_dir : str
         path for saving downloaded dataset
     """
+    # Validate dataset name
+    source_info = load_public_sources()
+    if dataset_name not in source_info.keys():
+        if dataset_name.replace('-', '_') not in source_info.keys():
+            msg = f"Received invalid public source: '{dataset_name}'."
+            msg = maybe_you_meant(dataset_name, msg)
+            raise ValueError(msg)
+        else:
+            log(f"Interpreted dataset '{dataset_name}' as "
+                f"'{dataset_name.replace('-', '_')}.'")
+            dataset_name = dataset_name.replace('-', '_')
+
     # Connect to S3 and generate unsigned URL for bucket object
     url = f"https://agdata-data.s3.us-west-1.amazonaws.com/{dataset_name}.zip"
 
@@ -41,7 +58,10 @@ def download_dataset(dataset_name, dest_dir):
                     pg.update(8192)
             pg.close()
     except BaseException as e:
-        pg.close()
+        try:
+            pg.close()
+        except (NameError, UnboundLocalError):
+            pass
         if os.path.exists(dataset_download_path):
             os.remove(dataset_download_path)
         raise e
@@ -55,3 +75,6 @@ def download_dataset(dataset_name, dest_dir):
     # Delete zipped file
     if os.path.exists(dataset_download_path):
         os.remove(dataset_download_path)
+
+    # Print dataset copyright info
+    copyright_print(dataset_name, os.path.splitext(dataset_download_path)[0])

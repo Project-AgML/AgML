@@ -1,9 +1,9 @@
 import os
 import abc
 
-from agml.utils.downloads import download_dataset  # noqa
+from agml.utils.downloads import download_dataset
 from agml.backend.config import default_data_save_path
-from agml.backend.tftorch import _swap_loader_mro
+from agml.backend.tftorch import _swap_loader_mro # noqa
 from agml.data.metadata import DatasetMetadata
 
 class AgMLDataLoader(object):

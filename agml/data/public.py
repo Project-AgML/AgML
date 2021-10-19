@@ -3,7 +3,7 @@ import functools
 import numpy as np
 
 from agml.utils.downloads import download_dataset as _download # noqa
-from agml.utils.general import load_public_sources
+from agml.utils.data import load_public_sources
 from agml.data.metadata import DatasetMetadata
 from agml.backend.config import default_data_save_path
 
@@ -116,6 +116,24 @@ def public_data_sources(**filters):
     s = _PublicSourceFilter().apply_filters(**filters)
     return s.result()
 
+def source(name):
+    """Returns the metadata of a single public dataset source.
+
+    If you just want to inspect the info of one dataset, then you can use
+    this method with `name` representing a dataset to get a single piece
+    of `DatasetMetadata` which contains its information.
+
+    Parameters
+    ----------
+    name : str
+        The name of the dataset you want to inspect.
+
+    Returns
+    -------
+    The metadata of the dataset `name`.
+    """
+    return DatasetMetadata(name)
+
 def download_public_dataset(dataset, location = None):
     """Downloads a public dataset from AgML to a directory.
 
@@ -140,3 +158,5 @@ def download_public_dataset(dataset, location = None):
                         else default_data_save_path()
     _download(dataset, location)
     return location
+
+
