@@ -103,6 +103,9 @@ class AgMLDataLoader(object):
         return self.num_images
 
     def __str__(self):
+        return repr(self)
+
+    def __repr__(self):
         fmt = (f"<AgMLDataLoader [{self._info.name}] "
                f"[task = {self._info.tasks.ml}]")
         if hasattr(self, '_split_name'):

@@ -1,6 +1,7 @@
 import os
 import sys
 import json
+import glob
 import shutil
 
 import cv2
@@ -830,7 +831,7 @@ class PreprocessData(object):
             annotation_dir = os.path.join(dataset_dir, 'annotations')
             annotation_images = sorted(get_file_list(annotation_dir, ext = 'png'))
 
-            # Move the images to the new directory
+            # Move the images to the new directory.
             def _annotation_preprocess_fn(annotation_path, out_path):
                 an_img = cv2.cvtColor(cv2.imread(annotation_path), cv2.COLOR_BGR2RGB)
                 crop, weed = (0, 255, 0), (255, 0, 0)
@@ -856,6 +857,7 @@ class PreprocessData(object):
             masks_dir = os.path.join(dataset_dir, 'train', 'masks')
             mask_images = sorted(get_file_list(masks_dir))
 
+            # Move the images to the new directory.
             def _annotation_preprocess_fn(annotation_path, out_path):
                 mask = cv2.imread(annotation_path, cv2.IMREAD_GRAYSCALE)
                 ids = np.unique(mask)[1:]
@@ -876,14 +878,20 @@ class PreprocessData(object):
                 annotation_preprocess_fn = _annotation_preprocess_fn
             )
 
+        elif dataset_name == 'rice_seedling_segmentation':
+            # Get all of the relevant data.
+            data_dir = os.path.join(self.data_original_dir, dataset_name)
+            images = sorted(glob.glob(os.path.join(data_dir, 'image_*.jpg')))
+            labels = sorted(glob.glob(os.path.join(data_dir, 'Label_*.png')))
+            images = [os.path.basename(p) for p in images]
+            labels = [os.path.basename(p) for p in labels]
 
+            # Move the images to the new directory
+            move_segmentation_dataset(
+                self.data_processed_dir, dataset_name,
+                images, labels, data_dir, data_dir
+            )
 
-
-
-if __name__ == '__main__':
-    p = PreprocessData('../../data_new')
-    p.preprocess('apple_segmentation_minnesota')
-            
 
 
 

@@ -442,10 +442,31 @@
         },
         "sensor_modality": "rgb",
         "real_synthetic": "real",
-        "platform": "GROUND",
+        "platform": "ground",
         "input_data_format": "png",
         "annotation_format": "image",
         "n_images": "670",
         "docs_url": "https://rsn.umn.edu/projects/orchard-monitoring/minneapple"
+    },
+    "rice_seedling_segmentation": {
+        "crop_types": {
+            "1": "Rice",
+            "2": "Background",
+            "3": "Weed"
+        },
+        "ml_task": "semantic_segmentation",
+        "ag_task": "weed_segmentation",
+        "location": {
+            "continent": "asia",
+            "country": "china"
+        },
+        "sensor_modality": "RGB",
+        "real_synthetic": "real",
+        "platform": "ground",
+        "input_data_format": "jpg",
+        "annotation_format": "image",
+        "n_images": "224",
+        "docs_url": "https://github.com/kabbas570/CED-Net-Crops-and-Weeds-Segmentation-for-Smart-Farming-Using-a-Small-Cascaded-Encoder-Decoder-Archi"
+
     }
 }
