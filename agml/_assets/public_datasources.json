@@ -429,5 +429,23 @@
         "annotation_format": "image",
         "n_images": "148",
         "docs_url": "https://data.nal.usda.gov/dataset/data-multi-species-fruit-flower-detection-using-refined-semantic-segmentation-network"
+    },
+    "apple_segmentation_minnesota": {
+        "crop_types": {
+            "1": "apple"
+        },
+        "ml_task": "semantic_segmentation",
+        "ag_task": "fruit_segmentation",
+        "location": {
+            "continent": "north_america",
+            "country": "usa"
+        },
+        "sensor_modality": "rgb",
+        "real_synthetic": "real",
+        "platform": "GROUND",
+        "input_data_format": "png",
+        "annotation_format": "image",
+        "n_images": "670",
+        "docs_url": "https://rsn.umn.edu/projects/orchard-monitoring/minneapple"
     }
 }

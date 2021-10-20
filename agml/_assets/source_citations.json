@@ -70,5 +70,9 @@
     "apple_flower_segmentation": {
         "license": "US Public Domain",
         "citation": "@ARTICLE{8392727,\n  author={Dias, Philipe A. and Tabb, Amy and Medeiros, Henry},\n  journal={IEEE Robotics and Automation Letters}, \n  title={Multispecies Fruit Flower Detection Using a Refined Semantic Segmentation Network}, \n  year={2018},\n  volume={3},\n  number={4},\n  pages={3003-3010},\n  doi={10.1109/LRA.2018.2849498}}"
+    },
+    "apple_segmentation_minnesota": {
+        "license": "MIT",
+        "citation": "@misc{hani2019minneapple,\n    title={MinneApple: A Benchmark Dataset for Apple Detection and Segmentation},\n    author={Nicolai Häni and Pravakar Roy and Volkan Isler}\n    year={2019},\n    eprint={1909.06441},\n    archivePrefix={arXiv},\n    primaryClass={cs.CV}\n}"
     }
 }
