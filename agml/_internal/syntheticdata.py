@@ -191,7 +191,7 @@ class HeliosDataGenerator(object):
         # Initialization of image resolution and camera position
         camera_params['image_resolution'] = '1000 800'
 
-        camera_params['camera_position'] = '[0, 0, 0]'
+        camera_params['camera_position'] = '0.0 0.0 0.0'
 
         return camera_params
 
@@ -305,7 +305,7 @@ class HeliosDataGenerator(object):
 
         param_ranges = self.canopy_param_ranges[canopy_type]
 
-        # lidar_ranges = copy.deepcopy(self.lidar_param_ranges)
+        lidar_ranges = copy.deepcopy(self.lidar_param_ranges)
 
         camera_ranges = self.camera_param_ranges
 

@@ -177,9 +177,9 @@ bool flag=false;
 
    //The 'camera' will stop at each of the (x,y,z) positions provided in this vector. It will always be pointed in the row-normal direction looking toward the center of the vineyard.
    std::vector<vec3> camera_pos;
-   float x_camera = rand_FloatRange (  0.3, 1.3);
-   float y_camera = rand_FloatRange (  -1.2,  -1.7);
-   float z_camera = rand_FloatRange (  0.7,  1.1);
+   float x_camera = rand_FloatRange (  -0.05, 0.05);
+   float y_camera = rand_FloatRange (  -1.0, -1.0);
+   float z_camera = rand_FloatRange (  0.25,  0.25);
 
    camera_pos.push_back( make_vec3(x_camera, y_camera, z_camera) );
 
@@ -247,14 +247,16 @@ bool flag=false;
       std::string type;
       if( context.doesPrimitiveDataExist( UUIDs_all.at(p),"element_type" ) ){
 	context.getPrimitiveData(UUIDs_all.at(p),"element_type",type);
+
+
 	if( type.compare("grape")==0 ){
 	  context.getPrimitivePointer(UUIDs_all.at(p))->setColor( grape_color );
 	}
       }else{
-	std::cout << "WARNING: Primitive data ""element_type"" does not exist for primitive " << UUIDs_all.at(p) << std::endl;
+        cout << type << endl;
+	// std::cout << "WARNING: Primitive data ""element_type"" does not exist for primitive " << UUIDs_all.at(p) << std::endl;
       }
     }
-
     
     Visualizer vis_RGB(windowW,windowH,8,false);
 
@@ -280,7 +282,7 @@ bool flag=false;
     
     
 
-  sprintf(outfile,"/Users/pranavraja/Documents/Helios Synthetic Data Project/AgML/agml/_helios/output/images/Image_0/RGB_rendering.jpeg");
+  sprintf(outfile,"/Users/jmearles/Library/Mobile Documents/com~apple~CloudDocs/Documents/ucd/projects/AgML/agml/_helios/output/images/Image_0/RGB_rendering.jpeg");
     vis_RGB.printWindow(outfile);
 
   
