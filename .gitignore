@@ -136,8 +136,8 @@ __MACOSX
 # Extra directories/files
 /**data*/
 
-agml/_helios/Helios/
-agml/_helios/output/
-agml/_helios/xmloutput_for_helios/
+/agml/_helios/Helios
+/agml/_helios/output
+/agml/_helios/xmloutput_for_helios
 
 **/**test*.*
