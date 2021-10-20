@@ -121,6 +121,9 @@ class AgMLDataLoader(object):
         """Searches for or downloads the dataset in this loader."""
         self._stored_kwargs_for_init = kwargs
         overwrite = kwargs.get('overwrite', False)
+        if 'dataset_path' in kwargs:
+            kwargs['dataset_path'] = os.path.realpath(
+                os.path.expanduser(kwargs['dataset_path']))
         if not overwrite:
             if kwargs.get('dataset_path', False):
                 path = kwargs.get('dataset_path')
@@ -233,9 +236,8 @@ class AgMLDataLoader(object):
     @property
     def training_data(self):
         if self._training_data is not None:
-            ret_cls = self.__class__._from_data_subset(
-                self._wrap_reduced_data('training'),
-                self._stored_kwargs_for_init)
+            ret_cls = self.__class__._init_from_meta(
+                self._wrap_reduced_data('training'))
             ret_cls._split_name = 'train'
             return ret_cls
         raise NotImplementedError(
@@ -245,9 +247,8 @@ class AgMLDataLoader(object):
     @property
     def validation_data(self):
         if self._validation_data is not None:
-            ret_cls = self.__class__._from_data_subset(
-                self._wrap_reduced_data('validation'),
-                self._stored_kwargs_for_init)
+            ret_cls = self.__class__._init_from_meta(
+                self._wrap_reduced_data('validation'))
             ret_cls._split_name = 'validation'
             return ret_cls
         raise NotImplementedError(
@@ -257,9 +258,8 @@ class AgMLDataLoader(object):
     @property
     def test_data(self):
         if self._test_data is not None:
-            ret_cls = self.__class__._from_data_subset(
-                self._wrap_reduced_data('test'),
-                self._stored_kwargs_for_init)
+            ret_cls = self.__class__._init_from_meta(
+                self._wrap_reduced_data('test'))
             ret_cls._split_name = 'test'
             return ret_cls
         raise NotImplementedError(
@@ -284,8 +284,24 @@ class AgMLDataLoader(object):
 
     @classmethod
     @abc.abstractmethod
-    def _from_data_subset(cls, *args, **kwargs):
+    def _init_from_meta(cls, *args, **kwargs):
         raise NotImplementedError()
+
+    @abc.abstractmethod
+    def _set_state_from_meta(self, *args, **kwargs):
+        raise NotImplementedError()
+
+    #### UTILITIES FOR PICKLING ####
+
+    def __getnewargs__(self):
+        return self._info.name,
+
+    def __getstate__(self):
+        return self._wrap_reduced_data()
+
+    def __setstate__(self, state):
+        self.__init__(state['name'], **state['init_kwargs'])
+        self._set_state_from_meta(state)
 
     #### API METHODS - OVERWRITTEN BY DERIVED CLASSES ####
 

@@ -95,32 +95,43 @@ class AgMLImageClassificationDataLoader(AgMLDataLoader):
                     f"Index out of range: got {indx}, "
                     f"expected one in range 0 - {len(self)}.")
 
-    def _wrap_reduced_data(self, split):
-        """Wraps the reduced class information for `_from_data_subset`."""
-        data_meta = getattr(self, f'_{split}_data')
+    def _wrap_reduced_data(self, split = None):
+        """Wraps the reduced class information for `_init_from_meta`."""
+        if split is not None:
+            data_meta = getattr(self, f'_{split}_data')
+        else:
+            data_meta = self._data
         meta_dict = {
             'name': self.name,
             'data': data_meta,
             'image_paths': list(data_meta.keys()),
             'transform_pipeline': self._transform_pipeline,
-            'image_resize': self._image_resize
+            'image_resize': self._image_resize,
+            'init_kwargs': self._stored_kwargs_for_init,
+            'split_name': getattr(self, '_split_name', False)
         }
         return meta_dict
 
     @classmethod
-    def _from_data_subset(cls, meta_dict, meta_kwargs):
-        """Initializes the class from a subset of data.
-
-        This method is used internally for the `split` method, and
-        generates DataLoaders with a specific subset of the data.
-        """
-        loader = cls(meta_dict['name'], **meta_kwargs)
+    def _init_from_meta(cls, meta_dict):
+        """Initializes the class from a set of metadata."""
+        loader = cls(meta_dict['name'], **meta_dict['init_kwargs'])
         loader._data = meta_dict['data']
         loader._image_paths = meta_dict['image_paths']
         loader._transform_pipeline = meta_dict['transform_pipeline']
         loader._image_resize = meta_dict['image_resize']
         loader._block_split = True
         return loader
+
+    def _set_state_from_meta(self, meta_dict):
+        """Like `_init_from_meta`, but modifies inplace."""
+        self._data = meta_dict['data']
+        self._image_paths = meta_dict['image_paths']
+        self._transform_pipeline = meta_dict['transform_pipeline']
+        self._image_resize = meta_dict['image_resize']
+        if meta_dict['split_name']:
+            self._block_split = True
+            self._split_name = meta_dict['split_name']
 
     @property
     def labels(self):

@@ -1,6 +1,7 @@
 import os
 import shutil
 import pytest
+import pickle
 
 import agml.data as agdata
 
@@ -76,16 +77,29 @@ def test_loader_classification_shuffle():
     loader.shuffle()
     assert contents != loader._image_paths
 
-@pytest.mark.order(9)
+@pytest.mark.order(10)
 def test_loader_segmentation_shuffle():
     loader = agdata.AgMLDataLoader('apple_flower_segmentation')
     contents = loader._image_paths
     loader.shuffle()
     assert contents != loader._image_paths
 
-@pytest.mark.order(9)
+@pytest.mark.order(11)
 def test_loader_detection_shuffle():
     loader = agdata.AgMLDataLoader('apple_detection_usa')
     contents = list(loader._coco_annotation_map.keys())
     loader.shuffle()
     assert contents != list(loader._coco_annotation_map.keys())
+
+@pytest.mark.order(12)
+def test_loader_pickling():
+    loader = agdata.AgMLDataLoader('apple_detection_usa')
+    assert loader._wrap_reduced_data() == \
+           pickle.loads(pickle.dumps(loader))._wrap_reduced_data()
+    loader = agdata.AgMLDataLoader('apple_flower_segmentation')
+    assert loader._wrap_reduced_data() == \
+           pickle.loads(pickle.dumps(loader))._wrap_reduced_data()
+    loader.split(train = 0.7, val = 0.2, test = 0.1)
+    train = pickle.loads(pickle.dumps(loader.training_data))
+    assert abs(len(train) - int(0.7 * len(loader))) <= 1
+
