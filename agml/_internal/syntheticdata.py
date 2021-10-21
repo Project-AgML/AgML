@@ -33,7 +33,7 @@ def install_helios(overwrite = False):
 
     import subprocess as _subprocess
     _subprocess.call([
-        f"{_os.path.join(os.path.dirname(_os.path.dirname(__file__)), '_helios/helios_config.sh')}",
+        f"{_os.path.join(_os.path.dirname(__file__), 'helios_config.sh')}",
         _os.path.dirname(__file__)])
     del _os, _shutil, _subprocess
 
@@ -52,11 +52,14 @@ class HeliosDataGenerator(object):
         self.path_main_cpp = os.path.join(
             os.path.dirname(os.path.dirname(__file__)), '_helios/Helios/projects/SyntheticImageAnnotation/main.cpp')
 
+        self.path_lidar_cpp = os.path.join(
+            path_helios_dir, 'plugins/lidar/src/LiDAR.cpp')
+
         self.canopy_types = self.get_canopy_types()
         self.canopy_params = self.get_canopy_params()
         self.canopy_param_ranges = self.set_initial_canopy_param_ranges()
-        # self.lidar_params = self.get_lidar_params()
-        # self.lidar_param_ranges = self.set_initial_lidar_param_ranges()
+        self.lidar_params = self.get_lidar_params()
+        self.lidar_param_ranges = self.set_initial_lidar_param_ranges()
         self.camera_params = self.get_camera_params()
         self.camera_param_ranges = self.set_initial_camera_param_ranges()
 
@@ -189,9 +192,9 @@ class HeliosDataGenerator(object):
         # Initialize canopy parameters dictionary
         camera_params = {}
         # Initialization of image resolution and camera position
-        camera_params['image_resolution'] = '600 400'
+        camera_params['image_resolution'] = '1000 800'
+
         camera_params['camera_position'] = '[0, 0, 0]'
-        camera_params['look_at'] = '[0, 0, 1]'
 
         return camera_params
 
@@ -279,15 +282,14 @@ class HeliosDataGenerator(object):
 
         canopy_params_filtered = {'helios': canopy_params_filtered}
 
-        if not os.path.exists(os.path.join(os.path.dirname(os.path.dirname(__file__)), '_helios/Helios/projects/SyntheticImageAnnotation/xml')):
-            os.makedirs(os.path.join(os.path.dirname(os.path.dirname(__file__)), '_helios/Helios/projects/SyntheticImageAnnotation/xml'))
+        if not os.path.exists(os.path.join(os.path.dirname(os.path.dirname(__file__)), '_helios/Helios/projects/SyntheticImageAnnotation/xmloutput_for_helios')):
+            os.makedirs(os.path.join(os.path.dirname(os.path.dirname(__file__)), '_helios/Helios/projects/SyntheticImageAnnotation/xmloutput_for_helios'))
 
         if export_format == 'xml':
-            with open(os.path.join(os.path.dirname(os.path.dirname(__file__)), '_helios/Helios/projects/SyntheticImageAnnotation/xml/tmp_canopy_params_image.xml'), "w") as f:
+            with open(os.path.join(os.path.dirname(os.path.dirname(__file__)), '_helios/Helios/projects/SyntheticImageAnnotation/xmloutput_for_helios/tmp_canopy_params_image.xml'), "w") as f:
                 f.write(dict2xml(canopy_params_filtered))
 
-    def generate_data(self, n_imgs, canopy_type, simulation_type, output_directory = "./agml/_helios"):
-
+    def generate_data(self, n_imgs, canopy_type, simulation_type, output_directory = ""):
 
         """
         Given the path to the output of Helios, this method can be used to convert the data to a more standard format such as COCO JSON
@@ -299,7 +301,6 @@ class HeliosDataGenerator(object):
         output_directory (string) (optional): optionally you may pass in a custom path to save the Helios output to the custom path
 
         """
-        output_directory=os.path.abspath(output_directory)
 
         assert simulation_type in ['rgb', 'lidar'], 'Specified simulation type is not available.'
 
@@ -339,7 +340,7 @@ class HeliosDataGenerator(object):
 
         for n in range(n_imgs):
             params = self.canopy_params[canopy_type]
-            # lidar_params = self.lidar_params
+            lidar_params = self.lidar_params
 
             # Context parameters
             for key in param_ranges:
@@ -352,8 +353,8 @@ class HeliosDataGenerator(object):
 
             self.generate_one_datapair(canopy_type, simulation_type)
 
-            # Re-write tags of XML to have the expected Helios input
-            tree = ET.parse(os.path.join(os.path.dirname(os.path.dirname(__file__)), '_helios/Helios/projects/SyntheticImageAnnotation/xml', 'tmp_canopy_params_image.xml'))
+            # Re-writte tags of XML to have the expected Helios input
+            tree = ET.parse(os.path.join(os.path.dirname(os.path.dirname(__file__)), '_helios/Helios/projects/SyntheticImageAnnotation/xmloutput_for_helios/tmp_canopy_params_image.xml'))
             root = tree.getroot()
             for child in root:
                 if child.tag == 'camera_position':
@@ -362,11 +363,8 @@ class HeliosDataGenerator(object):
                 if child.tag == 'image_resolution':
                     child.tag = 'globaldata_int2'
                     child.set('label', 'image_resolution')
-                if child.tag == 'look_at':
-                    child.tag = 'globaldata_vec3'
-                    child.set('label', 'look_at')
 
-            tree.write(os.path.join(os.path.dirname(os.path.dirname(__file__)), '_helios/Helios/projects/SyntheticImageAnnotation/xml', 'tmp_canopy_params_image.xml'))
+            tree.write(os.path.join(os.path.dirname(os.path.dirname(__file__)), '_helios/Helios/projects/SyntheticImageAnnotation/xmloutput_for_helios/tmp_canopy_params_image.xml'))
 
             # Modify cmake file for rgb versus lidar simulation
             with open(self.path_cmakelists) as f:
@@ -389,9 +387,9 @@ class HeliosDataGenerator(object):
 
                 # Define paths for CMAKE compilation and output files
             current_directory = os.getcwd()
-            build_dir = os.path.join(current_directory, 'agml/_helios/Helios/projects/SyntheticImageAnnotation/build/')
+            build_dir = os.path.join(current_directory, 'Helios/projects/SyntheticImageAnnotation/build')
             if output_directory == "":
-                output_dir = os.path.join(current_directory, 'output')
+                output_dir = os.path.join(current_directory, 'Helios/projects/SyntheticImageAnnotation/output')
             else:
                 assert os.path.isdir(output_directory), 'Please, introduce a valid directory'
                 output_dir = output_directory + '/output'
@@ -415,7 +413,7 @@ class HeliosDataGenerator(object):
                 if not os.path.exists(image_number):
                     os.makedirs(image_number)
 
-            exe = os.path.join(build_dir, 'executable')
+            exe = os.path.join(build_dir, 'SyntheticImageAnnotation')
 
             # Modify main.cpp file for compilation in LIDAR and RGB case
             print('Generation synthetic data: #' + str(n))
@@ -439,10 +437,10 @@ class HeliosDataGenerator(object):
                     main_cpp[i] = ' //LiDARcloud lidarcloud;\n'
 
                 if 'lidarcloud.loadXML' in string and simulation_type == 'lidar':
-                    main_cpp[i] = ' lidarcloud.loadXML("../xml/tmp_canopy_params_image.xml");\n'
+                    main_cpp[i] = ' lidarcloud.loadXML("../xmloutput_for_helios/tmp_canopy_params_image.xml");\n'
 
                 if 'lidarcloud.loadXML' in string and simulation_type == 'rgb':
-                    main_cpp[i] = ' //lidarcloud.loadXML("../xml/tmp_canopy_params_image.xml");\n'
+                    main_cpp[i] = ' //lidarcloud.loadXML("../xmloutput_for_helios/tmp_canopy_params_image.xml");\n'
 
                 if 'lidarcloud.syntheticScan' in string and simulation_type == 'lidar':
                     main_cpp[i] = ' lidarcloud.syntheticScan( &context);\n'
@@ -488,10 +486,10 @@ class HeliosDataGenerator(object):
             # System call to helios @DARIO
             # current_directory = os.getcwd()
             helios_directory = os.path.join(os.path.dirname(os.path.dirname(__file__)), '_helios')
-            build_dir = os.path.join(helios_directory, 'Helios/projects/SyntheticImageAnnotation/build/')
-            output_dir = os.path.join(helios_directory, 'output')
-            point_cloud_dir = os.path.join(helios_directory, 'output/point_cloud/')
-            images_dir = os.path.join(helios_directory, 'output/images/')
+            build_dir = os.path.join(helios_directory, 'Helios/projects/SyntheticImageAnnotation/build')
+            output_dir = os.path.join(helios_directory, 'Helios/projects/SyntheticImageAnnotation/output')
+            point_cloud_dir = os.path.join(helios_directory, 'Helios/projects/SyntheticImageAnnotation/output/point_cloud/')
+            images_dir = os.path.join(helios_directory, 'Helios/projects/SyntheticImageAnnotation/output/images/')
 
             if not os.path.exists(build_dir):
                 os.makedirs(build_dir)
@@ -513,10 +511,10 @@ class HeliosDataGenerator(object):
             cmake_args += ['-G', 'Unix Makefiles']
             # current_directory = os.getcwd()
             helios_directory = os.path.join(os.path.dirname(os.path.dirname(__file__)), '_helios')
-            build_dir = os.path.join(helios_directory, 'Helios/projects/SyntheticImageAnnotation/build/')
-            output_dir = os.path.join(helios_directory, 'output')
-            point_cloud_dir = os.path.join(helios_directory, 'output/point_cloud/')
-            images_dir = os.path.join(helios_directory, 'output/images/')
+            build_dir = os.path.join(helios_directory, 'Helios/projects/SyntheticImageAnnotation/build')
+            output_dir = os.path.join(helios_directory, 'Helios/projects/SyntheticImageAnnotation/output')
+            point_cloud_dir = os.path.join(helios_directory, 'Helios/projects/SyntheticImageAnnotation/output/point_cloud/')
+            images_dir = os.path.join(helios_directory, 'Helios/projects/SyntheticImageAnnotation/output/images/')
 
             if not os.path.exists(build_dir):
                 os.makedirs(build_dir)
