@@ -2,7 +2,6 @@ import os
 import sys
 import zipfile
 
-import requests
 from tqdm import tqdm
 
 from agml.utils.data import (
@@ -21,6 +20,8 @@ def download_dataset(dataset_name, dest_dir):
     dest_dir : str
         path for saving downloaded dataset
     """
+    import requests
+
     # Validate dataset name
     source_info = load_public_sources()
     if dataset_name not in source_info.keys():

@@ -65,6 +65,10 @@ def copyright_print(name, location = None):
         citation_msg = "When using this dataset, please cite the following:\n\n"
         citation_msg += citation
 
+    docs = load_public_sources()[name]['docs_url']
+    docs_msg = ("\nYou can find additional information about "
+                "this dataset at:\n" + docs)
+
     columns = shutil.get_terminal_size((80, 24)).columns
     max_print_length = max(min(
         columns, max([len(i) for i in [
@@ -73,13 +77,14 @@ def copyright_print(name, location = None):
     print(first_msg)
     print(license_msg)
     print(citation_msg)
+    print(docs_msg)
     print("\nThis message will " + _bold("not") + " be automatically shown\n" 
           "again. To view this message again, in an AgMLDataLoader\n" +
           "run `loader.info.citation_summary()`. Otherwise, you\n" +
-          "can use `agml.data.source(<name>).citation_summary().`\n")
+          "can use `agml.data.source(<name>).citation_summary().`")
 
     if location is not None:
-        print(f"You can find your dataset at {location}.")
+        print(f"\nYou can find your dataset at {location}.")
     print('=' * max_print_length)
 
 
