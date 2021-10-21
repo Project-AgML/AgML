@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 
 from agml.utils.general import resolve_tuple_values, as_scalar, scalar_unpack
 from agml.data.tools import _resolve_coco_annotations # noqa
-from agml.viz.tools import get_colormap, auto_resolve_image, format_image
+from agml.viz.tools import get_colormap, auto_resolve_image, format_image, show_when_allowed
 
 @auto_resolve_image
 def annotate_bboxes_on_image(image, bboxes = None, labels = None):
@@ -50,6 +50,7 @@ def annotate_bboxes_on_image(image, bboxes = None, labels = None):
     return image
 
 
+@show_when_allowed
 @auto_resolve_image
 def visualize_image_and_boxes(image, bboxes = None, labels = None):
     """Visualizes an image with annotated bounding boxes.

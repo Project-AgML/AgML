@@ -1,7 +1,27 @@
+import os
 import setuptools
 
-with open("../README.md", "r") as fh:
-    long_description = fh.read()
+# ============== SETUP INFORMATION ==============
+
+with open(os.path.join(os.path.dirname(__file__), 'README.md'), 'r') as f:
+    long_description = f.read()
+
+# ============ PACKAGE REQUIREMENTS =============
+
+install_requires = [
+    'pyyaml>=5.4.1'
+]
+
+tests_require = [
+    'pytest>=6.0.0',
+    'pytest-order==1.0.0'
+]
+
+backend_requires = [
+
+]
+
+# ==================== SETUP ====================
     
 setuptools.setup(
     name="agml",
@@ -13,3 +33,4 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     packages=setuptools.find_packages()
 )
+

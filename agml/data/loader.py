@@ -43,7 +43,7 @@ class AgMLDataLoader(object):
     kwargs : Any
         Other initialization parameters. Can include:
         dataset_path : str
-            The local path to the dataset.
+            The desired local path to the dataset.
         overwrite : str
             Whether to re-download an existing dataset.
     """
@@ -79,9 +79,6 @@ class AgMLDataLoader(object):
         self._shuffle = True
         if not kwargs.get('shuffle', True):
             self._shuffle = False
-        self._default_image_size = (512, 512)
-        if not kwargs.get('image_size', True):
-            self._default_image_size = kwargs['image_size']
 
         # Parameters that may or may not be changed. If not, they are
         # here just for consistency in the class and internal methods.
@@ -95,6 +92,8 @@ class AgMLDataLoader(object):
         self._test_data = None
 
         self._getitem_as_batch = False
+
+        self._image_resize = None
 
     @abc.abstractmethod
     def __len__(self):
@@ -118,31 +117,51 @@ class AgMLDataLoader(object):
     def _find_dataset(self, **kwargs):
         """Searches for or downloads the dataset in this loader."""
         self._stored_kwargs_for_init = kwargs
-        if not kwargs.get('overwrite', False):
+        overwrite = kwargs.get('overwrite', False)
+        if not overwrite:
             if kwargs.get('dataset_path', False):
-                self._dataset_root = kwargs['dataset_path']
-                if not os.path.exists(self._dataset_root):
-                    raise FileNotFoundError(
-                        f"Provided dataset path does not "
-                        f"exist: {self._dataset_root}.")
-                return
+                path = kwargs.get('dataset_path')
+                if (os.path.basename(path) == self._info.name
+                    and os.path.exists(path)) or \
+                        os.path.exists(os.path.join(path, self._info.name)):
+                    if os.path.basename(path) != self._info.name:
+                        path = os.path.join(path, self._info.name)
+                    self._dataset_root = path
+                    return
             elif os.path.exists(os.path.join(
                     default_data_save_path(), self._info.name)):
                 self._dataset_root = os.path.join(
                     default_data_save_path(), self._info.name)
                 return
-        if kwargs.get('dataset_download_path', False):
-            download_path = kwargs['dataset_download_path']
-            if not os.path.exists(download_path):
-                raise NotADirectoryError(
-                    f"Invalid dataset download path: {download_path}.")
         else:
-            download_path = default_data_save_path()
+            if kwargs.get('dataset_path', False):
+                path = kwargs.get('dataset_path')
+                if (os.path.basename(path) == self._info.name
+                    and os.path.exists(path)) or \
+                        os.path.exists(os.path.join(path, self._info.name)):
+                    if os.path.basename(path) != self._info.name:
+                        path = os.path.join(path, self._info.name)
+                    print(f'[AgML Download]: Overwriting dataset at '
+                          f'{os.path.join(path)}')
+                    if os.path.basename(path) != self._info.name:
+                        path = os.path.join(path, self._info.name)
+                    self._dataset_root = path
+            elif os.path.exists(os.path.join(
+                    default_data_save_path(), self._info.name)):
+                self._dataset_root = os.path.join(
+                    default_data_save_path(), self._info.name)
+                print(f'[AgML Download]: Overwriting dataset at '
+                      f'{os.path.join(self._dataset_root)}')
+        if kwargs.get('dataset_path', False):
+            download_path = kwargs['dataset_path']
+            if os.path.basename(download_path) != self._info.name:
+                download_path = os.path.join(download_path, self._info.name)
+        else:
+            download_path = os.path.join(default_data_save_path(), self._info.name)
         print(f"[AgML Download]: Downloading dataset `{self._info.name}` "
-              f"to {os.path.join(download_path, self._info.name)}.")
+              f"to {download_path}.")
         download_dataset(self._info.name, download_path)
-        self._dataset_root = os.path.join(
-            default_data_save_path(), self._info.name)
+        self._dataset_root = download_path
 
     @property
     def name(self):
@@ -182,6 +201,7 @@ class AgMLDataLoader(object):
         To re-enable preprocessing, run `enable_preprocessing()`.
         """
         self._preprocessing_enabled = False
+        self._getitem_as_batch = False
 
     def enable_preprocessing(self):
         """Re-enables internal processing for `__getitem__`.
@@ -190,11 +210,27 @@ class AgMLDataLoader(object):
         `disable_preprocessing()`, this method re-enables preprocessing.
         """
         self._preprocessing_enabled = True
+        self._getitem_as_batch = True
+
+    def resize_images(self, shape = None):
+        """Toggles resizing of images when accessing from the loader.
+
+        Passing `shape` in this method will, if preprocessing is enabled,
+        automatically resize the images to `shape`. If image resizing
+        has been enabled, then passing `None` in place of `shape` will
+        disable the resizing and return images in their original shape.
+
+        Parameters
+        ----------
+        shape: {list, tuple}
+            A two-value list or tuple with the new shape.
+        """
+        self._image_resize = shape
 
     @property
     def training_data(self):
         if self._training_data is not None:
-            ret_cls = self.__class__._from_extant_data(
+            ret_cls = self.__class__._from_data_subset(
                 self._wrap_reduced_data('training'),
                 self._stored_kwargs_for_init)
             ret_cls._split_name = 'train'
@@ -206,7 +242,7 @@ class AgMLDataLoader(object):
     @property
     def validation_data(self):
         if self._validation_data is not None:
-            ret_cls = self.__class__._from_extant_data(
+            ret_cls = self.__class__._from_data_subset(
                 self._wrap_reduced_data('validation'),
                 self._stored_kwargs_for_init)
             ret_cls._split_name = 'validation'
@@ -218,7 +254,7 @@ class AgMLDataLoader(object):
     @property
     def test_data(self):
         if self._test_data is not None:
-            ret_cls = self.__class__._from_extant_data(
+            ret_cls = self.__class__._from_data_subset(
                 self._wrap_reduced_data('test'),
                 self._stored_kwargs_for_init)
             ret_cls._split_name = 'test'
@@ -235,13 +271,17 @@ class AgMLDataLoader(object):
         _swap_loader_mro(self, 'torch')
         self._getitem_as_batch = True
 
+    def on_epoch_end(self):
+        # Used for a Keras Sequence
+        self._reshuffle()
+
     @abc.abstractmethod
     def _wrap_reduced_data(self, *args, **kwargs):
         raise NotImplementedError()
 
     @classmethod
     @abc.abstractmethod
-    def _from_extant_data(cls, *args, **kwargs):
+    def _from_data_subset(cls, *args, **kwargs):
         raise NotImplementedError()
 
     #### API METHODS - OVERWRITTEN BY DERIVED CLASSES ####

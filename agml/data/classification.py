@@ -25,7 +25,7 @@ class AgMLImageClassificationDataLoader(AgMLDataLoader):
         # Take care of the `__new__` initialization logic.
         if kwargs.get('skip_init', False):
             return
-        super(AgMLImageClassificationDataLoader, self).__init__(dataset)
+        super(AgMLImageClassificationDataLoader, self).__init__(dataset, **kwargs)
 
         # Set up the class data.
         self._load_data_by_directory()
@@ -42,6 +42,12 @@ class AgMLImageClassificationDataLoader(AgMLDataLoader):
     def __getitem__(self, indx):
         """Returns one element or one batch of data from the loader."""
         # Different cases for batched vs. non-batched data.
+        if isinstance(indx, slice):
+            content_length = len(self._data)
+            if self._is_batched:
+                content_length = len(self._batched_data)
+            contents = range(content_length)[indx]
+            return [self[c] for c in contents]
         if self._is_batched:
             try:
                 item = self._batched_data[indx]
@@ -81,9 +87,6 @@ class AgMLImageClassificationDataLoader(AgMLDataLoader):
                     else:
                         raise te
                 if self._getitem_as_batch:
-                    if self._default_image_size != 'default':
-                        image = cv2.resize(
-                            image, self._default_image_size, cv2.INTER_NEAREST)
                     return np.expand_dims(image, axis = 0), \
                            np.expand_dims(np.array(label), axis = 0)
                 return image, label
@@ -93,18 +96,19 @@ class AgMLImageClassificationDataLoader(AgMLDataLoader):
                     f"expected one in range 0 - {len(self)}.")
 
     def _wrap_reduced_data(self, split):
-        """Wraps the reduced class information for `_from_extant_data`."""
+        """Wraps the reduced class information for `_from_data_subset`."""
         data_meta = getattr(self, f'_{split}_data')
         meta_dict = {
             'name': self.name,
             'data': data_meta,
             'image_paths': list(data_meta.keys()),
-            'transform_pipeline': self._transform_pipeline
+            'transform_pipeline': self._transform_pipeline,
+            'image_resize': self._image_resize
         }
         return meta_dict
 
     @classmethod
-    def _from_extant_data(cls, meta_dict, meta_kwargs):
+    def _from_data_subset(cls, meta_dict, meta_kwargs):
         """Initializes the class from a subset of data.
 
         This method is used internally for the `split` method, and
@@ -114,6 +118,7 @@ class AgMLImageClassificationDataLoader(AgMLDataLoader):
         loader._data = meta_dict['data']
         loader._image_paths = meta_dict['image_paths']
         loader._transform_pipeline = meta_dict['transform_pipeline']
+        loader._image_resize = meta_dict['image_resize']
         loader._block_split = True
         return loader
 
@@ -150,6 +155,7 @@ class AgMLImageClassificationDataLoader(AgMLDataLoader):
         items = list(self._data.items())
         np.random.shuffle(items)
         self._data = dict(items)
+        self._image_paths = list(self._data.keys())
 
     @staticmethod
     def _convert_dict_to_arrays(*dicts):
@@ -181,6 +187,9 @@ class AgMLImageClassificationDataLoader(AgMLDataLoader):
     def _preprocess_image(self, image):
         """Preprocesses an image with transformations/other methods."""
         if self._preprocessing_enabled:
+            if self._image_resize is not None:
+                image = cv2.resize(
+                    image, self._image_resize, cv2.INTER_NEAREST)
             if self._transform_pipeline is not None:
                 image = self._transform_pipeline(image)
         return image
@@ -267,7 +276,7 @@ class AgMLImageClassificationDataLoader(AgMLDataLoader):
             else:
                 split_1, split_overflow = train_test_split(
                     tts, train_size = splits[0],
-                    test_size = splits[1] + splits[2], shuffle = shuffle)
+                    test_size = round(splits[1] + splits[2], 2), shuffle = shuffle)
                 split_2, split_3 = train_test_split(
                     split_overflow,
                     train_size = splits[1] / (splits[1] + splits[2]),
@@ -399,7 +408,7 @@ class AgMLImageClassificationDataLoader(AgMLDataLoader):
         _check_image_classification_transform(transform)
         self._transform_pipeline = transform
 
-    def torch(self, *, image_size = (512, 512), preprocessing = None, **loader_kwargs):
+    def torch(self, *, image_size = (512, 512), transform = None, **loader_kwargs):
         """Returns a PyTorch DataLoader with this dataset's content.
 
         This method allows the exportation of the data inside this
@@ -422,7 +431,7 @@ class AgMLImageClassificationDataLoader(AgMLDataLoader):
         image_size : tuple
             A tuple of two values containing the output
             image size. This defaults to `(512, 512)`.
-        preprocessing : Any
+        transform : Any
             One of the following:
                 1. A set of `torchvision.transforms`.
                 2. A method which takes in one input array (the
@@ -441,14 +450,14 @@ class AgMLImageClassificationDataLoader(AgMLDataLoader):
         """
         from torch.utils.data import Dataset, DataLoader
         set_backend('torch')
-        _check_image_classification_transform(preprocessing)
+        _check_image_classification_transform(transform)
         if get_backend() != 'torch':
             raise ValueError(
                 "Using a non-PyTorch transform for `AgMLDataLoader.torch()`.")
 
         # Create the simplified `torch.utils.data.Dataset` subclass.
         class _DummyDataset(Dataset):
-            def __init__(self, image_label_mapping, transform = None):
+            def __init__(self, image_label_mapping, transform = None): # noqa
                 self._mapping = image_label_mapping
                 self._transform = transform
 
@@ -469,8 +478,8 @@ class AgMLImageClassificationDataLoader(AgMLDataLoader):
             f"{self._info.name}_dataset")
         transform_ = None
         if self._preprocessing_enabled:
-            transform_ = preprocessing \
-                if preprocessing is not None \
+            transform_ = transform \
+                if transform is not None \
                 else (self._transform_pipeline
                       if self._transform_pipeline is not None else None)
         return DataLoader(_DummyDataset(
@@ -518,7 +527,7 @@ class AgMLImageClassificationDataLoader(AgMLDataLoader):
         """
         import tensorflow as tf
         set_backend('tensorflow')
-        _check_image_classification_transform(preprocessing)
+        _check_image_classification_transform(transform)
         if get_backend() != 'tensorflow':
             raise ValueError(
                 "Using a non-TensorFlow transform for `AgMLDataLoader.tensorflow()`.")

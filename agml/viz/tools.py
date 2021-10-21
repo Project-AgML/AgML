@@ -9,8 +9,7 @@ import functools
 import cv2
 import numpy as np
 from PIL import Image
-
-import matplotlib.colors as mcolors
+import matplotlib.pyplot as plt
 
 from agml.backend.tftorch import tf, torch
 
@@ -42,8 +41,37 @@ def auto_resolve_image(f):
                 raise FileNotFoundError(
                     f"The provided image file {image} does not exist.")
             image = cv2.imread(image)
+        elif isinstance(image, (list, tuple)):
+            if not isinstance(image[0], (str, bytes, os.PathLike)):
+                pass
+            else:
+                processed_images = []
+                for image_path in image:
+                    if isinstance(image_path, (str, bytes, os.PathLike)):
+                        processed_images.append(cv2.imread(image_path))
+                    else:
+                        processed_images.append(image_path)
+                image = processed_images
         return f(image, *args, **kwargs)
     return _resolver
+
+def show_when_allowed(f):
+    """Stops running `plt.show()` when in a Jupyter Notebook."""
+    _in_notebook = False
+    try:
+        shell = eval("get_ipython().__class__.__name__")
+        cls = eval("get_ipython().__class__")
+        if shell == 'ZMQInteractiveShell' or 'colab' in cls:
+            _in_notebook = True
+    except:
+        pass
+
+    def _cancel_display(*args, **kwargs):
+        res = f(*args, **kwargs)
+        if not _in_notebook:
+            plt.show()
+        return res
+    return _cancel_display
 
 def format_image(img):
     """Formats an image to be used in a Matplotlib visualization.

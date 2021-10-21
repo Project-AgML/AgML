@@ -141,3 +141,4 @@ __MACOSX
 /agml/_helios/xmloutput_for_helios
 
 **/**test*.*
+!tests/*/*
