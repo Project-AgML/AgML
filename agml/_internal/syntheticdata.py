@@ -305,11 +305,12 @@ class HeliosDataGenerator(object):
 
         param_ranges = self.canopy_param_ranges[canopy_type]
 
-        lidar_ranges = copy.deepcopy(self.lidar_param_ranges)
-
         camera_ranges = self.camera_param_ranges
 
         if simulation_type == 'lidar':
+            
+            lidar_ranges = copy.deepcopy(self.lidar_param_ranges)
+            
             # LiDAR parameters
             for key in lidar_ranges:
                 # param_vals=lidar_params[key].split(' ')
