@@ -1,3 +1,17 @@
+# Copyright 2021 UC Davis Plant AI and Biophysics Lab
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import os
 import setuptools
 
@@ -39,8 +53,10 @@ dev_requires = [
 setuptools.setup(
     name="agml",
     version="0.0.1",
-    author="UC Davis Plant AI and Biophysics Lab", # FIX: We need an author/author email, or maintainer/maintainer_email
-    maintainer_email="jmearles@ucdavis.edu",
+    author="UC Davis Plant AI and Biophysics Lab",
+    author_email="jmearles@ucdavis.edu",
+    maintainer="Amogh Joshi",
+    maintainer_email="amnjoshi@ucdavis.edu",
     url="https://github.com/plant-ai-biophysics-lab/AgML", # FIX: Do we want to make a cover webpage for this?
     description="A comprehensive library for agricultural deep learning",
     long_description=long_description,
