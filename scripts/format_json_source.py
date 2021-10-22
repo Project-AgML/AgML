@@ -21,9 +21,16 @@ import json
 
 SOURCE_PATH = os.path.join(os.path.dirname(
     os.path.dirname(__file__)), 'agml', '_assets', 'public_datasources.json')
+CITATION_PATH = os.path.join(os.path.dirname(
+    os.path.dirname(__file__)), 'agml', '_assets', 'source_citations.json')
 
 with open(SOURCE_PATH, 'r') as f:
     contents = json.load(f)
 with open(SOURCE_PATH, 'w') as f:
+    json.dump(contents, f, indent = 4)
+
+with open(CITATION_PATH, 'r') as f:
+    contents = json.load(f)
+with open(CITATION_PATH, 'w') as f:
     json.dump(contents, f, indent = 4)
 

@@ -1,0 +1,139 @@
+{
+    "apple_detection_spain": {
+        "crop_types": {
+            "1": "apple"
+        },
+        "ml_task": "object_detection",
+        "ag_task": "fruit_segmentation",
+        "location": {
+            "continent": "europe",
+            "country": "spain"
+        },
+        "sensor_modality": "rgb",
+        "real_synthetic": "real",
+        "platform": "ground",
+        "input_data_format": "jpg",
+        "annotation_format": "coco_json",
+        "n_images": "288",
+        "docs_url": "http://www.grap.udl.cat/en/publications/Fuji-SfM_dataset.html"
+    },
+    "fruit_detection_australia": {
+        "crop_types": {
+            "1": "apple",
+            "2": "mango",
+            "3": "almond"
+        },
+        "ml_task": "object_detection",
+        "ag_task": "fruit_detection",
+        "location": {
+            "continent": "oceania",
+            "country": "australia"
+        },
+        "sensor_modality": "rgb",
+        "real_synthetic": "real",
+        "platform": "ground",
+        "input_data_format": "png",
+        "annotation_format": "coco_json",
+        "n_images": "3704",
+        "docs_url": "http://data.acfr.usyd.edu.au/ag/treecrops/2016-multifruit/"
+    },
+    "datepalm_classification_saudi": {
+        "crop_types": {
+            "1": "Barhi",
+            "2": "Khalas",
+            "3": "Meneifi",
+            "4": "NabootSaif",
+            "5": "Sullaj",
+            "6": "Immature-1",
+            "7": "Immature-2",
+            "8": "Pre-Khalal",
+            "9": "Khalal",
+            "10": "KhalalwithRutab",
+            "11": "Pre-Tamar",
+            "12": "Tamar"
+        },
+        "ml_task": "image_classification",
+        "ag_task": "types_maturity_classification",
+        "location": {
+            "continent": "asia",
+            "country": "saudi_arabia"
+        },
+        "sensor_modality": "rgb",
+        "real_synthetic": "real",
+        "platform": "handheld",
+        "input_data_format": "jpg",
+        "annotation_format": "directory_names",
+        "n_images": "8079",
+        "docs_url": "https://ieee-dataport.org/open-access/date-fruit-dataset-automated-harvesting-and-visual-yield-estimation#files"
+    },
+    "plant_weeds_denmark": {
+        "crop_types": {
+            "1": "ALOMY",
+            "2": "ANGAR",
+            "3": "APESV",
+            "4": "ARTVU",
+            "5": "AVEFA",
+            "6": "BROST",
+            "7": "BRSNN",
+            "8": "CAPBP",
+            "9": "CENCY",
+            "10": "CHEAL",
+            "11": "CHYSE",
+            "12": "CIRAR",
+            "13": "CONAR",
+            "14": "EPHHE",
+            "15": "EPHPE",
+            "16": "EROCI",
+            "17": "FUMOF",
+            "18": "GALAP",
+            "19": "GERMO",
+            "20": "LAPCO",
+            "21": "LOLMU",
+            "22": "LYCAR",
+            "23": "MATCH",
+            "24": "MATIN",
+            "25": "MELNO",
+            "26": "MYOAR",
+            "27": "PAPRH",
+            "28": "PLALA",
+            "29": "PLAMA",
+            "30": "POAAN",
+            "31": "POLAV",
+            "32": "POLCO",
+            "33": "POLLA",
+            "34": "POLPE",
+            "35": "RUMCR",
+            "36": "SENVU",
+            "37": "SINAR",
+            "38": "SOLNI",
+            "39": "SONOL",
+            "40": "STEME",
+            "41": "THLAR",
+            "42": "URTUR",
+            "43": "VERAR",
+            "44": "VERPE",
+            "45": "VICHI",
+            "46": "VIOAR",
+            "47": "PPPMM",
+            "48": "PPPDD",
+            "49": "1PLAK",
+            "50": "1COMF",
+            "51": "3UNCLK",
+            "52": "SONAS",
+            "53": "OTHER"
+        },
+        "ml_task": "object_detection_image_classification",
+        "ag_task": "plant_detection_classification",
+        "location": {
+            "continent": "europe",
+            "country": "denmark"
+        },
+        "sensor_modality": "rgb",
+        "real_synthetic": "real",
+        "platform": "ground_fixed",
+        "input_data_format": "jpg",
+        "annotation_format": "coco_json",
+        "n_images": "7590",
+        "docs_url": "https://gitlab.au.dk/AUENG-Vision/OPPD"
+    }
+}
