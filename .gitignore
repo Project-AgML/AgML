@@ -145,5 +145,6 @@ agml/_helios/xmloutput_for_helios/
 **/**test*.*
 !tests/*/*
 agml/_helios
+agml/_internal
 agml/helios_config.sh
 agml/train
