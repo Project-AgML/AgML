@@ -70,5 +70,13 @@
     "plant_doc_classification": {
         "license": "CC BY-SA 4.0",
         "citation": "@inproceedings{10.1145/3371158.3371196,\n  author = {Singh, Davinder and Jain, Naman and Jain, Pranjali and Kayal, Pratik and Kumawat, Sudhakar and Batra, Nipun},\n  title = {PlantDoc: A Dataset for Visual Plant Disease Detection},\n  year = {2020},\n  isbn = {9781450377386},\n  publisher = {Association for Computing Machinery},\n  address = {New York, NY, USA},\n  url = {https://doi.org/10.1145/3371158.3371196},\n  doi = {10.1145/3371158.3371196},\n  booktitle = {Proceedings of the 7th ACM IKDD CoDS and 25th COMAD},\n  pages = {249–253},\n  numpages = {5},\n  keywords = {Deep Learning, Object Detection, Image Classification},\n  location = {Hyderabad, India},\n  series = {CoDS COMAD 2020}\n  }"
+    },
+    "grape_detection_californiaday": {
+        "license": "",
+        "citation": "@misc{GrapeDay,\n  author    = {Plant AI and Biophysics Lab},\n  title     = {Grape Detection 2019 Day},\n  year      = {2019},\n  url       = {https://github.com/plant-ai-biophysics-lab/AgML} \n "
+    },
+    "grape_detection_californianight": {
+        "license": "",
+        "citation": "@misc{GrapeNight,\n  author    = {Plant AI and Biophysics Lab},\n  title     = {Grape Detection 2020 Night},\n  year      = {2020},\n  url       = {https://github.com/plant-ai-biophysics-lab/AgML} \n "
     }
 }

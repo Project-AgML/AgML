@@ -431,6 +431,42 @@
         "annotation_format": "directory_names",
         "n_images": "2598",
         "docs_url": "https://github.com/pratikkayal/PlantDoc-Dataset"
+    },
+    "grape_detection_californiaday": {
+        "crop_types": {
+            "1": "grape"
+        },
+        "ml_task": "object_detection",
+        "ag_task": "fruit_detection",
+        "location": {
+            "continent": "north_america",
+            "country": "usa"
+        },
+        "sensor_modality": "rgb",
+        "real_synthetic": "real",
+        "platform": "ground",
+        "input_data_format": "jpg",
+        "annotation_format": "image",
+        "n_images": "126",
+        "docs_url": ""
+    },
+    "grape_detection_californianight": {
+        "crop_types": {
+            "1": "grape"
+        },
+        "ml_task": "object_detection",
+        "ag_task": "fruit_detection",
+        "location": {
+            "continent": "north_america",
+            "country": "usa"
+        },
+        "sensor_modality": "rgb",
+        "real_synthetic": "real",
+        "platform": "ground",
+        "input_data_format": "jpg",
+        "annotation_format": "image",
+        "n_images": "150",
+        "docs_url": ""
     }
 }
 
