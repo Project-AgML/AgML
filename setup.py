@@ -46,7 +46,7 @@ dev_requires = [
     'scikit-image',
     'boto3',
     'botocore'
-]
+] + tests_require
 
 # ==================== SETUP ====================
     
@@ -63,6 +63,7 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     packages=setuptools.find_packages(),
     include_package_data=True,
+    classifiers=CLASSIFIERS,
     extras_require={
         'dev': dev_requires,
         'test': tests_require

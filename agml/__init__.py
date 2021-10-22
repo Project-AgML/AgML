@@ -14,7 +14,3 @@
 
 from . import data, backend, viz
 
-# Initialize the logging configuration.
-from .utils import logging
-del logging
-

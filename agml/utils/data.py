@@ -63,7 +63,8 @@ def copyright_print(name, location = None):
         'CC BY SA 4.0': 'https://creativecommons.org/licenses/by-sa/4.0/',
         'CC BY-SA 4.0': 'https://creativecommons.org/licenses/by-sa/4.0/',
         'MIT': 'https://opensource.org/licenses/MIT',
-        'GPL-3.0': 'https://opensource.org/licenses/GPL-3.0'}
+        'GPL-3.0': 'https://opensource.org/licenses/GPL-3.0',
+        'US Public Domain': 'https://www.usa.gov/government-works'}
     if license == '':
         license_msg = "This dataset has " \
                       + _bold("no license") + ".\n"
