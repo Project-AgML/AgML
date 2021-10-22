@@ -15,7 +15,6 @@
 """
 Experimental data utilities that are in development.
 """
-import sys
 import functools
 
 import numpy as np
