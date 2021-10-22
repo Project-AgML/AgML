@@ -1,6 +1,7 @@
 import os
 import sys
 import json
+import glob
 import shutil
 
 import cv2
@@ -8,6 +9,7 @@ import numpy as np
 import pandas as pd
 
 from shutil import copytree
+
 from tqdm import tqdm
 from PIL import Image
 
@@ -16,9 +18,10 @@ from agml._internal.process_utils import read_txt_file, get_image_info, get_labe
 from agml._internal.process_utils import convert_bbox_to_coco, get_coco_annotation_from_obj, convert_xmls_to_cocojson
 from agml._internal.process_utils import mask_annotation_per_bbox, move_segmentation_dataset
 from agml._internal.process_utils import create_sub_masks, create_sub_mask_annotation_per_bbox
-from agml.utils.general import load_public_sources
+from agml.utils.data import load_public_sources
 
-class PreprocessData:
+class PreprocessData(object):
+    """Internal data preprocessing class."""
     def __init__(self, data_dir):
         self.data_dir = os.path.abspath(data_dir)
         self.data_original_dir = os.path.join(self.data_dir, 'original')
@@ -828,7 +831,7 @@ class PreprocessData:
             annotation_dir = os.path.join(dataset_dir, 'annotations')
             annotation_images = sorted(get_file_list(annotation_dir, ext = 'png'))
 
-            # Move the images to the new directory
+            # Move the images to the new directory.
             def _annotation_preprocess_fn(annotation_path, out_path):
                 an_img = cv2.cvtColor(cv2.imread(annotation_path), cv2.COLOR_BGR2RGB)
                 crop, weed = (0, 255, 0), (255, 0, 0)
@@ -843,10 +846,53 @@ class PreprocessData:
             move_segmentation_dataset(
                 self.data_processed_dir, dataset_name, train_images,
                 annotation_images, train_dir, annotation_dir,
-                annotation_preprocess_fn = _annotation_preprocess_fn)
+                annotation_preprocess_fn = _annotation_preprocess_fn
+            )
 
+        elif dataset_name == 'apple_segmentation_minnesota':
+            # Get all of the relevant data.
+            dataset_dir = os.path.join(self.data_original_dir, dataset_name)
+            train_dir = os.path.join(dataset_dir, 'train', 'images')
+            train_images = sorted(get_file_list(train_dir))
+            masks_dir = os.path.join(dataset_dir, 'train', 'masks')
+            mask_images = sorted(get_file_list(masks_dir))
 
-            
+            # Move the images to the new directory.
+            def _annotation_preprocess_fn(annotation_path, out_path):
+                mask = cv2.imread(annotation_path, cv2.IMREAD_GRAYSCALE)
+                ids = np.unique(mask)[1:]
+                masks = mask == ids[:, np.newaxis, np.newaxis]
+                masks = masks.astype(np.int32)
+                if len(masks) == 1:
+                    mask = mask
+                elif len(masks) >= 2:
+                    mask = np.logical_or(masks[0], masks[1])
+                    if len(masks) > 2:
+                        for mask_ in masks[2:]:
+                            mask = np.logical_or(mask, mask_)
+                mask = mask.astype(np.int32)
+                return cv2.imwrite(out_path, mask)
+            move_segmentation_dataset(
+                self.data_processed_dir, dataset_name, train_images,
+                mask_images, train_dir, masks_dir,
+                annotation_preprocess_fn = _annotation_preprocess_fn
+            )
 
+        elif dataset_name == 'rice_seedling_segmentation':
+            # Get all of the relevant data.
+            data_dir = os.path.join(self.data_original_dir, dataset_name)
+            images = sorted(glob.glob(os.path.join(data_dir, 'image_*.jpg')))
+            labels = sorted(glob.glob(os.path.join(data_dir, 'Label_*.png')))
+            images = [os.path.basename(p) for p in images]
+            labels = [os.path.basename(p) for p in labels]
+
+            # Move the images to the new directory
+            move_segmentation_dataset(
+                self.data_processed_dir, dataset_name,
+                images, labels, data_dir, data_dir
+            )
+
+        elif dataset_name == 'plant_village_classification':
+            pass
 
 

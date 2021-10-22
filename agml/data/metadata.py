@@ -1,10 +1,26 @@
+# Copyright 2021 UC Davis Plant AI and Biophysics Lab
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import io
 import re
 import yaml
 import collections
 
 import agml.utils.logging as logging
-from agml.utils.general import load_public_sources, maybe_you_meant
+from agml.utils.data import (
+    load_public_sources, load_citation_sources, maybe_you_meant, copyright_print
+)
 
 class DatasetMetadata(object):
     """Stores metadata about a certain AgML dataset.
@@ -53,7 +69,7 @@ class DatasetMetadata(object):
         source_info = load_public_sources()
         if name not in source_info.keys():
             if name.replace('-', '_') not in source_info.keys():
-                msg = f"Received invalid public source: {name}."
+                msg = f"Received invalid public source: '{name}'."
                 msg = maybe_you_meant(name, msg)
                 raise ValueError(msg)
             else:
@@ -63,10 +79,16 @@ class DatasetMetadata(object):
         self._name = name
         self._metadata = source_info[name]
 
+        # Load citation information.
+        self._citation_meta = load_citation_sources()[name]
+
     def __getattr__(self, key):
         if key in self._metadata.keys():
             return self._metadata[key]
-        raise AttributeError(f"Received invalid info parameter: {key}.")
+        raise AttributeError(
+            maybe_you_meant(
+                key, f"Received invalid info parameter: '{key}'.",
+                source = self._metadata.keys()))
 
     def __getitem__(self, key):
         return getattr(self, key)
@@ -121,6 +143,18 @@ class DatasetMetadata(object):
         nums = [int(float(i)) for i in mapping.keys()]
         return dict(zip(mapping.values(), nums))
 
+    @property
+    def license(self):
+        if self._citation_meta['license'] == '':
+            return None
+        return self._citation_meta['license']
+
+    @property
+    def citation(self):
+        if self._citation_meta['citation'] == '':
+            return None
+        return self._citation_meta['citation']
+
     def summary(self):
         """Prints out a summary of the dataset information.
 
@@ -150,6 +184,8 @@ class DatasetMetadata(object):
                 name = _SWITCH_NAMES[key]
             if name == 'Crop Types':
                 value = {int(k): v for k, v in value.items()}
+            if name == 'Number of Images':
+                value = int(value)
             formatted_metadata[_bold_yaml(name)] = value
 
         stream = io.StringIO()
@@ -161,5 +197,14 @@ class DatasetMetadata(object):
         print(_bold("Name") + f": {self._name}")
         print(content, end = '')
         print('=' * 57)
+
+    def citation_summary(self):
+        """Prints out a summary of the citation information of the dataset.
+
+        This message is the same as is displayed when the dataset is
+        initially downloaded, and contains information about the dataset
+        license and associated citation (if either exist).
+        """
+        copyright_print(self._name)
 
 

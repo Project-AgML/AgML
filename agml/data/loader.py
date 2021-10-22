@@ -1,9 +1,23 @@
+# Copyright 2021 UC Davis Plant AI and Biophysics Lab
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import os
 import abc
 
-from agml.utils.downloads import download_dataset  # noqa
+from agml.utils.downloads import download_dataset
 from agml.backend.config import default_data_save_path
-from agml.backend.tftorch import _swap_loader_mro
+from agml.backend.tftorch import _swap_loader_mro # noqa
 from agml.data.metadata import DatasetMetadata
 
 class AgMLDataLoader(object):
@@ -103,6 +117,9 @@ class AgMLDataLoader(object):
         return self.num_images
 
     def __str__(self):
+        return repr(self)
+
+    def __repr__(self):
         fmt = (f"<AgMLDataLoader [{self._info.name}] "
                f"[task = {self._info.tasks.ml}]")
         if hasattr(self, '_split_name'):
@@ -118,6 +135,9 @@ class AgMLDataLoader(object):
         """Searches for or downloads the dataset in this loader."""
         self._stored_kwargs_for_init = kwargs
         overwrite = kwargs.get('overwrite', False)
+        if 'dataset_path' in kwargs:
+            kwargs['dataset_path'] = os.path.realpath(
+                os.path.expanduser(kwargs['dataset_path']))
         if not overwrite:
             if kwargs.get('dataset_path', False):
                 path = kwargs.get('dataset_path')
@@ -230,9 +250,8 @@ class AgMLDataLoader(object):
     @property
     def training_data(self):
         if self._training_data is not None:
-            ret_cls = self.__class__._from_data_subset(
-                self._wrap_reduced_data('training'),
-                self._stored_kwargs_for_init)
+            ret_cls = self.__class__._init_from_meta(
+                self._wrap_reduced_data('training'))
             ret_cls._split_name = 'train'
             return ret_cls
         raise NotImplementedError(
@@ -242,9 +261,8 @@ class AgMLDataLoader(object):
     @property
     def validation_data(self):
         if self._validation_data is not None:
-            ret_cls = self.__class__._from_data_subset(
-                self._wrap_reduced_data('validation'),
-                self._stored_kwargs_for_init)
+            ret_cls = self.__class__._init_from_meta(
+                self._wrap_reduced_data('validation'))
             ret_cls._split_name = 'validation'
             return ret_cls
         raise NotImplementedError(
@@ -254,9 +272,8 @@ class AgMLDataLoader(object):
     @property
     def test_data(self):
         if self._test_data is not None:
-            ret_cls = self.__class__._from_data_subset(
-                self._wrap_reduced_data('test'),
-                self._stored_kwargs_for_init)
+            ret_cls = self.__class__._init_from_meta(
+                self._wrap_reduced_data('test'))
             ret_cls._split_name = 'test'
             return ret_cls
         raise NotImplementedError(
@@ -281,8 +298,24 @@ class AgMLDataLoader(object):
 
     @classmethod
     @abc.abstractmethod
-    def _from_data_subset(cls, *args, **kwargs):
+    def _init_from_meta(cls, *args, **kwargs):
         raise NotImplementedError()
+
+    @abc.abstractmethod
+    def _set_state_from_meta(self, *args, **kwargs):
+        raise NotImplementedError()
+
+    #### UTILITIES FOR PICKLING ####
+
+    def __getnewargs__(self):
+        return self._info.name,
+
+    def __getstate__(self):
+        return self._wrap_reduced_data()
+
+    def __setstate__(self, state):
+        self.__init__(state['name'], **state['init_kwargs'])
+        self._set_state_from_meta(state)
 
     #### API METHODS - OVERWRITTEN BY DERIVED CLASSES ####
 

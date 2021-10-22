@@ -1,3 +1,5 @@
+
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -142,3 +144,6 @@ agml/_helios/xmloutput_for_helios/
 
 **/**test*.*
 !tests/*/*
+agml/_helios
+agml/helios_config.sh
+agml/train
