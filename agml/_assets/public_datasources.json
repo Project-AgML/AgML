@@ -737,5 +737,41 @@
                 0.2241816222667694
             ]
         }
+    },
+    "grape_detection_californiaday": {
+        "classes": {
+            "1": "grape"
+        },
+        "ml_task": "object_detection",
+        "ag_task": "fruit_detection",
+        "location": {
+            "continent": "north_america",
+            "country": "usa"
+        },
+        "sensor_modality": "rgb",
+        "real_synthetic": "real",
+        "platform": "ground",
+        "input_data_format": "jpg",
+        "annotation_format": "image",
+        "n_images": "126",
+        "docs_url": ""
+    },
+    "grape_detection_californianight": {
+        "classes": {
+            "1": "grape"
+        },
+        "ml_task": "object_detection",
+        "ag_task": "fruit_detection",
+        "location": {
+            "continent": "north_america",
+            "country": "usa"
+        },
+        "sensor_modality": "rgb",
+        "real_synthetic": "real",
+        "platform": "ground",
+        "input_data_format": "jpg",
+        "annotation_format": "image",
+        "n_images": "150",
+        "docs_url": ""
     }
 }
