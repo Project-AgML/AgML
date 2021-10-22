@@ -247,6 +247,8 @@ bool flag=false;
       std::string type;
       if( context.doesPrimitiveDataExist( UUIDs_all.at(p),"element_type" ) ){
 	context.getPrimitiveData(UUIDs_all.at(p),"element_type",type);
+
+
 	if( type.compare("grape")==0 ){
 	  context.getPrimitivePointer(UUIDs_all.at(p))->setColor( grape_color );
 	}
@@ -255,7 +257,6 @@ bool flag=false;
       }
     }
 
-    
     Visualizer vis_RGB(windowW,windowH,8,false);
 
     uint framebufferW, framebufferH;
@@ -279,7 +280,7 @@ bool flag=false;
     wait(5);
     
 
-  sprintf(outfile,"/Users/pranavraja/Documents/Helios Synthetic Data Project/AgML/agml/_helios/output/images/Image_0/RGB_rendering.jpeg");
+  sprintf(outfile,"/Users/jmearles/Library/Mobile Documents/com~apple~CloudDocs/Documents/ucd/projects/AgML/agml/_helios/output/images/Image_0/RGB_rendering.jpeg");
     vis_RGB.printWindow(outfile);
 
   
