@@ -184,6 +184,8 @@ class DatasetMetadata(object):
                 name = _SWITCH_NAMES[key]
             if name == 'Crop Types':
                 value = {int(k): v for k, v in value.items()}
+            if name == 'Number of Images':
+                value = int(value)
             formatted_metadata[_bold_yaml(name)] = value
 
         stream = io.StringIO()
