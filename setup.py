@@ -46,6 +46,7 @@ dev_requires = [
     'scikit-image',
     'boto3',
     'botocore'
+    'pandas'
 ] + tests_require
 
 # ==================== SETUP ====================

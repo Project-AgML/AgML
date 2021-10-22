@@ -1,6 +1,7 @@
 numpy
-pandas
+matplotlib
 tqdm
+scikit-learn
 opencv-python
 torch
 torchvision
