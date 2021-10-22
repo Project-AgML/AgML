@@ -1,9 +1,23 @@
+# Copyright 2021 UC Davis Plant AI and Biophysics Lab
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import functools
 
 import numpy as np
 
 from agml.utils.downloads import download_dataset as _download # noqa
-from agml.utils.general import load_public_sources
+from agml.utils.data import load_public_sources
 from agml.data.metadata import DatasetMetadata
 from agml.backend.config import default_data_save_path
 
@@ -116,6 +130,24 @@ def public_data_sources(**filters):
     s = _PublicSourceFilter().apply_filters(**filters)
     return s.result()
 
+def source(name):
+    """Returns the metadata of a single public dataset source.
+
+    If you just want to inspect the info of one dataset, then you can use
+    this method with `name` representing a dataset to get a single piece
+    of `DatasetMetadata` which contains its information.
+
+    Parameters
+    ----------
+    name : str
+        The name of the dataset you want to inspect.
+
+    Returns
+    -------
+    The metadata of the dataset `name`.
+    """
+    return DatasetMetadata(name)
+
 def download_public_dataset(dataset, location = None):
     """Downloads a public dataset from AgML to a directory.
 
@@ -140,3 +172,5 @@ def download_public_dataset(dataset, location = None):
                         else default_data_save_path()
     _download(dataset, location)
     return location
+
+

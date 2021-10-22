@@ -1,0 +1,2 @@
+include README.md
+include agml/_assets/*.json

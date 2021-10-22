@@ -1,3 +1,17 @@
+# Copyright 2021 UC Davis Plant AI and Biophysics Lab
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 """
 A tools module for `agml.viz`, which also serves as almost a
 mini-backend to control ops such as the colormap being used.
@@ -31,6 +45,27 @@ def get_colormap():
     """Returns the current AgML colormap."""
     global _COLORMAPS, _COLORMAP_CHOICE
     return _COLORMAPS[_COLORMAP_CHOICE]
+
+def set_colormap(colormap):
+    """Sets the current AgML colormap used in color displays.
+
+    This method accepts one argument, `colormap`, which can be
+    any of the colormaps listed in `_assets/viz_colormaps.json`,
+    namely one of the following:
+
+    1. "default": Traditional matplotlib RGB colors.
+    2. "agriculture": Various shades of green (for agriculture).
+
+    Parameters
+    ----------
+    colormap : str
+        The colormap to set.
+    """
+    global _COLORMAP_CHOICE, _COLORMAPS
+    colormap = colormap.lower()
+    if colormap not in _COLORMAPS.keys():
+        raise ValueError(f"Invalid colormap {colormap} received.")
+    _COLORMAP_CHOICE = colormap
 
 def auto_resolve_image(f):
     """Resolves an image path or image into a read-in image."""

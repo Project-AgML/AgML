@@ -1,0 +1,86 @@
+{
+    "bean_disease_uganda": {
+        "license": "MIT",
+        "citation": ""
+    },
+    "carrot_weeds_germany": {
+        "license": "",
+        "citation": "@inproceedings{haug15,\n  author={Haug, Sebastian and Ostermann, J{\\\"o}rn},\n  title={A Crop/Weed Field Image Dataset for the Evaluation of Computer Vision Based Precision Agriculture Tasks},\n  year={2015},\n  booktitle={Computer Vision - ECCV 2014 Workshops},\n  doi={10.1007/978-3-319-16220-1_8},\n  url={http://dx.doi.org/10.1007/978-3-319-16220-1_8},\n  pages={105--116}\n}"
+    },
+    "plant_seedlings_aarhus": {
+        "license": "CC BY-SA 4.0",
+        "citation": "@article{Giselsson2017,\n  author = {Giselsson, Thomas Mosgaard and Dyrmann, Mads and J{\\o}rgensen, Rasmus Nyholm and Jensen, Peter Kryger and Midtiby, Henrik Skov},\n  journal = {arXiv preprint},\n  keywords = {benchmark,database,plant seedlings,segmentation,site-specific weed control},\n  title = {{A Public Image Database for Benchmark of Plant Seedling Classification Algorithms}},\n  year = {2017}\n}"
+    },
+    "soybean_weed_uav_brazil": {
+        "license": "CC BY NC 3.0",
+        "citation": "dos Santos Ferreira, Alessandro; Pistori, Hemerson; Matte Freitas, Daniel; Gon\u00e7alves da Silva, Gercina (2017), \u201cData for: Weed Detection in Soybean Crops Using ConvNets\u201d, Mendeley Data, V2, doi: 10.17632/3fmjm7ncc6.2"
+    },
+    "sugarcane_damage_usa": {
+        "license": "",
+        "citation": "@ARTICLE{8412587,\n  author={Alencastre-Miranda, Moises and Davidson, Joseph R. and Johnson, Richard M. and Waguespack, Herman and Krebs, Hermano Igo},\n  journal={IEEE Robotics and Automation Letters}, \n  title={Robotics for Sugarcane Cultivation: Analysis of Billet Quality using Computer Vision}, \n  year={2018},\n  volume={3},\n  number={4},\n  pages={3828-3835},\n  doi={10.1109/LRA.2018.2856999}}"
+    },
+    "crop_weeds_greece": {
+        "license": "MIT",
+        "citation": "@article{ESPEJOGARCIA2020105306,\n  title = {Towards weeds identification assistance through transfer learning},\n  journal = {Computers and Electronics in Agriculture},\n  volume = {171},\n  pages = {105306},\n  year = {2020},\n  issn = {0168-1699},\n  doi = {https://doi.org/10.1016/j.compag.2020.105306},\n  url = {https://www.sciencedirect.com/science/article/pii/S0168169919319854},\n  author = {Borja Espejo-Garcia and Nikos Mylonas and Loukas Athanasakos and Spyros Fountas and Ioannis Vasilakoglou},\n  keywords = {Weed identification, Deep learning, Transfer learning, Open data, Precision agriculture},\n  abstract = {Reducing the use of pesticides through selective spraying is an important component towards a more sustainable computer-assisted agriculture. Weed identification at early growth stage contributes to reduced herbicide rates. However, while computer vision alongside deep learning have overcome the performance of approaches that use hand-crafted features, there are still some open challenges in the development of a reliable automatic plant identification system. These type of systems have to take into account different sources of variability, such as growth stages and soil conditions, with the added constraint of the limited size of usual datasets. This study proposes a novel crop/weed identification system that relies on a combination of fine-tuning pre-trained convolutional networks (Xception, Inception-Resnet, VGNets, Mobilenet and Densenet) with the \u201ctraditional\u201d machine learning classifiers (Support Vector Machines, XGBoost and Logistic Regression) trained with the previously deep extracted features. The aim of this approach was to avoid overfitting and to obtain a robust and consistent performance. To evaluate this approach, an open access dataset of two crop [tomato (Solanum lycopersicum L.) and cotton (Gossypium hirsutum L.)] and two weed species [black nightshade (Solanum nigrum L.) and velvetleaf (Abutilon theophrasti Medik.)] was generated. The pictures were taken by different production sites across Greece under natural variable light conditions from RGB cameras. The results revealed that a combination of fine-tuned Densenet and Support Vector Machine achieved a micro F1 score of 99.29% with a very low performance difference between train and test sets. Other evaluated approaches also obtained repeatedly more than 95% F1 score. Additionally, our results analysis provides some heuristics for designing transfer-learning based systems to avoid overfitting without decreasing performance.}\n}"
+    },
+    "sugarbeet_weed_segmentation": {
+        "license": "GPL-3.0",
+        "citation": "@ARTICLE{8115245,\n  author={I. Sa and Z. Chen and M. Popovi\u0107 and R. Khanna and F. Liebisch and J. Nieto and R. Siegwart},\n  journal={IEEE Robotics and Automation Letters},\n  title={weedNet: Dense Semantic Weed Classification Using Multispectral Images and MAV for Smart Farming},\n  year={2018},\n  volume={3},\n  number={1},\n  pages={588-595},\n  keywords={agriculture;agrochemicals;autonomous aerial vehicles;control engineering computing;convolution;crops;feature extraction;image classification;learning (artificial intelligence);neural nets;vegetation;MAV;SegNet;convolutional neural network;crop health;crop management;curve classification metrics;dense semantic classes;dense semantic weed classification;encoder-decoder;input image channels;multispectral images;selective weed treatment;vegetation index;weed detection;Agriculture;Cameras;Image segmentation;Robots;Semantics;Training;Vegetation mapping;Aerial systems;agricultural automation;applications;robotics in agriculture and forestry},\n  doi={10.1109/LRA.2017.2774979},\n  ISSN={},\n  month={Jan}\n}"
+    },
+    "rangeland_weeds_australia": {
+        "license": "CC BY 4.0",
+        "citation": "@Article{Olsen2019,\n  author={Olsen, Alex and Konovalov, Dmitry A. and Philippa, Bronson and Ridd, Peter and Wood, Jake C. and Johns, Jamie and Banks, Wesley and Girgenti, Benjamin and Kenny, Owen and Whinney, James and Calvert, Brendan and Azghadi, Mostafa Rahimi and White, Ronald D.},\n  title={DeepWeeds: A Multiclass Weed Species Image Dataset for Deep Learning},\n  journal={Scientific Reports},\n  year={2019},\n  month={Feb},\n  day={14},\n  volume={9},\n  number={1},\n  pages={2058},\n  abstract={Robotic weed control has seen increased research of late with its potential for boosting productivity in agriculture. Majority of works focus on developing robotics for croplands, ignoring the weed management problems facing rangeland stock farmers. Perhaps the greatest obstacle to widespread uptake of robotic weed control is the robust classification of weed species in their natural environment. The unparalleled successes of deep learning make it an ideal candidate for recognising various weed species in the complex rangeland environment. This work contributes the first large, public, multiclass image dataset of weed species from the Australian rangelands; allowing for the development of robust classification methods to make robotic weed control viable. The DeepWeeds dataset consists of 17,509 labelled images of eight nationally significant weed species native to eight locations across northern Australia. This paper presents a baseline for classification performance on the dataset using the benchmark deep learning models, Inception-v3 and ResNet-50. These models achieved an average classification accuracy of 95.1{\\%} and 95.7{\\%}, respectively. We also demonstrate real time performance of the ResNet-50 architecture, with an average inference time of 53.4 ms per image. These strong results bode well for future field implementation of robotic weed control methods in the Australian rangelands.},\n  issn={2045-2322},\n  doi={10.1038/s41598-018-38343-3},\n  url={https://doi.org/10.1038/s41598-018-38343-3}\n}"
+    },
+    "fruit_detection_worldwide": {
+        "license": "",
+        "citation": "@Article{s16081222,\n  AUTHOR = {Sa, Inkyu and Ge, Zongyuan and Dayoub, Feras and Upcroft, Ben and Perez, Tristan and McCool, Chris},\n  TITLE = {DeepFruits: A Fruit Detection System Using Deep Neural Networks},\n  JOURNAL = {Sensors},\n  VOLUME = {16},\n  YEAR = {2016},\n  NUMBER = {8},\n  ARTICLE-NUMBER = {1222},\n  URL = {https://www.mdpi.com/1424-8220/16/8/1222},\n  ISSN = {1424-8220},\n  ABSTRACT = {This paper presents a novel approach to fruit detection using deep convolutional neural networks. The aim is to build an accurate, fast and reliable fruit detection system, which is a vital element of an autonomous agricultural robotic platform; it is a key element for fruit yield estimation and automated harvesting. Recent work in deep neural networks has led to the development of a state-of-the-art object detector termed Faster Region-based CNN (Faster R-CNN). We adapt this model, through transfer learning, for the task of fruit detection using imagery obtained from two modalities: colour (RGB) and Near-Infrared (NIR). Early and late fusion methods are explored for combining the multi-modal (RGB and NIR) information. This leads to a novel multi-modal Faster R-CNN model, which achieves state-of-the-art results compared to prior work with the F1 score, which takes into account both precision and recall performances improving from     0 . 807     to     0 . 838     for the detection of sweet pepper. In addition to improved accuracy, this approach is also much quicker to deploy for new fruits, as it requires bounding box annotation rather than pixel-level annotation (annotating bounding boxes is approximately an order of magnitude quicker to perform). The model is retrained to perform the detection of seven fruits, with the entire process taking four hours to annotate and train the new model per fruit.},\n  DOI = {10.3390/s16081222}\n}"
+    },
+    "plant_weeds_denmark": {
+        "license": "",
+        "citation": ""
+    },
+    "leaf_counting_denmark": {
+        "license": "CC BY-SA 4.0",
+        "citation": "@Article{s18051580,\n  author = {Teimouri, Nima and Dyrmann, Mads and Nielsen, Per  Rydahl and Mathiassen, Solvejg  Kopp and Somerville, Gayle  J. and J\u00f8rgensen, Rasmus  Nyholm},\n  title = {Weed Growth Stage Estimator Using Deep Convolutional Neural Networks},\n  journal = {Sensors},\n  volume = {18},\n  year = {2018},\n  number = {5},\n  url = {http://www.mdpi.com/1424-8220/18/5/1580},\n  issn = {1424-8220}\n}"
+    },
+    "apple_detection_usa": {
+        "license": "",
+        "citation": "@article{karkee2019apple,\n  title={Apple Dataset Benchmark from Orchard Environment in Modern Fruiting Wall},\n  author={Karkee, Manoj and Bhusal, Santosh and Zhang, Qin},\n  year={2019}\n}"
+    },
+    "cotton_seedling_counting": {
+        "license": "",
+        "citation": "@article{2019,\n  doi = {10.1186/s13007-019-0528-3},\n  url = {https://doi.org/10.1186/s13007-019-0528-3},\n  year = {2019},\n  month = nov,\n  publisher = {Springer Science and Business Media {LLC}},\n  volume = {15},\n  number = {1},\n  author = {Yu Jiang and Changying Li and Andrew H. Paterson and Jon S. Robertson},\n  title = {{DeepSeedling}: deep convolutional network and Kalman filter for plant seedling detection and counting in the field}\n}"
+    },
+    "apple_detection_spain": {
+        "license": "",
+        "citation": ""
+    },
+    "fruit_detection_australia": {
+        "license": "",
+        "citation": "@article{bargoti2016deep,\n  title={Deep Fruit Detection in Orchards},\n  author={Bargoti, Suchet and Underwood, James},\n  journal={arXiv preprint arXiv:1610.03677},\n  year={2016}\n}"
+    },
+    "datepalm_classification_saudi": {
+        "license": "",
+        "citation": ""
+    },
+    "mango_detection_australia": {
+        "license": "",
+        "citation": "@Misc{Koirala2019,\n  author={Koirala, Anand and Walsh, Kerry and Wang, Z. and McCarthy, C.},\n  title={MangoYOLO data set},\n  year={2019},\n  month={2021},\n  day={10-19},\n  publisher={Central Queensland University},\n  keywords={Mango images; Fruit detection; Yield estimation; Mango; Agricultural Land Management; Horticultural Crop Growth and Development},\n  abstract={Datasets and directories are structured similar to the PASCAL VOC dataset, avoiding the need to change scripts already available, with the detection frameworks ready to parse PASCAL VOC annotations into their format. The sub-directory JPEGImages consist of 1730 images (612x512 pixels) used for train, test and validation. Each image has at least one annotated fruit. The sub-directory Annotations consists of all the annotation files (record of bounding box coordinates for each image) in xml format and have the same name as the image name. The sub-directory Main consists of the text file that contains image names (without extension) used for train, test and validation. Training set (train.txt) lists 1300 train images  Validation set (val.txt) lists 130 validation images Test set (test.txt) lists 300 test images Each image has an XML annotation file (filename = image name) and each image set (training validation and test set) has associated text files (train.txt, val.txt and test.txt) containing the list of image names to be used for training and testing.  The XML annotation file contains the image attributes (name, width, height), the object attributes (class name, object bounding box co-ordinates (xmin, ymin, xmax, ymax)). (xmin, ymin) and (xmax, ymax) are the pixel co-ordinates of the bounding box's top-left corner and bottom-right corner respectively.},\n  note={CC-BY-4.0},\n  url={https://figshare.com/articles/dataset/MangoYOLO_data_set/13450661, https://researchdata.edu.au/mangoyolo-set},\n  language={English}\n}"
+    },
+    "apple_flower_segmentation": {
+        "license": "US Public Domain",
+        "citation": "@ARTICLE{8392727,\n  author={Dias, Philipe A. and Tabb, Amy and Medeiros, Henry},\n  journal={IEEE Robotics and Automation Letters}, \n  title={Multispecies Fruit Flower Detection Using a Refined Semantic Segmentation Network}, \n  year={2018},\n  volume={3},\n  number={4},\n  pages={3003-3010},\n  doi={10.1109/LRA.2018.2849498}}"
+    },
+    "apple_segmentation_minnesota": {
+        "license": "MIT",
+        "citation": "@misc{hani2019minneapple,\n    title={MinneApple: A Benchmark Dataset for Apple Detection and Segmentation},\n    author={Nicolai H\u00e4ni and Pravakar Roy and Volkan Isler}\n    year={2019},\n    eprint={1909.06441},\n    archivePrefix={arXiv},\n    primaryClass={cs.CV}\n}"
+    },
+    "rice_seedling_segmentation": {
+        "license": "",
+        "citation": "@Article{electronics9101602,\n  AUTHOR = {Khan, Abbas and Ilyas, Talha and Umraiz, Muhammad and Mannan, Zubaer Ibna and Kim, Hyongsuk},\n  TITLE = {CED-Net: Crops and Weeds Segmentation for Smart Farming Using a Small Cascaded Encoder-Decoder Architecture},\n  JOURNAL = {Electronics},\n  VOLUME = {9},\n  YEAR = {2020},\n  NUMBER = {10},\n  ARTICLE-NUMBER = {1602},\n  URL = {https://www.mdpi.com/2079-9292/9/10/1602},\n  ISSN = {2079-9292},\n  ABSTRACT = {Convolutional neural networks (CNNs) have achieved state-of-the-art performance in numerous aspects of human life and the agricultural sector is no exception. One of the main objectives of deep learning for smart farming is to identify the precise location of weeds and crops on farmland. In this paper, we propose a semantic segmentation method based on a cascaded encoder-decoder network, namely CED-Net, to differentiate weeds from crops. The existing architectures for weeds and crops segmentation are quite deep, with millions of parameters that require longer training time. To overcome such limitations, we propose an idea of training small networks in cascade to obtain coarse-to-fine predictions, which are then combined to produce the final results. Evaluation of the proposed network and comparison with other state-of-the-art networks are conducted using four publicly available datasets: rice seeding and weed dataset, BoniRob dataset, carrot crop vs. weed dataset, and a paddy&ndash;millet dataset. The experimental results and their comparisons proclaim that the proposed network outperforms state-of-the-art architectures, such as U-Net, SegNet, FCN-8s, and DeepLabv3, over intersection over union (IoU), F1-score, sensitivity, true detection rate, and average precision comparison metrics by utilizing only (1/5.74 &times; U-Net), (1/5.77 &times; SegNet), (1/3.04 &times; FCN-8s), and (1/3.24 &times; DeepLabv3) fractions of total parameters.},\n  DOI = {10.3390/electronics9101602}\n}"
+    },
+    "plant_village_classification": {
+        "license": "",
+        "citation": "@article{DBLP:journals/corr/HughesS15,\n  author    = {David P. Hughes and\n               Marcel Salath{'{e} } },\n  title     = {An open access repository of images on plant health to enable the\n               development of mobile disease diagnostics through machine\n               learning and crowdsourcing},\n  journal   = {CoRR},\n  volume    = {abs/1511.08060},\n  year      = {2015},\n  url       = {http://arxiv.org/abs/1511.08060},\n  archivePrefix = {arXiv},\n  eprint    = {1511.08060},\n  timestamp = {Mon, 13 Aug 2018 16:48:21 +0200},\n  biburl    = {https://dblp.org/rec/bib/journals/corr/HughesS15},\n  bibsource = {dblp computer science bibliography, https://dblp.org}\n}"
+    }
+}
