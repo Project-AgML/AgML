@@ -12,7 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .tools import format_image
+from .tools import (
+    format_image,
+    set_colormap
+)
 from .masks import (
     visualize_image_and_mask,
     overlay_segmentation_masks,

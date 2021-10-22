@@ -46,6 +46,27 @@ def get_colormap():
     global _COLORMAPS, _COLORMAP_CHOICE
     return _COLORMAPS[_COLORMAP_CHOICE]
 
+def set_colormap(colormap):
+    """Sets the current AgML colormap used in color displays.
+
+    This method accepts one argument, `colormap`, which can be
+    any of the colormaps listed in `_assets/viz_colormaps.json`,
+    namely one of the following:
+
+    1. "default": Traditional matplotlib RGB colors.
+    2. "agriculture": Various shades of green (for agriculture).
+
+    Parameters
+    ----------
+    colormap : str
+        The colormap to set.
+    """
+    global _COLORMAP_CHOICE, _COLORMAPS
+    colormap = colormap.lower()
+    if colormap not in _COLORMAPS.keys():
+        raise ValueError(f"Invalid colormap {colormap} received.")
+    _COLORMAP_CHOICE = colormap
+
 def auto_resolve_image(f):
     """Resolves an image path or image into a read-in image."""
     @functools.wraps(f)
