@@ -552,6 +552,7 @@
         "input_data_format": "jpg",
         "annotation_format": "directory_names",
         "n_images": "55448",
+<<<<<<< HEAD
         "docs_url": "https://github.com/spMohanty/PlantVillage-Dataset",
         "stats": {
             "mean": [
