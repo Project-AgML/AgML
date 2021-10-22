@@ -386,5 +386,41 @@
         "annotation_format": "directory_names",
         "n_images": "55448",
         "docs_url": "https://github.com/spMohanty/PlantVillage-Dataset"
+    },
+    "grape_detection_2019_day": {
+        "crop_types": {
+            "1": "grape"
+        },
+        "ml_task": "object_detection",
+        "ag_task": "fruit_detection",
+        "location": {
+            "continent": "north_america",
+            "country": "usa"
+        },
+        "sensor_modality": "rgb",
+        "real_synthetic": "real",
+        "platform": "ground",
+        "input_data_format": "jpg",
+        "annotation_format": "image",
+        "n_images": "126",
+        "docs_url": ""
+    },
+    "grape_detection_2020_night": {
+        "crop_types": {
+            "1": "grape"
+        },
+        "ml_task": "object_detection",
+        "ag_task": "fruit_detection",
+        "location": {
+            "continent": "north_america",
+            "country": "usa"
+        },
+        "sensor_modality": "rgb",
+        "real_synthetic": "real",
+        "platform": "ground",
+        "input_data_format": "jpg",
+        "annotation_format": "image",
+        "n_images": "150",
+        "docs_url": ""
     }
 }

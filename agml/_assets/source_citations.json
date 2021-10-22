@@ -82,5 +82,13 @@
     "plant_village_classification": {
         "license": "",
         "citation": "@article{DBLP:journals/corr/HughesS15,\n  author    = {David P. Hughes and\n               Marcel Salath{'{e} } },\n  title     = {An open access repository of images on plant health to enable the\n               development of mobile disease diagnostics through machine\n               learning and crowdsourcing},\n  journal   = {CoRR},\n  volume    = {abs/1511.08060},\n  year      = {2015},\n  url       = {http://arxiv.org/abs/1511.08060},\n  archivePrefix = {arXiv},\n  eprint    = {1511.08060},\n  timestamp = {Mon, 13 Aug 2018 16:48:21 +0200},\n  biburl    = {https://dblp.org/rec/bib/journals/corr/HughesS15},\n  bibsource = {dblp computer science bibliography, https://dblp.org}\n}"
+    },
+    "grape_detection_2019_day": {
+        "license": "",
+        "citation": "@misc{GrapeDay,\n  author    = {Plant AI and Biophysics Lab},\n  title     = {Grape Detection 2019 Day},\n  year      = {2019},\n  url       = {https://github.com/plant-ai-biophysics-lab/AgML} \n "
+    },
+    "grape_detection_2020_night": {
+        "license": "",
+        "citation": "@misc{GrapeNight,\n  author    = {Plant AI and Biophysics Lab},\n  title     = {Grape Detection 2020 Night},\n  year      = {2020},\n  url       = {https://github.com/plant-ai-biophysics-lab/AgML} \n "
     }
 }
