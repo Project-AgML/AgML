@@ -131,6 +131,14 @@ class AgMLDataLoader(object):
         for indx in range(len(self)):
             yield self[indx]
 
+    def __getattribute__(self, item):
+        if 'data' in item and any(
+                i in item for i in ['training', 'validation', 'test']):
+            if getattr(self, '_block_split', False):
+                raise AttributeError(
+                    "Cannot access split data of already split dataset.")
+        return super(AgMLDataLoader, self).__getattribute__(item)
+
     def _find_dataset(self, **kwargs):
         """Searches for or downloads the dataset in this loader."""
         self._stored_kwargs_for_init = kwargs

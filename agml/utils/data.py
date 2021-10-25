@@ -51,8 +51,6 @@ def copyright_print(name, location = None):
 
     def _bold(msg): # noqa
         return '\033[1m' + msg + '\033[0m'
-    def _bold_yaml(msg):  # noqa
-        return '<|>' + msg + '<|>'
 
     if location is None:
         first_msg = "Citation information for " + _bold(name) + ".\n"
