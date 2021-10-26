@@ -157,13 +157,14 @@ class AgMLImageClassificationDataLoader(AgMLDataLoader):
         """Attempts to automatically inference the dataset shape."""
         imgs = list(self._image_paths)
         imgs = np.random.choice(imgs, 20)
-        shapes = np.array([cv2.imread(
-            i, cv2.IMREAD_UNCHANGED).shape for i in imgs], dtype = object)
+        shapes = np.array([list(cv2.imread(
+            i, cv2.IMREAD_UNCHANGED).shape) for i in imgs], dtype = object)
         if not np.all(shapes == shapes[0]):
-            log("Could not inference a constant shape for all "
-                "dataset elements. Defaulting to (512, 512).")
+            log(f"Could not inference a constant shape for all dataset "
+                f"elements in {self.name}. Defaulting to (512, 512).")
             self._image_resize = (512, 512)
-        self._image_resize = shapes[0][:2]
+        else:
+            self._image_resize = tuple(shapes[0][:2])
 
     @property
     def labels(self):

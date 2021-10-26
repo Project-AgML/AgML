@@ -42,7 +42,7 @@ def log(msg, level = logging.WARNING):
 
     # Check if the warning has been delivered recently.
     log_method = method_map[level]
-    save_hash = f"{round(time.time(), -1)}:{inspect.stack()[1].function}"
+    save_hash = f"{round(time.time(), -1)}:{inspect.stack()[1].function}:{msg}"
     if save_hash in _GIVEN_WARNINGS.keys():
         if _GIVEN_WARNINGS[save_hash] == msg:
             save_time = float(save_hash.split(':')[0])
