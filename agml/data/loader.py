@@ -260,13 +260,14 @@ class AgMLDataLoader(object):
         shape: {list, tuple}
             A two-value list or tuple with the new shape.
         """
-        if not len(shape) == 2:
-            msg = f"Expected a two-value tuple with image " + \
-                  f"height and width, got {shape}. "
-            if len(shape) == 3:
-                msg += f"It appears that you've added a '{shape[-1]}' to " \
-                       f"indicate the number of channels. Remove this."
-            raise ValueError(msg)
+        if shape is not None:
+            if not len(shape) == 2:
+                msg = f"Expected a two-value tuple with image " + \
+                      f"height and width, got {shape}. "
+                if len(shape) == 3:
+                    msg += f"It appears that you've added a '{shape[-1]}' to " \
+                           f"indicate the number of channels. Remove this."
+                raise ValueError(msg)
         self._image_resize = shape
 
     def eval(self):
