@@ -18,7 +18,8 @@ echo "Installing Helios"
 if [ ! -d "$INSTALL_PATH"/agml/_helios/Helios ]; then
   mkdir -p "$INSTALL_PATH"/agml/_helios/Helios
   # git clone https://github.com/PlantSimulationLab/Helios.git "$INSTALL_PATH"/../_helios/Helios
-  git clone -b Development https://github.com/PlantSimulationLab/Helios_autolabeldev.git "$INSTALL_PATH"/agml/_helios/Helios
+  # git clone -b Development https://github.com/PlantSimulationLab/Helios_autolabeldev.git "$INSTALL_PATH"/agml/_helios/Helios
+  git clone -b SemanticSegmentation https://github.com/PlantSimulationLab/Helios_autolabeldev.git "$INSTALL_PATH"/agml/_helios/Helios
 # else
 #   # git -C "$INSTALL_PATH"/../_helios/Helios pull https://github.com/PlantSimulationLab/Helios.git
 #   git -C "$INSTALL_PATH"/agml/_helios/Helios pull https://github.com/PlantSimulationLab/Helios_autolabeldev.git
