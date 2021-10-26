@@ -26,7 +26,7 @@ from agml.backend.tftorch import (
 )
 
 from agml.utils.io import get_file_list
-from agml.utils.general import to_camel_case
+from agml.utils.general import to_camel_case, placeholder
 from agml.utils.logging import log
 
 from agml.data.loader import AgMLDataLoader
@@ -48,7 +48,7 @@ class AgMLObjectDetectionDataLoader(AgMLDataLoader):
         self._find_images_and_annotations()
 
         # Other attributes which may or may not be initialized.
-        self._transform_pipeline = lambda x: x
+        self._transform_pipeline = placeholder
         self._dual_transform_pipeline = None
 
     def __len__(self):
@@ -554,7 +554,7 @@ class AgMLObjectDetectionDataLoader(AgMLDataLoader):
         self._dual_transform_pipeline = dual_transform
         self._transform_pipeline = transform
         if self._transform_pipeline is None:
-            self._transform_pipeline = lambda x: x
+            self._transform_pipeline = placeholder
 
     def torch(self, *, image_size = (512, 512), transform = None,
               dual_transform = None, **loader_kwargs):

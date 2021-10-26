@@ -28,7 +28,7 @@ from agml.backend.tftorch import (
 from agml.backend.learn import set_seed
 
 from agml.utils.io import get_file_list
-from agml.utils.general import to_camel_case, resolve_list_value
+from agml.utils.general import to_camel_case, resolve_list_value, placeholder
 from agml.utils.logging import log
 
 from agml.data.loader import AgMLDataLoader
@@ -50,8 +50,8 @@ class AgMLSemanticSegmentationDataLoader(AgMLDataLoader):
         self._load_images_and_annotations()
 
         # Other attributes which may or may not be initialized.
-        self._transform_pipeline = lambda x: x
-        self._target_transform_pipeline = lambda x: x
+        self._transform_pipeline = placeholder
+        self._target_transform_pipeline = placeholder
         self._dual_transform_pipeline = None
 
     def __len__(self):
@@ -484,9 +484,9 @@ class AgMLSemanticSegmentationDataLoader(AgMLDataLoader):
         self._dual_transform_pipeline = dual_transform
         self._transform_pipeline = transform
         if self._transform_pipeline is None:
-            self._transform_pipeline = lambda x: x
+            self._transform_pipeline = placeholder
         if self._target_transform_pipeline is None:
-            self._target_transform_pipeline = lambda x: x
+            self._target_transform_pipeline = placeholder
 
     def export_contents(self, as_dict = False):
         """Exports arrays containing the image and annotation paths.
