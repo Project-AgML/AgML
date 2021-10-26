@@ -21,11 +21,13 @@ from sklearn.model_selection import train_test_split
 
 from agml.backend.tftorch import set_backend, get_backend
 from agml.backend.tftorch import (
-    _check_object_detection_transform, _convert_image_to_torch # noqa
+    _check_object_detection_transform, # noqa
+    _convert_image_to_torch, _multi_tensor_cat # noqa
 )
 
 from agml.utils.io import get_file_list
 from agml.utils.general import to_camel_case
+from agml.utils.logging import log
 
 from agml.data.loader import AgMLDataLoader
 
@@ -46,7 +48,7 @@ class AgMLObjectDetectionDataLoader(AgMLDataLoader):
         self._find_images_and_annotations()
 
         # Other attributes which may or may not be initialized.
-        self._transform_pipeline = None
+        self._transform_pipeline = lambda x: x
         self._dual_transform_pipeline = None
 
     def __len__(self):
@@ -76,6 +78,8 @@ class AgMLObjectDetectionDataLoader(AgMLDataLoader):
                 image, annotation = self._preprocess_data(image, annotation)
                 images.append(image)
                 annotations.append(annotation)
+            if self._getitem_as_batch:
+                return _multi_tensor_cat(images), annotations
             return images, annotations
         else:
             try:
@@ -88,7 +92,8 @@ class AgMLObjectDetectionDataLoader(AgMLDataLoader):
                 annotations = self._stack_annotations(annotations)
                 image, annotations = self._preprocess_data(image, annotations)
                 if self._getitem_as_batch:
-                    return np.expand_dims(image, axis = 0), annotations
+                    return self._tensor_convert(
+                        np.expand_dims(image, axis = 0), annotations)
                 return image, annotations
             except KeyError:
                 raise KeyError(
@@ -132,6 +137,17 @@ class AgMLObjectDetectionDataLoader(AgMLDataLoader):
         if meta_dict['split_name']:
             self._block_split = True
             self._split_name = meta_dict['split_name']
+
+    def _auto_inference_shape(self):
+        """Attempts to automatically inference the dataset shape."""
+        imgs = list(self._coco_annotation_map.keys())
+        imgs = np.random.choice(imgs, 20)
+        shapes = [cv2.imread(i, cv2.IMREAD_UNCHANGED) for i in imgs]
+        if not np.all(shapes == shapes[0]):
+            log("Could not inference a constant shape for all "
+                "dataset elements. Defaulting to (512, 512).")
+            self._image_resize = (512, 512)
+        self._image_resize = shapes[0][:2]
 
     @property
     def labels(self):
@@ -184,7 +200,17 @@ class AgMLObjectDetectionDataLoader(AgMLDataLoader):
             if self._image_resize is not None:
                 image, annotations = \
                     self._resize_image_and_boxes(image, annotation)
-        return image, annotation
+        return self._tensor_convert(image, annotation)
+
+    def _push_post_getitem(self, backend):
+        if backend == 'tf':
+            from agml.backend.tftorch import tf
+            self._tensor_convert = lambda image, annotation: \
+                (tf.constant(image), annotation)
+        elif backend == 'torch':
+            from agml.backend.tftorch import torch
+            self._tensor_convert = lambda image, annotation: \
+                (_convert_image_to_torch(image), annotation)
 
     @staticmethod
     def _stack_annotations(annotations):
@@ -525,12 +551,10 @@ class AgMLObjectDetectionDataLoader(AgMLDataLoader):
             Any of the above cases.
         """
         _check_object_detection_transform(transform, dual_transform)
-        if dual_transform is not None:
-            self._dual_transform_pipeline = dual_transform
-            self._transform_pipeline = None
-            return
+        self._dual_transform_pipeline = dual_transform
         self._transform_pipeline = transform
-        self._dual_transform_pipeline = None
+        if self._transform_pipeline is None:
+            self._transform_pipeline = lambda x: x
 
     def torch(self, *, image_size = (512, 512), transform = None,
               dual_transform = None, **loader_kwargs):
@@ -751,16 +775,16 @@ class AgMLObjectDetectionDataLoader(AgMLDataLoader):
             ret_coco['bboxes'] = ret_coco_boxes
             return image, ret_coco
         ds = ds.map(_image_coco_load_preprocess_fn)
+        if transform is None:
+            transform = tf.identity
         if dual_transform is not None:
             @tf.function
             def _map_preprocessing_fn(image, coco):
-                return dual_transform(image, coco)
-        elif transform is not None:
+                return dual_transform(transform(image), coco)
+        else:
             @tf.function
             def _map_preprocessing_fn(image, coco):
                 return transform(image), coco
-        else:
-            _map_preprocessing_fn = None
         if _map_preprocessing_fn is not None:
             ds = ds.map(_map_preprocessing_fn)
         return ds

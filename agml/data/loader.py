@@ -16,8 +16,9 @@ import os
 import abc
 
 from agml.utils.downloads import download_dataset
+from agml.utils.general import resolve_list_value
 from agml.backend.config import default_data_save_path
-from agml.backend.tftorch import _swap_loader_mro # noqa
+from agml.backend.tftorch import _swap_loader_mro, tf, torch # noqa
 from agml.data.metadata import DatasetMetadata
 
 class AgMLDataLoader(object):
@@ -101,7 +102,7 @@ class AgMLDataLoader(object):
 
         self._preprocessing_enabled = True
         self._eval_mode = True
-        self.__preprocessing_store_dict = {}
+        self._preprocessing_store_dict = {}
 
         self._training_data = None
         self._validation_data = None
@@ -110,6 +111,9 @@ class AgMLDataLoader(object):
         self._getitem_as_batch = False
 
         self._image_resize = None
+
+        self._tensor_convert_default = lambda *args: resolve_list_value(args)
+        self._tensor_convert = self._tensor_convert_default
 
     @abc.abstractmethod
     def __len__(self):
@@ -230,11 +234,14 @@ class AgMLDataLoader(object):
 
         To re-enable preprocessing, run `enable_preprocessing()`.
         """
-        self.__preprocessing_store_dict['_getitem_as_batch'] \
+        self._preprocessing_store_dict['_getitem_as_batch'] \
             = self._getitem_as_batch
+        self._preprocessing_store_dict['_tensor_convert'] \
+            = self._tensor_convert
         self._preprocessing_enabled = False
         self._eval_mode = False
         self._getitem_as_batch = False
+        self._tensor_convert = self._tensor_convert_default
 
     def enable_preprocessing(self):
         """Re-enables internal processing for `__getitem__`.
@@ -245,7 +252,11 @@ class AgMLDataLoader(object):
         self._preprocessing_enabled = True
         self._eval_mode = False
         self._getitem_as_batch = \
-            self.__preprocessing_store_dict.get('_getitem_as_batch', False)
+            self._preprocessing_store_dict.get(
+                '_getitem_as_batch', False)
+        self._tensor_convert = \
+            self._preprocessing_store_dict.get(
+                '_tensor_convert', self._tensor_convert)
 
     def resize_images(self, shape = None):
         """Toggles resizing of images when accessing from the loader.
@@ -255,12 +266,22 @@ class AgMLDataLoader(object):
         has been enabled, then passing `None` in place of `shape` will
         disable the resizing and return images in their original shape.
 
+        If shape is set to 'auto', then the loader will attempt to
+        automatically inference the shape by checking the shape of some
+        random images in the dataset and then setting the shape if they
+        all are the same. Note that there may be certain outliers in the
+        dataset which are unaccounted for, this does not guarantee to work.
+        If the inferencing fails, this falls back to (512, 512).
+
         Parameters
         ----------
-        shape: {list, tuple}
-            A two-value list or tuple with the new shape.
+        shape: {list, tuple, str}
+            A two-value list or tuple with the new shape, 'auto', or None.
         """
         if shape is not None:
+            if shape == 'auto':
+                self._auto_inference_shape()
+                return
             if not len(shape) == 2:
                 msg = f"Expected a two-value tuple with image " + \
                       f"height and width, got {shape}. "
@@ -269,6 +290,10 @@ class AgMLDataLoader(object):
                            f"indicate the number of channels. Remove this."
                 raise ValueError(msg)
         self._image_resize = shape
+
+    @abc.abstractmethod
+    def _auto_inference_shape(self, *args, **kwargs):
+        raise NotImplementedError()
 
     def eval(self):
         """Turns on evaluation mode for the loader.
@@ -288,7 +313,7 @@ class AgMLDataLoader(object):
         it will disable all preprocessing. All preprocessing here refers to
         transformation, batching, and image resizing.
         """
-        self._preprocessing_enabled = False
+        self.disable_preprocessing() # to run/store necessary checks.
         self._eval_mode = True
 
     @property
@@ -335,6 +360,7 @@ class AgMLDataLoader(object):
         _swap_loader_mro(self, 'tf')
         if self._preprocessing_enabled:
             self._getitem_as_batch = True
+        self._push_post_getitem('tf')
 
     def as_torch_dataset(self):
         """Makes the `AgMLDataLoader` inherit from `torch.utils.data.Dataset`.
@@ -347,10 +373,15 @@ class AgMLDataLoader(object):
         _swap_loader_mro(self, 'torch')
         if self._preprocessing_enabled:
             self._getitem_as_batch = True
+        self._push_post_getitem('torch')
 
     def on_epoch_end(self):
         # Used for a Keras Sequence
         self._reshuffle()
+
+    @abc.abstractmethod
+    def _push_post_getitem(self, *args, **kwargs):
+        raise NotImplementedError()
 
     @abc.abstractmethod
     def _wrap_reduced_data(self, *args, **kwargs):
