@@ -134,7 +134,9 @@ tf = LazyLoader('tensorflow', globals(), 'tensorflow')
 
 def _convert_image_to_torch(image):
     """Converts an image (np.ndarray) to a torch Tensor."""
-    return torch.from_numpy(image).long()
+    if isinstance(image, (list, tuple)):
+        return torch.tensor(image)
+    return torch.from_numpy(image).long().permute(2, 0, 1)
 
 def _postprocess_torch_annotation(image):
     """Post-processes a spatially augmented torch annotation."""
@@ -144,6 +146,12 @@ def _postprocess_torch_annotation(image):
     except AttributeError:
         pass
     return image
+
+def _multi_tensor_cat(tensors):
+    """Concatenates multiple tensors together."""
+    if get_backend() == 'tf':
+        return tf.stack(tensors, axis = 0)
+    return torch.stack(tensors, dim = 0)
 
 ######### AGMLDATALOADER METHODS #########
 

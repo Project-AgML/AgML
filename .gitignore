@@ -144,3 +144,7 @@ __MACOSX
 
 **/**test*.*
 !tests/*/*
+agml/_helios
+agml/_internal
+agml/helios_config.sh
+agml/train

@@ -14,6 +14,10 @@
 
 import re
 
+def placeholder(obj):
+    """Equivalent of lambda x: x, but enables pickling."""
+    return obj
+
 def to_camel_case(s):
     """Converts a given string `s` to camel case."""
     s = re.sub(r"(_|-)+", " ", s).title().replace(" ", "") # noqa

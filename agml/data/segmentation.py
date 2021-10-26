@@ -22,12 +22,14 @@ from sklearn.model_selection import train_test_split
 from agml.backend.tftorch import set_backend, get_backend
 from agml.backend.tftorch import (
     _check_semantic_segmentation_transform, # noqa
-    _convert_image_to_torch, _postprocess_torch_annotation # noqa
+    _postprocess_torch_annotation, # noqa
+    _convert_image_to_torch, _multi_tensor_cat # noqa
 )
 from agml.backend.learn import set_seed
 
 from agml.utils.io import get_file_list
-from agml.utils.general import to_camel_case, resolve_list_value
+from agml.utils.general import to_camel_case, resolve_list_value, placeholder
+from agml.utils.logging import log
 
 from agml.data.loader import AgMLDataLoader
 
@@ -48,8 +50,8 @@ class AgMLSemanticSegmentationDataLoader(AgMLDataLoader):
         self._load_images_and_annotations()
 
         # Other attributes which may or may not be initialized.
-        self._transform_pipeline = None
-        self._target_transform_pipeline = None
+        self._transform_pipeline = placeholder
+        self._target_transform_pipeline = placeholder
         self._dual_transform_pipeline = None
 
     def __len__(self):
@@ -77,6 +79,8 @@ class AgMLSemanticSegmentationDataLoader(AgMLDataLoader):
                 image, annotation = self._preprocess_data(image, annotation)
                 images.append(image)
                 annotations.append(annotation)
+            if self._getitem_as_batch:
+                return _multi_tensor_cat(images), _multi_tensor_cat(annotations)
             return images, annotations
         else:
             try:
@@ -89,8 +93,9 @@ class AgMLSemanticSegmentationDataLoader(AgMLDataLoader):
                     annotation = annotation[:, :, 0]
                 image, annotation = self._preprocess_data(image, annotation)
                 if self._getitem_as_batch:
-                    return np.expand_dims(image, axis = 0), \
-                           np.expand_dims(np.array(annotation), axis = 0)
+                    return self._tensor_convert(
+                        np.expand_dims(image, axis = 0),
+                        np.expand_dims(np.array(annotation), axis = 0))
                 return image, annotation
             except KeyError:
                 raise KeyError(
@@ -140,6 +145,17 @@ class AgMLSemanticSegmentationDataLoader(AgMLDataLoader):
         if meta_dict['split_name']:
             self._block_split = True
             self._split_name = meta_dict['split_name']
+
+    def _auto_inference_shape(self):
+        """Attempts to automatically inference the dataset shape."""
+        imgs = list(self._image_paths)
+        imgs = np.random.choice(imgs, 20)
+        shapes = [cv2.imread(i, cv2.IMREAD_UNCHANGED) for i in imgs]
+        if not np.all(shapes == shapes[0]):
+            log("Could not inference a constant shape for all "
+                "dataset elements. Defaulting to (512, 512).")
+            self._image_resize = (512, 512)
+        self._image_resize = shapes[0][:2]
 
     def _load_images_and_annotations(self):
         """Loads semantic segmentation data for the loader.
@@ -205,6 +221,15 @@ class AgMLSemanticSegmentationDataLoader(AgMLDataLoader):
                     annotation, self._image_resize, cv2.INTER_NEAREST)
             try:
                 annotation = np.expand_dims(annotation, axis = -1)
+                try:
+                    image = self._transform_pipeline(image)
+                    annotation = self._target_transform_pipeline(annotation)
+                except Exception:
+                    raise ValueError(
+                        "Encountered an error when using both `transform` and "
+                        "`target_transform`. Please check the documentation for "
+                        "`AgMLSemanticSegmentationDataLoader.transform()` to "
+                        "ensure that you are passing valid transformations.")
                 if self._dual_transform_pipeline is not None:
                     if isinstance(self._dual_transform_pipeline, types.FunctionType): # noqa
                         image, annotation = \
@@ -217,26 +242,6 @@ class AgMLSemanticSegmentationDataLoader(AgMLDataLoader):
                         annotation = self._dual_transform_pipeline(annotation)
                         if get_backend() == 'torch':
                             annotation = _postprocess_torch_annotation(annotation)
-                if self._transform_pipeline is None \
-                        and self._target_transform_pipeline is None:
-                    return image, annotation
-                elif self._transform_pipeline is not None \
-                        and self._target_transform_pipeline is not None:
-                    try:
-                        image = self._transform_pipeline(image)
-                        annotation = self._target_transform_pipeline(annotation)
-                    except Exception:
-                        raise ValueError(
-                            "Encountered an error when using both `transform` and "
-                            "`target_transform`. Please check the documentation for "
-                            "`AgMLSemanticSegmentationDataLoader.transform()` to "
-                            "ensure that you are passing valid transformations.")
-                elif self._transform_pipeline is not None \
-                        and self._target_transform_pipeline is None:
-                    image = self._transform_pipeline(image)
-                elif self._transform_pipeline is None \
-                        and self._target_transform_pipeline is not None:
-                    annotation = self._target_transform_pipeline(annotation)
                 annotation = np.squeeze(annotation)
             except TypeError as te:
                 if "PIL" in str(te):
@@ -245,7 +250,23 @@ class AgMLSemanticSegmentationDataLoader(AgMLDataLoader):
                         ".ToTensor() in a transform pipeline.")
                 else:
                     raise te
-        return image, annotation
+        elif self._eval_mode:
+            if self._image_resize is not None:
+                image = cv2.resize(
+                    image, self._image_resize, cv2.INTER_NEAREST)
+                annotation = cv2.resize(
+                    annotation, self._image_resize, cv2.INTER_NEAREST)
+        return self._tensor_convert(image, annotation)
+
+    def _push_post_getitem(self, backend):
+        if backend == 'tf':
+            from agml.backend.tftorch import tf
+            self._tensor_convert = lambda image, annotation: \
+                (tf.constant(image), tf.constant(annotation))
+        elif backend == 'torch':
+            self._tensor_convert = lambda image, annotation: \
+                (_convert_image_to_torch(image),
+                 _convert_image_to_torch(annotation))
 
     def split(self, train = None, val = None, test = None, shuffle = True):
         """Splits the data into train, val and test splits.
@@ -460,14 +481,12 @@ class AgMLSemanticSegmentationDataLoader(AgMLDataLoader):
         """
         _check_semantic_segmentation_transform(
             transform, target_transform, dual_transform)
-        if dual_transform is not None:
-            self._dual_transform_pipeline = dual_transform
-            self._transform_pipeline = transform
-            self._target_transform_pipeline = target_transform
-            return
+        self._dual_transform_pipeline = dual_transform
         self._transform_pipeline = transform
-        self._target_transform_pipeline = target_transform
-        self._dual_transform_pipeline = None
+        if self._transform_pipeline is None:
+            self._transform_pipeline = placeholder
+        if self._target_transform_pipeline is None:
+            self._target_transform_pipeline = placeholder
 
     def export_contents(self, as_dict = False):
         """Exports arrays containing the image and annotation paths.
