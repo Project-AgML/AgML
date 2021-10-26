@@ -20,6 +20,21 @@ from agml.utils.general import resolve_tuple_values, as_scalar, scalar_unpack
 from agml.data.tools import _resolve_coco_annotations # noqa
 from agml.viz.tools import get_colormap, auto_resolve_image, format_image, show_when_allowed
 
+def _resolve_proportional_bboxes(coords, shape):
+    """Resolves float vs. integer bounding boxes."""
+    if all(isinstance(i, float) for i in coords):
+        if coords[0] <= 1:
+            x, y, width, height = coords
+            y *= shape[0]; height *= shape[0]  # noqa
+            x *= shape[1]; width *= shape[1]  # noqa
+            coords = [x, y, width, height]
+        return [int(round(c)) for c in coords]
+    elif all(isinstance(i, int) for i in coords):
+        return coords
+    raise TypeError(
+        f"Got multiple types for coordinates: "
+        f"{[type(i) for i in coords]}.")
+
 @auto_resolve_image
 def annotate_bboxes_on_image(image, bboxes = None, labels = None):
     """Annotates bounding boxes onto an image.
@@ -56,9 +71,12 @@ def annotate_bboxes_on_image(image, bboxes = None, labels = None):
         labels = [1] * len(bboxes)
 
     for bbox, label in zip(bboxes, labels):
-        x1, y1, width, height = scalar_unpack(bbox)
+        bbox = scalar_unpack(bbox)
+        x1, y1, width, height = \
+            _resolve_proportional_bboxes(bbox, image.shape)
         x2, y2 = x1 + width, y1 + height
-        image = cv2.rectangle(image, (x1, y1), (x2, y2),
+        image = cv2.rectangle(image, (x1, y1),
+                      (x2, y2),
                       get_colormap()[as_scalar(label)], 2)
     return image
 
