@@ -147,8 +147,8 @@ def _postprocess_torch_annotation(image):
         pass
     return image
 
-def _multi_tensor_cat(tensors):
-    """Concatenates multiple tensors together."""
+def _multi_tensor_stack(tensors):
+    """Stacks multiple tensors together."""
     if get_backend() == 'tf':
         return tf.stack(tensors, axis = 0)
     return torch.stack(tensors, dim = 0)

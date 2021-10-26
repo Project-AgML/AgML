@@ -408,6 +408,15 @@ class AgMLDataLoader(object):
         self.__init__(state['name'], **state['init_kwargs'])
         self._set_state_from_meta(state)
 
+    #### UTILITIES FOR COPYING #####
+
+    def __copy__(self):
+        return self.__class__._init_from_meta(
+            self._wrap_reduced_data())
+
+    def copy(self):
+        return self.__copy__()
+
     #### API METHODS - OVERWRITTEN BY DERIVED CLASSES ####
 
     @abc.abstractmethod

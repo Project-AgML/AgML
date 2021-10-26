@@ -23,7 +23,7 @@ from agml.backend.tftorch import set_backend, get_backend
 from agml.backend.tftorch import (
     _check_semantic_segmentation_transform, # noqa
     _postprocess_torch_annotation, # noqa
-    _convert_image_to_torch, _multi_tensor_cat # noqa
+    _convert_image_to_torch, _multi_tensor_stack # noqa
 )
 from agml.backend.learn import set_seed
 
@@ -80,7 +80,7 @@ class AgMLSemanticSegmentationDataLoader(AgMLDataLoader):
                 images.append(image)
                 annotations.append(annotation)
             if self._getitem_as_batch:
-                return _multi_tensor_cat(images), _multi_tensor_cat(annotations)
+                return _multi_tensor_stack(images), _multi_tensor_stack(annotations)
             return images, annotations
         else:
             try:

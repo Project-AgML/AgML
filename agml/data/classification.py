@@ -21,7 +21,7 @@ from sklearn.model_selection import train_test_split
 from agml.backend.tftorch import set_backend, get_backend
 from agml.backend.tftorch import (
     _check_image_classification_transform, # noqa
-    _multi_tensor_cat, _convert_image_to_torch # noqa
+    _multi_tensor_stack, _convert_image_to_torch # noqa
 )
 
 from agml.utils.io import get_dir_list, get_file_list
@@ -83,7 +83,7 @@ class AgMLImageClassificationDataLoader(AgMLDataLoader):
                     images.append(image)
                     labels.append(label)
                 if self._getitem_as_batch:
-                    return _multi_tensor_cat(images), \
+                    return _multi_tensor_stack(images), \
                            self._tensor_convert(labels)
                 return images, labels
             except KeyError:

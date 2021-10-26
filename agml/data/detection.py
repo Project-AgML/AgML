@@ -22,7 +22,7 @@ from sklearn.model_selection import train_test_split
 from agml.backend.tftorch import set_backend, get_backend
 from agml.backend.tftorch import (
     _check_object_detection_transform, # noqa
-    _convert_image_to_torch, _multi_tensor_cat # noqa
+    _convert_image_to_torch, _multi_tensor_stack # noqa
 )
 
 from agml.utils.io import get_file_list
@@ -79,7 +79,7 @@ class AgMLObjectDetectionDataLoader(AgMLDataLoader):
                 images.append(image)
                 annotations.append(annotation)
             if self._getitem_as_batch:
-                return _multi_tensor_cat(images), annotations
+                return _multi_tensor_stack(images), annotations
             return images, annotations
         else:
             try:
