@@ -1,3 +1,17 @@
+# Copyright 2021 UC Davis Plant AI and Biophysics Lab
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import os
 
 import cv2
@@ -6,11 +20,13 @@ from sklearn.model_selection import train_test_split
 
 from agml.backend.tftorch import set_backend, get_backend
 from agml.backend.tftorch import (
-    _check_image_classification_transform # noqa
+    _check_image_classification_transform, # noqa
+    _multi_tensor_cat, _convert_image_to_torch # noqa
 )
 
 from agml.utils.io import get_dir_list, get_file_list
 from agml.utils.general import to_camel_case, resolve_list_value
+from agml.utils.logging import log
 
 from agml.data.loader import AgMLDataLoader
 
@@ -66,6 +82,9 @@ class AgMLImageClassificationDataLoader(AgMLDataLoader):
                             raise te
                     images.append(image)
                     labels.append(label)
+                if self._getitem_as_batch:
+                    return _multi_tensor_cat(images), \
+                           self._tensor_convert(labels)
                 return images, labels
             except KeyError:
                 raise KeyError(
@@ -87,40 +106,64 @@ class AgMLImageClassificationDataLoader(AgMLDataLoader):
                     else:
                         raise te
                 if self._getitem_as_batch:
-                    return np.expand_dims(image, axis = 0), \
-                           np.expand_dims(np.array(label), axis = 0)
+                    return self._tensor_convert(
+                        np.expand_dims(image, axis = 0)
+                    ), np.expand_dims(np.array(label), axis = 0)
                 return image, label
             except KeyError:
                 raise KeyError(
                     f"Index out of range: got {indx}, "
                     f"expected one in range 0 - {len(self)}.")
 
-    def _wrap_reduced_data(self, split):
-        """Wraps the reduced class information for `_from_data_subset`."""
-        data_meta = getattr(self, f'_{split}_data')
+    def _wrap_reduced_data(self, split = None):
+        """Wraps the reduced class information for `_init_from_meta`."""
+        if split is not None:
+            data_meta = getattr(self, f'_{split}_data')
+        else:
+            data_meta = self._data
         meta_dict = {
             'name': self.name,
             'data': data_meta,
             'image_paths': list(data_meta.keys()),
             'transform_pipeline': self._transform_pipeline,
-            'image_resize': self._image_resize
+            'image_resize': self._image_resize,
+            'init_kwargs': self._stored_kwargs_for_init,
+            'split_name': getattr(self, '_split_name', False)
         }
         return meta_dict
 
     @classmethod
-    def _from_data_subset(cls, meta_dict, meta_kwargs):
-        """Initializes the class from a subset of data.
-
-        This method is used internally for the `split` method, and
-        generates DataLoaders with a specific subset of the data.
-        """
-        loader = cls(meta_dict['name'], **meta_kwargs)
+    def _init_from_meta(cls, meta_dict):
+        """Initializes the class from a set of metadata."""
+        loader = cls(meta_dict['name'], **meta_dict['init_kwargs'])
         loader._data = meta_dict['data']
         loader._image_paths = meta_dict['image_paths']
         loader._transform_pipeline = meta_dict['transform_pipeline']
         loader._image_resize = meta_dict['image_resize']
         loader._block_split = True
         return loader
+
+    def _set_state_from_meta(self, meta_dict):
+        """Like `_init_from_meta`, but modifies inplace."""
+        self._data = meta_dict['data']
+        self._image_paths = meta_dict['image_paths']
+        self._transform_pipeline = meta_dict['transform_pipeline']
+        self._image_resize = meta_dict['image_resize']
+        if meta_dict['split_name']:
+            self._block_split = True
+            self._split_name = meta_dict['split_name']
+
+    def _auto_inference_shape(self):
+        """Attempts to automatically inference the dataset shape."""
+        imgs = list(self._image_paths)
+        imgs = np.random.choice(imgs, 20)
+        shapes = np.array([cv2.imread(
+            i, cv2.IMREAD_UNCHANGED).shape for i in imgs], dtype = object)
+        if not np.all(shapes == shapes[0]):
+            log("Could not inference a constant shape for all "
+                "dataset elements. Defaulting to (512, 512).")
+            self._image_resize = (512, 512)
+        self._image_resize = shapes[0][:2]
 
     @property
     def labels(self):
@@ -192,7 +235,18 @@ class AgMLImageClassificationDataLoader(AgMLDataLoader):
                     image, self._image_resize, cv2.INTER_NEAREST)
             if self._transform_pipeline is not None:
                 image = self._transform_pipeline(image)
-        return image
+        elif self._eval_mode:
+            if self._image_resize is not None:
+                image = cv2.resize(
+                    image, self._image_resize, cv2.INTER_NEAREST)
+        return self._tensor_convert(image)
+
+    def _push_post_getitem(self, backend):
+        if backend == 'tf':
+            from agml.backend.tftorch import tf
+            self._tensor_convert = lambda image: tf.constant(image)
+        elif backend == 'torch':
+            self._tensor_convert = lambda image: _convert_image_to_torch(image)
 
     def split(self, train = None, val = None, test = None, shuffle = True):
         """Splits the data into train, val and test splits.

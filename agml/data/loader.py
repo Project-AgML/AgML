@@ -1,9 +1,24 @@
+# Copyright 2021 UC Davis Plant AI and Biophysics Lab
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import os
 import abc
 
-from agml.utils.downloads import download_dataset  # noqa
+from agml.utils.downloads import download_dataset
+from agml.utils.general import resolve_list_value
 from agml.backend.config import default_data_save_path
-from agml.backend.tftorch import _swap_loader_mro
+from agml.backend.tftorch import _swap_loader_mro, tf, torch # noqa
 from agml.data.metadata import DatasetMetadata
 
 class AgMLDataLoader(object):
@@ -86,6 +101,8 @@ class AgMLDataLoader(object):
         self._batched_data = None
 
         self._preprocessing_enabled = True
+        self._eval_mode = True
+        self._preprocessing_store_dict = {}
 
         self._training_data = None
         self._validation_data = None
@@ -95,6 +112,9 @@ class AgMLDataLoader(object):
 
         self._image_resize = None
 
+        self._tensor_convert_default = lambda *args: resolve_list_value(args)
+        self._tensor_convert = self._tensor_convert_default
+
     @abc.abstractmethod
     def __len__(self):
         """Returns the number of images in the dataset."""
@@ -103,6 +123,9 @@ class AgMLDataLoader(object):
         return self.num_images
 
     def __str__(self):
+        return repr(self)
+
+    def __repr__(self):
         fmt = (f"<AgMLDataLoader [{self._info.name}] "
                f"[task = {self._info.tasks.ml}]")
         if hasattr(self, '_split_name'):
@@ -114,10 +137,21 @@ class AgMLDataLoader(object):
         for indx in range(len(self)):
             yield self[indx]
 
+    def __getattribute__(self, item):
+        if 'data' in item and any(
+                i in item for i in ['training', 'validation', 'test']):
+            if getattr(self, '_block_split', False):
+                raise AttributeError(
+                    "Cannot access split data of already split dataset.")
+        return super(AgMLDataLoader, self).__getattribute__(item)
+
     def _find_dataset(self, **kwargs):
         """Searches for or downloads the dataset in this loader."""
         self._stored_kwargs_for_init = kwargs
         overwrite = kwargs.get('overwrite', False)
+        if 'dataset_path' in kwargs:
+            kwargs['dataset_path'] = os.path.realpath(
+                os.path.expanduser(kwargs['dataset_path']))
         if not overwrite:
             if kwargs.get('dataset_path', False):
                 path = kwargs.get('dataset_path')
@@ -200,8 +234,14 @@ class AgMLDataLoader(object):
 
         To re-enable preprocessing, run `enable_preprocessing()`.
         """
+        self._preprocessing_store_dict['_getitem_as_batch'] \
+            = self._getitem_as_batch
+        self._preprocessing_store_dict['_tensor_convert'] \
+            = self._tensor_convert
         self._preprocessing_enabled = False
+        self._eval_mode = False
         self._getitem_as_batch = False
+        self._tensor_convert = self._tensor_convert_default
 
     def enable_preprocessing(self):
         """Re-enables internal processing for `__getitem__`.
@@ -210,7 +250,13 @@ class AgMLDataLoader(object):
         `disable_preprocessing()`, this method re-enables preprocessing.
         """
         self._preprocessing_enabled = True
-        self._getitem_as_batch = True
+        self._eval_mode = False
+        self._getitem_as_batch = \
+            self._preprocessing_store_dict.get(
+                '_getitem_as_batch', False)
+        self._tensor_convert = \
+            self._preprocessing_store_dict.get(
+                '_tensor_convert', self._tensor_convert)
 
     def resize_images(self, shape = None):
         """Toggles resizing of images when accessing from the loader.
@@ -220,19 +266,61 @@ class AgMLDataLoader(object):
         has been enabled, then passing `None` in place of `shape` will
         disable the resizing and return images in their original shape.
 
+        If shape is set to 'auto', then the loader will attempt to
+        automatically inference the shape by checking the shape of some
+        random images in the dataset and then setting the shape if they
+        all are the same. Note that there may be certain outliers in the
+        dataset which are unaccounted for, this does not guarantee to work.
+        If the inferencing fails, this falls back to (512, 512).
+
         Parameters
         ----------
-        shape: {list, tuple}
-            A two-value list or tuple with the new shape.
+        shape: {list, tuple, str}
+            A two-value list or tuple with the new shape, 'auto', or None.
         """
+        if shape is not None:
+            if shape == 'auto':
+                self._auto_inference_shape()
+                return
+            if not len(shape) == 2:
+                msg = f"Expected a two-value tuple with image " + \
+                      f"height and width, got {shape}. "
+                if len(shape) == 3:
+                    msg += f"It appears that you've added a '{shape[-1]}' to " \
+                           f"indicate the number of channels. Remove this."
+                raise ValueError(msg)
         self._image_resize = shape
+
+    @abc.abstractmethod
+    def _auto_inference_shape(self, *args, **kwargs):
+        raise NotImplementedError()
+
+    def eval(self):
+        """Turns on evaluation mode for the loader.
+
+        Using `eval` is similar to using `disable_preprocessing`, however
+        it keeps the resizing of the images (but disables the image batching).
+        This is mainly intended to be used when evaluating models, e.g. you
+        want to test the model but use traditional (non-augmented) images.
+
+        To re-enable preprocessing, use `enable_preprocessing()`.
+
+        Notes
+        -----
+        Note that `enable_preprocessing` and `disable_preprocessing` have
+        precedence over `eval()`. If you use `enable_preprocessing`, it will
+        enable all preprocessing, and if you use `disable_preprocessing`, then
+        it will disable all preprocessing. All preprocessing here refers to
+        transformation, batching, and image resizing.
+        """
+        self.disable_preprocessing() # to run/store necessary checks.
+        self._eval_mode = True
 
     @property
     def training_data(self):
         if self._training_data is not None:
-            ret_cls = self.__class__._from_data_subset(
-                self._wrap_reduced_data('training'),
-                self._stored_kwargs_for_init)
+            ret_cls = self.__class__._init_from_meta(
+                self._wrap_reduced_data('training'))
             ret_cls._split_name = 'train'
             return ret_cls
         raise NotImplementedError(
@@ -242,9 +330,8 @@ class AgMLDataLoader(object):
     @property
     def validation_data(self):
         if self._validation_data is not None:
-            ret_cls = self.__class__._from_data_subset(
-                self._wrap_reduced_data('validation'),
-                self._stored_kwargs_for_init)
+            ret_cls = self.__class__._init_from_meta(
+                self._wrap_reduced_data('validation'))
             ret_cls._split_name = 'validation'
             return ret_cls
         raise NotImplementedError(
@@ -254,9 +341,8 @@ class AgMLDataLoader(object):
     @property
     def test_data(self):
         if self._test_data is not None:
-            ret_cls = self.__class__._from_data_subset(
-                self._wrap_reduced_data('test'),
-                self._stored_kwargs_for_init)
+            ret_cls = self.__class__._init_from_meta(
+                self._wrap_reduced_data('test'))
             ret_cls._split_name = 'test'
             return ret_cls
         raise NotImplementedError(
@@ -264,16 +350,38 @@ class AgMLDataLoader(object):
             "parameter to use the `test_data` property.")
 
     def as_keras_sequence(self):
+        """Makes the `AgMLDataLoader` inherit from `keras.utils.Sequence`.
+
+        This allows the AgMLDataLoader to be directly used in a `model.fit()`
+        training pipeline in Keras. This method also enables the dataloader
+        to return all items as batches, e.g. if a single image is returned,
+        it will still be returned as a batch of 1 for model compatibility.
+        """
         _swap_loader_mro(self, 'tf')
-        self._getitem_as_batch = True
+        if self._preprocessing_enabled:
+            self._getitem_as_batch = True
+        self._push_post_getitem('tf')
 
     def as_torch_dataset(self):
+        """Makes the `AgMLDataLoader` inherit from `torch.utils.data.Dataset`.
+
+        This allows the AgMLDataLoader to be directly used in a model
+        training pipeline in PyTorch. This method also enables the dataloader
+        to return all items as batches, e.g. if a single image is returned,
+        it will still be returned as a batch of 1 for model compatibility.
+        """
         _swap_loader_mro(self, 'torch')
-        self._getitem_as_batch = True
+        if self._preprocessing_enabled:
+            self._getitem_as_batch = True
+        self._push_post_getitem('torch')
 
     def on_epoch_end(self):
         # Used for a Keras Sequence
         self._reshuffle()
+
+    @abc.abstractmethod
+    def _push_post_getitem(self, *args, **kwargs):
+        raise NotImplementedError()
 
     @abc.abstractmethod
     def _wrap_reduced_data(self, *args, **kwargs):
@@ -281,8 +389,24 @@ class AgMLDataLoader(object):
 
     @classmethod
     @abc.abstractmethod
-    def _from_data_subset(cls, *args, **kwargs):
+    def _init_from_meta(cls, *args, **kwargs):
         raise NotImplementedError()
+
+    @abc.abstractmethod
+    def _set_state_from_meta(self, *args, **kwargs):
+        raise NotImplementedError()
+
+    #### UTILITIES FOR PICKLING ####
+
+    def __getnewargs__(self):
+        return self._info.name,
+
+    def __getstate__(self):
+        return self._wrap_reduced_data()
+
+    def __setstate__(self, state):
+        self.__init__(state['name'], **state['init_kwargs'])
+        self._set_state_from_meta(state)
 
     #### API METHODS - OVERWRITTEN BY DERIVED CLASSES ####
 

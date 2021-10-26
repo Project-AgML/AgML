@@ -1,3 +1,17 @@
+# Copyright 2021 UC Davis Plant AI and Biophysics Lab
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 """
 This part of the backend controls the AgML methods where either
 TensorFlow or PyTorch methods can be used, and prevents unnecessary
@@ -120,7 +134,9 @@ tf = LazyLoader('tensorflow', globals(), 'tensorflow')
 
 def _convert_image_to_torch(image):
     """Converts an image (np.ndarray) to a torch Tensor."""
-    return torch.from_numpy(image).long()
+    if isinstance(image, (list, tuple)):
+        return torch.tensor(image)
+    return torch.from_numpy(image).long().permute(2, 0, 1)
 
 def _postprocess_torch_annotation(image):
     """Post-processes a spatially augmented torch annotation."""
@@ -130,6 +146,12 @@ def _postprocess_torch_annotation(image):
     except AttributeError:
         pass
     return image
+
+def _multi_tensor_cat(tensors):
+    """Concatenates multiple tensors together."""
+    if get_backend() == 'tf':
+        return tf.stack(tensors, axis = 0)
+    return torch.stack(tensors, dim = 0)
 
 ######### AGMLDATALOADER METHODS #########
 
