@@ -415,7 +415,8 @@ class AgMLDataLoader(object):
             self._wrap_reduced_data())
 
     def copy(self):
-        return self.__copy__()
+        import copy as _copy
+        return _copy.deepcopy(self)
 
     #### API METHODS - OVERWRITTEN BY DERIVED CLASSES ####
 
