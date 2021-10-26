@@ -100,6 +100,8 @@ class AgMLDataLoader(object):
         self._batched_data = None
 
         self._preprocessing_enabled = True
+        self._eval_mode = True
+        self.__preprocessing_store_dict = {}
 
         self._training_data = None
         self._validation_data = None
@@ -228,7 +230,10 @@ class AgMLDataLoader(object):
 
         To re-enable preprocessing, run `enable_preprocessing()`.
         """
+        self.__preprocessing_store_dict['_getitem_as_batch'] \
+            = self._getitem_as_batch
         self._preprocessing_enabled = False
+        self._eval_mode = False
         self._getitem_as_batch = False
 
     def enable_preprocessing(self):
@@ -238,7 +243,9 @@ class AgMLDataLoader(object):
         `disable_preprocessing()`, this method re-enables preprocessing.
         """
         self._preprocessing_enabled = True
-        self._getitem_as_batch = True
+        self._eval_mode = False
+        self._getitem_as_batch = \
+            self.__preprocessing_store_dict.get('_getitem_as_batch', False)
 
     def resize_images(self, shape = None):
         """Toggles resizing of images when accessing from the loader.
@@ -253,7 +260,35 @@ class AgMLDataLoader(object):
         shape: {list, tuple}
             A two-value list or tuple with the new shape.
         """
+        if not len(shape) == 2:
+            msg = f"Expected a two-value tuple with image " + \
+                  f"height and width, got {shape}. "
+            if len(shape) == 3:
+                msg += f"It appears that you've added a '{shape[-1]}' to " \
+                       f"indicate the number of channels. Remove this."
+            raise ValueError(msg)
         self._image_resize = shape
+
+    def eval(self):
+        """Turns on evaluation mode for the loader.
+
+        Using `eval` is similar to using `disable_preprocessing`, however
+        it keeps the resizing of the images (but disables the image batching).
+        This is mainly intended to be used when evaluating models, e.g. you
+        want to test the model but use traditional (non-augmented) images.
+
+        To re-enable preprocessing, use `enable_preprocessing()`.
+
+        Notes
+        -----
+        Note that `enable_preprocessing` and `disable_preprocessing` have
+        precedence over `eval()`. If you use `enable_preprocessing`, it will
+        enable all preprocessing, and if you use `disable_preprocessing`, then
+        it will disable all preprocessing. All preprocessing here refers to
+        transformation, batching, and image resizing.
+        """
+        self._preprocessing_enabled = False
+        self._eval_mode = True
 
     @property
     def training_data(self):
@@ -289,12 +324,28 @@ class AgMLDataLoader(object):
             "parameter to use the `test_data` property.")
 
     def as_keras_sequence(self):
+        """Makes the `AgMLDataLoader` inherit from `keras.utils.Sequence`.
+
+        This allows the AgMLDataLoader to be directly used in a `model.fit()`
+        training pipeline in Keras. This method also enables the dataloader
+        to return all items as batches, e.g. if a single image is returned,
+        it will still be returned as a batch of 1 for model compatibility.
+        """
         _swap_loader_mro(self, 'tf')
-        self._getitem_as_batch = True
+        if self._preprocessing_enabled:
+            self._getitem_as_batch = True
 
     def as_torch_dataset(self):
+        """Makes the `AgMLDataLoader` inherit from `torch.utils.data.Dataset`.
+
+        This allows the AgMLDataLoader to be directly used in a model
+        training pipeline in PyTorch. This method also enables the dataloader
+        to return all items as batches, e.g. if a single image is returned,
+        it will still be returned as a batch of 1 for model compatibility.
+        """
         _swap_loader_mro(self, 'torch')
-        self._getitem_as_batch = True
+        if self._preprocessing_enabled:
+            self._getitem_as_batch = True
 
     def on_epoch_end(self):
         # Used for a Keras Sequence

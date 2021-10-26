@@ -217,6 +217,10 @@ class AgMLImageClassificationDataLoader(AgMLDataLoader):
                     image, self._image_resize, cv2.INTER_NEAREST)
             if self._transform_pipeline is not None:
                 image = self._transform_pipeline(image)
+        elif self._eval_mode:
+            if self._image_resize is not None:
+                image = cv2.resize(
+                    image, self._image_resize, cv2.INTER_NEAREST)
         return image
 
     def split(self, train = None, val = None, test = None, shuffle = True):

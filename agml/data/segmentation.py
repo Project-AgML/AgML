@@ -245,6 +245,12 @@ class AgMLSemanticSegmentationDataLoader(AgMLDataLoader):
                         ".ToTensor() in a transform pipeline.")
                 else:
                     raise te
+        elif self._eval_mode:
+            if self._image_resize is not None:
+                image = cv2.resize(
+                    image, self._image_resize, cv2.INTER_NEAREST)
+                annotation = cv2.resize(
+                    annotation, self._image_resize, cv2.INTER_NEAREST)
         return image, annotation
 
     def split(self, train = None, val = None, test = None, shuffle = True):

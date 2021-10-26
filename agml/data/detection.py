@@ -180,6 +180,10 @@ class AgMLObjectDetectionDataLoader(AgMLDataLoader):
             if self._image_resize is not None:
                 image, annotations = \
                     self._resize_image_and_boxes(image, annotation)
+        elif self._eval_mode:
+            if self._image_resize is not None:
+                image, annotations = \
+                    self._resize_image_and_boxes(image, annotation)
         return image, annotation
 
     @staticmethod
