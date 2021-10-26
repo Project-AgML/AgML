@@ -144,6 +144,14 @@ class DatasetMetadata(object):
         return dict(zip(mapping.values(), nums))
 
     @property
+    def classes(self):
+        return list(self._metadata['crop_types'].values())
+
+    @property
+    def num_classes(self):
+        return len(self.classes)
+
+    @property
     def license(self):
         if self._citation_meta['license'] == '':
             return None
