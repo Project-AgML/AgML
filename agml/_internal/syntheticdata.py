@@ -282,14 +282,14 @@ class HeliosDataGenerator(object):
 
         canopy_params_filtered = {'helios': canopy_params_filtered}
 
-        if not os.path.exists(os.path.join(os.path.dirname(os.path.dirname(__file__)), '_helios/Helios/projects/SyntheticImageAnnotation/xmloutput_for_helios')):
-            os.makedirs(os.path.join(os.path.dirname(os.path.dirname(__file__)), '_helios/Helios/projects/SyntheticImageAnnotation/xmloutput_for_helios'))
+        if not os.path.exists(os.path.join(os.path.dirname(os.path.dirname(__file__)), '_helios/Helios/projects/SyntheticImageAnnotation/xml')):
+            os.makedirs(os.path.join(os.path.dirname(os.path.dirname(__file__)), '_helios/Helios/projects/SyntheticImageAnnotation/xml'))
 
         if export_format == 'xml':
-            with open(os.path.join(os.path.dirname(os.path.dirname(__file__)), '_helios/Helios/projects/SyntheticImageAnnotation/xmloutput_for_helios/tmp_canopy_params_image.xml'), "w") as f:
+            with open(os.path.join(os.path.dirname(os.path.dirname(__file__)), '_helios/Helios/projects/SyntheticImageAnnotation/xml/tmp_canopy_params_image.xml'), "w") as f:
                 f.write(dict2xml(canopy_params_filtered))
 
-    def generate_data(self, n_imgs, canopy_type, simulation_type, output_directory = ""):
+    def generate_data(self, n_imgs, canopy_type, simulation_type, output_directory = ".."):
 
         """
         Given the path to the output of Helios, this method can be used to convert the data to a more standard format such as COCO JSON
@@ -355,7 +355,7 @@ class HeliosDataGenerator(object):
             self.generate_one_datapair(canopy_type, simulation_type)
 
             # Re-writte tags of XML to have the expected Helios input
-            tree = ET.parse(os.path.join(os.path.dirname(os.path.dirname(__file__)), '_helios/Helios/projects/SyntheticImageAnnotation/xmloutput_for_helios/tmp_canopy_params_image.xml'))
+            tree = ET.parse(os.path.join(os.path.dirname(os.path.dirname(__file__)), '_helios/Helios/projects/SyntheticImageAnnotation/xml/tmp_canopy_params_image.xml'))
             root = tree.getroot()
             for child in root:
                 if child.tag == 'camera_position':
@@ -365,7 +365,7 @@ class HeliosDataGenerator(object):
                     child.tag = 'globaldata_int2'
                     child.set('label', 'image_resolution')
 
-            tree.write(os.path.join(os.path.dirname(os.path.dirname(__file__)), '_helios/Helios/projects/SyntheticImageAnnotation/xmloutput_for_helios/tmp_canopy_params_image.xml'))
+            tree.write(os.path.join(os.path.dirname(os.path.dirname(__file__)), '_helios/Helios/projects/SyntheticImageAnnotation/xml/tmp_canopy_params_image.xml'))
 
             # Modify cmake file for rgb versus lidar simulation
             with open(self.path_cmakelists) as f:
@@ -438,10 +438,10 @@ class HeliosDataGenerator(object):
                     main_cpp[i] = ' //LiDARcloud lidarcloud;\n'
 
                 if 'lidarcloud.loadXML' in string and simulation_type == 'lidar':
-                    main_cpp[i] = ' lidarcloud.loadXML("../xmloutput_for_helios/tmp_canopy_params_image.xml");\n'
+                    main_cpp[i] = ' lidarcloud.loadXML("../xml/tmp_canopy_params_image.xml");\n'
 
                 if 'lidarcloud.loadXML' in string and simulation_type == 'rgb':
-                    main_cpp[i] = ' //lidarcloud.loadXML("../xmloutput_for_helios/tmp_canopy_params_image.xml");\n'
+                    main_cpp[i] = ' //lidarcloud.loadXML("../xml/tmp_canopy_params_image.xml");\n'
 
                 if 'lidarcloud.syntheticScan' in string and simulation_type == 'lidar':
                     main_cpp[i] = ' lidarcloud.syntheticScan( &context);\n'
