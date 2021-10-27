@@ -25,6 +25,11 @@ import functools
 
 from agml.utils.logging import log
 
+# Suppress any irrelevant warnings which will pop up from either backend.
+import warnings
+warnings.filterwarnings(
+    'ignore', category = UserWarning, message = '.*Named tensors.*Triggered internally.*')
+
 # Check if TensorFlow and PyTorch exist in the environment.
 _HAS_TENSORFLOW: bool
 _HAS_TORCH: bool
@@ -136,7 +141,7 @@ def _convert_image_to_torch(image):
     """Converts an image (np.ndarray) to a torch Tensor."""
     if isinstance(image, (list, tuple)):
         return torch.tensor(image)
-    return torch.from_numpy(image).long().permute(2, 0, 1)
+    return torch.from_numpy(image).permute(2, 0, 1).float()
 
 def _postprocess_torch_annotation(image):
     """Post-processes a spatially augmented torch annotation."""
