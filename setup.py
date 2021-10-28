@@ -53,12 +53,12 @@ dev_requires = [
     
 setuptools.setup(
     name="agml",
-    version="0.0.1",
+    version="0.1",
     author="UC Davis Plant AI and Biophysics Lab",
     author_email="jmearles@ucdavis.edu",
     maintainer="Amogh Joshi",
     maintainer_email="amnjoshi@ucdavis.edu",
-    url="https://github.com/plant-ai-biophysics-lab/AgML", # FIX: Do we want to make a cover webpage for this?
+    url="https://github.com/plant-ai-biophysics-lab/AgML",
     description="A comprehensive library for agricultural deep learning",
     long_description=long_description,
     long_description_content_type="text/markdown",
