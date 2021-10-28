@@ -111,6 +111,10 @@ def show_when_allowed(f):
 def format_image(img):
     """Formats an image to be used in a Matplotlib visualization.
 
+    This method takes in one of a number of common image/array types
+    and returns a formatted NumPy array with formatted image data
+    as expected by matplotlib.
+
     This method is primarily necessary to serve as convenience
     in a few situations: converting images from PyTorch's channels
     first format to channels last, or removing the extra grayscale
@@ -125,12 +129,12 @@ def format_image(img):
     -------
     An np.ndarray formatted correctly for a Matplotlib visualization.
     """
-    if isinstance(img, Image.Image):
+    if isinstance(img, np.ndarray):
+        img = img
+    elif isinstance(img, Image.Image):
         img = np.array(img.getdata())
     elif isinstance(img, torch.Tensor):
         img = img.numpy()
-    elif isinstance(img, np.ndarray):
-        img = img
     elif isinstance(img, tf.Tensor):
         img = img.numpy()
     else:

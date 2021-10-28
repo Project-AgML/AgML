@@ -64,7 +64,6 @@ def _mask_2d_to_3d(mask):
         iter_idx += 1
     return out
 
-
 def output_to_mask(mask):
     """Converts an output annotation mask into a visual segmentation mask.
 
@@ -83,7 +82,6 @@ def output_to_mask(mask):
     The colorful visually formatted mask.
     """
     return _preprocess_mask(mask)
-
 
 @show_when_allowed
 @auto_resolve_image
@@ -120,7 +118,6 @@ def visualize_image_and_mask(image, mask = None):
         ax.set_aspect('equal')
         ax.axis('off')
     return fig
-
 
 @show_when_allowed
 @auto_resolve_image
@@ -164,7 +161,6 @@ def visualize_image_mask_and_predicted(image, mask = None, predicted = None):
         ax.set_aspect('equal')
         ax.axis('off')
     return fig
-
 
 @auto_resolve_image
 def overlay_segmentation_masks(image, mask = None, border = True):
@@ -218,7 +214,6 @@ def overlay_segmentation_masks(image, mask = None, border = True):
                     image, pts = [contour], isClosed = True,
                     color = color, thickness = 2)
     return image
-
 
 @show_when_allowed
 @auto_resolve_image

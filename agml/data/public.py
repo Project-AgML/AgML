@@ -26,9 +26,6 @@ class _PublicSourceFilter(object):
     _sources = load_public_sources()
     _current_filtered_source = []
 
-    def __init__(self):
-        pass
-
     def apply_filters(self, **filters):
         if len(filters) == 0:
             self._current_filtered_source = self._sources.keys()
@@ -47,10 +44,10 @@ class _PublicSourceFilter(object):
                 self._n_image_case_greater(
                     int(float(value[1:])), internal_set)
             else:
-                for source in self._sources.keys():
+                for source_ in self._sources.keys():
                     try:
-                        if self._sources[source][key] == value:
-                            internal_set.append(source)
+                        if self._sources[source_][key] == value:
+                            internal_set.append(source_)
                     except: # some situations don't have certain arguments.
                         continue
             source_sets.append(internal_set)
@@ -59,29 +56,29 @@ class _PublicSourceFilter(object):
         return self
 
     def _location_case(self, desired, value_set):
-        for source in self._sources.keys():
+        for source_ in self._sources.keys():
             param, value = desired.split(':')
             try:
-                if self._sources[source]['location'][param] == value:
-                    value_set.append(source)
+                if self._sources[source_]['location'][param] == value:
+                    value_set.append(source_)
             except KeyError: # some situations don't have location.
                 continue
         return value_set
 
     def _n_image_case_greater(self, thresh, value_set):
-        for source in self._sources.keys():
+        for source_ in self._sources.keys():
             try:
-                if int(float(self._sources[source]['n_images'])) >= thresh:
-                    value_set.append(source)
+                if int(float(self._sources[source_]['n_images'])) >= thresh:
+                    value_set.append(source_)
             except KeyError: # some situations don't have n_images.
                 continue
         return
 
     def _n_image_case_lesser(self, thresh, value_set):
-        for source in self._sources.keys():
+        for source_ in self._sources.keys():
             try:
-                if int(float(self._sources[source]['n_images'])) <= thresh:
-                    value_set.append(source)
+                if int(float(self._sources[source_]['n_images'])) <= thresh:
+                    value_set.append(source_)
             except KeyError: # some situations don't have n_images.
                 continue
         return

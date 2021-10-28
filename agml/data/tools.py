@@ -53,7 +53,6 @@ def _resolve_coco_annotations(annotations):
             "Expected either a single COCO annotation "
             "dictionary or a list of multiple dictionaries.")
 
-
 def coco_to_bboxes(annotations):
     """Extracts the bounding boxes and labels from COCO JSON annotations.
 
@@ -73,7 +72,6 @@ def coco_to_bboxes(annotations):
     """
     annotations = _resolve_coco_annotations(annotations)
     return annotations['bboxes'], annotations['labels']
-
 
 def convert_bbox_format(annotations_or_bboxes, fmt):
     """Converts bounding box formats for COCO JSON and others.
