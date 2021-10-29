@@ -53,7 +53,7 @@ dev_requires = [
     
 setuptools.setup(
     name="agml",
-    version="0.1",
+    version="0.11",
     author="UC Davis Plant AI and Biophysics Lab",
     author_email="jmearles@ucdavis.edu",
     maintainer="Amogh Joshi",
