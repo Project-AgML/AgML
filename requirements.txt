@@ -7,4 +7,3 @@ torch
 torchvision
 tensorflow
 pyyaml>=5.4.1
-tqdm

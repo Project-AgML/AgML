@@ -53,7 +53,7 @@ dev_requires = [
     
 setuptools.setup(
     name="agml",
-    version="0.11",
+    version="0.13",
     author="UC Davis Plant AI and Biophysics Lab",
     author_email="jmearles@ucdavis.edu",
     maintainer="Amogh Joshi",
@@ -65,6 +65,17 @@ setuptools.setup(
     packages=setuptools.find_packages(),
     include_package_data=True,
     classifiers=CLASSIFIERS,
+    install_requires=[
+        'numpy',
+        'matplotlib',
+        'tqdm',
+        'scikit-learn',
+        'opencv-python',
+        'torch',
+        'torchvision',
+        'tensorflow',
+        'pyyaml>=5.4.1'
+    ],
     extras_require={
         'dev': dev_requires,
         'test': tests_require
