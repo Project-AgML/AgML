@@ -141,6 +141,8 @@ def _convert_image_to_torch(image):
     """Converts an image (np.ndarray) to a torch Tensor."""
     if isinstance(image, (list, tuple)):
         return torch.tensor(image)
+    if image.ndim:
+        return image
     return torch.from_numpy(image).permute(2, 0, 1).float()
 
 def _postprocess_torch_annotation(image):

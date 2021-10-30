@@ -267,8 +267,7 @@ class AgMLSemanticSegmentationDataLoader(AgMLDataLoader):
                 (tf.constant(image), tf.constant(annotation))
         elif backend == 'torch':
             self._tensor_convert = lambda image, annotation: \
-                (_convert_image_to_torch(image),
-                 _convert_image_to_torch(annotation))
+                (_convert_image_to_torch(image), annotation)
 
     def split(self, train = None, val = None, test = None, shuffle = True):
         """Splits the data into train, val and test splits.
