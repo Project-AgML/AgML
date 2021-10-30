@@ -3,7 +3,6 @@
 AgML is a comprehensive library for agricultural machine learning. Currently, AgML provides
 access to a wealth of public agricultural datasets for common agricultural deep learning tasks.  
 
-
 ## Installation
 
 To install the latest release of AgML, run the following command:
