@@ -2,17 +2,17 @@
 Create a new empty public repository called `AgML` on the remote and pull it to local.
 
 Create a bare copy of the `AgML-dev` repo. This only clones the main branch, which should be the public release branch.
-`$ git clone --bare https://github.com/plant-ai-biophysics-lab/AgML-dev.git.git`
+`$ git clone --bare https://github.com/plant-ai-biophysics-lab/AgML-dev.git`
 
-Change into the `AgML-dev.git` directory.
-`$ cd AgML-dev.git`
+Change into the `AgML-dev` directory.
+`$ cd AgML-dev`
 
 Push the contents of the `AgML-dev` bare duplicate into the new public repo.
-`$ git push --mirror https://github.com/plant-ai-biophysics-lab/AgMLa.git` 
+`$ git push --mirror https://github.com/plant-ai-biophysics-lab/AgML.git` 
 
-Delete the temporary duplicate of the `AgML-dev.git` repo. 
+Delete the temporary duplicate of the `AgML-dev` repo. 
 `cd ..`
-`rm -rf AgML-dev.git`
+`rm -rf AgML-dev`
 
 ### Add a public remote (`AgML`) to the AgML private repo (`AgML-dev`)
 `git remote add public https://github.com/plant-ai-biophysics-lab/AgML.git`
