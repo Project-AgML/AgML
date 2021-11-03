@@ -68,4 +68,18 @@ def scalar_unpack(inp):
     """Unpacks a 1-d array into a list of scalars."""
     return [as_scalar(item) for item in inp]
 
+def is_array_like(inp):
+    """Determines if an input is a np.ndarray, torch.Tensor, or tf.Tensor."""
+    import numpy as np
+    if isinstance(inp, np.ndarray):
+        return True
+    from agml.backend.tftorch import torch
+    if isinstance(inp, torch.Tensor):
+        return True
+    from agml.backend.tftorch import tf
+    if isinstance(inp, tf.Tensor):
+        return True
+    return False
+
+
 

@@ -26,6 +26,7 @@ from agml.backend.tftorch import (
 
 from agml.utils.io import get_dir_list, get_file_list
 from agml.utils.general import to_camel_case, resolve_list_value
+from agml.utils.image import imread_context
 from agml.utils.logging import log
 
 from agml.data.loader import AgMLDataLoader
@@ -69,8 +70,8 @@ class AgMLImageClassificationDataLoader(AgMLDataLoader):
                 item = self._batched_data[indx]
                 images, labels = [], []
                 for image_path, label in item.items():
-                    image = cv2.cvtColor(
-                        cv2.imread(image_path), cv2.COLOR_BGR2RGB)
+                    with imread_context(image_path) as image:
+                        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
                     try:
                         image = self._preprocess_image(image)
                     except TypeError as te:
@@ -94,8 +95,8 @@ class AgMLImageClassificationDataLoader(AgMLDataLoader):
             try:
                 image_path = self._image_paths[indx]
                 label = self._data[image_path]
-                image = cv2.cvtColor(
-                    cv2.imread(image_path), cv2.COLOR_BGR2RGB)
+                with imread_context(image_path) as image:
+                    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
                 try:
                     image = self._preprocess_image(image)
                 except TypeError as te:
@@ -521,8 +522,8 @@ class AgMLImageClassificationDataLoader(AgMLDataLoader):
 
             def __getitem__(self, indx):
                 image, label = list(self._mapping.items())[indx]
-                image = cv2.cvtColor(
-                    cv2.imread(image), cv2.COLOR_BGR2RGB)
+                with imread_context(image) as image:
+                    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
                 image = cv2.resize(image, image_size, cv2.INTER_NEAREST)
                 if self._transform is not None:
                     image = self._transform(image)

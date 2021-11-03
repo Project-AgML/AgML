@@ -27,6 +27,7 @@ from agml.backend.tftorch import (
 
 from agml.utils.io import get_file_list
 from agml.utils.general import to_camel_case, placeholder
+from agml.utils.image import imread_context
 from agml.utils.logging import log
 
 from agml.data.loader import AgMLDataLoader
@@ -72,8 +73,8 @@ class AgMLObjectDetectionDataLoader(AgMLDataLoader):
             for image_path, annotation in item.items():
                 image_path = os.path.join(
                     self._dataset_root, 'images', image_path)
-                image = cv2.cvtColor(
-                    cv2.imread(image_path), cv2.COLOR_BGR2RGB)
+                with imread_context(image_path) as image:
+                    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
                 annotation = self._stack_annotations(annotation)
                 image, annotation = self._preprocess_data(image, annotation)
                 images.append(image)
@@ -87,8 +88,8 @@ class AgMLObjectDetectionDataLoader(AgMLDataLoader):
                     self._coco_annotation_map.items())[indx]
                 image_path = os.path.join(
                     self._dataset_root, 'images', image_path)
-                image = cv2.cvtColor(
-                    cv2.imread(image_path), cv2.COLOR_BGR2RGB)
+                with imread_context(image_path) as image:
+                    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
                 annotations = self._stack_annotations(annotations)
                 image, annotations = self._preprocess_data(image, annotations)
                 if self._getitem_as_batch:
@@ -642,9 +643,8 @@ class AgMLObjectDetectionDataLoader(AgMLDataLoader):
 
             def __getitem__(self, indx):
                 image, annotations = list(self._coco_mapping.items())[indx]
-                image = cv2.cvtColor(
-                    cv2.imread(os.path.join(self._root, 'images', image)),
-                    cv2.COLOR_BGR2RGB)
+                with imread_context(os.path.join(self._root, 'images', image)) as image:
+                    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
                 image, annotations = \
                     self._resize_image_and_box(image, annotations)
                 annotation = {'bboxes': [], 'labels': [], 'area': [],

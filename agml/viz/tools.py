@@ -129,6 +129,7 @@ def format_image(img):
     -------
     An np.ndarray formatted correctly for a Matplotlib visualization.
     """
+    # Get the numpy array from the image type.
     if isinstance(img, np.ndarray):
         img = img
     elif isinstance(img, Image.Image):
@@ -155,6 +156,12 @@ def format_image(img):
     # Remove the grayscale axis.
     if img.shape[-1] == 1:
         img = np.squeeze(img)
+
+    # If the image is in range 0-255 but a float image, then
+    # we need to convert it to an integer type.
+    if np.issubdtype(img.dtype, np.inexact):
+        if (img / 255).max() <= 1:
+            img = img.astype(np.uint8)
 
     return img
 
