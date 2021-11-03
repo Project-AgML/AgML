@@ -16,6 +16,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from agml.viz.tools import auto_resolve_image, show_when_allowed, format_image
+from agml.utils.general import is_array_like, as_scalar
 
 def _inference_best_shape(n_images):
     """Inferences the best matplotlib row/column layout.
@@ -64,7 +65,7 @@ def visualize_images_with_labels(images, labels = None, *, info = None, shape = 
     The matplotlib figure with the plotted info.
     """
     if images is not None and labels is None:
-        if isinstance(images[0], np.ndarray):
+        if is_array_like(images[0]):
             if images[0].ndim >= 3:
                 images, labels = images[0], images[1]
             else:
@@ -107,6 +108,7 @@ def visualize_images_with_labels(images, labels = None, *, info = None, shape = 
     for image, label, ax in zip(images, labels, iter_ax):
         ax.imshow(format_image(image))
         ax.set_aspect(1)
+        label = as_scalar(label)
         if info is not None:
             label = info.num_to_class[label]
         ax.set_xticklabels([])

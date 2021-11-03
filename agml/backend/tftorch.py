@@ -87,7 +87,7 @@ def set_backend(backend):
             raise ImportError(
                 "TensorFlow not found on system, cannot be used as "
                 "backend. Try running `pip install tensorflow`.")
-        _BACKEND = 'tensorflow'
+        _BACKEND = 'tf'
         log("Switched backend to TensorFlow.", level = logging.INFO)
     elif backend in ['torch', 'pytorch'] and _BACKEND != 'torch':
         if not _HAS_TORCH:
@@ -141,7 +141,7 @@ def _convert_image_to_torch(image):
     """Converts an image (np.ndarray) to a torch Tensor."""
     if isinstance(image, (list, tuple)):
         return torch.tensor(image)
-    if image.ndim:
+    if isinstance(image, torch.Tensor) or image.ndim == 4:
         return image
     return torch.from_numpy(image).permute(2, 0, 1).float()
 
@@ -158,7 +158,8 @@ def _multi_tensor_stack(tensors):
     """Stacks multiple tensors together."""
     if get_backend() == 'tf':
         return tf.stack(tensors, axis = 0)
-    return torch.stack(tensors, dim = 0)
+    else:
+        return torch.stack(tensors, dim = 0)
 
 ######### AGMLDATALOADER METHODS #########
 
