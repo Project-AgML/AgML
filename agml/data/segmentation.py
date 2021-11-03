@@ -29,6 +29,7 @@ from agml.backend.learn import set_seed
 
 from agml.utils.io import get_file_list
 from agml.utils.general import to_camel_case, resolve_list_value, placeholder
+from agml.utils.image import imread_context
 from agml.utils.logging import log
 
 from agml.data.loader import AgMLDataLoader
@@ -73,9 +74,10 @@ class AgMLSemanticSegmentationDataLoader(AgMLDataLoader):
             item = self._batched_data[indx]
             images, annotations = [], []
             for image_path, annotation_path in item.items():
-                image = cv2.cvtColor(
-                    cv2.imread(image_path), cv2.COLOR_BGR2RGB)
-                annotation = cv2.imread(annotation_path)
+                with imread_context(image_path) as image:
+                    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+                with imread_context(annotation_path) as annotation:
+                    annotation = annotation
                 image, annotation = self._preprocess_data(image, annotation)
                 images.append(image)
                 annotations.append(annotation)
@@ -86,9 +88,10 @@ class AgMLSemanticSegmentationDataLoader(AgMLDataLoader):
             try:
                 image_path = self._image_paths[indx]
                 annotation_path = self._data[image_path]
-                image = cv2.cvtColor(
-                    cv2.imread(image_path), cv2.COLOR_BGR2RGB)
-                annotation = cv2.imread(annotation_path)
+                with imread_context(image_path) as image:
+                    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+                with imread_context(annotation_path) as annotation:
+                    annotation = annotation
                 if annotation.shape[-1] == 3:
                     annotation = annotation[:, :, 0]
                 image, annotation = self._preprocess_data(image, annotation)
@@ -615,9 +618,10 @@ class AgMLSemanticSegmentationDataLoader(AgMLDataLoader):
 
             def __getitem__(self, indx):
                 image, annotation = list(self._mapping.items())[indx]
-                image = cv2.cvtColor(
-                    cv2.imread(image), cv2.COLOR_BGR2RGB)
-                annotation = cv2.imread(annotation)
+                with imread_context(image) as image:
+                    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+                with imread_context(annotation) as annotation:
+                    annotation = annotation
                 image = cv2.resize(
                     image, image_size, cv2.INTER_NEAREST)
                 annotation = cv2.resize(
