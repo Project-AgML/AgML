@@ -163,9 +163,9 @@ class AgMLImageClassificationDataLoader(AgMLDataLoader):
         if not np.all(shapes == shapes[0]):
             log(f"Could not inference a constant shape for all dataset "
                 f"elements in {self.name}. Defaulting to (512, 512).")
-            self._image_resize = (512, 512)
+            self._image_resize = tuple(reversed((512, 512)))
         else:
-            self._image_resize = tuple(shapes[0][:2])
+            self._image_resize = tuple(reversed(shapes[0][:2]))
 
     @property
     def labels(self):
@@ -582,9 +582,9 @@ class AgMLImageClassificationDataLoader(AgMLDataLoader):
         A configured `tf.data.Dataset` with the data.
         """
         import tensorflow as tf
-        set_backend('tensorflow')
+        set_backend('tf')
         _check_image_classification_transform(transform)
-        if get_backend() != 'tensorflow':
+        if get_backend() != 'tf':
             raise ValueError(
                 "Using a non-TensorFlow transform for `AgMLDataLoader.tensorflow()`.")
 

@@ -149,9 +149,9 @@ class AgMLObjectDetectionDataLoader(AgMLDataLoader):
         if not np.all(shapes == shapes[0]):
             log(f"Could not inference a constant shape for all dataset "
                 f"elements in {self.name}. Defaulting to (512, 512).")
-            self._image_resize = (512, 512)
+            self._image_resize = tuple(reversed((512, 512)))
         else:
-            self._image_resize = tuple(shapes[0][:2])
+            self._image_resize = tuple(reversed(shapes[0][:2]))
 
     @property
     def labels(self):
@@ -718,10 +718,10 @@ class AgMLObjectDetectionDataLoader(AgMLDataLoader):
         # runs into multiple errors, we have to prevent this by running the dataset
         # in eager mode. To change this behavior, you have to write your own dataset.
         import tensorflow as tf
-        tf.config.run_functions_eagerly(True)
-        set_backend('tensorflow')
+        # tf.config.run_functions_eagerly(True)
+        set_backend('tf')
         _check_object_detection_transform(transform, dual_transform)
-        if get_backend() != 'tensorflow':
+        if get_backend() != 'tf':
             raise ValueError(
                 "Using a non-TensorFlow transform for `AgMLDataLoader.tensorflow()`.")
 

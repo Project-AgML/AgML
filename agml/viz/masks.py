@@ -47,8 +47,9 @@ def _preprocess_mask(mask):
 
 def _mask_2d_to_3d(mask):
     """Converts a mask from 2-dimensional to channel-by-channel."""
+    mask = np.squeeze(mask)
     channels = np.unique(mask)[1:]
-    out = np.zeros(shape = (*mask.shape[:2], max(channels)))
+    out = np.zeros(shape = (*mask.shape[:2], int(max(channels))))
     iter_idx = 1
     while True:
         if iter_idx > max(channels):

@@ -14,6 +14,7 @@
 
 import cv2
 
+import numpy as np
 import matplotlib.pyplot as plt
 
 from agml.utils.general import resolve_tuple_values, as_scalar, scalar_unpack
@@ -22,14 +23,16 @@ from agml.viz.tools import get_colormap, auto_resolve_image, format_image, show_
 
 def _resolve_proportional_bboxes(coords, shape):
     """Resolves float vs. integer bounding boxes."""
-    if all(isinstance(i, float) for i in coords):
+    if all(isinstance(i, float) for i in coords) or \
+            all(np.issubdtype(i.dtype, np.inexact) for i in coords):
         if coords[0] <= 1:
             x, y, width, height = coords
             y *= shape[0]; height *= shape[0]  # noqa
             x *= shape[1]; width *= shape[1]  # noqa
             coords = [x, y, width, height]
         return [int(round(c)) for c in coords]
-    elif all(isinstance(i, int) for i in coords):
+    elif all(isinstance(i, int) for i in coords) or \
+            all(np.issubdtype(i.dtype, np.integer) for i in coords):
         return coords
     raise TypeError(
         f"Got multiple types for coordinates: "

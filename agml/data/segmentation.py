@@ -158,9 +158,9 @@ class AgMLSemanticSegmentationDataLoader(AgMLDataLoader):
         if not np.all(shapes == shapes[0]):
             log(f"Could not inference a constant shape for all dataset "
                 f"elements in {self.name}. Defaulting to (512, 512).")
-            self._image_resize = (512, 512)
+            self._image_resize = tuple(reversed((512, 512)))
         else:
-            self._image_resize = tuple(shapes[0][:2])
+            self._image_resize = tuple(reversed(shapes[0][:2]))
 
     def _load_images_and_annotations(self):
         """Loads semantic segmentation data for the loader.
@@ -269,8 +269,9 @@ class AgMLSemanticSegmentationDataLoader(AgMLDataLoader):
             self._tensor_convert = lambda image, annotation: \
                 (tf.constant(image), tf.constant(annotation))
         elif backend == 'torch':
+            from agml.backend.tftorch import torch
             self._tensor_convert = lambda image, annotation: \
-                (_convert_image_to_torch(image), annotation)
+                (_convert_image_to_torch(image), torch.tensor(annotation))
 
     def split(self, train = None, val = None, test = None, shuffle = True):
         """Splits the data into train, val and test splits.
@@ -556,6 +557,7 @@ class AgMLSemanticSegmentationDataLoader(AgMLDataLoader):
         -------
         A configured `torch.utils.data.DataLoader` with the data.
         """
+        import torch
         from torch.utils.data import Dataset, DataLoader
         set_backend('torch')
         _check_semantic_segmentation_transform(
@@ -622,13 +624,14 @@ class AgMLSemanticSegmentationDataLoader(AgMLDataLoader):
                     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
                 with imread_context(annotation) as annotation:
                     annotation = annotation
+                if annotation.shape[-1] == 3:
+                    annotation = annotation[:, :, 0]
                 image = cv2.resize(
                     image, image_size, cv2.INTER_NEAREST)
                 annotation = cv2.resize(
                     annotation, image_size, cv2.INTER_NEAREST)
                 image, annotation = \
-                    _convert_image_to_torch(image), \
-                    _convert_image_to_torch(annotation)
+                    _convert_image_to_torch(image), torch.tensor(annotation)
                 image, annotation = self._apply_transform(image, annotation)
                 return image, annotation
 
@@ -682,10 +685,10 @@ class AgMLSemanticSegmentationDataLoader(AgMLDataLoader):
         A configured `tf.data.Dataset` with the data.
         """
         import tensorflow as tf
-        set_backend('tensorflow')
+        set_backend('tf')
         _check_semantic_segmentation_transform(
             transform, target_transform, dual_transform)
-        if get_backend() != 'tensorflow':
+        if get_backend() != 'tf':
             raise ValueError(
                 "Using a non-TensorFlow transform for `AgMLDataLoader.tensorflow()`.")
 
