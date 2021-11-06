@@ -45,7 +45,7 @@ dev_requires = [
     'semantics',
     'scikit-image',
     'boto3',
-    'botocore'
+    'botocore',
     'pandas'
 ] + tests_require
 
@@ -62,7 +62,7 @@ setuptools.setup(
     description="A comprehensive library for agricultural deep learning",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    packages=setuptools.find_packages(),
+    packages=setuptools.find_packages(exclude = ('agml/_internal', )),
     include_package_data=True,
     classifiers=CLASSIFIERS,
     install_requires=[
