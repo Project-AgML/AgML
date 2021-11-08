@@ -160,7 +160,7 @@ def format_image(img):
     # If the image is in range 0-255 but a float image, then
     # we need to convert it to an integer type.
     if np.issubdtype(img.dtype, np.inexact):
-        if (img / 255).max() <= 1:
+        if not img.max() <= 1: # noqa
             img = img.astype(np.uint8)
 
     return img

@@ -187,7 +187,7 @@ class AgMLImageClassificationDataLoader(AgMLDataLoader):
                 continue
             for file_ in get_file_list(dir_path):
                 file_ = os.path.join(dir_path, file_)
-                image_label_mapping[file_] = self._info.class_to_num[dir_]
+                image_label_mapping[file_] = self._info.class_to_num[dir_] - 1
         self._image_paths = list(image_label_mapping.keys())
         self._labels = list(np.unique(list(image_label_mapping.values())))
         self._data = image_label_mapping
