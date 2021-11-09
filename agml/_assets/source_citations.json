@@ -35,6 +35,10 @@
         "license": "",
         "citation": "@Article{s16081222,\n  AUTHOR = {Sa, Inkyu and Ge, Zongyuan and Dayoub, Feras and Upcroft, Ben and Perez, Tristan and McCool, Chris},\n  TITLE = {DeepFruits: A Fruit Detection System Using Deep Neural Networks},\n  JOURNAL = {Sensors},\n  VOLUME = {16},\n  YEAR = {2016},\n  NUMBER = {8},\n  ARTICLE-NUMBER = {1222},\n  URL = {https://www.mdpi.com/1424-8220/16/8/1222},\n  ISSN = {1424-8220},\n  ABSTRACT = {This paper presents a novel approach to fruit detection using deep convolutional neural networks. The aim is to build an accurate, fast and reliable fruit detection system, which is a vital element of an autonomous agricultural robotic platform; it is a key element for fruit yield estimation and automated harvesting. Recent work in deep neural networks has led to the development of a state-of-the-art object detector termed Faster Region-based CNN (Faster R-CNN). We adapt this model, through transfer learning, for the task of fruit detection using imagery obtained from two modalities: colour (RGB) and Near-Infrared (NIR). Early and late fusion methods are explored for combining the multi-modal (RGB and NIR) information. This leads to a novel multi-modal Faster R-CNN model, which achieves state-of-the-art results compared to prior work with the F1 score, which takes into account both precision and recall performances improving from     0 . 807     to     0 . 838     for the detection of sweet pepper. In addition to improved accuracy, this approach is also much quicker to deploy for new fruits, as it requires bounding box annotation rather than pixel-level annotation (annotating bounding boxes is approximately an order of magnitude quicker to perform). The model is retrained to perform the detection of seven fruits, with the entire process taking four hours to annotate and train the new model per fruit.},\n  DOI = {10.3390/s16081222}\n}"
     },
+    "plant_weeds_denmark": {
+        "license": "",
+        "citation": ""
+    },
     "leaf_counting_denmark": {
         "license": "CC BY-SA 4.0",
         "citation": "@Article{s18051580,\n  author = {Teimouri, Nima and Dyrmann, Mads and Nielsen, Per  Rydahl and Mathiassen, Solvejg  Kopp and Somerville, Gayle  J. and J\u00f8rgensen, Rasmus  Nyholm},\n  title = {Weed Growth Stage Estimator Using Deep Convolutional Neural Networks},\n  journal = {Sensors},\n  volume = {18},\n  year = {2018},\n  number = {5},\n  url = {http://www.mdpi.com/1424-8220/18/5/1580},\n  issn = {1424-8220}\n}"
@@ -47,9 +51,17 @@
         "license": "",
         "citation": "@article{2019,\n  doi = {10.1186/s13007-019-0528-3},\n  url = {https://doi.org/10.1186/s13007-019-0528-3},\n  year = {2019},\n  month = nov,\n  publisher = {Springer Science and Business Media {LLC}},\n  volume = {15},\n  number = {1},\n  author = {Yu Jiang and Changying Li and Andrew H. Paterson and Jon S. Robertson},\n  title = {{DeepSeedling}: deep convolutional network and Kalman filter for plant seedling detection and counting in the field}\n}"
     },
+    "apple_detection_spain": {
+        "license": "",
+        "citation": ""
+    },
     "fruit_detection_australia": {
         "license": "",
         "citation": "@article{bargoti2016deep,\n  title={Deep Fruit Detection in Orchards},\n  author={Bargoti, Suchet and Underwood, James},\n  journal={arXiv preprint arXiv:1610.03677},\n  year={2016}\n}"
+    },
+    "datepalm_classification_saudi": {
+        "license": "",
+        "citation": ""
     },
     "mango_detection_australia": {
         "license": "",
@@ -70,5 +82,9 @@
     "plant_village_classification": {
         "license": "",
         "citation": "@article{DBLP:journals/corr/HughesS15,\n  author    = {David P. Hughes and\n               Marcel Salath{'{e} } },\n  title     = {An open access repository of images on plant health to enable the\n               development of mobile disease diagnostics through machine\n               learning and crowdsourcing},\n  journal   = {CoRR},\n  volume    = {abs/1511.08060},\n  year      = {2015},\n  url       = {http://arxiv.org/abs/1511.08060},\n  archivePrefix = {arXiv},\n  eprint    = {1511.08060},\n  timestamp = {Mon, 13 Aug 2018 16:48:21 +0200},\n  biburl    = {https://dblp.org/rec/bib/journals/corr/HughesS15},\n  bibsource = {dblp computer science bibliography, https://dblp.org}\n}"
+    },
+    "plant_doc_classification": {
+        "licence": "CC BY-SA 4.0",
+        "citation": "@inproceedings{10.1145/3371158.3371196,\n  author = {Singh, Davinder and Jain, Naman and Jain, Pranjali and Kayal, Pratik and Kumawat, Sudhakar and Batra, Nipun},\n  title = {PlantDoc: A Dataset for Visual Plant Disease Detection},\n  year = {2020},\n  isbn = {9781450377386},\n  publisher = {Association for Computing Machinery},\n  address = {New York, NY, USA},\n  url = {https://doi.org/10.1145/3371158.3371196},\n  doi = {10.1145/3371158.3371196},\n  booktitle = {Proceedings of the 7th ACM IKDD CoDS and 25th COMAD},\n  pages = {249–253},\n  numpages = {5},\n  keywords = {Deep Learning, Object Detection, Image Classification},\n  location = {Hyderabad, India},\n  series = {CoDS COMAD 2020}\n  }"
     }
 }
