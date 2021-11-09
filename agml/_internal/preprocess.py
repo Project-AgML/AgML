@@ -531,3 +531,5 @@ class PublicDataPreprocessor(object):
     def plant_village_classification(self, dataset_name):
         pass
 
+    def plant_doc_classification(self, dataset_name):
+        pass
