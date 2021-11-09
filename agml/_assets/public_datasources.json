@@ -323,7 +323,7 @@
             "continent": "asia",
             "country": "china"
         },
-        "sensor_modality": "RGB",
+        "sensor_modality": "rgb",
         "real_synthetic": "real",
         "platform": "handheld",
         "input_data_format": "jpg",
@@ -379,7 +379,7 @@
             "continent": "north_america",
             "country": "usa"
         },
-        "sensor_modality": "RGB",
+        "sensor_modality": "rgb",
         "real_synthetic": "real",
         "platform": "ground",
         "input_data_format": "jpg",
@@ -424,7 +424,7 @@
             "continent": "worldwide",
             "country": "worldwide"
         },
-        "sensor_modality": "RGB",
+        "sensor_modality": "rgb",
         "real_synthetic": "real",
         "platform": "ground",
         "input_data_format": "jpg",
@@ -433,3 +433,4 @@
         "docs_url": "https://github.com/pratikkayal/PlantDoc-Dataset"
     }
 }
+
