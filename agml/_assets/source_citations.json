@@ -68,7 +68,7 @@
         "citation": "@article{DBLP:journals/corr/HughesS15,\n  author    = {David P. Hughes and\n               Marcel Salath{'{e} } },\n  title     = {An open access repository of images on plant health to enable the\n               development of mobile disease diagnostics through machine\n               learning and crowdsourcing},\n  journal   = {CoRR},\n  volume    = {abs/1511.08060},\n  year      = {2015},\n  url       = {http://arxiv.org/abs/1511.08060},\n  archivePrefix = {arXiv},\n  eprint    = {1511.08060},\n  timestamp = {Mon, 13 Aug 2018 16:48:21 +0200},\n  biburl    = {https://dblp.org/rec/bib/journals/corr/HughesS15},\n  bibsource = {dblp computer science bibliography, https://dblp.org}\n}"
     },
     "plant_doc_classification": {
-        "licence": "CC BY-SA 4.0",
+        "license": "CC BY-SA 4.0",
         "citation": "@inproceedings{10.1145/3371158.3371196,\n  author = {Singh, Davinder and Jain, Naman and Jain, Pranjali and Kayal, Pratik and Kumawat, Sudhakar and Batra, Nipun},\n  title = {PlantDoc: A Dataset for Visual Plant Disease Detection},\n  year = {2020},\n  isbn = {9781450377386},\n  publisher = {Association for Computing Machinery},\n  address = {New York, NY, USA},\n  url = {https://doi.org/10.1145/3371158.3371196},\n  doi = {10.1145/3371158.3371196},\n  booktitle = {Proceedings of the 7th ACM IKDD CoDS and 25th COMAD},\n  pages = {249–253},\n  numpages = {5},\n  keywords = {Deep Learning, Object Detection, Image Classification},\n  location = {Hyderabad, India},\n  series = {CoDS COMAD 2020}\n  }"
     }
 }
