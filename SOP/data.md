@@ -184,7 +184,7 @@ Next, make a pull request on the repository with the two files (and the preproce
 is accepted, you can upload the dataset using the following commands:
 
 ```python
-from agml._internal.publicdata import InternalAgMLS3API
+from agml._internal.s3internal import InternalAgMLS3API
 
 InternalAgMLS3API().upload_dataset('my_new_dataset', '/root')
 ```
