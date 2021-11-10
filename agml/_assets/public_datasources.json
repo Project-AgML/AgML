@@ -323,7 +323,7 @@
             "continent": "asia",
             "country": "china"
         },
-        "sensor_modality": "RGB",
+        "sensor_modality": "rgb",
         "real_synthetic": "real",
         "platform": "handheld",
         "input_data_format": "jpg",
@@ -379,12 +379,58 @@
             "continent": "north_america",
             "country": "usa"
         },
-        "sensor_modality": "RGB",
+        "sensor_modality": "rgb",
         "real_synthetic": "real",
         "platform": "ground",
         "input_data_format": "jpg",
         "annotation_format": "directory_names",
         "n_images": "55448",
         "docs_url": "https://github.com/spMohanty/PlantVillage-Dataset"
+    },
+    "plant_doc_classification": {
+        "crop_types": {
+            "1": "Apple_Scab_Leaf",
+            "2": "Apple_leaf",
+            "3": "Apple_rust_leaf",
+            "4": "Bell_pepper_leaf_spot",
+            "5": "Bell_pepper_leaf",
+            "6": "Blueberry_leaf",
+            "7": "Cherry_leaf",
+            "8": "Corn_Gray_leaf_spot",
+            "9": "Corn_leaf_blight",
+            "10": "Corn_rust_leaf",
+            "11": "Peach_leaf",
+            "12": "Potato_leaf_early_blight",
+            "13": "Potato_leaf_late_blight",
+            "14": "Raspberry_leaf",
+            "15": "Soybean_leaf",
+            "16": "Squash_Powdery_mildew_leaf",
+            "17": "Strawberry_leaf",
+            "18": "Tomato_Early_blight_leaf",
+            "19": "Tomato_Septoria_leaf_spot",
+            "20": "Tomato_leaf_bacterial_spot",
+            "21": "Tomato_leaf_late_blight",
+            "22": "Tomato_leaf_mosaic_virus",
+            "23": "Tomato_leaf_yellow_virus",
+            "24": "Tomato_leaf",
+            "25": "Tomato_mold_leaf",
+            "26": "Tomato_two_spotted_spider_mites_leaf",
+            "27": "grape_leaf_black_rot",
+            "28": "grape_leaf"
+        },
+        "ml_task": "image_classification",
+        "ag_task": "disease_classification",
+        "location": {
+            "continent": "worldwide",
+            "country": "worldwide"
+        },
+        "sensor_modality": "rgb",
+        "real_synthetic": "real",
+        "platform": "ground",
+        "input_data_format": "jpg",
+        "annotation_format": "directory_names",
+        "n_images": "2598",
+        "docs_url": "https://github.com/pratikkayal/PlantDoc-Dataset"
     }
 }
+
