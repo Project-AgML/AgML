@@ -16,7 +16,7 @@
         "platform": "handheld",
         "input_data_format": "jpg",
         "annotation_format": "directory_names",
-        "n_images": "1296",
+        "n_images": "1295",
         "docs_url": "https://github.com/AI-Lab-Makerere/ibean/"
     },
     "carrot_weeds_germany": {
@@ -107,7 +107,7 @@
         "platform": "ground_fixed",
         "input_data_format": "bmp",
         "annotation_format": "directory_names",
-        "n_images": "154",
+        "n_images": "153",
         "docs_url": "https://github.com/The77Lab/SugarcaneBilletsDataset"
     },
     "crop_weeds_greece": {
