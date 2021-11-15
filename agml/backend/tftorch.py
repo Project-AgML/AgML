@@ -182,13 +182,6 @@ def _postprocess_torch_annotation(image):
     return image
 
 
-def _multi_tensor_stack(tensors):
-    """Stacks multiple tensors together."""
-    if get_backend() == 'tf':
-        return tf.stack(tensors, axis = 0)
-    else:
-        return torch.stack(tensors, dim = 0)
-
 ######### AGMLDATALOADER METHODS #########
 
 class AgMLObject(object):
