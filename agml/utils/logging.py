@@ -18,13 +18,16 @@ import time
 import inspect
 import logging
 
+
 # Track already given warnings.
 _GIVEN_WARNINGS = {}
+
 
 # Configure the logger.
 logging.basicConfig(
     format = '[AgML] %(asctime)s %(levelname)s - %(name)s: %(message)s',
     datefmt = '%m-%d-%Y %H:%M:%S')
+
 
 def log(msg, level = logging.WARNING):
     """Logs a message to the console.

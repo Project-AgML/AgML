@@ -14,7 +14,6 @@
 
 import os
 import sys
-import copy
 import argparse
 
 import torch
@@ -41,15 +40,18 @@ def build_model(name):
 def build_loaders(name):
     loader = agml.data.AgMLDataLoader(name)
     loader.split(train = 0.8, val = 0.1, test = 0.1)
-    train_ds = loader.training_data.torch(
-        transform = T.Compose([
-            T.ToTensor(), T.RandomHorizontalFlip(), T.RandomRotation(20)
-        ]),
-        batch_size = 1
+    loader.batch(batch_size = 8)
+    train_data = loader.train_data
+    train_data.transform(
+        T.Compose([
+            T.ToTensor(), T.RandomHorizontalFlip()
+        ])
     )
-    val_ds = loader.validation_data.torch(batch_size = 1)
-    test_ds = loader.test_data.torch()
+    train_ds = loader.train_data.export_torch()
+    val_ds = loader.val_data.export_torch()
+    test_ds = loader.test_data.export_torch()
     return train_ds, val_ds, test_ds
+
 
 # Create the training loop.
 class Trainer(object):
@@ -97,6 +99,7 @@ class Trainer(object):
             train_loss, val_loss = [], []
 
             # Iterate through the training data loader.
+            model.train()
             for (images, labels) in tqdm(
                     iter(train_ds), desc = f"Epoch {epoch}/{epochs}", file = sys.stdout):
                 # Move the data to the correct device.
@@ -104,7 +107,6 @@ class Trainer(object):
                 labels = torch.tensor([label.to(device) for label in labels])
 
                 # Train the model.
-                model.train()
                 out = model(images)
                 loss = nn.CrossEntropyLoss()(out, labels)
                 train_loss.append(loss.item())
@@ -115,6 +117,7 @@ class Trainer(object):
                 optimizer.step()
 
             # Iterate through the validation data loader.
+            model.eval()
             for (images, labels) in val_ds:
                 # Move the data to the correct device.
                 images = torch.stack([image.to(device) for image in images])
@@ -122,7 +125,6 @@ class Trainer(object):
 
                 # Calculate the validation metrics.
                 with torch.no_grad():
-                    model.eval()
                     out = model(images)
                     loss = nn.CrossEntropyLoss()(out, labels)
                     val_loss.append(loss)
@@ -171,7 +173,8 @@ def execute():
     # Execute the program.
     train, val, test = build_loaders(args.dataset)
     net = build_model(args.dataset)
-    Trainer().fit(net, train_ds = train, val_ds = val, dataset = 'bean_disease_uganda')
+    Trainer().fit(net, train_ds = train, val_ds = val,
+                  dataset = args.dataset, save_all = args.save_all)
 
 if __name__ == '__main__':
     execute()

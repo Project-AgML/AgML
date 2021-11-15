@@ -72,16 +72,9 @@ def create_dir(dir_):
     """Creates a directory (or does nothing if it exists)."""
     os.makedirs(dir_, exist_ok = True)
 
-<<<<<<< HEAD
-=======
 
->>>>>>> public/dev
 def recursive_dirname(dir_, level = 1):
     """Returns a recursive dirname for the number of levels provided."""
     if level == 0:
         return dir_
     return recursive_dirname(os.path.dirname(dir_), level - 1)
-<<<<<<< HEAD
-=======
-
->>>>>>> public/dev
