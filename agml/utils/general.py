@@ -70,7 +70,6 @@ def as_scalar(inp):
     """Converts an input value to a scalar."""
     if isinstance(inp, (int, float)):
         return inp
-    import numpy as np
     if np.isscalar(inp):
         return inp.item()
     if isinstance(inp, np.ndarray):
