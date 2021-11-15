@@ -16,6 +16,13 @@ import os
 
 import cv2
 
+
+def consistent_shapes(images):
+    """Determines whether the shapes of the images are consistent."""
+    shapes = [i.shape for i in images]
+    return shapes.count(shapes[0]) == len(shapes)
+
+
 class imread_context(object):
     """Wraps the `cv2.imread` function into a context.
 

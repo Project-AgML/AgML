@@ -14,20 +14,31 @@
 
 import re
 
+import numpy as np
+
+
+# Represents an empty object, but allows passing `None`
+# as an independent object in certain cases.
+NoArgument = object()
+
+
 def placeholder(obj):
     """Equivalent of lambda x: x, but enables pickling."""
     return obj
+
 
 def to_camel_case(s):
     """Converts a given string `s` to camel case."""
     s = re.sub(r"(_|-)+", " ", s).title().replace(" ", "") # noqa
     return ''.join(s)
 
+
 def resolve_list_value(val):
     """Determines whether a list contains one or multiple values."""
     if len(val) == 1:
         return val[0]
     return val
+
 
 def resolve_tuple_values(*inputs, custom_error = None):
     """Determines whether `inputs[0]` contains two values or
@@ -36,7 +47,7 @@ def resolve_tuple_values(*inputs, custom_error = None):
         if len(inputs[0]) != len(inputs):
             # special case for COCO JSON
             if len(inputs) == 3 and len(inputs[0]) == 2 and isinstance(inputs[0][1], dict):
-                return inputs[0][0], inputs[0][1]['bboxes'], inputs[0][1]['labels']
+                return inputs[0][0], inputs[0][1]['bbox'], inputs[0][1]['category_id']
             if custom_error is not None:
                 raise ValueError(custom_error)
             else:
@@ -47,11 +58,18 @@ def resolve_tuple_values(*inputs, custom_error = None):
             return inputs[0]
     return inputs
 
+
+def resolve_tuple(sequence):
+    """Resolves a sequence to a tuple."""
+    if isinstance(sequence, np.ndarray):
+        sequence = sequence.tolist()
+    return tuple(i for i in sequence)
+
+
 def as_scalar(inp):
     """Converts an input value to a scalar."""
     if isinstance(inp, (int, float)):
         return inp
-    import numpy as np
     if np.isscalar(inp):
         return inp.item()
     if isinstance(inp, np.ndarray):
@@ -64,9 +82,11 @@ def as_scalar(inp):
         return inp.numpy()
     raise TypeError(f"Unsupported variable type {type(inp)}.")
 
+
 def scalar_unpack(inp):
     """Unpacks a 1-d array into a list of scalars."""
     return [as_scalar(item) for item in inp]
+
 
 def is_array_like(inp):
     """Determines if an input is a np.ndarray, torch.Tensor, or tf.Tensor."""
@@ -80,6 +100,31 @@ def is_array_like(inp):
     if isinstance(inp, tf.Tensor):
         return True
     return False
+
+
+class seed_context(object):
+    """Creates a context with a custom random seed, then resets it.
+
+    This allows for setting a custom seed (for reproducibility) in a
+    context, then resetting the original state after exiting, to
+    prevent interfering with the program execution.
+    """
+
+    def __init__(self, seed):
+        self._seed = seed
+        self._prev_state = None
+
+    def __enter__(self):
+        self._prev_state = np.random.get_state()
+        np.random.seed(self._seed)
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        np.random.set_state(self._prev_state)
+        self._prev_state = None
+
+    def reset(self):
+        np.random.seed(self._seed)
 
 
 

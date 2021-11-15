@@ -25,14 +25,31 @@ import functools
 
 from agml.utils.logging import log
 
+
 # Suppress any irrelevant warnings which will pop up from either backend.
 import warnings
 warnings.filterwarnings(
     'ignore', category = UserWarning, message = '.*Named tensors.*Triggered internally.*')
 
+# Custom errors.
+
+class BackendError(ValueError):
+    pass
+
+
+class StrictBackendError(BackendError):
+    def __init__(self, message = None, change = None, obj = None):
+        if message is None:
+            message = f"Backend was manually set to " \
+                      f"'{get_backend()}', but got an object " \
+                      f"from backend '{change}': {obj}."
+        super(StrictBackendError, self).__init__(message)
+
+
 # Check if TensorFlow and PyTorch exist in the environment.
 _HAS_TENSORFLOW: bool
 _HAS_TORCH: bool
+
 
 @functools.lru_cache(maxsize = None)
 def _check_tf_torch():
@@ -50,13 +67,16 @@ def _check_tf_torch():
     else:
         _HAS_TORCH = True
 
+
 # Default backend is PyTorch.
 _BACKEND = 'torch'
 _USER_SET_BACKEND = False
 
+
 def get_backend():
     """Returns the current AgML backend."""
     return _BACKEND
+
 
 def set_backend(backend):
     """Change the AgML backend for the current session.
@@ -97,9 +117,11 @@ def set_backend(backend):
         _BACKEND = 'torch'
         log("Switched backend to PyTorch.", level = logging.INFO)
 
-def _was_backend_changed():
+
+def user_changed_backend():
     """Returns whether the backend has been manually changed."""
     return _USER_SET_BACKEND
+
 
 # Ported from https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/util/lazy_loader.py
 class LazyLoader(types.ModuleType):
@@ -129,11 +151,13 @@ class LazyLoader(types.ModuleType):
     module = self._load()
     return dir(module)
 
+
 # Load TensorFlow and PyTorch lazily to prevent pulling them in when unnecessary.
 torch = LazyLoader('torch', globals(), 'torch')
 torch_data = LazyLoader('torch_data', globals(), 'torch.utils.data')
 torchvision = LazyLoader('torchvision', globals(), 'torchvision')
 tf = LazyLoader('tensorflow', globals(), 'tensorflow')
+
 
 ######### GENERAL METHODS #########
 
@@ -143,7 +167,10 @@ def _convert_image_to_torch(image):
         return torch.tensor(image)
     if isinstance(image, torch.Tensor) or image.ndim == 4:
         return image
-    return torch.from_numpy(image).permute(2, 0, 1).float()
+    if image.shape[0] > image.shape[-1]:
+        return torch.from_numpy(image).permute(2, 0, 1).float()
+    return torch.from_numpy(image)
+
 
 def _postprocess_torch_annotation(image):
     """Post-processes a spatially augmented torch annotation."""
@@ -154,132 +181,38 @@ def _postprocess_torch_annotation(image):
         pass
     return image
 
-def _multi_tensor_stack(tensors):
-    """Stacks multiple tensors together."""
-    if get_backend() == 'tf':
-        return tf.stack(tensors, axis = 0)
-    else:
-        return torch.stack(tensors, dim = 0)
 
 ######### AGMLDATALOADER METHODS #########
 
-def _swap_loader_mro(inst, mode):
+class AgMLObject(object):
+    """Base class for the `AgMLDataLoader` to enable inheritance.
+
+    This class solves a bug which arises when trying to dynamically
+    inherit from `tf.keras.utils.Sequence` and/or `torch.utils.data.Dataset`.
+    The fact that the `AgMLDataLoader` has this `AgMLObject` as a subclass
+    enables it to be able to handle dynamic inheritance. This is the sole
+    purpose of this subclass, it does not have any features.
+    """
+
+
+def _add_dataset_to_mro(inst, mode):
+    """Adds the relevant backend class to the `AgMLDataLoader` MRO.
+
+    This allows for the loader to dynamically inherent from the
+    `tf.keras.utils.Sequence` and `torch.utils.data.Dataset`.
+    """
     if mode == 'tf':
         if not get_backend() == 'tf':
+            if user_changed_backend():
+                raise StrictBackendError(change = 'tf', obj = inst)
             set_backend('tf')
         if tf.keras.utils.Sequence not in inst.__class__.__bases__:
-            inst.__class__.__bases__ = \
-                inst.__class__.__bases__ + (tf.keras.utils.Sequence,)
+            inst.__class__.__bases__ += (tf.keras.utils.Sequence, )
     if mode == 'torch':
         if not get_backend() == 'torch':
-            set_backend('torch')
+            if user_changed_backend():
+                raise StrictBackendError(change = 'torch', obj = inst)
         if torch_data.Dataset not in inst.__class__.__bases__:
-            inst.__class__.__bases__ = \
-                inst.__class__.__bases__ + (torch_data.Dataset,)
+            inst.__class__.__bases__ += (torch_data.Dataset,)
 
-###################################################################
-############### TRANSFORM CHECKS FOR AGMLDATALOADER ###############
-###################################################################
 
-######### `AgMLImageClassificationDataLoader.transform()` #########
-
-def _check_image_classification_transform(transform):
-    """Check the image classification transform pipeline."""
-    if transform is None:
-        return None
-    if isinstance(transform, (types.FunctionType, functools.partial)): # noqa
-        return transform
-    if get_backend() == 'tensorflow':
-        _tf_check_sequential_preprocessing_pipeline(transform)
-        return transform
-    elif get_backend() == 'torch':
-        return _torch_check_torchvision_preprocessing_pipeline(transform)
-    else:
-        raise TypeError(
-            "Got unknown preprocessing transform (not a method, "
-            f"or a TensorFlow/PyTorch preprocessing pipeline): {transform}.")
-
-def _tf_check_sequential_preprocessing_pipeline(model):
-    """Checks that a Sequential model passed to a dataset is valid."""
-    if not isinstance(model, tf.keras.models.Sequential):
-        if 'torchvision' in model.__module__:
-            if _was_backend_changed():
-                raise TypeError(
-                    "Backend was manually set to `tensorflow`, "
-                    "but got a PyTorch transformation.")
-            else:
-                log("Switching backend to PyTorch: got a torchvision "
-                    "transform while backend was set to TensorFlow.")
-                set_backend('torch')
-                return _torch_check_torchvision_preprocessing_pipeline(model)
-        else:
-            raise TypeError(
-                f"Unknown preprocessing object {model} of type {type(model)}. "
-                f"Backend is currently `tensorflow`, but object is neither "
-                f"a function or a torchvision transform.")
-    for layer in model.layers:
-        if 'keras' not in layer.__module__ and 'preprocessing' not in layer.__module__:
-            raise TypeError(
-                "Expected only preprocessing layers in "
-                f"Sequential preprocessing model: got {type(layer)}.")
-    return model
-
-def _torch_check_torchvision_preprocessing_pipeline(transforms):
-    """Checks that a torchvision transform pipeline is valid."""
-    if 'torchvision' not in transforms.__module__:
-        if isinstance(transforms, tf.keras.models.Sequential):
-            if _was_backend_changed():
-                raise TypeError(
-                    "Backend was manually set to `torch`, but got"
-                    "a TensorFlow preprocessing model.")
-            else:
-                log("Switching backend to TensorFlow: got a TensorFlow "
-                    "preprocessing model while backend was set to PyTorch.")
-    return transforms
-
-######### `AgMLSemanticSegmentationDataLoader.transform()` #########
-
-def _check_semantic_segmentation_transform(transform, target_transform, dual_transform):
-    """Checks the semantic segmentation transform pipeline."""
-    if transform is None and target_transform is None and dual_transform is None:
-        return None, None, None
-    if transform is not None:
-        if isinstance(transform, types.FunctionType) and target_transform is None:  # noqa
-            _check_function_type_transform(transform)
-    if dual_transform is not None:
-        _check_image_classification_transform(dual_transform)
-    else:
-        old_backend = get_backend()
-        _check_image_classification_transform(transform)
-        current_backend = get_backend()
-        _check_image_classification_transform(target_transform)
-        new_backend = get_backend()
-        if old_backend == new_backend and old_backend != current_backend:
-            raise ValueError(
-                "Transform and target transform use methods from different backends.")
-        return transform, target_transform
-
-def _check_function_type_transform(transform):
-    if len(inspect.signature(transform).parameters) != 1:  # noqa
-        raise ValueError(
-            "If passing a function for `transform`, it "
-            "should accept one argument, the input image.")
-    return transform
-
-######### `AgMLObjectDetectionDataLoader.transform()` #########
-
-def _check_object_detection_transform(transform, dual_transform):
-    """Checks the object detection transform pipeline."""
-    if transform is None and dual_transform is None:
-        return None, None, None
-    if dual_transform is not None:
-        _check_function_type_transform(dual_transform)
-    else:
-        _check_image_classification_transform(transform)
-
-def _check_dual_function_type_transform(transform):
-    if len(inspect.signature(transform).parameters) != 2:  # noqa
-        raise ValueError(
-            "If passing a function for `transform`, it should accept "
-            "two arguments, the input image and annotation.")
-    return transform

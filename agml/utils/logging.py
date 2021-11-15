@@ -37,7 +37,11 @@ def log(msg, level = logging.WARNING):
         logging.DEBUG: logging.debug,
         logging.INFO: logging.info,
         logging.WARNING: logging.warning,
-        logging.CRITICAL: logging.critical
+        logging.CRITICAL: logging.critical,
+        'debug': logging.debug,
+        'info': logging.info,
+        'warning': logging.warning,
+        'critical': logging.critical
     }
 
     # Check if the warning has been delivered recently.

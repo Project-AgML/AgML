@@ -141,6 +141,11 @@ __MACOSX
 **/**test*.*
 !tests/*/*
 agml/_helios
-agml/_internal
 agml/helios_config.sh
 agml/train
+
+# Controls for the `_internal` directory.
+agml/_internal/*
+!agml/_internal/preprocess*.py
+!agml/_internal/s3internal.py
+!agml/_internal/__init__.py

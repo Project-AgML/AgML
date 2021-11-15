@@ -17,12 +17,13 @@ import re
 import yaml
 import collections
 
+from agml.framework import AgMLSerializable
 import agml.utils.logging as logging
 from agml.utils.data import (
     load_public_sources, load_citation_sources, maybe_you_meant, copyright_print
 )
 
-class DatasetMetadata(object):
+class DatasetMetadata(AgMLSerializable):
     """Stores metadata about a certain AgML dataset.
 
     When loading in a dataset using the `AgMLDataLoader`, the "info"
@@ -60,12 +61,22 @@ class DatasetMetadata(object):
             return self._name == other._name
         return False
 
+    def __getstate__(self):
+        return {
+            'name': self._name,
+            'metadata': self._metadata,
+            'citation_meta': self._citation_meta
+        }
+
     @property
     def data(self):
         return self._metadata
 
     def _load_source_info(self, name):
         """Loads the data source metadata into the class."""
+        if isinstance(name, DatasetMetadata):
+            name = name.name
+
         source_info = load_public_sources()
         if name not in source_info.keys():
             if name.replace('-', '_') not in source_info.keys():
