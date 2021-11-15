@@ -25,14 +25,31 @@ import functools
 
 from agml.utils.logging import log
 
+
 # Suppress any irrelevant warnings which will pop up from either backend.
 import warnings
 warnings.filterwarnings(
     'ignore', category = UserWarning, message = '.*Named tensors.*Triggered internally.*')
 
+# Custom errors.
+
+class BackendError(ValueError):
+    pass
+
+
+class StrictBackendError(BackendError):
+    def __init__(self, message = None, change = None, obj = None):
+        if message is None:
+            message = f"Backend was manually set to " \
+                      f"'{get_backend()}', but got an object " \
+                      f"from backend '{change}': {obj}."
+        super(StrictBackendError, self).__init__(message)
+
+
 # Check if TensorFlow and PyTorch exist in the environment.
 _HAS_TENSORFLOW: bool
 _HAS_TORCH: bool
+
 
 @functools.lru_cache(maxsize = None)
 def _check_tf_torch():
@@ -50,13 +67,16 @@ def _check_tf_torch():
     else:
         _HAS_TORCH = True
 
+
 # Default backend is PyTorch.
 _BACKEND = 'torch'
 _USER_SET_BACKEND = False
 
+
 def get_backend():
     """Returns the current AgML backend."""
     return _BACKEND
+
 
 def set_backend(backend):
     """Change the AgML backend for the current session.
@@ -97,9 +117,11 @@ def set_backend(backend):
         _BACKEND = 'torch'
         log("Switched backend to PyTorch.", level = logging.INFO)
 
-def _was_backend_changed():
+
+def user_changed_backend():
     """Returns whether the backend has been manually changed."""
     return _USER_SET_BACKEND
+
 
 # Ported from https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/util/lazy_loader.py
 class LazyLoader(types.ModuleType):
@@ -129,11 +151,13 @@ class LazyLoader(types.ModuleType):
     module = self._load()
     return dir(module)
 
+
 # Load TensorFlow and PyTorch lazily to prevent pulling them in when unnecessary.
 torch = LazyLoader('torch', globals(), 'torch')
 torch_data = LazyLoader('torch_data', globals(), 'torch.utils.data')
 torchvision = LazyLoader('torchvision', globals(), 'torchvision')
 tf = LazyLoader('tensorflow', globals(), 'tensorflow')
+
 
 ######### GENERAL METHODS #########
 
@@ -143,7 +167,10 @@ def _convert_image_to_torch(image):
         return torch.tensor(image)
     if isinstance(image, torch.Tensor) or image.ndim == 4:
         return image
-    return torch.from_numpy(image).permute(2, 0, 1).float()
+    if image.shape[0] > image.shape[-1]:
+        return torch.from_numpy(image).permute(2, 0, 1).float()
+    return torch.from_numpy(image)
+
 
 def _postprocess_torch_annotation(image):
     """Post-processes a spatially augmented torch annotation."""
@@ -154,6 +181,7 @@ def _postprocess_torch_annotation(image):
         pass
     return image
 
+
 def _multi_tensor_stack(tensors):
     """Stacks multiple tensors together."""
     if get_backend() == 'tf':
@@ -162,6 +190,38 @@ def _multi_tensor_stack(tensors):
         return torch.stack(tensors, dim = 0)
 
 ######### AGMLDATALOADER METHODS #########
+
+class AgMLObject(object):
+    """Base class for the `AgMLDataLoader` to enable inheritance.
+
+    This class solves a bug which arises when trying to dynamically
+    inherit from `tf.keras.utils.Sequence` and/or `torch.utils.data.Dataset`.
+    The fact that the `AgMLDataLoader` has this `AgMLObject` as a subclass
+    enables it to be able to handle dynamic inheritance. This is the sole
+    purpose of this subclass, it does not have any features.
+    """
+
+
+def _add_dataset_to_mro(inst, mode):
+    """Adds the relevant backend class to the `AgMLDataLoader` MRO.
+
+    This allows for the loader to dynamically inherent from the
+    `tf.keras.utils.Sequence` and `torch.utils.data.Dataset`.
+    """
+    if mode == 'tf':
+        if not get_backend() == 'tf':
+            if user_changed_backend():
+                raise StrictBackendError(change = 'tf', obj = inst)
+            set_backend('tf')
+        if tf.keras.utils.Sequence not in inst.__class__.__bases__:
+            inst.__class__.__bases__ += (tf.keras.utils.Sequence, )
+    if mode == 'torch':
+        if not get_backend() == 'torch':
+            if user_changed_backend():
+                raise StrictBackendError(change = 'torch', obj = inst)
+        if torch_data.Dataset not in inst.__class__.__bases__:
+            inst.__class__.__bases__ += (torch_data.Dataset,)
+
 
 def _swap_loader_mro(inst, mode):
     if mode == 'tf':
@@ -199,11 +259,12 @@ def _check_image_classification_transform(transform):
             "Got unknown preprocessing transform (not a method, "
             f"or a TensorFlow/PyTorch preprocessing pipeline): {transform}.")
 
+
 def _tf_check_sequential_preprocessing_pipeline(model):
     """Checks that a Sequential model passed to a dataset is valid."""
     if not isinstance(model, tf.keras.models.Sequential):
         if 'torchvision' in model.__module__:
-            if _was_backend_changed():
+            if user_changed_backend():
                 raise TypeError(
                     "Backend was manually set to `tensorflow`, "
                     "but got a PyTorch transformation.")
@@ -228,7 +289,7 @@ def _torch_check_torchvision_preprocessing_pipeline(transforms):
     """Checks that a torchvision transform pipeline is valid."""
     if 'torchvision' not in transforms.__module__:
         if isinstance(transforms, tf.keras.models.Sequential):
-            if _was_backend_changed():
+            if user_changed_backend():
                 raise TypeError(
                     "Backend was manually set to `torch`, but got"
                     "a TensorFlow preprocessing model.")

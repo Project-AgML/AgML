@@ -13,7 +13,21 @@
 # limitations under the License.
 
 __version__ = '0.13'
+__all__ = ['data', 'backend', 'viz']
 
+# If AgML is being imported for the first time, then we need to setup
+# the module, namely prepping the config file.
+def _setup():
+    import os as _os
+    import json as _json
+    if not _os.path.exists(_os.path.expanduser('~/.agml')):
+        _os.makedirs(_os.path.expanduser('~/.agml'))
+        with open(_os.path.join(
+                _os.path.expanduser('~/.agml/config.json')), 'w') as f:
+            _json.dump({'dataset_path': _os.path.expanduser('~/.agml/datasets')}, f)
+_setup(); del _setup # noqa
+
+# There are no top-level imported functions or classes, only the modules.
 from . import data, backend, viz
 
 

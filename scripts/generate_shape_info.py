@@ -36,7 +36,7 @@ datasets = ap.parse_args().datasets
 
 # Load in the original contents of the shape info file.
 shape_info_file = os.path.join(
-        os.path.expanduser('~'), '.agml', '.shape.info.pickle')
+        os.path.dirname(__file__), 'agml', '_assets', 'shape_info.pickle')
 if os.path.exists(shape_info_file):
     with open(shape_info_file, 'rb') as f:
         shape_contents = pickle.load(f)
@@ -50,7 +50,8 @@ if datasets[0] == 'all':
 # Parse through and update the shape contents.
 for ds in tqdm(datasets, desc = 'Processing Datasets'):
     current_shapes, leave = [], True
-    if not os.path.exists(os.path.join(os.path.expanduser('~'), '.agml', 'datasets', ds)):
+    if not os.path.exists(os.path.join(
+            os.path.expanduser('~'), '.agml', 'datasets', ds)):
         leave = False
     loader = agml.data.AgMLDataLoader(ds)
     for contents in tqdm(loader, desc = 'Loader Iteration', leave = False):
