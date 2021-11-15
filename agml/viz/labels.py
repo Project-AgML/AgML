@@ -18,6 +18,7 @@ import matplotlib.pyplot as plt
 from agml.viz.tools import auto_resolve_image, show_when_allowed, format_image
 from agml.utils.general import is_array_like, as_scalar
 
+
 def _inference_best_shape(n_images):
     """Inferences the best matplotlib row/column layout.
 
@@ -32,6 +33,7 @@ def _inference_best_shape(n_images):
             a = i
             b = n_images // a
     return [b, a]
+
 
 @show_when_allowed
 @auto_resolve_image
@@ -87,6 +89,11 @@ def visualize_images_with_labels(images, labels = None, *, info = None, shape = 
             "Invalid format for `images` and `labels`, see documentation.")
     if isinstance(images, np.ndarray) and images.shape[0] > 100:
         images, labels = [images], [labels]
+
+    # Check if the labels are converted to one-hot, and re-convert them back.
+    if isinstance(labels, np.ndarray):
+        if labels.ndim == 2:
+            labels = np.argmax(labels, axis = -1)
 
     # If a prime number is passed, e.g. 23, then the `_inference_best_shape`
     # method will return the shape of (23, 1). Likely, the user is expecting

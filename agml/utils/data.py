@@ -18,6 +18,7 @@ import shutil
 import difflib
 import functools
 
+
 @functools.lru_cache(maxsize = None)
 def load_public_sources():
     """Loads the public data sources JSON file."""
@@ -25,6 +26,7 @@ def load_public_sources():
             os.path.dirname(os.path.dirname(__file__)),
             '_assets/public_datasources.json')) as f:
         return json.load(f)
+
 
 @functools.lru_cache(maxsize = None)
 def load_citation_sources():
@@ -34,6 +36,7 @@ def load_citation_sources():
             '_assets/source_citations.json')) as f:
         return json.load(f)
 
+
 def maybe_you_meant(name, msg, source = None):
     """Suggests potential correct spellings for an invalid name."""
     source = source if source is not None \
@@ -42,6 +45,7 @@ def maybe_you_meant(name, msg, source = None):
     if len(suggestion) == 0:
         return msg
     return msg + f" Maybe you meant: '{suggestion[0]}'?"
+
 
 def copyright_print(name, location = None):
     """Prints out license/copyright info after a dataset download."""

@@ -19,7 +19,7 @@ import numpy as np
 from agml.utils.downloads import download_dataset as _download # noqa
 from agml.utils.data import load_public_sources
 from agml.data.metadata import DatasetMetadata
-from agml.backend.config import default_data_save_path
+from agml.backend.config import data_save_path
 
 class _PublicSourceFilter(object):
     """Filters public datasets based on the input filters."""
@@ -166,7 +166,7 @@ def download_public_dataset(dataset, location = None):
     The local directory of the dataset.
     """
     location = location if location \
-                        else default_data_save_path()
+                        else data_save_path()
     _download(dataset, location)
     return location
 

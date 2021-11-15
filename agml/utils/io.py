@@ -25,6 +25,7 @@ def _is_valid_file(file):
             return True
     return False
 
+
 def get_file_list(fpath, ext = None):
     """Gets a list of files from a path."""
     base_list = [f for f in os.listdir(fpath)
@@ -37,10 +38,12 @@ def get_file_list(fpath, ext = None):
                     any([f.endswith(i) for i in ext])]
     return base_list
 
+
 def get_dir_list(filepath):
     """Get a list of directories from a path."""
     return [f for f in os.listdir(filepath)
             if os.path.isdir(os.path.join(filepath, f))]
+
 
 def nested_dir_list(fpath):
     """Returns a nested list of directories from a path."""
@@ -54,6 +57,7 @@ def nested_dir_list(fpath):
             dirs.extend(nested_dir_list(dir_))
     return dirs
 
+
 def nested_file_list(fpath):
     """Returns a nested list of files from a path."""
     files = []
@@ -63,6 +67,15 @@ def nested_file_list(fpath):
                       if _is_valid_file(os.path.join(dir_, i))])
     return files
 
+
 def create_dir(dir_):
     """Creates a directory (or does nothing if it exists)."""
     os.makedirs(dir_, exist_ok = True)
+
+
+def recursive_dirname(dir_, level = 1):
+    """Returns a recursive dirname for the number of levels provided."""
+    if level == 0:
+        return dir_
+    return recursive_dirname(os.path.dirname(dir_), level - 1)
+
