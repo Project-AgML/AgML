@@ -20,7 +20,6 @@ from agml.framework import AgMLSerializable
 from agml.data.manager import DataManager
 from agml.data.builder import DataBuilder
 from agml.data.metadata import DatasetMetadata
-from agml.data.exporters.tensorflow import TFExporter
 from agml.utils.general import NoArgument
 from agml.backend.tftorch import (
     get_backend, set_backend,
@@ -735,6 +734,7 @@ class AgMLDataLoader(AgMLSerializable):
         as a native TensorFlow object for TensorFlow pipelines.
         """
         # Update the backend management system.
+        from agml.data.exporters.tensorflow import TFExporter
         if get_backend() != 'tf':
             if user_changed_backend():
                 raise StrictBackendError(
