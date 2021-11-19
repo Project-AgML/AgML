@@ -71,6 +71,11 @@ class ClassificationBenchmark(pl.LightningModule):
         loss = F.cross_entropy(y_pred, y)
         return loss
 
+    def validation_step(self, batch, *args, **kwargs):
+        x, y = batch
+        y_pred = self(x)
+        return F.cross_entropy(y_pred, y)
+
     def configure_optimizers(self):
         return torch.optim.Adam(self.parameters(), lr = 0.02)
 
@@ -84,7 +89,6 @@ def build_loaders(name):
     train_data.transform(
         transform = A.Compose([
             A.RandomRotate90(),
-            A.Normalize
         ])
     )
     train_ds = loader.train_data.export_torch()
