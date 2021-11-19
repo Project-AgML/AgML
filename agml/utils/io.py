@@ -14,6 +14,7 @@
 
 import os
 
+
 def _is_valid_file(file):
     """Returns whether a file is valid.
 

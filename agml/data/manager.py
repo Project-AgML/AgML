@@ -222,7 +222,7 @@ class DataManager(AgMLSerializable):
         for key, transform in transform_dict.items():
             self._transform_manager.assign(key, transform)
 
-    def _load_one_image_and_annotation(self, obj: DataObject):
+    def _load_one_image_and_annotation(self, obj):
         """Loads one image and annotation from a `DataObject`."""
         return self._train_manager.apply(
             obj = obj, batch_state = self._batch_size is not None
