@@ -47,6 +47,9 @@ class DatasetMetadata(AgMLSerializable):
     property of this class, but any additional info that is not can
     be accessed by treating the `info` object as a dictionary.
     """
+    serializable = frozenset(
+        ('name', 'metadata', 'citation_meta'))
+
     def __init__(self, name):
         self._load_source_info(name)
 
@@ -60,13 +63,6 @@ class DatasetMetadata(AgMLSerializable):
         if isinstance(other, DatasetMetadata):
             return self._name == other._name
         return False
-
-    def __getstate__(self):
-        return {
-            'name': self._name,
-            'metadata': self._metadata,
-            'citation_meta': self._citation_meta
-        }
 
     @property
     def data(self):

@@ -184,7 +184,7 @@ class TrainingManager(AgMLSerializable):
         if self._state is TrainState.FALSE:
             return contents
 
-        # In any other case other than `False`, we  resize the images.
+        # In any other case other than `False`, we resize the images.
         contents = self._resize_manager.apply(contents)
 
         # If we are in a training state or `None`, (so not an evaluation
