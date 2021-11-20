@@ -103,13 +103,17 @@ class Trainer(object):
             for (images, labels) in tqdm(
                     iter(train_ds), desc = f"Epoch {epoch}/{epochs}", file = sys.stdout):
                 # Move the data to the correct device.
-                images = torch.stack([image.to(device) for image in images])
-                labels = torch.tensor([label.to(device) for label in labels])
+                images = torch.stack([image.to(device) for image in images]).to(device)
+                labels = torch.tensor([label.to(device) for label in labels]).to(device)
 
                 # Train the model.
                 out = model(images)
                 loss = nn.CrossEntropyLoss()(out, labels)
-                train_loss.append(loss.item())
+                try:
+                    train_loss.append(loss.item())
+                except:
+                    print(labels, out, loss)
+                    raise
 
                 # Backprop and update weights.
                 optimizer.zero_grad()

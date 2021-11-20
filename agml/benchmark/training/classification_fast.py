@@ -65,7 +65,7 @@ class ClassificationBenchmark(pl.LightningModule):
     def forward(self, x):
         return self.net.forward(x)
 
-    def training_step(self, batch, *args, **kwargs):
+    def training_step(self, batch, **kwargs):
         x, y = batch
         y_pred = self(x)
         loss = F.cross_entropy(y_pred, y)
@@ -140,6 +140,7 @@ if __name__ == '__main__':
 
     # Train the model.
     train(args.dataset, args.not_pretrained, save_dir = args.checkpoint_dir)
+
 
 
 

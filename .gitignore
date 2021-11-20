@@ -135,6 +135,9 @@ dmypy.json
 __MACOSX
 .idea/
 
+# Benchmarking
+**/lightning_logs
+
 # Extra directories/files
 /**data*/
 
