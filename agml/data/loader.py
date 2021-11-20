@@ -782,7 +782,9 @@ class AgMLDataLoader(AgMLSerializable):
 
         Parameters
         ----------
-
+        loader_kwargs : optional
+            A set of keyword arguments for the `torch.utils.data.DataLoader`.
+            See the documentation for the loader for more information.
 
         Returns
         -------
@@ -796,22 +798,26 @@ class AgMLDataLoader(AgMLSerializable):
                     change = 'torch', obj = self.export_torch)
             set_backend('torch')
 
+        # Make a copy of the `AgMLDataLoader` so the following changes
+        # don't affect the original loader, just the new one.
+        obj = self.copy()
+
         # Convert to a PyTorch dataset.
-        self.as_torch_dataset()
+        obj.as_torch_dataset()
 
         # The `DataLoader` automatically batches objects using its
         # own mechanism, so we remove batching from this DataLoader.
         batch_size = loader_kwargs.pop(
-            'batch_size', self._manager._batch_size)
-        self.batch(None)
+            'batch_size', obj._manager._batch_size)
+        obj.batch(None)
         shuffle = loader_kwargs.pop(
-            'shuffle', self._manager._shuffle)
+            'shuffle', obj._manager._shuffle)
 
         # The `collate_fn` for object detection is different because
         # the COCO JSON dictionaries each have different formats. So,
         # we need to replace it with a custom function.
         collate_fn = None
-        if self.task == 'object_detection':
+        if obj.task == 'object_detection':
             def collate_fn(batch):
                 images = torch.stack(
                     [i[0] for i in batch], dim = 0)
@@ -821,7 +827,7 @@ class AgMLDataLoader(AgMLSerializable):
         # Return the DataLoader with a copy of this AgMLDataLoader, so
         # that changes to this will not affect the returned loader.
         return DataLoader(
-            self.copy(), # noqa
+            obj,
             batch_size = batch_size,
             shuffle = shuffle,
             collate_fn = collate_fn,
