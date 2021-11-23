@@ -1,4 +1,6 @@
-![AgML Logo](/figures/agml-logo.png)
+<p align="center">
+<img src="/figures/agml-logo.png" alt="agml framework" width="350" height="291">
+</p>
 
 ## Overview
 AgML is a comprehensive library for agricultural machine learning. Currently, AgML provides
