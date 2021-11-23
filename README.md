@@ -1,5 +1,5 @@
 <p align="center">
-<img src="/figures/agml-logo.png" alt="agml framework" width="350" height="291">
+<img src="/figures/agml-logo.png" alt="agml framework" width="400" height="400">
 </p>
 
 ## Overview
