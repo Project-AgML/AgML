@@ -1,4 +1,4 @@
-![AgML Logo]("https://github.com/plant-ai-biophysics-lab/AgML/blob/dev/figures/agml-logo-wide.png")
+![AgML Logo](https://github.com/plant-ai-biophysics-lab/AgML/blob/dev/figures/agml-logo-wide.png)
 
 ## Overview
 AgML is a comprehensive library for agricultural machine learning. Currently, AgML provides
