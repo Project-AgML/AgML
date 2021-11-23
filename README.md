@@ -1,4 +1,4 @@
-![alt text](https://github.com/plant-ai-biophysics-lab/AgML/blob/dev/figures/agml-logo.png)
+![alt text](https://github.com/plant-ai-biophysics-lab/AgML/blob/dev/figures/agml-logo.png | width=250)
 
 # AgML
 
