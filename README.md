@@ -1,14 +1,14 @@
-<center>
+<p align="center">
 <img src="https://github.com/plant-ai-biophysics-lab/AgML/blob/dev/figures/agml-logo.png" alt="agml logo" width="250" height="250">
-</center>
+</p>
 
 ## Overview
 AgML is a comprehensive library for agricultural machine learning. Currently, AgML provides
 access to a wealth of public agricultural datasets for common agricultural deep learning tasks. In the future, AgML will provide ag-specific ML functionality related to data, training, and evaluation. Here's a conceptual diagram of the overall framework. 
 
-<center>
+<p align="center">
 <img src="https://github.com/plant-ai-biophysics-lab/AgML/blob/dev/figures/agml-framework.png" alt="agml logo" width="350" height="291">
-</center>
+</p>
 
 ## Installation
 
