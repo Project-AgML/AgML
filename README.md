@@ -1,5 +1,5 @@
 <p align="center">
-<img src="https://github.com/plant-ai-biophysics-lab/AgML/blob/dev/figures/agml-logo.png" alt="agml logo" width="250" height="250">
+<img src="https://github.com/plant-ai-biophysics-lab/AgML/blob/dev/figures/agml-logo-wide.png" alt="agml logo">
 </p>
 
 ## Overview
