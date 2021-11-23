@@ -163,7 +163,6 @@ class AgMLDataLoader(AgMLSerializable):
 
         # Load a new `DataManager` and update its internal managers
         # using the state of the existing loader's `DataManager`.
-        #
         builder = DataBuilder.from_data(
             contents = contents,
             info = self.info,
@@ -172,6 +171,12 @@ class AgMLDataLoader(AgMLSerializable):
         new_manager = DataManager.__new__(DataManager)
         current_manager.pop('builder')
         current_manager['builder'] = builder
+
+        # Build the new accessors and construct the `DataManager`.
+        accessors = np.arange(len(builder.get_contents()))
+        if self._manager._shuffle:
+            np.random.shuffle(accessors)
+        current_manager['accessors'] = accessors
         new_manager.__setstate__(current_manager)
 
         # Instantiate a new `AgMLDataLoader` from the contents.
@@ -180,6 +185,9 @@ class AgMLDataLoader(AgMLSerializable):
         loader['manager'] = new_manager
         cls = super(AgMLDataLoader, self).__new__(AgMLDataLoader)
         cls.__setstate__(loader)
+        for attr in ['train', 'val', 'test']:
+            setattr(cls, f'_{attr}_data', None)
+        print(len(cls._builder.get_contents()))
         cls._is_split = True
         return cls
 

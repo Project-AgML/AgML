@@ -17,6 +17,7 @@ import pytest
 import agml.data as agdata
 import numpy as np
 
+
 @pytest.fixture
 def coco_example():
     return [
@@ -57,9 +58,11 @@ def coco_example():
         }
     ]
 
+
 def test_coco_bbox_extraction(coco_example):
     bboxes = [b['bbox'] for b in coco_example]
     assert agdata.coco_to_bboxes(coco_example)[0].tolist() == bboxes
+
 
 def test_coco_formatting_rearrange(coco_example):
     bboxes = agdata.coco_to_bboxes(coco_example)[0]
@@ -68,6 +71,7 @@ def test_coco_formatting_rearrange(coco_example):
     bboxes[:, [1, 3]] = bboxes[:, [3, 1]]
     assert np.all(agdata.convert_bbox_format(
         bboxes, 'width height x1 y1') == og_bboxes)
+
 
 def test_coco_formatting_minmax():
     eg_box = [[100, 500, 200, 700]]
