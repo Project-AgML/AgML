@@ -101,7 +101,7 @@ class OneHotLabelTransform(TransformApplierBase):
         # in the `_transform` parameter is simply the number of labels.
         one_hot = np.zeros(shape = (self._transform, ))
         one_hot[labels - 1] = 1
-        return one_hot.astype(np.int32)
+        return one_hot.astype(np.float32)
 
 
 

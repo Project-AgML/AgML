@@ -11,13 +11,15 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import argparse
+
 import os
+import argparse
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import pytorch_lightning as pl
+from torchmetrics import Accuracy
 import torchvision.models as models
 from torchvision.models import efficientnet_b4
 
@@ -25,6 +27,7 @@ import albumentations as A
 
 import agml
 
+print("CUDA Available: " + str(torch.cuda.is_available()))
 
 class ClassificationBenchmark(pl.LightningModule):
     """Represents an image classification benchmark model."""
@@ -34,6 +37,7 @@ class ClassificationBenchmark(pl.LightningModule):
         self._source = agml.data.source(dataset)
         self._pretrained = pretrained
         self._build_model(model)
+        self._accuracy = Accuracy()
 
     def _build_model(self, name):
         """Constructs the actual image classification model."""
@@ -59,22 +63,29 @@ class ClassificationBenchmark(pl.LightningModule):
             nn.Linear(1000, 256),
             nn.Dropout(0.1),
             nn.Linear(256, self._source.num_classes),
-            nn.ReLU()
+            nn.Softmax()
         )
 
     def forward(self, x):
         return self.net.forward(x)
 
-    def training_step(self, batch, **kwargs):
+    def training_step(self, batch, *args, **kwargs):
         x, y = batch
         y_pred = self(x)
         loss = F.cross_entropy(y_pred, y)
-        return loss
+        self._accuracy(torch.argmax(y_pred, dim = 0), torch.argmax(y, dim = 0))
+        return {
+            'loss': loss,
+            'accuracy': self._accuracy,
+        }
 
     def validation_step(self, batch, *args, **kwargs):
         x, y = batch
         y_pred = self(x)
-        return F.cross_entropy(y_pred, y)
+        print(y_pred, y)
+        return {
+            'val_loss': F.cross_entropy(y_pred, y)
+        }
 
     def configure_optimizers(self):
         return torch.optim.Adam(self.parameters(), lr = 0.02)
@@ -84,16 +95,17 @@ class ClassificationBenchmark(pl.LightningModule):
 def build_loaders(name):
     loader = agml.data.AgMLDataLoader(name)
     loader.split(train = 0.8, val = 0.1, test = 0.1)
-    loader.batch(batch_size = 8)
+    loader.batch(batch_size = 16)
+    loader.labels_to_one_hot()
     train_data = loader.train_data
     train_data.transform(
         transform = A.Compose([
             A.RandomRotate90(),
         ])
     )
-    train_ds = loader.train_data.export_torch()
-    val_ds = loader.val_data.export_torch()
-    test_ds = loader.test_data.export_torch()
+    train_ds = train_data.export_torch(num_workers = 8)
+    val_ds = loader.val_data.export_torch(num_workers = 8)
+    test_ds = loader.test_data.export_torch(num_workers = 8)
     return train_ds, val_ds, test_ds
 
 
@@ -106,7 +118,9 @@ def train(dataset, pretrained, model = None, save_dir = None):
     # Set up the checkpoint saving callback.
     callbacks = [
         pl.callbacks.ModelCheckpoint(
-            dirpath = save_dir, monitor = 'val_loss', mode = 'min')]
+            dirpath = save_dir, mode = 'min',
+            filename = "{epoch}-{val_loss:.2f}",
+            save_top_k = -1)]
 
     # Construct the model.
     model = ClassificationBenchmark(
@@ -117,7 +131,7 @@ def train(dataset, pretrained, model = None, save_dir = None):
 
     # Create the trainer and train the model.
     trainer = pl.Trainer(
-        max_epochs = 100, gpus = 1, callbacks = callbacks)
+        max_epochs = 50, gpus = 1, callbacks = callbacks)
     trainer.fit(
         model = model,
         train_dataloaders = train_ds,
