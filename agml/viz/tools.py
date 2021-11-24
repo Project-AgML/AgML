@@ -38,13 +38,16 @@ def _load_colormaps():
         ret_dict[map_[0]] = {int(k): v for k, v in map_[1].items()}
     return ret_dict
 
+
 _COLORMAPS = _load_colormaps()
 _COLORMAP_CHOICE = 'default'
+
 
 def get_colormap():
     """Returns the current AgML colormap."""
     global _COLORMAPS, _COLORMAP_CHOICE
     return _COLORMAPS[_COLORMAP_CHOICE]
+
 
 def set_colormap(colormap):
     """Sets the current AgML colormap used in color displays.
@@ -66,6 +69,7 @@ def set_colormap(colormap):
     if colormap not in _COLORMAPS.keys():
         raise ValueError(f"Invalid colormap {colormap} received.")
     _COLORMAP_CHOICE = colormap
+
 
 def auto_resolve_image(f):
     """Resolves an image path or image into a read-in image."""
@@ -90,6 +94,7 @@ def auto_resolve_image(f):
         return f(image, *args, **kwargs)
     return _resolver
 
+
 def show_when_allowed(f):
     """Stops running `plt.show()` when in a Jupyter Notebook."""
     _in_notebook = False
@@ -107,6 +112,7 @@ def show_when_allowed(f):
             plt.show()
         return res
     return _cancel_display
+
 
 def format_image(img):
     """Formats an image to be used in a Matplotlib visualization.
@@ -129,6 +135,7 @@ def format_image(img):
     -------
     An np.ndarray formatted correctly for a Matplotlib visualization.
     """
+    # Get the numpy array from the image type.
     if isinstance(img, np.ndarray):
         img = img
     elif isinstance(img, Image.Image):
@@ -155,6 +162,12 @@ def format_image(img):
     # Remove the grayscale axis.
     if img.shape[-1] == 1:
         img = np.squeeze(img)
+
+    # If the image is in range 0-255 but a float image, then
+    # we need to convert it to an integer type.
+    if np.issubdtype(img.dtype, np.inexact):
+        if not img.max() <= 1:  # noqa
+            img = img.astype(np.uint8)
 
     return img
 

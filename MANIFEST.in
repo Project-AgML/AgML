@@ -1,2 +1,4 @@
 include README.md
 include agml/_assets/*.json
+include agml/_assets/shape_info.pickle
+prune agml/_internal

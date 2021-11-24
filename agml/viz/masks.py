@@ -22,9 +22,11 @@ from agml.viz.tools import (
     format_image, get_colormap, auto_resolve_image, show_when_allowed
 )
 
+
 def _reduce_categorical_mask(mask):
     """Reduces a categorical mask label to one-dimensional."""
     return np.argmax(mask)
+
 
 def _preprocess_mask(mask):
     """Preprocesses a mask with a distinct colorscheme."""
@@ -45,10 +47,12 @@ def _preprocess_mask(mask):
         label_indx += 1
     return mask
 
+
 def _mask_2d_to_3d(mask):
     """Converts a mask from 2-dimensional to channel-by-channel."""
+    mask = np.squeeze(mask)
     channels = np.unique(mask)[1:]
-    out = np.zeros(shape = (*mask.shape[:2], max(channels)))
+    out = np.zeros(shape = (*mask.shape[:2], int(max(channels))))
     iter_idx = 1
     while True:
         if iter_idx > max(channels):
@@ -63,6 +67,7 @@ def _mask_2d_to_3d(mask):
         out[:, :, iter_idx - 1] = channel
         iter_idx += 1
     return out
+
 
 def output_to_mask(mask):
     """Converts an output annotation mask into a visual segmentation mask.
@@ -82,6 +87,7 @@ def output_to_mask(mask):
     The colorful visually formatted mask.
     """
     return _preprocess_mask(mask)
+
 
 @show_when_allowed
 @auto_resolve_image
@@ -118,6 +124,7 @@ def visualize_image_and_mask(image, mask = None):
         ax.set_aspect('equal')
         ax.axis('off')
     return fig
+
 
 @show_when_allowed
 @auto_resolve_image
@@ -161,6 +168,7 @@ def visualize_image_mask_and_predicted(image, mask = None, predicted = None):
         ax.set_aspect('equal')
         ax.axis('off')
     return fig
+
 
 @auto_resolve_image
 def overlay_segmentation_masks(image, mask = None, border = True):
@@ -214,6 +222,7 @@ def overlay_segmentation_masks(image, mask = None, border = True):
                     image, pts = [contour], isClosed = True,
                     color = color, thickness = 2)
     return image
+
 
 @show_when_allowed
 @auto_resolve_image

@@ -138,13 +138,16 @@ __MACOSX
 # Extra directories/files
 /**data*/
 
-agml/_helios/Helios/
-agml/_helios/output/
-agml/_helios/xmloutput_for_helios/
-
 **/**test*.*
 !tests/*/*
 agml/_helios
-agml/_internal
 agml/helios_config.sh
 agml/train
+
+# Controls for the `_internal` directory.
+agml/_internal/*
+!agml/_internal/preprocess*.py
+!agml/_internal/s3internal.py
+!agml/_internal/__init__.py
+
+*.pptx

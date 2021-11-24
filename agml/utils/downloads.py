@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import os
-import sys
 import zipfile
 
 from tqdm import tqdm
@@ -22,6 +21,7 @@ from agml.utils.data import (
     load_public_sources, maybe_you_meant, copyright_print
 )
 from agml.utils.logging import log
+
 
 def download_dataset(dataset_name, dest_dir):
     """
@@ -64,7 +64,7 @@ def download_dataset(dataset_name, dest_dir):
             r = sess.get(url, stream = True)
             r.raise_for_status()
             content_size = int(r.headers['Content-Length'])
-            pg = tqdm(total = content_size, file = sys.stdout,
+            pg = tqdm(total = content_size,
                       desc = f"Downloading {dataset_name} "
                              f"(size = {round(content_size/ 1000000, 1)} MB)")
             with open(dataset_download_path, 'wb') as f:

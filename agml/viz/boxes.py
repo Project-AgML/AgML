@@ -20,8 +20,10 @@ from agml.utils.general import resolve_tuple_values, as_scalar, scalar_unpack
 from agml.data.tools import _resolve_coco_annotations # noqa
 from agml.viz.tools import get_colormap, auto_resolve_image, format_image, show_when_allowed
 
+
 def _resolve_proportional_bboxes(coords, shape):
     """Resolves float vs. integer bounding boxes."""
+    coords = scalar_unpack(coords)
     if all(isinstance(i, float) for i in coords):
         if coords[0] <= 1:
             x, y, width, height = coords
@@ -34,6 +36,7 @@ def _resolve_proportional_bboxes(coords, shape):
     raise TypeError(
         f"Got multiple types for coordinates: "
         f"{[type(i) for i in coords]}.")
+
 
 @auto_resolve_image
 def annotate_bboxes_on_image(image, bboxes = None, labels = None):
@@ -79,6 +82,7 @@ def annotate_bboxes_on_image(image, bboxes = None, labels = None):
                       (x2, y2),
                       get_colormap()[as_scalar(label)], 2)
     return image
+
 
 @show_when_allowed
 @auto_resolve_image

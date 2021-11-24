@@ -19,7 +19,9 @@ import functools
 
 import numpy as np
 
+
 __all__ = ['generate_keras_segmentation_dual_transform']
+
 
 def generate_keras_segmentation_dual_transform(*layers):
     """Generates a `dual_transform` pipeline from Keras preprocessing layers.

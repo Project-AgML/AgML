@@ -16,6 +16,7 @@ import numpy as np
 
 from agml.utils.general import resolve_list_value
 
+
 def _resolve_coco_annotations(annotations):
     """Resolves COCO annotations to a standard format.
 
@@ -53,6 +54,7 @@ def _resolve_coco_annotations(annotations):
             "Expected either a single COCO annotation "
             "dictionary or a list of multiple dictionaries.")
 
+
 def coco_to_bboxes(annotations):
     """Extracts the bounding boxes and labels from COCO JSON annotations.
 
@@ -72,6 +74,7 @@ def coco_to_bboxes(annotations):
     """
     annotations = _resolve_coco_annotations(annotations)
     return annotations['bboxes'], annotations['labels']
+
 
 def convert_bbox_format(annotations_or_bboxes, fmt):
     """Converts bounding box formats for COCO JSON and others.
@@ -94,7 +97,7 @@ def convert_bbox_format(annotations_or_bboxes, fmt):
 
     Parameters
     ----------
-    annotations_or_bboxes : {np.ndarray, dict}
+    annotations_or_bboxes : {np.ndarray, list, dict}
         Either a COCO JSON annotation dictionary, or a numpy array/list
         with all of the annotations.
     fmt : {list, tuple}

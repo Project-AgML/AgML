@@ -20,6 +20,7 @@ import pytest
 import agml.data as agdata
 from agml.utils.data import load_public_sources
 
+
 def test_location_filters():
     uganda_filter = agdata.public_data_sources(
         location = 'country:uganda')
@@ -27,9 +28,11 @@ def test_location_filters():
     for source in agdata.public_data_sources(location = 'country:australia'):
         assert source.location.continent == 'oceania'
 
+
 def test_num_images_filters():
     for source in agdata.public_data_sources(n_images = '>1000'):
         assert int(float(load_public_sources()[source.name]['n_images'])) >= 1000
+
 
 def test_source_download():
     local_path = os.path.join(
