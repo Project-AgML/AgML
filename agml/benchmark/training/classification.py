@@ -18,10 +18,10 @@ import argparse
 
 import torch
 import torch.nn as nn
-import torchvision.transforms as T
 from torchvision.models import efficientnet_b4
 
 from tqdm import tqdm
+import albumentations as A
 
 import agml
 from agml.utils.io import recursive_dirname
@@ -43,8 +43,8 @@ def build_loaders(name):
     loader.batch(batch_size = 8)
     train_data = loader.train_data
     train_data.transform(
-        T.Compose([
-            T.ToTensor(), T.RandomHorizontalFlip()
+        transform = A.Compose([
+            A.RandomRotate90(),
         ])
     )
     train_ds = loader.train_data.export_torch()
