@@ -15,7 +15,7 @@
 
 # Get the path to this script.
 # shellcheck disable=SC2164
-SELF_PATH="$(dirname "$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )")"
+SELF_PATH="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 
 # Run the info generation scripts.
 python3 "$SELF_PATH/generate_normalization_info.py" --dataset all
