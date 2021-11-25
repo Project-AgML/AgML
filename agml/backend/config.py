@@ -55,6 +55,7 @@ def data_save_path():
     global DATASET_SAVE_DIR
     return DATASET_SAVE_DIR
 
+
 def set_data_save_path(location = None):
     """Sets the default dataset save path for AgML.
 

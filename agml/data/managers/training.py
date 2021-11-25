@@ -135,9 +135,9 @@ class TrainingManager(AgMLSerializable):
 
         # Set the correct 'eval' mode, based on the prior state.
         elif t_(state) == TrainState.EVAL:
-            if self._state in TrainState.TF:
+            if self._state == TrainState.TF:
                 self._state = TrainState.EVAL_TF
-            elif self._state in TrainState.TORCH:
+            elif self._state == TrainState.TORCH:
                 self._state = TrainState.EVAL_TORCH
             else:
                 self._state = TrainState.EVAL

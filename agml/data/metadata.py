@@ -59,6 +59,9 @@ class DatasetMetadata(AgMLSerializable):
     def __str__(self):
         return self._name
 
+    def __fspath__(self):
+        return self._name
+
     def __eq__(self, other):
         if isinstance(other, DatasetMetadata):
             return self._name == other._name
@@ -121,6 +124,13 @@ class DatasetMetadata(AgMLSerializable):
         Location = collections.namedtuple('Location', ['continent', 'country'])
         continent, country = self._metadata['location'].values()
         return Location(continent = continent, country = country)
+
+    @property
+    def image_stats(self):
+        """Returns the mean and standard deviation of the RGB images."""
+        ImageStats = collections.namedtuple('ImageStats', ['mean', 'std'])
+        mean, std = self._metadata['stats'].values()
+        return ImageStats(mean = mean, std = std)
 
     @property
     def sensor_modality(self):

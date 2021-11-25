@@ -179,6 +179,11 @@ class AgMLDataLoader(AgMLSerializable):
         current_manager['accessors'] = accessors
         new_manager.__setstate__(current_manager)
 
+        # Batching data needs to be done independently.
+        if current_manager['batch_size'] is not None:
+            new_manager.batch_data(
+                batch_size = current_manager['batch_size'])
+
         # Instantiate a new `AgMLDataLoader` from the contents.
         loader = self.copy().__getstate__()
         loader['builder'] = builder
@@ -187,7 +192,6 @@ class AgMLDataLoader(AgMLSerializable):
         cls.__setstate__(loader)
         for attr in ['train', 'val', 'test']:
             setattr(cls, f'_{attr}_data', None)
-        print(len(cls._builder.get_contents()))
         cls._is_split = True
         return cls
 
@@ -644,6 +648,25 @@ class AgMLDataLoader(AgMLSerializable):
             transform = transform,
             target_transform = target_transform,
             dual_transform = dual_transform
+        )
+
+    def normalize_images(self):
+        """Converts images from 0-255 integers to 0-1 floats and normalizes.
+
+        This is a convenience method to convert all images from integer-valued
+        arrays into float-valued arrays, and normalizes them (using shifting
+        and scaling from mean and std). This is useful for training in order
+        to reduce computational complexity (instead of large-valued integer
+        multiplication, only float multiplication), and for extracting the
+        most information out of different types of imagery.
+
+        Note: When setting the loader into `train` mode (using either one of
+        `as_keras_sequence` or `as_torch_dataset`), images will automatically
+        be converted to the 0-1 range. However, this method must be called
+        if you want to normalize the images as well.
+        """
+        self.transform(
+            transform = ('normalize', self._info.image_stats)
         )
 
     def labels_to_one_hot(self):
