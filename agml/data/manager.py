@@ -166,7 +166,11 @@ class DataManager(AgMLSerializable):
         # then update the existing batch sizes. For unbatching the data,
         # update the batch state and then flatten the accessor array.
         if self._batch_size is not None:
-            self._accessors = np.concatenate(self._accessors).ravel()
+            try:
+                self._accessors = np.concatenate(self._accessors).ravel()
+            except ValueError:
+                # The array is currently 0-dimensional.
+                pass
         if batch_size is None or batch_size == 0:
             self._batch_size = None
             return

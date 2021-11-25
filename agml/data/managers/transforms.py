@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import copy
 import types
 import inspect
 import functools
@@ -27,6 +26,7 @@ from agml.data.managers.transform_helpers import (
     AlbumentationsTransformMask,
     AlbumentationsTransformCOCO,
     SameStateImageMaskTransform,
+    NormalizationTransform,
     OneHotLabelTransform
 )
 from agml.utils.logging import log
@@ -224,6 +224,12 @@ class TransformManager(AgMLSerializable):
         # This case is used for clearing a transformation.
         if transform is None:
             return None
+
+        # A special case for when the transform is `normalize`.
+        if isinstance(transform, tuple):
+            if transform[0] == 'normalize':
+                mean, std = transform[1].mean, transform[1].std
+                return NormalizationTransform((mean, std))
 
         # A general functional transformation. We don't verify what happens in
         # the function. The only check which occurs here that the signature of
