@@ -130,6 +130,13 @@ class DatasetMetadata(AgMLSerializable):
         return Location(continent = continent, country = country)
 
     @property
+    def image_stats(self):
+        """Returns the mean and standard deviation of the RGB images."""
+        ImageStats = collections.namedtuple('ImageStats', ['mean', 'std'])
+        mean, std = self._metadata['stats'].values()
+        return ImageStats(mean = mean, std = std)
+
+    @property
     def sensor_modality(self):
         return self._metadata['sensor_modality']
 

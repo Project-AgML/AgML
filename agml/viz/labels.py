@@ -91,8 +91,8 @@ def visualize_images_with_labels(images, labels = None, *, info = None, shape = 
         images, labels = [images], [labels]
 
     # Check if the labels are converted to one-hot, and re-convert them back.
-    if isinstance(labels, np.ndarray):
-        if labels.ndim == 2:
+    if is_array_like(labels):
+        if labels.ndim == 2: # noqa
             labels = np.argmax(labels, axis = -1)
 
     # If a prime number is passed, e.g. 23, then the `_inference_best_shape`

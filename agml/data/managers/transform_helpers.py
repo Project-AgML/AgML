@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import abc
-import copy
 
 import numpy as np
 
@@ -93,6 +92,21 @@ class SameStateImageMaskTransform(TransformApplierBase):
             context.reset()
             mask = self._transform(mask)
         return image, mask
+
+
+class NormalizationTransform(TransformApplierBase):
+    def apply(self, image):
+        # This method applies normalization to input images, scaling them
+        # to a 0-1 float range, and performing scaling normalization.
+        if image.max() >= 1 or np.issubdtype(image.dtype, np.integer):
+            image = (image / 255).astype(np.float32)
+
+        mean, std = self._transform
+        mean = np.array(mean, dtype = np.float32)
+        std = np.array(std, dtype = np.float32)
+        denominator = np.reciprocal(std, dtype = np.float32)
+        image = (image - mean) * denominator
+        return image
 
 
 class OneHotLabelTransform(TransformApplierBase):
