@@ -39,7 +39,7 @@ source_info_file = os.path.join(
         os.path.dirname(os.path.dirname(__file__)),
         'agml', '_assets', 'public_datasources.json')
 if os.path.exists(source_info_file):
-    with open(source_info_file, 'rb') as f:
+    with open(source_info_file, 'r') as f:
         source_info = json.load(f)
 else:
     raise ValueError(f"The public data source file is missing "
@@ -51,7 +51,7 @@ if datasets[0] == 'all':
 
 # Parse through and calculate the mean/std.
 for ds in tqdm(datasets, desc = 'Processing Datasets'):
-    current_shapes, leave = [], True
+    leave = True
     if not os.path.exists(os.path.join(
             os.path.expanduser('~'), '.agml', 'datasets', ds)):
         leave = False
@@ -66,12 +66,17 @@ for ds in tqdm(datasets, desc = 'Processing Datasets'):
         image = np.reshape(np.transpose(image, (2, 0, 1)), (3, -1))
         mean += image.mean(-1)
         std += image.std(-1)
-    print(mean / num_images, std / num_images)
+    mean /= num_images
+    std /= num_images
 
-    source_info[loader.name] = np.unique(
-        current_shapes, return_counts = True, axis = 0)
+    source_info[loader.name]['stats'] = {
+        'mean': mean,
+        'std': std
+    }
     if not leave:
         shutil.rmtree(loader.dataset_root)
 
+with open(source_info_file, 'w') as f:
+    json.dump(source_info, f)
 
 
