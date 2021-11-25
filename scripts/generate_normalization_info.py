@@ -48,6 +48,8 @@ else:
 # Determine which datasets to download.
 if datasets[0] == 'all':
     datasets = agml.data.public_data_sources()
+else:
+    datasets = [agml.data.source(i) for i in datasets]
 
 # Parse through and calculate the mean/std.
 for ds in tqdm(datasets, desc = 'Processing Datasets'):
@@ -66,17 +68,17 @@ for ds in tqdm(datasets, desc = 'Processing Datasets'):
         image = np.reshape(np.transpose(image, (2, 0, 1)), (3, -1))
         mean += image.mean(-1)
         std += image.std(-1)
-    mean /= num_images
-    std /= num_images
-
+    mean = tuple((mean / num_images).tolist()) # noqa
+    std = tuple((std / num_images).tolist()) # noqa
     source_info[loader.name]['stats'] = {
-        'mean': mean,
-        'std': std
+        'mean': tuple(mean),
+        'std': tuple(std)
     }
+    print(source_info[loader.name])
     if not leave:
         shutil.rmtree(loader.dataset_root)
 
 with open(source_info_file, 'w') as f:
-    json.dump(source_info, f)
+    json.dump(source_info, f, indent = 4)
 
 
