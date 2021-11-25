@@ -56,6 +56,9 @@ class DatasetMetadata(AgMLSerializable):
     def __str__(self):
         return self._name
 
+    def __fspath__(self):
+        return self._name
+
     def __eq__(self, other):
         if isinstance(other, DatasetMetadata):
             return self._name == other._name
