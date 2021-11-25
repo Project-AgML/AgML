@@ -74,7 +74,6 @@ for ds in tqdm(datasets, desc = 'Processing Datasets'):
         'mean': tuple(mean),
         'std': tuple(std)
     }
-    print(source_info[loader.name])
     if not leave:
         shutil.rmtree(loader.dataset_root)
 
