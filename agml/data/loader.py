@@ -583,7 +583,6 @@ class AgMLDataLoader(AgMLSerializable):
 
         The hierarchy in which transforms are applied is:
 
-
              transform  ->  --------|
                                     |----->   dual_transform
              target_transform ->  --|
@@ -639,7 +638,7 @@ class AgMLDataLoader(AgMLSerializable):
         - Albumentations transforms are special in that even transforms which
           would normally be passed to `dual_transform` (e.g., they act on the
           input image and the output annotation) can simply be passed to the
-          `transform` method and they will automatically be applied.
+          `transform` argument and they will automatically be applied.
         """
         self._manager.push_transforms(
             transform = transform,
