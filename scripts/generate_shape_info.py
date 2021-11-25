@@ -52,7 +52,7 @@ if datasets[0] == 'all':
 for ds in tqdm(datasets, desc = 'Processing Datasets'):
     current_shapes, leave = [], True
     if not os.path.exists(os.path.join(
-            os.path.expanduser('~'), '.agml', 'datasets', ds)):
+            os.path.expanduser('~'), '.agml', 'datasets', ds.name)):
         leave = False
     loader = agml.data.AgMLDataLoader(ds)
     for contents in tqdm(loader, desc = 'Loader Iteration', leave = False):
