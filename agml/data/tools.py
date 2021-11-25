@@ -97,7 +97,7 @@ def convert_bbox_format(annotations_or_bboxes, fmt):
 
     Parameters
     ----------
-    annotations_or_bboxes : {np.ndarray, dict}
+    annotations_or_bboxes : {np.ndarray, list, dict}
         Either a COCO JSON annotation dictionary, or a numpy array/list
         with all of the annotations.
     fmt : {list, tuple}

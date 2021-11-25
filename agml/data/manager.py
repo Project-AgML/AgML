@@ -171,6 +171,11 @@ class DataManager(AgMLSerializable):
             self._batch_size = None
             return
 
+        # If we have a batch size of `1`, then don't do anything
+        # since this doesn't really mean to do anything.
+        if batch_size == 1:
+            return
+
         # Otherwise, calculate the actual batches and the overflow
         # of the contents, and then update the accessor.
         num_splits = len(self._accessors) // batch_size
