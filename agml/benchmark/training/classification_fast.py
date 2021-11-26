@@ -95,7 +95,7 @@ class ClassificationBenchmark(pl.LightningModule):
 def build_loaders(name):
     loader = agml.data.AgMLDataLoader(name)
     loader.split(train = 0.8, val = 0.1, test = 0.1)
-    loader.batch(batch_size = 8)
+    loader.batch(batch_size = 16)
     loader.normalize_images()
     loader.labels_to_one_hot()
     train_data = loader.train_data
@@ -104,8 +104,8 @@ def build_loaders(name):
             A.RandomRotate90(),
         ])
     )
-    train_ds = train_data.export_torch()
-    val_ds = loader.val_data.export_torch()
+    train_ds = train_data.export_torch(num_workers = 8)
+    val_ds = loader.val_data.export_torch(num_workers = 8)
     test_ds = loader.test_data.as_torch_dataset().eval()
     return train_ds, val_ds, test_ds
 
