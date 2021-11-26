@@ -24,7 +24,7 @@ def _setup():
         _os.makedirs(_os.path.expanduser('~/.agml'))
         with open(_os.path.join(
                 _os.path.expanduser('~/.agml/config.json')), 'w') as f:
-            _json.dump({'dataset_path': _os.path.expanduser('~/.agml/datasets')}, f)
+            _json.dump({'data_path': _os.path.expanduser('~/.agml/datasets')}, f)
 _setup(); del _setup # noqa
 
 # There are no top-level imported functions or classes, only the modules.
