@@ -150,7 +150,7 @@ class TrainingManager(AgMLSerializable):
                     raise StrictBackendError(
                         change = 'torch', obj = t_(state))
                 set_backend('torch')
-            self._resize_manager.assign('auto')
+            self._resize_manager.assign('train-auto')
         elif t_(state) == TrainState.TF:
             self._state = TrainState.TF
             if get_backend() == 'torch':
@@ -158,7 +158,7 @@ class TrainingManager(AgMLSerializable):
                     raise StrictBackendError(
                         change = 'tf', obj = t_(state))
                 set_backend('tf')
-            self._resize_manager.assign('auto')
+            self._resize_manager.assign('train-auto')
 
         # Set the default conversion (`None`).
         elif t_(state) == TrainState.NONE:
