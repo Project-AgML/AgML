@@ -115,14 +115,19 @@ class ImageResizeManager(AgMLSerializable):
                     f"the height and width but got {len(kind)} values.")
             self._resize_type = 'custom_size'
             self._image_size = tuple(*kind)
-        elif kind == 'auto':
-            info = self._maybe_load_shape_info()
-            if info is None:
-                shape = self._random_inference_shape()
-            else:
-                shape = self._inference_shape(info)
-            self._resize_type = 'auto'
-            self._image_size = resolve_tuple(shape)
+        elif 'auto' in kind:
+            # This means that the dataloader has been exported in some format.
+            # First, we check whether a different size has automatically been
+            # set, since if it has, we don't want to override that size.
+            if kind == 'train-auto':
+                if self._resize_type == 'default':
+                    info = self._maybe_load_shape_info()
+                    if info is None:
+                        shape = self._random_inference_shape()
+                    else:
+                        shape = self._inference_shape(info)
+                    self._resize_type = 'auto'
+                    self._image_size = resolve_tuple(shape)
 
     def apply(self, contents):
         """Applies the resizing operation to the input data."""
