@@ -138,7 +138,7 @@ class TFExporter(object):
     def _image_classification_load(image, label):
         image = tf.cast(tf.image.decode_jpeg(
             tf.io.read_file(image)), tf.float32) / 255.
-        return image, tf.constant(label)
+        return image, tf.convert_to_tensor(label)
 
     @staticmethod
     @tf.function
