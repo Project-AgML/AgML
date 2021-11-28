@@ -232,7 +232,7 @@ class AgMLDataLoader(AgMLSerializable):
             self._test_data, split = 'test')
         return self._test_data
 
-    def eval(self):
+    def eval(self) -> "AgMLDataLoader":
         """Sets the `AgMLDataLoader` in evaluation mode.
 
         Evaluation mode disables transforms, and only keeps the loader applying
@@ -258,7 +258,7 @@ class AgMLDataLoader(AgMLSerializable):
         self._manager.update_train_state('eval')
         return self
 
-    def disable_preprocessing(self):
+    def disable_preprocessing(self) -> "AgMLDataLoader":
         """Disables all preprocessing on the `AgMLDataLoader`.
 
         This sets the loader in a no-preprocessing mode (represented internally as
@@ -279,7 +279,7 @@ class AgMLDataLoader(AgMLSerializable):
         self._manager.update_train_state(False)
         return self
 
-    def reset_preprocessing(self):
+    def reset_preprocessing(self) -> "AgMLDataLoader":
         """Re-enables preprocessing on the `AgMLDataLoader`.
 
         This resets the loader back to its default train state, namely where it

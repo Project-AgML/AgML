@@ -27,14 +27,23 @@ import agml
 from agml.utils.io import recursive_dirname
 
 # Build the model with the correct image classification head.
-def build_model(name):
-    return nn.Sequential(
-        efficientnet_b4(pretrained = False),
-        nn.Linear(1000, 256),
-        nn.Dropout(0.1),
-        nn.Linear(256, agml.data.source(name).num_classes),
-        nn.Softmax()
-    )
+# Build a wrapper class for the `EfficientNetB4` model.
+class EfficientNetB4Transfer(nn.Module):
+    def __init__(self, num_classes):
+        super(EfficientNetB4Transfer, self).__init__()
+        self.base = efficientnet_b4(pretrained = False)
+        self.l1 = nn.Linear(1000, 256)
+        self.dropout = nn.Dropout(0.1)
+        self.relu = nn.ReLU()
+        self.l2 = nn.Linear(256, num_classes)
+        self.out = nn.Softmax()
+
+    def forward(self, x, **kwargs):
+        x = self.base(x)
+        x = x.view(x.size(0), -1)
+        x = self.dropout(self.relu(self.l1(x)))
+        x = self.out(self.l2(x))
+        return x
 
 # Build the data loaders.
 def build_loaders(name):
@@ -181,7 +190,7 @@ def execute():
 
     # Execute the program.
     train, val, test = build_loaders(args.dataset)
-    net = build_model(args.dataset)
+    net = EfficientNetB4Transfer(args.dataset)
     Trainer().fit(net, train_ds = train, val_ds = val,
                   dataset = args.dataset, save_all = args.save_all)
 
