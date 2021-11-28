@@ -49,7 +49,7 @@ def build_loaders(name):
             A.RandomRotate90(),
         ])
     )
-    train_ds = loader.train_data.export_torch(
+    train_ds = train_data.export_torch(
         num_workers = os.cpu_count())
     val_ds = loader.val_data.export_torch(
         num_workers = os.cpu_count())

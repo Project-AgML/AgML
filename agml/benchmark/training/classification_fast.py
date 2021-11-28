@@ -27,7 +27,6 @@ import albumentations as A
 
 import agml
 
-print("CUDA Available: " + str(torch.cuda.is_available()))
 
 class ClassificationBenchmark(pl.LightningModule):
     """Represents an image classification benchmark model."""
@@ -69,17 +68,18 @@ class ClassificationBenchmark(pl.LightningModule):
     def forward(self, x):
         return self.net.forward(x)
 
-    def training_step(self, batch, *args, **kwargs):
+    def training_step(self, batch, *args, **kwargs): # noqa
         x, y = batch
         y_pred = self(x)
         loss = F.cross_entropy(y_pred, y)
         self._accuracy(torch.argmax(y_pred, dim = 0), torch.argmax(y, dim = 0))
+        self.log('acc', self._accuracy, prog_bar = True)
         return {
             'loss': loss,
             'accuracy': self._accuracy,
         }
 
-    def validation_step(self, batch, *args, **kwargs):
+    def validation_step(self, batch, *args, **kwargs): # noqa
         x, y = batch
         y_pred = self(x)
         print(y_pred, y)
@@ -88,25 +88,30 @@ class ClassificationBenchmark(pl.LightningModule):
         }
 
     def configure_optimizers(self):
-        return torch.optim.Adam(self.parameters(), lr = 0.02)
+        return torch.optim.Adam(self.parameters(), lr = 0.01)
 
 
 # Build the data loaders.
 def build_loaders(name):
     loader = agml.data.AgMLDataLoader(name)
     loader.split(train = 0.8, val = 0.1, test = 0.1)
-    loader.batch(batch_size = 16)
-    loader.normalize_images()
+    loader.batch(batch_size = 8)
     loader.labels_to_one_hot()
+    loader.resize_images('imagenet')
     train_data = loader.train_data
     train_data.transform(
         transform = A.Compose([
             A.RandomRotate90(),
         ])
     )
-    train_ds = train_data.export_torch(num_workers = 8)
-    val_ds = loader.val_data.export_torch(num_workers = 8)
-    test_ds = loader.test_data.as_torch_dataset().eval()
+    train_ds = train_data.export_torch(
+        num_workers = os.cpu_count())
+    val_ds = loader.val_data.export_torch(
+        num_workers = os.cpu_count())
+    test_data = loader.test_data
+    test_data.eval()
+    test_ds = test_data.export_torch(
+        num_workers = os.cpu_count())
     return train_ds, val_ds, test_ds
 
 
