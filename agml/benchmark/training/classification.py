@@ -29,11 +29,11 @@ from agml.utils.io import recursive_dirname
 # Build the model with the correct image classification head.
 def build_model(name):
     return nn.Sequential(
-        efficientnet_b4(pretrained = True),
+        efficientnet_b4(pretrained = False),
         nn.Linear(1000, 256),
         nn.Dropout(0.1),
         nn.Linear(256, agml.data.source(name).num_classes),
-        nn.ReLU()
+        nn.Softmax()
     )
 
 # Build the data loaders.
@@ -41,15 +41,20 @@ def build_loaders(name):
     loader = agml.data.AgMLDataLoader(name)
     loader.split(train = 0.8, val = 0.1, test = 0.1)
     loader.batch(batch_size = 8)
+    loader.labels_to_one_hot()
+    loader.resize_images('imagenet')
     train_data = loader.train_data
     train_data.transform(
         transform = A.Compose([
             A.RandomRotate90(),
         ])
     )
-    train_ds = loader.train_data.export_torch()
-    val_ds = loader.val_data.export_torch()
-    test_ds = loader.test_data.export_torch()
+    train_ds = loader.train_data.export_torch(
+        num_workers = os.cpu_count())
+    val_ds = loader.val_data.export_torch(
+        num_workers = os.cpu_count())
+    test_ds = loader.test_data.export_torch(
+        num_workers = os.cpu_count())
     return train_ds, val_ds, test_ds
 
 
