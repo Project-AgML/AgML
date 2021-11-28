@@ -54,16 +54,19 @@ class DataObject(AgMLSerializable):
         # dictionary doesn't contain the full path, only the base.
         self._dataset_root = root
 
-    @staticmethod
-    def _parse_image(path):
-        with imread_context(os.path.realpath(path)) as image:
-            return cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-
     def __len__(self):
         return 2
 
     def __getitem__(self, i):
         return self.get()[i]
+
+    def __repr__(self):
+        return f"<DataObject: {self._image_path}, {self._annotation_obj}>"
+
+    @staticmethod
+    def _parse_image(path):
+        with imread_context(os.path.realpath(path)) as image:
+            return cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
     def get(self):
         """Returns the image and annotation pair with applied transforms.
