@@ -45,13 +45,17 @@ class EfficientNetB4Transfer(nn.Module):
         x = self.out(self.l2(x))
         return x
 
+# Helper method (convenience).
+def export_torch(obj):
+    return obj.export_torch(num_workers = 8)
+
 # Build the data loaders.
 def build_loaders(name):
     loader = agml.data.AgMLDataLoader(name)
     loader.split(train = 0.8, val = 0.1, test = 0.1)
-    loader.batch(batch_size = 8)
-    loader.labels_to_one_hot()
+    loader.batch(batch_size = 16)
     loader.resize_images('imagenet')
+    loader.labels_to_one_hot()
     train_data = loader.train_data
     train_data.transform(
         transform = A.Compose([
@@ -90,6 +94,7 @@ class Trainer(object):
         save_all = kwargs.pop('save_all', False)
         self._checkpoint_dir = os.path.join(
             self._checkpoint_dir, kwargs['dataset'])
+        os.makedirs(self._checkpoint_dir, exist_ok = True)
         if log:
             log_file = os.path.join(self._checkpoint_dir, 'log.txt')
             open(log_file, 'w').close()
@@ -104,7 +109,6 @@ class Trainer(object):
         # Initialize training state variables.
         print(f"Training EfficientNetB4 on '{kwargs['dataset']}': "
               f"{epochs} epochs, writing checkpoints to {self._checkpoint_dir}.")
-        epoch_loss, best_loss = 0, 1000.
         model.train()
 
         # Start the training loop.
@@ -115,19 +119,15 @@ class Trainer(object):
             # Iterate through the training data loader.
             model.train()
             for (images, labels) in tqdm(
-                    iter(train_ds), desc = f"Epoch {epoch}/{epochs}", file = sys.stdout):
+                    iter(train_ds), desc = f"Epoch {epoch + 1}/{epochs}", file = sys.stdout):
                 # Move the data to the correct device.
-                images = torch.stack([image.to(device) for image in images]).to(device)
-                labels = torch.tensor([label.to(device) for label in labels]).to(device)
+                images = images.to(device)
+                labels = labels.to(device)
 
                 # Train the model.
                 out = model(images)
                 loss = nn.CrossEntropyLoss()(out, labels)
-                try:
-                    train_loss.append(loss.item())
-                except:
-                    print(labels, out, loss)
-                    raise
+                train_loss.append(loss.item())
 
                 # Backprop and update weights.
                 optimizer.zero_grad()
@@ -136,10 +136,11 @@ class Trainer(object):
 
             # Iterate through the validation data loader.
             model.eval()
-            for (images, labels) in val_ds:
+            for (images, labels) in tqdm(
+                    iter(val_ds), "Validating"):
                 # Move the data to the correct device.
-                images = torch.stack([image.to(device) for image in images])
-                labels = torch.tensor([label.to(device) for label in labels])
+                images = images.to(device)
+                labels = labels.to(device)
 
                 # Calculate the validation metrics.
                 with torch.no_grad():
@@ -148,11 +149,10 @@ class Trainer(object):
                     val_loss.append(loss)
 
             # Print out metrics.
-            final_loss = epoch_loss[-1]
-            epoch_loss = torch.tensor(epoch_loss)
-            avg_epoch_loss = torch.mean(epoch_loss)
+            final_loss = train_loss[-1]
+            train_loss = torch.mean(torch.tensor(train_loss))
             final_val_loss = val_loss[-1]
-            print(f"Average Loss: {avg_epoch_loss:.4f}, "
+            print(f"Average Loss: {train_loss:.4f}, "
                   f"Epoch Loss: {final_loss:.4f}, "
                   f"Validation Loss: {final_val_loss:.4f}")
 
@@ -170,7 +170,7 @@ class Trainer(object):
                            f"epoch_{epoch}_loss_{final_val_loss:.3f}.pth")
             torch.save(model.state_dict(), save_path)
             if not save_all:
-                for path, loss in self._saved_checkpoints:
+                for path, loss in self._saved_checkpoints.items():
                     if loss > final_val_loss:
                         os.remove(path)
             self._saved_checkpoints[save_path] = final_val_loss
@@ -191,8 +191,10 @@ def execute():
     # Execute the program.
     train, val, test = build_loaders(args.dataset)
     net = EfficientNetB4Transfer(args.dataset)
-    Trainer().fit(net, train_ds = train, val_ds = val,
-                  dataset = args.dataset, save_all = args.save_all)
+    Trainer(checkpoint_dir = args.checkpoint_dir).fit(
+        net, train_ds = train, val_ds = val,
+        dataset = args.dataset, save_all = args.save_all
+    )
 
 if __name__ == '__main__':
     execute()

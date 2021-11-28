@@ -82,7 +82,6 @@ class ClassificationBenchmark(pl.LightningModule):
     def validation_step(self, batch, *args, **kwargs): # noqa
         x, y = batch
         y_pred = self(x)
-        print(y_pred, y)
         return {
             'val_loss': F.cross_entropy(y_pred, y)
         }
@@ -98,6 +97,7 @@ def build_loaders(name):
     loader.batch(batch_size = 8)
     loader.labels_to_one_hot()
     loader.resize_images('imagenet')
+    loader.transform(lambda x: x / 255)
     train_data = loader.train_data
     train_data.transform(
         transform = A.Compose([
