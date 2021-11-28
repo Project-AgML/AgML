@@ -106,6 +106,7 @@ def show_when_allowed(f):
     except:
         pass
 
+    @functools.wraps(f)
     def _cancel_display(*args, **kwargs):
         res = f(*args, **kwargs)
         if not _in_notebook:
