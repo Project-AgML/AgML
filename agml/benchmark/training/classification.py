@@ -27,6 +27,7 @@ import albumentations as A
 import agml
 from agml.utils.io import recursive_dirname
 
+
 # Build the model with the correct image classification head.
 # Build a wrapper class for the `EfficientNetB4` model.
 class EfficientNetB4Transfer(nn.Module):
@@ -46,9 +47,6 @@ class EfficientNetB4Transfer(nn.Module):
         x = self.out(self.l2(x))
         return x
 
-# Helper method (convenience).
-def export_torch(obj):
-    return obj.export_torch(num_workers = 8)
 
 # Build the data loaders.
 def build_loaders(name):
