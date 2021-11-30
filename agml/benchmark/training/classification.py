@@ -19,6 +19,7 @@ import argparse
 import torch
 import torch.nn as nn
 from torchvision.models import efficientnet_b4
+from torchmetrics.functional import accuracy
 
 from tqdm import tqdm
 import albumentations as A
@@ -31,7 +32,7 @@ from agml.utils.io import recursive_dirname
 class EfficientNetB4Transfer(nn.Module):
     def __init__(self, num_classes):
         super(EfficientNetB4Transfer, self).__init__()
-        self.base = efficientnet_b4(pretrained = False)
+        self.base = efficientnet_b4(pretrained = True)
         self.l1 = nn.Linear(1000, 256)
         self.dropout = nn.Dropout(0.1)
         self.relu = nn.ReLU()
@@ -56,6 +57,9 @@ def build_loaders(name):
     loader.batch(batch_size = 16)
     loader.resize_images('imagenet')
     loader.labels_to_one_hot()
+    loader.transform(
+        lambda x: x / 255
+    )
     train_data = loader.train_data
     train_data.transform(
         transform = A.Compose([
@@ -114,7 +118,7 @@ class Trainer(object):
         # Start the training loop.
         for epoch in range(epochs):
             # Create epoch-state variables.
-            train_loss, val_loss = [], []
+            train_loss, val_loss, acc = [], [], []
 
             # Iterate through the training data loader.
             model.train()
@@ -125,14 +129,19 @@ class Trainer(object):
                 labels = labels.to(device)
 
                 # Train the model.
-                out = model(images)
-                loss = nn.CrossEntropyLoss()(out, labels)
-                train_loss.append(loss.item())
-
-                # Backprop and update weights.
                 optimizer.zero_grad()
-                loss.backward()
-                optimizer.step()
+                with torch.set_grad_enabled(True):
+                    out = model(images)
+                    loss = nn.CrossEntropyLoss()(out, labels)
+                    train_loss.append(loss.item())
+
+                    # Backprop and update weights.
+                    loss.backward()
+                    optimizer.step()
+
+                # Compute accuracy.
+                label_logits = torch.argmax(labels, 1)
+                acc.append(accuracy(out, label_logits))
 
             # Iterate through the validation data loader.
             model.eval()
@@ -152,7 +161,9 @@ class Trainer(object):
             final_loss = train_loss[-1]
             train_loss = torch.mean(torch.tensor(train_loss))
             final_val_loss = val_loss[-1]
+            final_acc = sum(acc) / len(acc)
             print(f"Average Loss: {train_loss:.4f}, "
+                  f"Average Accuracy: {final_acc:.4f}, ",
                   f"Epoch Loss: {final_loss:.4f}, "
                   f"Validation Loss: {final_val_loss:.4f}")
 
@@ -172,7 +183,8 @@ class Trainer(object):
             if not save_all:
                 for path, loss in self._saved_checkpoints.items():
                     if loss > final_val_loss:
-                        os.remove(path)
+                        if os.path.exists(path):
+                            os.remove(path)
             self._saved_checkpoints[save_path] = final_val_loss
 
 
@@ -190,7 +202,7 @@ def execute():
 
     # Execute the program.
     train, val, test = build_loaders(args.dataset)
-    net = EfficientNetB4Transfer(args.dataset)
+    net = EfficientNetB4Transfer(agml.data.source(args.dataset).num_classes)
     Trainer(checkpoint_dir = args.checkpoint_dir).fit(
         net, train_ds = train, val_ds = val,
         dataset = args.dataset, save_all = args.save_all
