@@ -61,6 +61,7 @@ def build_loaders(name):
     train_data = loader.train_data
     train_data.transform(
         transform = A.Compose([
+            A.Normalize(),
             A.RandomRotate90(),
         ])
     )
