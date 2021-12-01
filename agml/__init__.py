@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-__version__ = '0.2.1'
+__version__ = '0.2.2'
 __all__ = ['data', 'backend', 'viz']
 
 # If AgML is being imported for the first time, then we need to setup
@@ -24,7 +24,7 @@ def _setup():
         _os.makedirs(_os.path.expanduser('~/.agml'))
         with open(_os.path.join(
                 _os.path.expanduser('~/.agml/config.json')), 'w') as f:
-            _json.dump({'dataset_path': _os.path.expanduser('~/.agml/datasets')}, f)
+            _json.dump({'data_path': _os.path.expanduser('~/.agml/datasets')}, f)
 _setup(); del _setup # noqa
 
 # There are no top-level imported functions or classes, only the modules.

@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import copy
 from decimal import getcontext, Decimal
 
 import numpy as np
@@ -107,11 +108,14 @@ class AgMLDataLoader(AgMLSerializable):
         for indx in range(len(self)):
             yield self[indx]
 
-    def __str__(self):
+    def __repr__(self):
         out = f"<AgMLDataLoader: (dataset={self.name}"
         out += f", task={self.task}"
         out += f") at {hex(id(self))}>"
         return out
+
+    def __str__(self):
+        return repr(self)
 
     def copy(self):
         """Returns a deep copy of the data loader's contents."""
@@ -167,8 +171,7 @@ class AgMLDataLoader(AgMLSerializable):
             contents = contents,
             info = self.info,
             root = self.dataset_root)
-        current_manager = self._manager.__getstate__()
-        new_manager = DataManager.__new__(DataManager)
+        current_manager = copy.deepcopy(self._manager.__getstate__())
         current_manager.pop('builder')
         current_manager['builder'] = builder
 
@@ -177,17 +180,28 @@ class AgMLDataLoader(AgMLSerializable):
         if self._manager._shuffle:
             np.random.shuffle(accessors)
         current_manager['accessors'] = accessors
+        batch_size = current_manager.pop('batch_size')
+        current_manager['batch_size'] = None
+        new_manager = DataManager.__new__(DataManager)
         new_manager.__setstate__(current_manager)
 
+        # After the builder and accessors have been generated, we need
+        # to generate a new list of `DataObject`s.
+        new_manager._create_objects(
+            new_manager._builder, self.task)
+
+        # Batching data needs to be done independently.
+        if batch_size is not None:
+            new_manager.batch_data(batch_size = batch_size)
+
         # Instantiate a new `AgMLDataLoader` from the contents.
-        loader = self.copy().__getstate__()
-        loader['builder'] = builder
-        loader['manager'] = new_manager
+        loader_state = self.copy().__getstate__()
+        loader_state['builder'] = builder
+        loader_state['manager'] = new_manager
         cls = super(AgMLDataLoader, self).__new__(AgMLDataLoader)
-        cls.__setstate__(loader)
+        cls.__setstate__(loader_state)
         for attr in ['train', 'val', 'test']:
             setattr(cls, f'_{attr}_data', None)
-        print(len(cls._builder.get_contents()))
         cls._is_split = True
         return cls
 
@@ -197,7 +211,7 @@ class AgMLDataLoader(AgMLSerializable):
         if isinstance(self._train_data, AgMLDataLoader):
             return self._train_data
         self._train_data = self._generate_split_loader(
-            self._train_data, split = 'val')
+            self._train_data, split = 'train')
         return self._train_data
 
     @property
@@ -290,7 +304,7 @@ class AgMLDataLoader(AgMLSerializable):
         """
         self._manager._maybe_shuffle()
 
-    def as_keras_sequence(self):
+    def as_keras_sequence(self) -> "AgMLDataLoader":
         """Sets the `DataLoader` in TensorFlow mode.
 
         This TensorFlow extension converts the loader into a TensorFlow mode,
@@ -320,7 +334,7 @@ class AgMLDataLoader(AgMLSerializable):
         self._manager.update_train_state('tf')
         return self
 
-    def as_torch_dataset(self):
+    def as_torch_dataset(self) -> "AgMLDataLoader":
         """Sets the `DataLoader` in PyTorch mode.
 
         This PyTorch extension converts the loader into a PyTorch mode, adding
@@ -644,6 +658,25 @@ class AgMLDataLoader(AgMLSerializable):
             transform = transform,
             target_transform = target_transform,
             dual_transform = dual_transform
+        )
+
+    def normalize_images(self):
+        """Converts images from 0-255 integers to 0-1 floats and normalizes.
+
+        This is a convenience method to convert all images from integer-valued
+        arrays into float-valued arrays, and normalizes them (using shifting
+        and scaling from mean and std). This is useful for training in order
+        to reduce computational complexity (instead of large-valued integer
+        multiplication, only float multiplication), and for extracting the
+        most information out of different types of imagery.
+
+        Note: When setting the loader into `train` mode (using either one of
+        `as_keras_sequence` or `as_torch_dataset`), images will automatically
+        be converted to the 0-1 range. However, this method must be called
+        if you want to normalize the images as well.
+        """
+        self.transform(
+            transform = ('normalize', self._info.image_stats)
         )
 
     def labels_to_one_hot(self):

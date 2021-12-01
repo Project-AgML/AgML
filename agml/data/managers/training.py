@@ -135,9 +135,9 @@ class TrainingManager(AgMLSerializable):
 
         # Set the correct 'eval' mode, based on the prior state.
         elif t_(state) == TrainState.EVAL:
-            if self._state in TrainState.TF:
+            if self._state == TrainState.TF:
                 self._state = TrainState.EVAL_TF
-            elif self._state in TrainState.TORCH:
+            elif self._state == TrainState.TORCH:
                 self._state = TrainState.EVAL_TORCH
             else:
                 self._state = TrainState.EVAL
@@ -150,7 +150,7 @@ class TrainingManager(AgMLSerializable):
                     raise StrictBackendError(
                         change = 'torch', obj = t_(state))
                 set_backend('torch')
-            self._resize_manager.assign('auto')
+            self._resize_manager.assign('train-auto')
         elif t_(state) == TrainState.TF:
             self._state = TrainState.TF
             if get_backend() == 'torch':
@@ -158,7 +158,7 @@ class TrainingManager(AgMLSerializable):
                     raise StrictBackendError(
                         change = 'tf', obj = t_(state))
                 set_backend('tf')
-            self._resize_manager.assign('auto')
+            self._resize_manager.assign('train-auto')
 
         # Set the default conversion (`None`).
         elif t_(state) == TrainState.NONE:

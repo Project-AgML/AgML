@@ -23,6 +23,7 @@ from agml.utils.data import (
     load_public_sources, load_citation_sources, maybe_you_meant, copyright_print
 )
 
+
 class DatasetMetadata(AgMLSerializable):
     """Stores metadata about a certain AgML dataset.
 
@@ -47,6 +48,8 @@ class DatasetMetadata(AgMLSerializable):
     property of this class, but any additional info that is not can
     be accessed by treating the `info` object as a dictionary.
     """
+    serializable = frozenset(('name', 'metadata', 'citation_meta'))
+
     def __init__(self, name):
         self._load_source_info(name)
 
@@ -56,17 +59,13 @@ class DatasetMetadata(AgMLSerializable):
     def __str__(self):
         return self._name
 
+    def __fspath__(self):
+        return self._name
+
     def __eq__(self, other):
         if isinstance(other, DatasetMetadata):
             return self._name == other._name
         return False
-
-    def __getstate__(self):
-        return {
-            'name': self._name,
-            'metadata': self._metadata,
-            'citation_meta': self._citation_meta
-        }
 
     @property
     def data(self):
@@ -125,6 +124,13 @@ class DatasetMetadata(AgMLSerializable):
         Location = collections.namedtuple('Location', ['continent', 'country'])
         continent, country = self._metadata['location'].values()
         return Location(continent = continent, country = country)
+
+    @property
+    def image_stats(self):
+        """Returns the mean and standard deviation of the RGB images."""
+        ImageStats = collections.namedtuple('ImageStats', ['mean', 'std'])
+        mean, std = self._metadata['stats'].values()
+        return ImageStats(mean = mean, std = std)
 
     @property
     def sensor_modality(self):

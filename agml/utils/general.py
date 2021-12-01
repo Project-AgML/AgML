@@ -90,7 +90,6 @@ def scalar_unpack(inp):
 
 def is_array_like(inp):
     """Determines if an input is a np.ndarray, torch.Tensor, or tf.Tensor."""
-    import numpy as np
     if isinstance(inp, np.ndarray):
         return True
     from agml.backend.tftorch import torch
