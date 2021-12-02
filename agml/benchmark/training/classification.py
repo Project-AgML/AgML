@@ -21,6 +21,7 @@ import torch
 import torch.nn as nn
 from torchvision.models import efficientnet_b4
 
+import numpy as np
 from tqdm import tqdm
 import albumentations as A
 
@@ -38,39 +39,39 @@ class EfficientNetB4Transfer(nn.Module):
         self.dropout = nn.Dropout(0.1)
         self.relu = nn.ReLU()
         self.l2 = nn.Linear(256, num_classes)
-        self.out = nn.Softmax()
 
     def forward(self, x, **kwargs):
         x = self.base(x)
         x = x.view(x.size(0), -1)
         x = self.dropout(self.relu(self.l1(x)))
-        x = self.out(self.l2(x))
+        x = self.l2(x)
         return x
+
+
+def to_0_1_range(x):
+    return (x / 255).astype(np.float32)
 
 
 # Build the data loaders.
 def build_loaders(name):
     loader = agml.data.AgMLDataLoader(name)
     loader.split(train = 0.8, val = 0.1, test = 0.1)
-    loader.batch(batch_size = 16)
+    loader.batch(batch_size = 2)
+    loader.transform(
+        transform = to_0_1_range
+    )
     loader.resize_images('imagenet')
     loader.labels_to_one_hot()
-    loader.transform(
-        lambda x: x / 255
-    )
     train_data = loader.train_data
     train_data.transform(
         transform = A.Compose([
-            A.Normalize(),
+            A.Normalize(max_pixel_value = 1.0),
             A.RandomRotate90(),
         ])
     )
-    train_ds = train_data.export_torch(
-        num_workers = os.cpu_count())
-    val_ds = loader.val_data.export_torch(
-        num_workers = os.cpu_count())
-    test_ds = loader.test_data.export_torch(
-        num_workers = os.cpu_count())
+    train_ds = train_data.copy()
+    val_ds = loader.val_data
+    test_ds = loader.test_data
     return train_ds, val_ds, test_ds
 
 
@@ -278,6 +279,7 @@ def execute():
         '--checkpoint_dir', type = str, default = '/data2/amnjoshi/checkpoints',
         help = "The checkpoint directory to save to.")
     args = ap.parse_args()
+    args.dataset = 'bean_disease_uganda'
 
     # Execute the program.
     train, val, test = build_loaders(args.dataset)

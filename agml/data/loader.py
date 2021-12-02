@@ -190,6 +190,13 @@ class AgMLDataLoader(AgMLSerializable):
         new_manager._create_objects(
             new_manager._builder, self.task)
 
+        # Update the `TransformManager` and `ResizeManager` of the
+        # `TrainManager` in the `DataManager` (they need to be synchronized).
+        new_manager._train_manager._transform_manager = \
+            new_manager._transform_manager
+        new_manager._train_manager._resize_manager = \
+            new_manager._resize_manager
+
         # Batching data needs to be done independently.
         if batch_size is not None:
             new_manager.batch_data(batch_size = batch_size)

@@ -76,7 +76,7 @@ class TransformManager(AgMLSerializable):
             transform_dict[name] = state.copy()
         return transform_dict
 
-    def assign(self, kind, transform,):
+    def assign(self, kind, transform):
         """Assigns a new transform to the manager."""
         prev = self._transforms.get(kind, None)
 
@@ -109,7 +109,7 @@ class TransformManager(AgMLSerializable):
             if t_(kind) == TransformKind.Transform:
                 transform = self._construct_single_image_transform(transform)
             elif t_(kind) == TransformKind.TargetTransform:
-                if isinstance(transform, tuple):  # a special convenience case
+                if isinstance(transform, tuple): # a special convenience case
                     if transform[0] == 'one_hot':
                         transform = OneHotLabelTransform(transform[1])
             else:
