@@ -94,7 +94,19 @@ class SameStateImageMaskTransform(TransformApplierBase):
         return image, mask
 
 
-class NormalizationTransform(TransformApplierBase):
+class NormalizationTransformBase(TransformApplierBase, abc.ABC):
+    """A subclass to mark transforms as normalizing transforms."""
+    pass
+
+
+class ScaleTransform(NormalizationTransformBase):
+    def apply(self, image):
+        if image.max() >= 1 or np.issubdtype(image.dtype, np.integer):
+            image = (image / 255).astype(np.float32)
+        return image
+
+
+class NormalizationTransform(NormalizationTransformBase):
     def apply(self, image):
         # This method applies normalization to input images, scaling them
         # to a 0-1 float range, and performing scaling normalization.

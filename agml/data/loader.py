@@ -667,7 +667,7 @@ class AgMLDataLoader(AgMLSerializable):
             dual_transform = dual_transform
         )
 
-    def normalize_images(self):
+    def normalize_images(self, method = 'scale'):
         """Converts images from 0-255 integers to 0-1 floats and normalizes.
 
         This is a convenience method to convert all images from integer-valued
@@ -677,13 +677,44 @@ class AgMLDataLoader(AgMLSerializable):
         multiplication, only float multiplication), and for extracting the
         most information out of different types of imagery.
 
-        Note: When setting the loader into `train` mode (using either one of
-        `as_keras_sequence` or `as_torch_dataset`), images will automatically
-        be converted to the 0-1 range. However, this method must be called
-        if you want to normalize the images as well.
+        There are three different 'normalization' modes that can be initialized
+        with this method, as described below:
+
+        1. `scale`: This simply scales images from the 0-255 pixel range to
+           the 0-1 range (and converts them to floats as such).
+        2. `imagenet`: This performs normalization using the traditional ImageNet
+           mean and standard deviation:
+                (mean = [0.485, 0.456, 0.406], std = [0.229, 0.224, 0.225])
+           This is useful when trying to conduct transfer learning, for instance.
+        3. `standard`: This performs normalization using a pre-calculated mean
+           and standard deviation for the dataset (see the public sources JSON).
+
+        To remove normalization altogether, pass `None` as a parameter.
+
+        Parameters
+        ----------
+        method : str
+            The method by which to normalize the images.
+
+        Notes
+        -----
+        This method is not implicitly called when converting to PyTorch/TensorFlow
+        mode, it needs to be manually called even if you just want 0-1 scaled images.
         """
+        if method not in ['scale', 'imagenet', 'standard', None]:
+            raise ValueError(f"Received invalid normalization method: '{method}'.")
+
+        if method == 'scale':
+            normalization_params = 'scale'
+        elif method == 'imagenet':
+            normalization_params = 'imagenet'
+        elif method == 'standard':
+            normalization_params = self._info.image_stats
+        else:
+            normalization_params = None
+
         self.transform(
-            transform = ('normalize', self._info.image_stats)
+            transform = ('normalize', normalization_params)
         )
 
     def labels_to_one_hot(self):
