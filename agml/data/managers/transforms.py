@@ -26,6 +26,8 @@ from agml.data.managers.transform_helpers import (
     AlbumentationsTransformMask,
     AlbumentationsTransformCOCO,
     SameStateImageMaskTransform,
+    NormalizationTransformBase,
+    ScaleTransform,
     NormalizationTransform,
     OneHotLabelTransform
 )
@@ -107,7 +109,7 @@ class TransformManager(AgMLSerializable):
         # Validate the transformation based on the task and kind.
         if self._task == 'image_classification':
             if t_(kind) == TransformKind.Transform:
-                transform = self._construct_single_image_transform(transform)
+                transform = self._maybe_normalization_or_regular_transform(transform)
             elif t_(kind) == TransformKind.TargetTransform:
                 if isinstance(transform, tuple):  # a special convenience case
                     if transform[0] == 'one_hot':
@@ -118,24 +120,25 @@ class TransformManager(AgMLSerializable):
                                  "input as a `transform` or `target_transform`.")
         elif self._task == 'semantic_segmentation':
             if t_(kind) == TransformKind.Transform:
-                transform = self._construct_single_image_transform(transform)
+                transform = self._maybe_normalization_or_regular_transform(transform)
             elif t_(kind) == TransformKind.TargetTransform:
-                transform = self._construct_single_image_transform(transform)
+                transform = self._maybe_normalization_or_regular_transform(transform)
             else:
                 transform = self._construct_image_and_mask_transform(transform)
         elif self._task == 'object_detection':
             if t_(kind) == TransformKind.Transform:
-                transform = self._construct_single_image_transform(transform)
+                transform = self._maybe_normalization_or_regular_transform(transform)
             elif t_(kind) == TransformKind.TargetTransform:
                 pass
             else:
                 transform = self._construct_image_and_coco_transform(transform)
 
         # Add the transformation to the internal storage.
-        if prev is not None:
-            self._transforms[kind].append(transform)
-        else:
-            self._transforms[kind] = [transform]
+        if transform is not None:
+            if prev is not None:
+                self._transforms[kind].append(transform)
+            else:
+                self._transforms[kind] = [transform]
 
     def apply(self, contents):
         """Applies a transform to a set of input data.
@@ -207,6 +210,55 @@ class TransformManager(AgMLSerializable):
             # Otherwise, raise the default exception.
             raise Exception(default_msg)
 
+    def _maybe_normalization_or_regular_transform(self, transform):
+        """Dispatches to the correct single-image transform construction."""
+        if isinstance(transform, tuple):
+            if transform[0] == 'normalize':
+                return self._build_normalization_transform(transform)
+        return self._construct_single_image_transform(transform)
+
+    def _build_normalization_transform(self, transform):
+        """Constructs a normalization transform if passed.
+
+        This is a special case for transforms passed by the `normalize_images`
+        'method of the `AgMLDataLoader`, since these are treated almost as
+        their own independent management system in terms of resetting or
+        applying them in a different method. This is called by `assign`.
+        """
+        # First, we check if a normalization transform already exists
+        # within the transform dict, and then we get its location.
+        norm_transform_index = -1
+        try:
+            for i, t in enumerate(self._transforms['transform']):
+                if isinstance(t, NormalizationTransformBase):
+                    norm_transform_index = i
+                    break
+        except:
+            self._transforms['transform'] = []
+
+        if transform[1] == 'scale':
+            tfm = ScaleTransform(None)
+            if norm_transform_index != -1:
+                self._transforms['transform'][norm_transform_index] = tfm
+            else:
+                self._transforms['transform'].append(tfm)
+        elif hasattr(transform[1], 'mean') or transform[1] == 'imagenet':
+            try:
+                mean, std = transform[1].mean, transform[1].std
+            except AttributeError:
+                # Default ImageNet mean and std.
+                mean = [0.485, 0.456, 0.406]
+                std = [0.229, 0.224, 0.225]
+            tfm = NormalizationTransform((mean, std))
+            if norm_transform_index != -1:
+                self._transforms['transform'][norm_transform_index] = tfm
+            else:
+                self._transforms['transform'].append(tfm)
+        elif transform[1] == 'reset':
+            if norm_transform_index != -1:
+                self._transforms['transform'].pop(norm_transform_index)
+        return
+
     # The following methods implement different checks which validate
     # as well as process input transformations, and manage the backend.
     # The transforms here will be also checked to match a specific
@@ -224,12 +276,6 @@ class TransformManager(AgMLSerializable):
         # This case is used for clearing a transformation.
         if transform is None:
             return None
-
-        # A special case for when the transform is `normalize`.
-        if isinstance(transform, tuple):
-            if transform[0] == 'normalize':
-                mean, std = transform[1].mean, transform[1].std
-                return NormalizationTransform((mean, std))
 
         # A general functional transformation. We don't verify what happens in
         # the function. The only check which occurs here that the signature of
