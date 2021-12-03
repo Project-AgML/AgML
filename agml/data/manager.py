@@ -191,6 +191,8 @@ class DataManager(AgMLSerializable):
                 np.array(self._accessors
                          [:num_splits * batch_size]), num_splits)
         except ValueError:
+            log(f"There is less data ({len(self._accessors)}) than the provided "
+                f"batch size ({batch_size}). Consider using a smaller batch size.")
             batches = [self._accessors]
         else:
             batches.append(extra_items)
