@@ -29,18 +29,21 @@ import agml
 from agml.utils.io import recursive_dirname
 
 
-# Build the model with the correct image classification head.
-# Build a wrapper class for the `EfficientNetB4` model.
 class EfficientNetB4Transfer(nn.Module):
-    def __init__(self, num_classes):
+    """Represents a transfer learning EfficientNetB4 model.
+
+    This is the base benchmarking model for image classification, using
+    the EfficientNetB4 model with two added linear fully-connected layers.
+    """
+    def __init__(self, num_classes, pretrained = True):
         super(EfficientNetB4Transfer, self).__init__()
-        self.base = efficientnet_b4(pretrained = True)
+        self.base = efficientnet_b4(pretrained = pretrained)
         self.l1 = nn.Linear(1000, 256)
         self.dropout = nn.Dropout(0.1)
         self.relu = nn.ReLU()
         self.l2 = nn.Linear(256, num_classes)
 
-    def forward(self, x, **kwargs):
+    def forward(self, x, **kwargs): # noqa
         x = self.base(x)
         x = x.view(x.size(0), -1)
         x = self.dropout(self.relu(self.l1(x)))
@@ -48,34 +51,28 @@ class EfficientNetB4Transfer(nn.Module):
         return x
 
 
-def to_0_1_range(x):
-    return (x / 255).astype(np.float32)
-
-
-# Build the data loaders.
 def build_loaders(name):
+    """This method builds the `AgMLDataLoader`s used in training.
+
+    The data is split into train, validation, and test sets of the
+    following respective percentages: 80/10/10. Images are resized
+    to the imagenet default (224, 224), and also normalized using
+    the imagenet standard. Labels vectors are converted to one-hot.
+    """
     loader = agml.data.AgMLDataLoader(name)
     loader.split(train = 0.8, val = 0.1, test = 0.1)
     loader.batch(batch_size = 2)
-    loader.transform(
-        transform = to_0_1_range
-    )
     loader.resize_images('imagenet')
+    loader.normalize_images('imagenet')
     loader.labels_to_one_hot()
     train_data = loader.train_data
-    train_data.transform(
-        transform = A.Compose([
-            A.Normalize(max_pixel_value = 1.0),
-            A.RandomRotate90(),
-        ])
-    )
-    train_ds = train_data.copy()
-    val_ds = loader.val_data
-    test_ds = loader.test_data
+    train_data.transform(transform = A.RandomRotate90())
+    train_ds = train_data.copy().as_torch_dataset()
+    val_ds = loader.val_data.as_torch_dataset()
+    test_ds = loader.test_data.as_torch_dataset()
     return train_ds, val_ds, test_ds
 
 
-# Create the training loop.
 class Trainer(object):
     """Trains a model and saves checkpoints to a save directory."""
     def __init__(self, checkpoint_dir = None):
@@ -84,6 +81,9 @@ class Trainer(object):
             checkpoint_dir = os.path.join(
                 recursive_dirname(__file__, 4), 'checkpoints')
         self._checkpoint_dir = checkpoint_dir
+
+        # Previously saved checkpoints are stored here for removal,
+        # since only the top-k checkpoints are saved during training.
         self._saved_checkpoints = dict()
 
     def fit(self,
@@ -99,18 +99,26 @@ class Trainer(object):
         self._checkpoint_dir = os.path.join(
             self._checkpoint_dir, kwargs['dataset'])
         os.makedirs(self._checkpoint_dir, exist_ok = True)
+
+        # Create the log file.
         if log:
             log_file = os.path.join(self._checkpoint_dir, 'log.txt')
-            open(log_file, 'w').close()
+            with open(log_file, 'w') as f:
+                f.write("Epoch,"
+                        "Train Loss,"
+                        "Train Accuracy,"
+                        "Val Loss,"
+                        "Val Accuracy")
 
-        # Determine if a GPU exists.
+        # Set up the device.
         device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         model = model.to(device)
 
-        # Create the optimizer.
-        optimizer = torch.optim.Adam(model.parameters())
+        # Create the optimizer and loss.
+        optimizer = torch.optim.Adam(model.parameters(), lr = 0.005)
+        criterion = nn.CrossEntropyLoss()
 
-        # Initialize training state variables.
+        # Begin training.
         print(f"Training EfficientNetB4 on '{kwargs['dataset']}': "
               f"{epochs} epochs, writing checkpoints to {self._checkpoint_dir}.")
         model.train()
@@ -118,12 +126,12 @@ class Trainer(object):
         # Start the training loop.
         for epoch in range(epochs):
             # Create epoch-state variables.
-            train_loss, val_loss, acc = [], [], []
+            train_loss, val_loss, acc, val_acc = [], [], [], []
 
             # Iterate through the training data loader.
             model.train()
             for (images, labels) in tqdm(
-                    iter(train_ds), desc = f"Epoch {epoch + 1}/{epochs}", file = sys.stdout):
+                    train_ds, desc = f"Epoch {epoch + 1}/{epochs}", file = sys.stdout):
                 # Move the data to the correct device.
                 images = images.to(device)
                 labels = labels.to(device)
@@ -132,7 +140,7 @@ class Trainer(object):
                 optimizer.zero_grad()
                 with torch.set_grad_enabled(True):
                     out = model(images)
-                    loss = nn.CrossEntropyLoss()(out, labels)
+                    loss = criterion(out, labels)
                     train_loss.append(loss.item())
 
                     # Backprop and update weights.
@@ -145,8 +153,7 @@ class Trainer(object):
 
             # Iterate through the validation data loader.
             model.eval()
-            for (images, labels) in tqdm(
-                    iter(val_ds), "Validating"):
+            for (images, labels) in tqdm(val_ds, "Validating"):
                 # Move the data to the correct device.
                 images = images.to(device)
                 labels = labels.to(device)
@@ -154,26 +161,33 @@ class Trainer(object):
                 # Calculate the validation metrics.
                 with torch.no_grad():
                     out = model(images)
-                    loss = nn.CrossEntropyLoss()(out, labels)
+                    loss = criterion(out, labels)
                     val_loss.append(loss)
+
+                # Compute accuracy.
+                label_logits = torch.argmax(labels, 1)
+                val_acc.append(accuracy(out, label_logits))
 
             # Print out metrics.
             final_loss = train_loss[-1]
-            train_loss = torch.mean(torch.tensor(train_loss))
+            train_loss = torch.mean(torch.tensor(train_loss)).item()
             final_val_loss = val_loss[-1]
-            final_acc = sum(acc) / len(acc)
+            final_acc = (sum(acc) / len(acc)).item()
+            final_val_acc = (sum(val_acc) / len(val_acc)).item()
             print(f"Average Loss: {train_loss:.4f}, "
-                  f"Average Accuracy: {final_acc:.4f}, ",
+                  f"Average Accuracy: {final_acc:.2f}%, ",
                   f"Epoch Loss: {final_loss:.4f}, "
-                  f"Validation Loss: {final_val_loss:.4f}")
+                  f"Validation Accuracy: {final_val_acc:.2f}%, "
+                  f"Validation Loss: {final_val_loss:.4f}\n")
 
             # Save info to log file.
             if log:
                 with open(log_file, 'a') as f: # noqa
-                    f.write(f"Epoch {epoch}, "
-                            f"Average Loss: {train_loss:.4f}, "
-                            f"Epoch Loss: {final_loss:.4f}, "
-                            f"Validation Loss: {final_val_loss:.4f}\n")
+                    f.write(f"{epoch},"
+                            f"{train_loss:.4f},"
+                            f"{final_acc::.2f},"
+                            f"{final_val_loss:.4f},"
+                            f"{final_val_acc:.4f}\n")
 
             # Save the checkpoint.
             save_path = os.path.join(
@@ -186,75 +200,6 @@ class Trainer(object):
                         if os.path.exists(path):
                             os.remove(path)
             self._saved_checkpoints[save_path] = final_val_loss
-
-
-class Summary(Enum):
-    NONE = 0
-    AVERAGE = 1
-    SUM = 2
-    COUNT = 3
-
-
-class AverageMeter(object):
-    """Computes and stores the average and current value"""
-    def __init__(self, name, fmt=':f', summary_type=Summary.AVERAGE):
-        self.name = name
-        self.fmt = fmt
-        self.summary_type = summary_type
-        self.reset()
-
-    def reset(self):
-        self.val = 0
-        self.avg = 0
-        self.sum = 0
-        self.count = 0
-
-    def update(self, val, n=1):
-        self.val = val
-        self.sum += val * n
-        self.count += n
-        self.avg = self.sum / self.count
-
-    def __str__(self):
-        fmtstr = '{name} {val' + self.fmt + '} ({avg' + self.fmt + '})'
-        return fmtstr.format(**self.__dict__)
-
-    def summary(self):
-        fmtstr = ''
-        if self.summary_type is Summary.NONE:
-            fmtstr = ''
-        elif self.summary_type is Summary.AVERAGE:
-            fmtstr = '{name} {avg:.3f}'
-        elif self.summary_type is Summary.SUM:
-            fmtstr = '{name} {sum:.3f}'
-        elif self.summary_type is Summary.COUNT:
-            fmtstr = '{name} {count:.3f}'
-        else:
-            raise ValueError('invalid summary type %r' % self.summary_type)
-
-        return fmtstr.format(**self.__dict__)
-
-
-class ProgressMeter(object):
-    def __init__(self, num_batches, meters, prefix=""):
-        self.batch_fmtstr = self._get_batch_fmtstr(num_batches)
-        self.meters = meters
-        self.prefix = prefix
-
-    def display(self, batch):
-        entries = [self.prefix + self.batch_fmtstr.format(batch)]
-        entries += [str(meter) for meter in self.meters]
-        print('\t'.join(entries))
-
-    def display_summary(self):
-        entries = [" *"]
-        entries += [meter.summary() for meter in self.meters]
-        print(' '.join(entries))
-
-    def _get_batch_fmtstr(self, num_batches):
-        num_digits = len(str(num_batches // 1))
-        fmt = '{:' + str(num_digits) + 'd}'
-        return '[' + fmt + '/' + fmt.format(num_batches) + ']'
 
 
 def accuracy(output, target):
@@ -279,7 +224,6 @@ def execute():
         '--checkpoint_dir', type = str, default = '/data2/amnjoshi/checkpoints',
         help = "The checkpoint directory to save to.")
     args = ap.parse_args()
-    args.dataset = 'bean_disease_uganda'
 
     # Execute the program.
     train, val, test = build_loaders(args.dataset)
