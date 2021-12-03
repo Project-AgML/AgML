@@ -17,10 +17,7 @@ import argparse
 
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 import pytorch_lightning as pl
-from torchmetrics import Accuracy
-import torchvision.models as models
 from torchvision.models import efficientnet_b4
 
 import albumentations as A
@@ -28,42 +25,44 @@ import albumentations as A
 import agml
 
 
+class EfficientNetB4Transfer(nn.Module):
+    """Represents a transfer learning EfficientNetB4 model.
+
+    This is the base benchmarking model for image classification, using
+    the EfficientNetB4 model with two added linear fully-connected layers.
+    """
+    def __init__(self, num_classes, pretrained = True):
+        super(EfficientNetB4Transfer, self).__init__()
+        self.base = efficientnet_b4(pretrained = pretrained)
+        self.l1 = nn.Linear(1000, 256)
+        self.dropout = nn.Dropout(0.1)
+        self.relu = nn.ReLU()
+        self.l2 = nn.Linear(256, num_classes)
+
+    def forward(self, x, **kwargs): # noqa
+        x = self.base(x)
+        x = x.view(x.size(0), -1)
+        x = self.dropout(self.relu(self.l1(x)))
+        x = self.l2(x)
+        return x
+
+
 class ClassificationBenchmark(pl.LightningModule):
     """Represents an image classification benchmark model."""
-    def __init__(self, dataset, pretrained = False, model = None):
+    def __init__(self, dataset, pretrained = False):
+        # Initialize the module.
         super(ClassificationBenchmark, self).__init__()
 
+        # Construct the network.
         self._source = agml.data.source(dataset)
         self._pretrained = pretrained
-        self._build_model(model)
-        self._accuracy = Accuracy()
-
-    def _build_model(self, name):
-        """Constructs the actual image classification model."""
-        if name is None:
-            base = efficientnet_b4
-        else:
-            if isinstance(name, str):
-                try:
-                    base = getattr(models, name)
-                except AttributeError:
-                    raise AttributeError(
-                        f"Got invalid benchmark name '{name}'.")
-            elif isinstance(name, nn.Module):
-                base = name
-            else:
-                raise TypeError(
-                    "Expected either an `nn.Module` or the name "
-                    "of a pretrained model in torchvision.")
-
-        # Build and store the architecture.
-        self.net = nn.Sequential(
-            base(pretrained = self._pretrained),
-            nn.Linear(1000, 256),
-            nn.Dropout(0.1),
-            nn.Linear(256, self._source.num_classes),
-            nn.Softmax()
+        self.net = EfficientNetB4Transfer(
+            self._source.num_classes,
+            self._pretrained
         )
+
+        # Construct the loss for training.
+        self.loss = nn.CrossEntropyLoss()
 
     def forward(self, x):
         return self.net.forward(x)
@@ -71,23 +70,35 @@ class ClassificationBenchmark(pl.LightningModule):
     def training_step(self, batch, *args, **kwargs): # noqa
         x, y = batch
         y_pred = self(x)
-        loss = F.cross_entropy(y_pred, y)
-        self._accuracy(torch.argmax(y_pred, dim = 0), torch.argmax(y, dim = 0))
-        self.log('acc', self._accuracy, prog_bar = True)
+        loss = self.loss(y_pred, y)
+        acc = accuracy(y_pred, torch.argmax(y, 1))
         return {
             'loss': loss,
-            'accuracy': self._accuracy,
+            'accuracy': acc
         }
 
     def validation_step(self, batch, *args, **kwargs): # noqa
         x, y = batch
         y_pred = self(x)
+        val_acc = accuracy(y_pred, torch.argmax(y, 1))
         return {
-            'val_loss': F.cross_entropy(y_pred, y)
+            'val_loss': self.loss(y_pred, y),
+            'val_accuracy': val_acc
         }
 
     def configure_optimizers(self):
-        return torch.optim.Adam(self.parameters(), lr = 0.01)
+        return torch.optim.Adam(self.parameters())
+
+
+def accuracy(output, target):
+    """Computes the accuracy between `output` and `target`."""
+    with torch.no_grad():
+        batch_size = target.size(0)
+        _, pred = torch.topk(output, 1, 1)
+        pred = pred.t()
+        correct = pred.eq(target.view(1, -1).expand_as(pred))
+        correct_k = correct[:1].reshape(-1).float().sum(0, keepdim = True)
+        return correct_k.mul_(100.0 / batch_size)
 
 
 # Build the data loaders.
@@ -130,7 +141,7 @@ def train(dataset, pretrained, model = None, save_dir = None):
 
     # Construct the model.
     model = ClassificationBenchmark(
-        dataset = dataset, pretrained = pretrained, model = model)
+        dataset = dataset, pretrained = pretrained)
 
     # Construct the data loaders.
     train_ds, val_ds, test_ds = build_loaders(dataset)
