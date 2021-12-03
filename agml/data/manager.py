@@ -186,10 +186,14 @@ class DataManager(AgMLSerializable):
         data_items = np.array(self._accessors)
         overflow = len(self._accessors) - num_splits * batch_size
         extra_items = data_items[-overflow:]
-        batches = np.array_split(
-            np.array(self._accessors
-                     [:num_splits * batch_size]), num_splits)
-        batches.append(extra_items)
+        try:
+            batches = np.array_split(
+                np.array(self._accessors
+                         [:num_splits * batch_size]), num_splits)
+        except ValueError:
+            batches = [self._accessors]
+        else:
+            batches.append(extra_items)
         self._accessors = np.array(batches, dtype = object)
         self._batch_size = batch_size
 
