@@ -61,7 +61,7 @@ def build_loaders(name):
     """
     loader = agml.data.AgMLDataLoader(name)
     loader.split(train = 0.8, val = 0.1, test = 0.1)
-    loader.batch(batch_size = 2)
+    loader.batch(batch_size = 16)
     loader.resize_images('imagenet')
     loader.normalize_images('imagenet')
     loader.labels_to_one_hot()
@@ -73,6 +73,7 @@ def build_loaders(name):
     return train_ds, val_ds, test_ds
 
 
+# Create the training loop.
 class Trainer(object):
     """Trains a model and saves checkpoints to a save directory."""
     def __init__(self, checkpoint_dir = None):
@@ -81,9 +82,6 @@ class Trainer(object):
             checkpoint_dir = os.path.join(
                 recursive_dirname(__file__, 4), 'checkpoints')
         self._checkpoint_dir = checkpoint_dir
-
-        # Previously saved checkpoints are stored here for removal,
-        # since only the top-k checkpoints are saved during training.
         self._saved_checkpoints = dict()
 
     def fit(self,
@@ -99,26 +97,19 @@ class Trainer(object):
         self._checkpoint_dir = os.path.join(
             self._checkpoint_dir, kwargs['dataset'])
         os.makedirs(self._checkpoint_dir, exist_ok = True)
-
-        # Create the log file.
         if log:
             log_file = os.path.join(self._checkpoint_dir, 'log.txt')
-            with open(log_file, 'w') as f:
-                f.write("Epoch,"
-                        "Train Loss,"
-                        "Train Accuracy,"
-                        "Val Loss,"
-                        "Val Accuracy")
+            open(log_file, 'w').close()
 
-        # Set up the device.
+        # Determine if a GPU exists.
         device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         model = model.to(device)
 
         # Create the optimizer and loss.
-        optimizer = torch.optim.Adam(model.parameters(), lr = 0.005)
+        optimizer = torch.optim.Adam(model.parameters())
         criterion = nn.CrossEntropyLoss()
 
-        # Begin training.
+        # Initialize training state variables.
         print(f"Training EfficientNetB4 on '{kwargs['dataset']}': "
               f"{epochs} epochs, writing checkpoints to {self._checkpoint_dir}.")
         model.train()
@@ -140,7 +131,7 @@ class Trainer(object):
                 optimizer.zero_grad()
                 with torch.set_grad_enabled(True):
                     out = model(images)
-                    loss = criterion(out, labels)
+                    loss = criterion(out, labels.float())
                     train_loss.append(loss.item())
 
                     # Backprop and update weights.
@@ -153,7 +144,7 @@ class Trainer(object):
 
             # Iterate through the validation data loader.
             model.eval()
-            for (images, labels) in tqdm(val_ds, "Validating"):
+            for (images, labels) in tqdm(val_ds, desc = "Validating"):
                 # Move the data to the correct device.
                 images = images.to(device)
                 labels = labels.to(device)
@@ -161,7 +152,7 @@ class Trainer(object):
                 # Calculate the validation metrics.
                 with torch.no_grad():
                     out = model(images)
-                    loss = criterion(out, labels)
+                    loss = criterion(out, labels.float())
                     val_loss.append(loss)
 
                 # Compute accuracy.
@@ -174,20 +165,19 @@ class Trainer(object):
             final_val_loss = val_loss[-1]
             final_acc = (sum(acc) / len(acc)).item()
             final_val_acc = (sum(val_acc) / len(val_acc)).item()
-            print(f"Average Loss: {train_loss:.4f}, "
-                  f"Average Accuracy: {final_acc:.2f}%, ",
+            print(f"\nAverage Loss: {train_loss:.4f}, "
+                  f"Average Accuracy: {final_acc:.4f}, ",
                   f"Epoch Loss: {final_loss:.4f}, "
-                  f"Validation Accuracy: {final_val_acc:.2f}%, "
-                  f"Validation Loss: {final_val_loss:.4f}\n")
+                  f"Validation Accuracy: {final_val_acc:.4f}, "
+                  f"Validation Loss: {final_val_loss:.4f}")
 
             # Save info to log file.
             if log:
                 with open(log_file, 'a') as f: # noqa
-                    f.write(f"{epoch},"
-                            f"{train_loss:.4f},"
-                            f"{final_acc::.2f},"
-                            f"{final_val_loss:.4f},"
-                            f"{final_val_acc:.4f}\n")
+                    f.write(f"Epoch {epoch}, "
+                            f"Average Loss: {train_loss.items():.4f}, "
+                            f"Epoch Loss: {final_loss:.4f}, "
+                            f"Validation Loss: {final_val_loss:.4f}\n")
 
             # Save the checkpoint.
             save_path = os.path.join(
