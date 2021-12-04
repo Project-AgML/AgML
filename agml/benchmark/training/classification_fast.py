@@ -126,18 +126,25 @@ def build_loaders(name):
     return train_ds, val_ds, test_ds
 
 
-def train(dataset, pretrained, model = None, save_dir = None):
+def train(dataset, pretrained, epochs, save_dir = None):
     """Constructs the training loop and trains a model."""
     if save_dir is None:
-        save_dir = os.path.join(f"/data2/amnjoshi/agml-benchmark/{dataset}")
+        save_dir = os.path.join(f"/data2/amnjoshi/checkpoints/{dataset}")
         os.makedirs(save_dir, exist_ok = True)
 
     # Set up the checkpoint saving callback.
     callbacks = [
         pl.callbacks.ModelCheckpoint(
             dirpath = save_dir, mode = 'min',
-            filename = "{epoch}-{val_loss:.2f}",
-            save_top_k = -1)]
+            filename = f"{dataset}" + "-{epoch}-{val_loss:.2f}",
+            monitor = 'val_loss',
+            save_top_k = 3),
+        pl.callbacks.EarlyStopping(
+            monitor = 'val_loss',
+            min_delta = 0.01,
+            patience = 3,
+        )
+    ]
 
     # Construct the model.
     model = ClassificationBenchmark(
@@ -148,7 +155,7 @@ def train(dataset, pretrained, model = None, save_dir = None):
 
     # Create the trainer and train the model.
     trainer = pl.Trainer(
-        max_epochs = 50, gpus = 1, callbacks = callbacks)
+        max_epochs = epochs, gpus = 1, callbacks = callbacks)
     trainer.fit(
         model = model,
         train_dataloaders = train_ds,
@@ -167,10 +174,16 @@ if __name__ == '__main__':
     ap.add_argument(
         '--checkpoint_dir', type = str, default = None,
         help = "The checkpoint directory to save to.")
+    ap.add_argument(
+        '--epochs', type = int, default = 50,
+        help = "How many epochs to train for. Default is 50.")
     args = ap.parse_args()
 
     # Train the model.
-    train(args.dataset, args.not_pretrained, save_dir = args.checkpoint_dir)
+    train(args.dataset,
+          args.not_pretrained,
+          epochs = args.epochs,
+          save_dir = args.checkpoint_dir)
 
 
 
