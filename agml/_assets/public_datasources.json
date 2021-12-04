@@ -1,10 +1,5 @@
 {
     "bean_disease_uganda": {
-        "crop_types": {
-            "1": "angular_leaf_spot",
-            "2": "bean_rust",
-            "3": "healthy"
-        },
         "ml_task": "image_classification",
         "ag_task": "disease_classification",
         "location": {
@@ -29,13 +24,14 @@
                 0.19948190450668335,
                 0.16856084764003754
             ]
+        },
+        "classes": {
+            "0": "angular_leaf_spot",
+            "1": "bean_rust",
+            "2": "healthy"
         }
     },
     "carrot_weeds_germany": {
-        "crop_types": {
-            "1": "carrot",
-            "2": "weeds"
-        },
         "ml_task": "semantic_segmentation",
         "ag_task": "weed_segmentation",
         "location": {
@@ -60,23 +56,13 @@
                 0.0995175838470459,
                 0.08643443882465363
             ]
+        },
+        "classes": {
+            "0": "carrot",
+            "1": "weeds"
         }
     },
     "plant_seedlings_aarhus": {
-        "crop_types": {
-            "1": "maize",
-            "2": "common_wheat",
-            "3": "sugar_beet",
-            "4": "scentless_mayweed",
-            "5": "common_chickweed",
-            "6": "shepherds_purse",
-            "7": "cleavers",
-            "8": "charlock",
-            "9": "fat_hen",
-            "10": "smallflowered_cranesbill",
-            "11": "black_grass",
-            "12": "loose_silkybent"
-        },
         "ml_task": "image_classification",
         "ag_task": "weed_classification",
         "location": {
@@ -101,15 +87,23 @@
                 0.09644084423780441,
                 0.10552656650543213
             ]
+        },
+        "classes": {
+            "0": "maize",
+            "1": "common_wheat",
+            "2": "sugar_beet",
+            "3": "scentless_mayweed",
+            "4": "common_chickweed",
+            "5": "shepherds_purse",
+            "6": "cleavers",
+            "7": "charlock",
+            "8": "fat_hen",
+            "9": "smallflowered_cranesbill",
+            "10": "black_grass",
+            "11": "loose_silkybent"
         }
     },
     "soybean_weed_uav_brazil": {
-        "crop_types": {
-            "1": "broadleaf",
-            "2": "grass",
-            "3": "soybean",
-            "4": "soil"
-        },
         "ml_task": "image_classification",
         "ag_task": "weed_classification",
         "location": {
@@ -134,17 +128,15 @@
                 0.24915193021297455,
                 0.1570599228143692
             ]
+        },
+        "classes": {
+            "0": "broadleaf",
+            "1": "grass",
+            "2": "soybean",
+            "3": "soil"
         }
     },
     "sugarcane_damage_usa": {
-        "crop_types": {
-            "1": "cracked",
-            "2": "crushed",
-            "3": "no_buds",
-            "4": "two_buds",
-            "5": "single_damaged_buds",
-            "6": "no_damage"
-        },
         "ml_task": "image_classification",
         "ag_task": "damage_classification",
         "location": {
@@ -168,15 +160,17 @@
                 0.21735337376594543,
                 0.1923859417438507
             ]
+        },
+        "classes": {
+            "0": "cracked",
+            "1": "crushed",
+            "2": "no_buds",
+            "3": "two_buds",
+            "4": "single_damaged_buds",
+            "5": "no_damage"
         }
     },
     "crop_weeds_greece": {
-        "crop_types": {
-            "1": "black_nightshade",
-            "2": "velvet_leaf",
-            "3": "cotton",
-            "4": "tomato"
-        },
         "ml_task": "image_classification",
         "ag_task": "weed_classification",
         "location": {
@@ -200,13 +194,15 @@
                 0.1530727595090866,
                 0.13750973343849182
             ]
+        },
+        "classes": {
+            "0": "black_nightshade",
+            "1": "velvet_leaf",
+            "2": "cotton",
+            "3": "tomato"
         }
     },
     "sugarbeet_weed_segmentation": {
-        "crop_types": {
-            "1": "sugar_beet",
-            "2": "random_weeds"
-        },
         "ml_task": "semantic_segmentation",
         "ag_task": "weed_segmentation",
         "location": {
@@ -231,21 +227,13 @@
                 0.16996806859970093,
                 0.16996806859970093
             ]
+        },
+        "classes": {
+            "0": "sugar_beet",
+            "1": "random_weeds"
         }
     },
     "rangeland_weeds_australia": {
-        "crop_types": {
-            "1": "no_weeds",
-            "2": "chinee_apple",
-            "3": "lantana",
-            "4": "parkinsonia",
-            "5": "parthenium",
-            "6": "prickly_acacia",
-            "7": "rubber_vine",
-            "8": "siam_weed",
-            "9": "snake_weed",
-            "10": "negative"
-        },
         "ml_task": "image_classification",
         "ag_task": "weed_classification",
         "location": {
@@ -270,18 +258,21 @@
                 0.22450360655784607,
                 0.22274591028690338
             ]
+        },
+        "classes": {
+            "0": "no_weeds",
+            "1": "chinee_apple",
+            "2": "lantana",
+            "3": "parkinsonia",
+            "4": "parthenium",
+            "5": "prickly_acacia",
+            "6": "rubber_vine",
+            "7": "siam_weed",
+            "8": "snake_weed",
+            "9": "negative"
         }
     },
     "fruit_detection_worldwide": {
-        "crop_types": {
-            "1": "avocado",
-            "2": "rockmelon",
-            "3": "apple",
-            "4": "orange",
-            "5": "strawberry",
-            "6": "mango",
-            "7": "capsicum"
-        },
         "ml_task": "object_detection",
         "ag_task": "fruit_detection",
         "location": {
@@ -306,20 +297,18 @@
                 0.22500208020210266,
                 0.2183498740196228
             ]
+        },
+        "classes": {
+            "0": "avocado",
+            "1": "rockmelon",
+            "2": "apple",
+            "3": "orange",
+            "4": "strawberry",
+            "5": "mango",
+            "6": "capsicum"
         }
     },
     "leaf_counting_denmark": {
-        "crop_types": {
-            "1": "1",
-            "2": "2",
-            "3": "3",
-            "4": "4",
-            "5": "5",
-            "6": "6",
-            "7": "7",
-            "8": "8",
-            "9": "9+"
-        },
         "ml_task": "image_classification",
         "ag_task": "leaf_counting",
         "platform": "mixed",
@@ -338,12 +327,20 @@
                 0.1434885710477829,
                 0.11489786207675934
             ]
+        },
+        "classes": {
+            "0": "1",
+            "1": "2",
+            "2": "3",
+            "3": "4",
+            "4": "5",
+            "5": "6",
+            "6": "7",
+            "7": "8",
+            "8": "9+"
         }
     },
     "apple_detection_usa": {
-        "crop_types": {
-            "1": "apple"
-        },
         "ml_task": "object_detection",
         "ag_task": "fruit_detection",
         "location": {
@@ -368,13 +365,12 @@
                 0.18647761642932892,
                 0.1885077804327011
             ]
+        },
+        "classes": {
+            "0": "apple"
         }
     },
     "cotton_seedling_counting": {
-        "crop_types": {
-            "1": "Plant",
-            "2": "Weed"
-        },
         "ml_task": "object_detection",
         "ag_task": "seedling_counting",
         "location": {
@@ -399,12 +395,13 @@
                 0.07951230555772781,
                 0.07661264389753342
             ]
+        },
+        "classes": {
+            "0": "Plant",
+            "1": "Weed"
         }
     },
     "mango_detection_australia": {
-        "crop_types": {
-            "1": "mango"
-        },
         "ml_task": "object_detection",
         "ag_task": "fruit_detection",
         "location": {
@@ -429,12 +426,12 @@
                 0.07924807816743851,
                 0.043408144265413284
             ]
+        },
+        "classes": {
+            "0": "mango"
         }
     },
     "apple_flower_segmentation": {
-        "crop_types": {
-            "1": "apple"
-        },
         "ml_task": "semantic_segmentation",
         "ag_task": "flower_segmentation",
         "location": {
@@ -459,12 +456,12 @@
                 0.19258278608322144,
                 0.2156316637992859
             ]
+        },
+        "classes": {
+            "0": "apple"
         }
     },
     "apple_segmentation_minnesota": {
-        "crop_types": {
-            "1": "apple"
-        },
         "ml_task": "semantic_segmentation",
         "ag_task": "fruit_segmentation",
         "location": {
@@ -489,14 +486,12 @@
                 0.28767505288124084,
                 0.33136168122291565
             ]
+        },
+        "classes": {
+            "0": "apple"
         }
     },
     "rice_seedling_segmentation": {
-        "crop_types": {
-            "1": "Rice",
-            "2": "Background",
-            "3": "Weed"
-        },
         "ml_task": "semantic_segmentation",
         "ag_task": "weed_segmentation",
         "location": {
@@ -521,50 +516,14 @@
                 0.1075846329331398,
                 0.11058590561151505
             ]
+        },
+        "classes": {
+            "0": "Rice",
+            "1": "Background",
+            "2": "Weed"
         }
     },
     "plant_village_classification": {
-        "crop_types": {
-            "1": "Apple___Apple_scab",
-            "2": "Apple___Black_rot",
-            "3": "Apple___Cedar_apple_rust",
-            "4": "Apple___healthy",
-            "5": "Background_without_leaves",
-            "6": "Blueberry___healthy",
-            "7": "Cherry___Powdery_mildew",
-            "8": "Cherry___healthy",
-            "9": "Corn___Cercospora_leaf_spot Gray_leaf_spot",
-            "10": "Corn___Common_rust",
-            "11": "Corn___Northern_Leaf_Blight",
-            "12": "Corn___healthy",
-            "13": "Grape___Black_rot",
-            "14": "Grape___Esca_(Black_Measles)",
-            "15": "Grape___Leaf_blight_(Isariopsis_Leaf_Spot)",
-            "16": "Grape___healthy",
-            "17": "Orange___Haunglongbing_(Citrus_greening)",
-            "18": "Peach___Bacterial_spot",
-            "19": "Peach___healthy",
-            "20": "Pepper,_bell___Bacterial_spot",
-            "21": "Pepper,_bell___healthy",
-            "22": "Potato___Early_blight",
-            "23": "Potato___Late_blight",
-            "24": "Potato___healthy",
-            "25": "Raspberry___healthy",
-            "26": "Soybean___healthy",
-            "27": "Squash___Powdery_mildew",
-            "28": "Strawberry___Leaf_scorch",
-            "29": "Strawberry___healthy",
-            "30": "Tomato___Bacterial_spot",
-            "31": "Tomato___Early_blight",
-            "32": "Tomato___Late_blight",
-            "33": "Tomato___Leaf_Mold",
-            "34": "Tomato___Septoria_leaf_spot",
-            "35": "Tomato___Spider_mites Two-spotted_spider_mite",
-            "36": "Tomato___Target_Spot",
-            "37": "Tomato___Tomato_Yellow_Leaf_Curl_Virus",
-            "38": "Tomato___Tomato_mosaic_virus",
-            "39": "Tomato___healthy"
-        },
         "ml_task": "image_classification",
         "ag_task": "disease_classification",
         "location": {
@@ -589,39 +548,50 @@
                 0.15169815719127655,
                 0.19375969469547272
             ]
+        },
+        "classes": {
+            "0": "Apple___Apple_scab",
+            "1": "Apple___Black_rot",
+            "2": "Apple___Cedar_apple_rust",
+            "3": "Apple___healthy",
+            "4": "Background_without_leaves",
+            "5": "Blueberry___healthy",
+            "6": "Cherry___Powdery_mildew",
+            "7": "Cherry___healthy",
+            "8": "Corn___Cercospora_leaf_spot Gray_leaf_spot",
+            "9": "Corn___Common_rust",
+            "10": "Corn___Northern_Leaf_Blight",
+            "11": "Corn___healthy",
+            "12": "Grape___Black_rot",
+            "13": "Grape___Esca_(Black_Measles)",
+            "14": "Grape___Leaf_blight_(Isariopsis_Leaf_Spot)",
+            "15": "Grape___healthy",
+            "16": "Orange___Haunglongbing_(Citrus_greening)",
+            "17": "Peach___Bacterial_spot",
+            "18": "Peach___healthy",
+            "19": "Pepper,_bell___Bacterial_spot",
+            "20": "Pepper,_bell___healthy",
+            "21": "Potato___Early_blight",
+            "22": "Potato___Late_blight",
+            "23": "Potato___healthy",
+            "24": "Raspberry___healthy",
+            "25": "Soybean___healthy",
+            "26": "Squash___Powdery_mildew",
+            "27": "Strawberry___Leaf_scorch",
+            "28": "Strawberry___healthy",
+            "29": "Tomato___Bacterial_spot",
+            "30": "Tomato___Early_blight",
+            "31": "Tomato___Late_blight",
+            "32": "Tomato___Leaf_Mold",
+            "33": "Tomato___Septoria_leaf_spot",
+            "34": "Tomato___Spider_mites Two-spotted_spider_mite",
+            "35": "Tomato___Target_Spot",
+            "36": "Tomato___Tomato_Yellow_Leaf_Curl_Virus",
+            "37": "Tomato___Tomato_mosaic_virus",
+            "38": "Tomato___healthy"
         }
     },
     "plant_doc_classification": {
-        "crop_types": {
-            "1": "Apple_Scab_Leaf",
-            "2": "Apple_leaf",
-            "3": "Apple_rust_leaf",
-            "4": "Bell_pepper_leaf_spot",
-            "5": "Bell_pepper_leaf",
-            "6": "Blueberry_leaf",
-            "7": "Cherry_leaf",
-            "8": "Corn_Gray_leaf_spot",
-            "9": "Corn_leaf_blight",
-            "10": "Corn_rust_leaf",
-            "11": "Peach_leaf",
-            "12": "Potato_leaf_early_blight",
-            "13": "Potato_leaf_late_blight",
-            "14": "Raspberry_leaf",
-            "15": "Soybean_leaf",
-            "16": "Squash_Powdery_mildew_leaf",
-            "17": "Strawberry_leaf",
-            "18": "Tomato_Early_blight_leaf",
-            "19": "Tomato_Septoria_leaf_spot",
-            "20": "Tomato_leaf_bacterial_spot",
-            "21": "Tomato_leaf_late_blight",
-            "22": "Tomato_leaf_mosaic_virus",
-            "23": "Tomato_leaf_yellow_virus",
-            "24": "Tomato_leaf",
-            "25": "Tomato_mold_leaf",
-            "26": "Tomato_two_spotted_spider_mites_leaf",
-            "27": "grape_leaf_black_rot",
-            "28": "grape_leaf"
-        },
         "ml_task": "image_classification",
         "ag_task": "disease_classification",
         "location": {
@@ -646,6 +616,36 @@
                 0.20371955633163452,
                 0.2188636064529419
             ]
+        },
+        "classes": {
+            "0": "Apple_Scab_Leaf",
+            "1": "Apple_leaf",
+            "2": "Apple_rust_leaf",
+            "3": "Bell_pepper_leaf_spot",
+            "4": "Bell_pepper_leaf",
+            "5": "Blueberry_leaf",
+            "6": "Cherry_leaf",
+            "7": "Corn_Gray_leaf_spot",
+            "8": "Corn_leaf_blight",
+            "9": "Corn_rust_leaf",
+            "10": "Peach_leaf",
+            "11": "Potato_leaf_early_blight",
+            "12": "Potato_leaf_late_blight",
+            "13": "Raspberry_leaf",
+            "14": "Soybean_leaf",
+            "15": "Squash_Powdery_mildew_leaf",
+            "16": "Strawberry_leaf",
+            "17": "Tomato_Early_blight_leaf",
+            "18": "Tomato_Septoria_leaf_spot",
+            "19": "Tomato_leaf_bacterial_spot",
+            "20": "Tomato_leaf_late_blight",
+            "21": "Tomato_leaf_mosaic_virus",
+            "22": "Tomato_leaf_yellow_virus",
+            "23": "Tomato_leaf",
+            "24": "Tomato_mold_leaf",
+            "25": "Tomato_two_spotted_spider_mites_leaf",
+            "26": "grape_leaf_black_rot",
+            "27": "grape_leaf"
         }
     }
 }

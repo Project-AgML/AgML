@@ -150,19 +150,19 @@ class DatasetMetadata(AgMLSerializable):
 
     @property
     def num_to_class(self):
-        mapping = self._metadata['crop_types']
+        mapping = self._metadata['classes']
         nums = [int(float(i)) for i in mapping.keys()]
         return dict(zip(nums, mapping.values()))
 
     @property
     def class_to_num(self):
-        mapping = self._metadata['crop_types']
+        mapping = self._metadata['classes']
         nums = [int(float(i)) for i in mapping.keys()]
         return dict(zip(mapping.values(), nums))
 
     @property
     def classes(self):
-        return list(self._metadata['crop_types'].values())
+        return list(self._metadata['classes'].values())
 
     @property
     def num_classes(self):
