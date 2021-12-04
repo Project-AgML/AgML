@@ -370,6 +370,26 @@ class AgMLDataLoader(AgMLSerializable):
         self._manager.update_train_state('torch')
         return self
 
+    @property
+    def shuffle_data(self):
+        """Returns whether the loader is set to shuffle data or not.
+
+        By default, if no value is passed in initialization, this is set to
+        `True`. It can be manually toggled to `False` using this property.
+        """
+        return self._manager._shuffle
+
+    @shuffle_data.setter
+    def shuffle_data(self, value):
+        """Set whether the loader should shuffle data or not.
+
+        This can be used to enable/disable shuffling, by passing
+        either `True` or `False`, respectively.
+        """
+        if not isinstance(value, bool):
+            raise TypeError("Expected either `True` or `False` for 'shuffle_data'.")
+        self._manager._shuffle = value
+
     def shuffle(self, seed = None):
         """Potentially shuffles the contents of the loader.
         
