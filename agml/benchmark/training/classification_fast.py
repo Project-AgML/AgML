@@ -151,7 +151,7 @@ def train(dataset, pretrained, epochs, save_dir = None):
 
     # Create the trainer and train the model.
     trainer = pl.Trainer(
-        max_epochs = epochs, gpus = 0, callbacks = callbacks)
+        max_epochs = epochs, gpus = 1, callbacks = callbacks)
     trainer.fit(
         model = model,
         train_dataloaders = train_ds,
