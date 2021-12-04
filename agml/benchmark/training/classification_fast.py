@@ -71,7 +71,8 @@ class ClassificationBenchmark(pl.LightningModule):
         x, y = batch
         y_pred = self(x)
         loss = self.loss(y_pred, y)
-        acc = accuracy(y_pred, torch.argmax(y, 1))
+        acc = accuracy(y_pred, torch.argmax(y, 1)).item()
+        self.log('accuracy', acc, prog_bar = True)
         return {
             'loss': loss,
             'accuracy': acc
@@ -80,9 +81,12 @@ class ClassificationBenchmark(pl.LightningModule):
     def validation_step(self, batch, *args, **kwargs): # noqa
         x, y = batch
         y_pred = self(x)
+        val_loss = self.loss(y_pred, y)
         val_acc = accuracy(y_pred, torch.argmax(y, 1))
+        self.log('val_loss', val_loss.item(), prog_bar = True)
+        self.log('val_accuracy', val_acc.item(), prog_bar = True)
         return {
-            'val_loss': self.loss(y_pred, y),
+            'val_loss': val_loss,
             'val_accuracy': val_acc
         }
 
@@ -105,31 +109,23 @@ def accuracy(output, target):
 def build_loaders(name):
     loader = agml.data.AgMLDataLoader(name)
     loader.split(train = 0.8, val = 0.1, test = 0.1)
-    loader.batch(batch_size = 8)
-    loader.labels_to_one_hot()
+    loader.batch(batch_size = 16)
     loader.resize_images('imagenet')
-    loader.transform(lambda x: x / 255)
+    loader.normalize_images('imagenet')
+    loader.labels_to_one_hot()
     train_data = loader.train_data
-    train_data.transform(
-        transform = A.Compose([
-            A.RandomRotate90(),
-        ])
-    )
-    train_ds = train_data.export_torch(
-        num_workers = os.cpu_count())
-    val_ds = loader.val_data.export_torch(
-        num_workers = os.cpu_count())
-    test_data = loader.test_data
-    test_data.eval()
-    test_ds = test_data.export_torch(
-        num_workers = os.cpu_count())
+    train_data.transform(transform = A.RandomRotate90())
+    train_ds = train_data.copy().as_torch_dataset()
+    val_ds = loader.val_data.as_torch_dataset()
+    val_ds.shuffle_data = False
+    test_ds = loader.test_data.as_torch_dataset()
     return train_ds, val_ds, test_ds
 
 
 def train(dataset, pretrained, epochs, save_dir = None):
     """Constructs the training loop and trains a model."""
     if save_dir is None:
-        save_dir = os.path.join(f"/data2/amnjoshi/checkpoints/{dataset}")
+        save_dir = os.path.join(f"./amnjoshi/checkpoints/{dataset}")
         os.makedirs(save_dir, exist_ok = True)
 
     # Set up the checkpoint saving callback.
@@ -155,7 +151,7 @@ def train(dataset, pretrained, epochs, save_dir = None):
 
     # Create the trainer and train the model.
     trainer = pl.Trainer(
-        max_epochs = epochs, gpus = 1, callbacks = callbacks)
+        max_epochs = epochs, gpus = 0, callbacks = callbacks)
     trainer.fit(
         model = model,
         train_dataloaders = train_ds,
@@ -178,6 +174,7 @@ if __name__ == '__main__':
         '--epochs', type = int, default = 50,
         help = "How many epochs to train for. Default is 50.")
     args = ap.parse_args()
+    args.dataset = 'bean_disease_uganda'
 
     # Train the model.
     train(args.dataset,
