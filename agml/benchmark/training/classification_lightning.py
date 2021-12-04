@@ -93,6 +93,12 @@ class ClassificationBenchmark(pl.LightningModule):
     def configure_optimizers(self):
         return torch.optim.Adam(self.parameters())
 
+    def get_progress_bar_dict(self):
+        tqdm_dict = super(ClassificationBenchmark, self)\
+            .get_progress_bar_dict()
+        tqdm_dict.pop('v_num', None)
+        return tqdm_dict
+
 
 def accuracy(output, target):
     """Computes the accuracy between `output` and `target`."""
@@ -125,19 +131,21 @@ def build_loaders(name):
 def train(dataset, pretrained, epochs, save_dir = None):
     """Constructs the training loop and trains a model."""
     if save_dir is None:
-        save_dir = os.path.join(f"./amnjoshi/checkpoints/{dataset}")
+        save_dir = os.path.join(f"/data2/amnjoshi/checkpoints/{dataset}")
         os.makedirs(save_dir, exist_ok = True)
 
     # Set up the checkpoint saving callback.
     callbacks = [
         pl.callbacks.ModelCheckpoint(
             dirpath = save_dir, mode = 'min',
-            filename = f"{dataset}" + "-{epoch}-{val_loss:.2f}",
+            filename = f"{dataset}" + "-epoch{epoch:02d}-val_loss_{val_loss:.2f}",
             monitor = 'val_loss',
-            save_top_k = 3),
+            save_top_k = 3,
+            auto_insert_metric_name = False
+        ),
         pl.callbacks.EarlyStopping(
             monitor = 'val_loss',
-            min_delta = 0.01,
+            min_delta = 0.001,
             patience = 3,
         )
     ]
@@ -174,7 +182,6 @@ if __name__ == '__main__':
         '--epochs', type = int, default = 50,
         help = "How many epochs to train for. Default is 50.")
     args = ap.parse_args()
-    args.dataset = 'bean_disease_uganda'
 
     # Train the model.
     train(args.dataset,
