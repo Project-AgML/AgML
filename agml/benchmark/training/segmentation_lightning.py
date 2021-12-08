@@ -20,9 +20,8 @@ import torch.nn as nn
 import pytorch_lightning as pl
 from torchvision.models.segmentation import deeplabv3_resnet50
 
-import albumentations as A
-
 import agml
+import albumentations as A
 
 
 class DeepLabV3Transfer(nn.Module):
@@ -42,11 +41,6 @@ class DeepLabV3Transfer(nn.Module):
         return self.base(x)
 
 
-# We construct the network outside of the model so that it can be loaded
-# independently from the `pl.LightningModule` used to train it.
-net = None
-
-
 class ClassificationBenchmark(pl.LightningModule):
     """Represents an image classification benchmark model."""
     def __init__(self, dataset, pretrained = False):
@@ -56,18 +50,16 @@ class ClassificationBenchmark(pl.LightningModule):
         # Construct the network.
         self._source = agml.data.source(dataset)
         self._pretrained = pretrained
-        global net
-        net = DeepLabV3Transfer(
+        self.net = DeepLabV3Transfer(
             self._source.num_classes,
             self._pretrained
-        ).cuda()
+        )
 
         # Construct the loss for training.
         self.loss = nn.BCEWithLogitsLoss()
 
     def forward(self, x):
-        global net
-        return net.forward(x)
+        return self.net.forward(x)
 
     def training_step(self, batch, *args, **kwargs): # noqa
         x, y = batch
@@ -87,8 +79,7 @@ class ClassificationBenchmark(pl.LightningModule):
         }
 
     def configure_optimizers(self):
-        global net
-        return torch.optim.Adam(net.parameters())
+        return torch.optim.Adam(self.net.parameters())
 
     def get_progress_bar_dict(self):
         tqdm_dict = super(ClassificationBenchmark, self)\
