@@ -34,10 +34,17 @@ def convert_state_dict(fpath):
     # Otherwise, get the model state dict from the contents
     # and re-save the file using the same name, just with only
     # the state dict and no PyTorch Lightning values.
-    state_dict = contents.get('state_dict', None)
+    state_dict: OrderedDict = contents.get('state_dict', None)
     if state_dict is None:
         print(f"No state dict found in file {fpath}.")
         return
+
+    # Parse the state dict and drop the first level from the keys.
+    for key in state_dict.keys():
+        value = state_dict.pop(key)
+        state_dict[key.replace('net.', '')] = value
+
+    # Save the state dict.
     temp_path = os.path.join(os.path.dirname(fpath), 'temp_state_dict.ckpt')
     shutil.copy(fpath, temp_path) # save a copy in case an issue occurs
     os.remove(fpath)
@@ -57,7 +64,8 @@ search_dir = ap.parse_args().search_dir
 # Search through and convert all of the files.
 for path, subdirs, files in os.walk(os.path.abspath(os.path.normpath(search_dir))):
     for name in files:
-        if fnmatch(name, '.ckpt'):
+        print(name)
+        if fnmatch(name, '*.ckpt'):
             convert_state_dict(os.path.join(path, name))
             print(f"Converting checkpoint at '{path}'... ", end = '')
 

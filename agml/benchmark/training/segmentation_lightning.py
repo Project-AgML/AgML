@@ -42,6 +42,11 @@ class DeepLabV3Transfer(nn.Module):
         return self.base(x)
 
 
+# We construct the network outside of the model so that it can be loaded
+# independently from the `pl.LightningModule` used to train it.
+net = None
+
+
 class ClassificationBenchmark(pl.LightningModule):
     """Represents an image classification benchmark model."""
     def __init__(self, dataset, pretrained = False):
@@ -51,42 +56,39 @@ class ClassificationBenchmark(pl.LightningModule):
         # Construct the network.
         self._source = agml.data.source(dataset)
         self._pretrained = pretrained
-        self.net = DeepLabV3Transfer(
+        global net
+        net = DeepLabV3Transfer(
             self._source.num_classes,
             self._pretrained
-        )
+        ).cuda()
 
         # Construct the loss for training.
-        self.loss = nn.CrossEntropyLoss()
+        self.loss = nn.BCEWithLogitsLoss()
 
     def forward(self, x):
-        return self.net.forward(x)
+        global net
+        return net.forward(x)
 
     def training_step(self, batch, *args, **kwargs): # noqa
         x, y = batch
-        y_pred = self(x)
-        loss = self.loss(y_pred, y)
-        acc = accuracy(y_pred, torch.argmax(y, 1)).item()
-        self.log('accuracy', acc, prog_bar = True)
+        y_pred = self(x)['out']
+        loss = self.loss(y_pred.float().squeeze(), y.float())
         return {
             'loss': loss,
-            'accuracy': acc
         }
 
     def validation_step(self, batch, *args, **kwargs): # noqa
         x, y = batch
-        y_pred = self(x)
-        val_loss = self.loss(y_pred, y)
-        val_acc = accuracy(y_pred, torch.argmax(y, 1))
+        y_pred = self(x)['out']
+        val_loss = self.loss(y_pred.float().squeeze(), y.float())
         self.log('val_loss', val_loss.item(), prog_bar = True)
-        self.log('val_accuracy', val_acc.item(), prog_bar = True)
         return {
             'val_loss': val_loss,
-            'val_accuracy': val_acc
         }
 
     def configure_optimizers(self):
-        return torch.optim.Adam(self.parameters())
+        global net
+        return torch.optim.Adam(net.parameters())
 
     def get_progress_bar_dict(self):
         tqdm_dict = super(ClassificationBenchmark, self)\
@@ -113,7 +115,6 @@ def build_loaders(name):
     loader.batch(batch_size = 16)
     loader.resize_images('imagenet')
     loader.normalize_images('imagenet')
-    loader.labels_to_one_hot()
     train_data = loader.train_data
     train_data.transform(transform = A.RandomRotate90())
     train_ds = train_data.copy().as_torch_dataset()
