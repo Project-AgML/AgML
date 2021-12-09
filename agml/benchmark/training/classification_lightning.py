@@ -18,6 +18,9 @@ import argparse
 import torch
 import torch.nn as nn
 import pytorch_lightning as pl
+from pytorch_lightning.loggers import (
+    CSVLogger, TensorBoardLogger
+)
 from torchvision.models import efficientnet_b4
 
 import albumentations as A
@@ -157,13 +160,20 @@ def train(dataset, pretrained, epochs, save_dir = None):
     # Construct the data loaders.
     train_ds, val_ds, test_ds = build_loaders(dataset)
 
+    # Create the loggers.
+    loggers = [
+        CSVLogger(save_dir),
+        TensorBoardLogger(save_dir)
+    ]
+
     # Create the trainer and train the model.
     trainer = pl.Trainer(
-        max_epochs = epochs, gpus = 1, callbacks = callbacks)
+        max_epochs = epochs, gpus = 1,
+        callbacks = callbacks, logger = loggers)
     trainer.fit(
         model = model,
         train_dataloaders = train_ds,
-        val_dataloaders = val_ds
+        val_dataloaders = val_ds,
     )
 
 
