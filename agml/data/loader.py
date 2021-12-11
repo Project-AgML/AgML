@@ -22,6 +22,7 @@ from agml.data.manager import DataManager
 from agml.data.builder import DataBuilder
 from agml.data.metadata import DatasetMetadata
 from agml.utils.general import NoArgument
+from agml.utils.logging import log
 from agml.backend.tftorch import (
     get_backend, set_backend,
     user_changed_backend, StrictBackendError,
@@ -746,11 +747,37 @@ class AgMLDataLoader(AgMLSerializable):
         This is a more commonly used format for image classification.
         """
         if self._info.tasks.ml != 'image_classification':
-            raise ValueError("The `one_hot` label transformation can only "
-                             "be used for image classification tasks.")
+            raise RuntimeError("The `one_hot` label transformation can only "
+                               "be used for image classification tasks.")
 
         self.transform(
             target_transform = ('one_hot', self._info.num_classes)
+        )
+
+    def mask_to_channel_basis(self):
+        """Converts semantic segmentation masks to channel-wise.
+
+        This is a convenience method to convert integer-labeled semantic
+        segmentation masks into channel-by-channel masks, essentially
+        one-hot vector transformation but for semantic segmentation. Note
+        that if the task is binary segmentation, e.g. there is only one
+        class, then this method will do nothing.
+
+        This method should traditionally be called *after* applying general
+        transformations to the loader, in order to prevent any issues.
+        """
+        if self._info.tasks.ml != 'semantic_segmentation':
+            raise ValueError("The `mask_to_channel_basis` transformation "
+                             "can only be used for semantic segmentation tasks.")
+
+        # Warn about binary segmentation tasks.
+        if self._info.num_classes == 1:
+            log(f"No mask-to-channel transformation will be applied for "
+                f"a binary segmentation task (dataset {self.name}).")
+            return
+
+        self.transform(
+            target_transform = ('channel_basis', self._info.num_classes)
         )
 
     def export_contents(self, export_format = None):

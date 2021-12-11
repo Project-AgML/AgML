@@ -29,7 +29,8 @@ from agml.data.managers.transform_helpers import (
     NormalizationTransformBase,
     ScaleTransform,
     NormalizationTransform,
-    OneHotLabelTransform
+    OneHotLabelTransform,
+    MaskToChannelBasisTransform
 )
 from agml.utils.logging import log
 
@@ -122,7 +123,11 @@ class TransformManager(AgMLSerializable):
             if t_(kind) == TransformKind.Transform:
                 transform = self._maybe_normalization_or_regular_transform(transform)
             elif t_(kind) == TransformKind.TargetTransform:
-                transform = self._maybe_normalization_or_regular_transform(transform)
+                if isinstance(transform, tuple): # a special convenience case
+                    if transform[0] == 'channel_basis':
+                        transform = MaskToChannelBasisTransform(transform[1])
+                else:
+                    transform = self._maybe_normalization_or_regular_transform(transform)
             else:
                 transform = self._construct_image_and_mask_transform(transform)
         elif self._task == 'object_detection':

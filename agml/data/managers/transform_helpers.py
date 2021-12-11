@@ -130,5 +130,17 @@ class OneHotLabelTransform(TransformApplierBase):
         return one_hot.astype(np.float32)
 
 
+class MaskToChannelBasisTransform(TransformApplierBase):
+    def apply(self, mask):
+        # Converts a 2-d mask of `n` labels, excluding background, to a
+        # `n x h x w` 3-dimensional mask with each channel a label.
+        input_shape = mask.shape
+        mask = mask.ravel()
+        n = mask.shape[0]
+        mask = np.array(mask, dtype = np.int32)
+        out = np.zeros(shape = (n, self._transform + 1))
+        out[np.arange(n), mask] = 1
+        out = np.reshape(out, input_shape + (self._transform + 1,))
+        return out[..., 1:].astype(np.int32)
 
 

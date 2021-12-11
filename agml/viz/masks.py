@@ -25,7 +25,7 @@ from agml.viz.tools import (
 
 def _reduce_categorical_mask(mask):
     """Reduces a categorical mask label to one-dimensional."""
-    return np.argmax(mask)
+    return np.argmax(mask, axis = -1)
 
 
 def _preprocess_mask(mask):
