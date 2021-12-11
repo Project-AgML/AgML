@@ -27,8 +27,14 @@ def convert_state_dict(fpath):
     contents = torch.load(fpath)
 
     # If the contents of the file are an `OrderedDict`, then
-    # they are already a model state dict, so no conversion.
+    # we don't need to extract the `state_dict`. However, the
+    # nested key hierarchy might be different, so we check that.
     if isinstance(contents, OrderedDict):
+        keys: list[str] = list(contents.keys())
+        if keys[0].startswith('net'):
+            for key in contents.keys():
+                value = contents.pop(key)
+                contents[key.replace('net.', '')] = value
         return
 
     # Otherwise, get the model state dict from the contents
