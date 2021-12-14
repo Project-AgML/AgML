@@ -24,6 +24,7 @@ import torch
 
 
 def convert_state_dict(fpath):
+    # load the file contents.
     contents = torch.load(fpath)
 
     # If the contents of the file are an `OrderedDict`, then
@@ -31,30 +32,37 @@ def convert_state_dict(fpath):
     # nested key hierarchy might be different, so we check that.
     if isinstance(contents, OrderedDict):
         keys: list[str] = list(contents.keys())
+        if len(keys) == 0:
+            print('No state dict found.')
+            return
         if keys[0].startswith('net'):
+            out_dict = OrderedDict()
             for key in contents.keys():
-                value = contents.pop(key)
-                contents[key.replace('net.', '')] = value
-        return
+                value = contents[key]
+                out_dict[key.replace('net.', '')] = value
+        else:
+            return
 
     # Otherwise, get the model state dict from the contents
     # and re-save the file using the same name, just with only
     # the state dict and no PyTorch Lightning values.
-    state_dict: OrderedDict = contents.get('state_dict', None)
-    if state_dict is None:
-        print(f"No state dict found in file {fpath}.")
-        return
+    else:
+        state_dict: OrderedDict = contents.get('state_dict', None)
+        if state_dict is None:
+            print(f"No state dict found in file {fpath}.")
+            return
 
-    # Parse the state dict and drop the first level from the keys.
-    for key in state_dict.keys():
-        value = state_dict.pop(key)
-        state_dict[key.replace('net.', '')] = value
+        # Parse the state dict and drop the first level from the keys.
+        out_dict = OrderedDict()
+        for key in state_dict.keys():
+            value = state_dict[key]
+            out_dict[key.replace('net.', '')] = value
 
     # Save the state dict.
     temp_path = os.path.join(os.path.dirname(fpath), 'temp_state_dict.ckpt')
     shutil.copy(fpath, temp_path) # save a copy in case an issue occurs
     os.remove(fpath)
-    torch.save(state_dict, fpath.replace('.ckpt', '.pth'))
+    torch.save(out_dict, fpath.replace('.ckpt', '.pth'))
     os.remove(temp_path)
     print("Conversion Successful.")
 
@@ -70,10 +78,9 @@ search_dir = ap.parse_args().search_dir
 # Search through and convert all of the files.
 for path, subdirs, files in os.walk(os.path.abspath(os.path.normpath(search_dir))):
     for name in files:
-        print(name)
-        if fnmatch(name, '*.ckpt'):
+        if fnmatch(name, '*.ckpt') or fnmatch(name, '*.pth'):
+            print(f"Converting checkpoint at '{os.path.join(path, name)}'... ", end = '')
             convert_state_dict(os.path.join(path, name))
-            print(f"Converting checkpoint at '{path}'... ", end = '')
 
 
 

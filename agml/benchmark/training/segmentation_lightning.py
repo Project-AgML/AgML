@@ -18,6 +18,7 @@ import argparse
 import torch
 import torch.nn as nn
 import pytorch_lightning as pl
+from torchmetrics import IoU
 from torchvision.models.segmentation import deeplabv3_resnet50
 
 import agml
@@ -56,24 +57,40 @@ class ClassificationBenchmark(pl.LightningModule):
         )
 
         # Construct the loss for training.
-        self.loss = nn.BCEWithLogitsLoss()
+        if self._source.num_classes == 1:
+            self.loss = nn.BCEWithLogitsLoss()
+        else:
+            self.loss = nn.CrossEntropyLoss()
+
+        # Construct the IoU metric.
+        self.iou = IoU(self._source.num_classes + 1)
 
     def forward(self, x):
         return self.net.forward(x)
 
+    def calculate_loss(self, y_pred, y):
+        print(y_pred.min(), y_pred.max(), y.min(), y.max(), torch.argmax(y_pred, dim = 1).shape, y.shape)
+        if self._source.num_classes != 1:
+            return self.loss(y_pred, y.long())
+        return self.loss(y_pred, y.float())
+
     def training_step(self, batch, *args, **kwargs): # noqa
         x, y = batch
-        y_pred = self(x)['out']
-        loss = self.loss(y_pred.float().squeeze(), y.float())
+        y_pred = self(x)['out'].float().squeeze()
+        loss = self.calculate_loss(y_pred, y)
+        iou = self.iou(y_pred, y)
+        self.log('iou', iou.item(), prog_bar = True)
         return {
             'loss': loss,
         }
 
     def validation_step(self, batch, *args, **kwargs): # noqa
         x, y = batch
-        y_pred = self(x)['out']
-        val_loss = self.loss(y_pred.float().squeeze(), y.float())
+        y_pred = self(x)['out'].float().squeeze()
+        val_loss = self.calculate_loss(y_pred, y)
         self.log('val_loss', val_loss.item(), prog_bar = True)
+        val_iou = self.iou(y_pred, y)
+        self.log('val_iou', val_iou.item(), prog_bar = True)
         return {
             'val_loss': val_loss,
         }
@@ -81,7 +98,7 @@ class ClassificationBenchmark(pl.LightningModule):
     def configure_optimizers(self):
         return torch.optim.Adam(self.net.parameters())
 
-    def get_progress_bar_dict(self):
+    def get_metrics(self):
         tqdm_dict = super(ClassificationBenchmark, self)\
             .get_progress_bar_dict()
         tqdm_dict.pop('v_num', None)
@@ -106,6 +123,7 @@ def build_loaders(name):
     loader.batch(batch_size = 16)
     loader.resize_images('imagenet')
     loader.normalize_images('imagenet')
+    loader.mask_to_channel_basis()
     train_data = loader.train_data
     train_data.transform(transform = A.RandomRotate90())
     train_ds = train_data.copy().as_torch_dataset()
@@ -146,7 +164,7 @@ def train(dataset, pretrained, epochs, save_dir = None):
 
     # Create the trainer and train the model.
     trainer = pl.Trainer(
-        max_epochs = epochs, gpus = 1, callbacks = callbacks)
+        max_epochs = epochs, gpus = 0, callbacks = callbacks)
     trainer.fit(
         model = model,
         train_dataloaders = train_ds,
@@ -160,8 +178,8 @@ if __name__ == '__main__':
     ap.add_argument(
         '--dataset', type = str, help = "The name of the dataset.")
     ap.add_argument(
-        '--not-pretrained', action = 'store_false',
-        default = True, help = "Whether to load a pretrained model.")
+        '--pretrained', action = 'store_true',
+        default = False, help = "Whether to load a pretrained model.")
     ap.add_argument(
         '--checkpoint_dir', type = str, default = None,
         help = "The checkpoint directory to save to.")
@@ -172,7 +190,7 @@ if __name__ == '__main__':
 
     # Train the model.
     train(args.dataset,
-          args.not_pretrained,
+          args.pretrained,
           epochs = args.epochs,
           save_dir = args.checkpoint_dir)
 
