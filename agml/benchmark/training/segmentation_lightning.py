@@ -42,6 +42,19 @@ class DeepLabV3Transfer(nn.Module):
         return self.base(x)
 
 
+def dice_loss(y_pred, y):
+    y = y.float()
+    try: # Multi-class segmentation
+        c, h, w = y.shape[1:]
+    except: # Binary segmentation
+        h, w = y.shape[1:]; c = 1 # noqa
+    pred_flat = torch.reshape(y_pred, [-1, c * h * w])
+    y_flat = torch.reshape(y, [-1, c * h * w])
+    intersection = 2.0 * torch.sum(pred_flat * y_flat, dim = 1) + 1e-6
+    denominator = torch.sum(pred_flat, dim = 1) + torch.sum(y_flat, dim = 1) + 1e-6
+    return 1. - torch.mean(intersection / denominator)
+
+
 class ClassificationBenchmark(pl.LightningModule):
     """Represents an image classification benchmark model."""
     def __init__(self, dataset, pretrained = False):
@@ -57,10 +70,7 @@ class ClassificationBenchmark(pl.LightningModule):
         )
 
         # Construct the loss for training.
-        if self._source.num_classes == 1:
-            self.loss = nn.BCEWithLogitsLoss()
-        else:
-            self.loss = nn.CrossEntropyLoss()
+        self.loss = dice_loss
 
         # Construct the IoU metric.
         self.iou = IoU(self._source.num_classes + 1)

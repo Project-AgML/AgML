@@ -101,6 +101,11 @@ def is_array_like(inp):
     return False
 
 
+def shapes(seq):
+    """Returns the shapes (or lengths) of all of the objects in the sequence."""
+    return [getattr(obj, 'shape', getattr(obj, '__len__', None)) for obj in seq]
+
+
 class seed_context(object):
     """Creates a context with a custom random seed, then resets it.
 
