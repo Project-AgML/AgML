@@ -269,8 +269,16 @@ class TrainingManager(AgMLSerializable):
         """Converts contents to `torch.Tensor`s where possible."""
         image, annotation = contents
         image = _convert_image_to_torch(image)
-        if task in ['image_classification', 'semantic_segmentation']:
+        if task == 'image_classification':
             annotation = torch.tensor(annotation)
+        elif task == 'semantic_segmentation':
+            # Check if the tensor has multiple output channels (which
+            # implies that `mask_to_channel_basis` was called). If so,
+            # then convert the channel format from HWC to CHW.
+            if annotation.ndim > 2:
+                annotation = _convert_image_to_torch(annotation)
+            else:
+                annotation = torch.tensor(annotation)
         elif task == 'object_detection':
             annotation = TrainingManager._torch_tensor_coco_convert(
                 annotation)
