@@ -79,7 +79,6 @@ class ClassificationBenchmark(pl.LightningModule):
         return self.net.forward(x)
 
     def calculate_loss(self, y_pred, y):
-        print(y_pred.min(), y_pred.max(), y.min(), y.max(), torch.argmax(y_pred, dim = 1).shape, y.shape)
         if self._source.num_classes != 1:
             return self.loss(y_pred, y.long())
         return self.loss(y_pred, y.float())
@@ -88,7 +87,7 @@ class ClassificationBenchmark(pl.LightningModule):
         x, y = batch
         y_pred = self(x)['out'].float().squeeze()
         loss = self.calculate_loss(y_pred, y)
-        iou = self.iou(y_pred, y)
+        iou = self.iou(y_pred, y.int())
         self.log('iou', iou.item(), prog_bar = True)
         return {
             'loss': loss,
@@ -99,7 +98,7 @@ class ClassificationBenchmark(pl.LightningModule):
         y_pred = self(x)['out'].float().squeeze()
         val_loss = self.calculate_loss(y_pred, y)
         self.log('val_loss', val_loss.item(), prog_bar = True)
-        val_iou = self.iou(y_pred, y)
+        val_iou = self.iou(y_pred, y.int())
         self.log('val_iou', val_iou.item(), prog_bar = True)
         return {
             'val_loss': val_loss,
@@ -174,7 +173,7 @@ def train(dataset, pretrained, epochs, save_dir = None):
 
     # Create the trainer and train the model.
     trainer = pl.Trainer(
-        max_epochs = epochs, gpus = 0, callbacks = callbacks)
+        max_epochs = epochs, gpus = 1, callbacks = callbacks)
     trainer.fit(
         model = model,
         train_dataloaders = train_ds,

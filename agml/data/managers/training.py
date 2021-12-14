@@ -290,8 +290,17 @@ class TrainingManager(AgMLSerializable):
         images, annotations = contents
         images = torch.stack([
             _convert_image_to_torch(image) for image in images])
-        if task in ['image_classification', 'semantic_segmentation']:
+        if task == 'image_classification':
             annotations = torch.tensor(annotations)
+        elif task == 'semantic_segmentation':
+            # Check if the tensors have multiple output channels (which
+            # implies that `mask_to_channel_basis` was called). If so,
+            # then convert the channel format from NHWC to NCHW.
+            if annotations[0].ndim > 2:
+                annotations = torch.stack(
+                    [_convert_image_to_torch(a) for a in annotations])
+            else:
+                annotations = torch.tensor(annotations)
         elif task == 'object_detection':
             annotations = [TrainingManager._torch_tensor_coco_convert(
                 a_set) for a_set in annotations]
