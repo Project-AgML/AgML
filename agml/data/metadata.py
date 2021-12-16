@@ -19,6 +19,7 @@ import collections
 
 from agml.framework import AgMLSerializable
 import agml.utils.logging as logging
+from agml.utils.general import has_nested_dicts
 from agml.utils.data import (
     load_public_sources, load_citation_sources, maybe_you_meant, copyright_print
 )
@@ -93,12 +94,16 @@ class DatasetMetadata(AgMLSerializable):
         self._citation_meta = load_citation_sources()[name]
 
     def __getattr__(self, key):
-        if key in self._metadata.keys():
-            return self._metadata[key]
-        raise AttributeError(
-            maybe_you_meant(
-                key, f"Received invalid info parameter: '{key}'.",
-                source = self._metadata.keys()))
+        try:
+            # Some weird behavior with lookups can happen.
+            return object.__getattribute__(self, key)
+        except:
+            if key in self._metadata.keys():
+                return self._metadata[key]
+            raise AttributeError(
+                maybe_you_meant(
+                    key, f"Received invalid info parameter: '{key}'.",
+                    source = self._metadata.keys()))
 
     def __getitem__(self, key):
         return getattr(self, key)
@@ -150,19 +155,40 @@ class DatasetMetadata(AgMLSerializable):
 
     @property
     def num_to_class(self):
-        mapping = self._metadata['crop_types']
+        mapping = self._metadata['classes']
+        if has_nested_dicts(mapping):
+            out = {}
+            for class_type in mapping.keys():
+                if isinstance(mapping[class_type], dict):
+                    nums = [int(float(i)) for i in mapping[class_type.keys()]]
+                    out[class_type] = dict(zip(nums, mapping[class_type].values()))
+                else:
+                    out[class_type] = mapping[class_type]
+            return out
         nums = [int(float(i)) for i in mapping.keys()]
         return dict(zip(nums, mapping.values()))
 
     @property
     def class_to_num(self):
-        mapping = self._metadata['crop_types']
+        mapping = self._metadata['classes']
+        if has_nested_dicts(mapping):
+            out = {}
+            for class_type in mapping.keys():
+                if isinstance(mapping[class_type], dict):
+                    nums = [int(float(i)) for i in mapping[class_type].keys()]
+                    out[class_type] = dict(zip(mapping[class_type].values(), nums))
+                else:
+                    out[class_type] = mapping[class_type]
+            return out
         nums = [int(float(i)) for i in mapping.keys()]
         return dict(zip(mapping.values(), nums))
 
     @property
     def classes(self):
-        return list(self._metadata['crop_types'].values())
+        classes = self._metadata['classes']
+        if has_nested_dicts(classes):
+            return {k: list(d.values()) for k, d in classes.items()}
+        return list(classes.values())
 
     @property
     def num_classes(self):
@@ -179,6 +205,10 @@ class DatasetMetadata(AgMLSerializable):
         if self._citation_meta['citation'] == '':
             return None
         return self._citation_meta['citation']
+
+    @property
+    def external_image_sources(self):
+        return self._metadata['external_image_sources']
 
     def summary(self):
         """Prints out a summary of the dataset information.

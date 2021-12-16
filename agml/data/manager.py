@@ -115,7 +115,12 @@ class DataManager(AgMLSerializable):
         """
         self._data_objects = []
         contents = builder.get_contents()
-        for content in list(contents.items()):
+        if 'inputs' in contents.keys():
+            contents = zip(tuple(contents['inputs']),
+                           tuple(contents['outputs']))
+        else:
+            contents = contents.items()
+        for content in list(contents):
             self._data_objects.append(DataObject.create(
                 contents = content, task = task,
                 root = self._dataset_root))
@@ -250,6 +255,47 @@ class DataManager(AgMLSerializable):
                     self._data_objects[self._accessors[i]]))
         return contents
 
+    def _batch_multi_image_inputs(self, images):
+        """Converts either a list of images or multiple input types into a batch."""
+        # If the input images are just a simple batch.
+        if isinstance(images[0], np.ndarray):
+            if not consistent_shapes(images):
+                images = np.array(images, dtype = object)
+                log("Created a batch of images with different "
+                    "shapes. If you want the shapes to be consistent, "
+                    "run `loader.resize_images('auto')`.")
+            else:
+                images = np.array(images)
+            return images
+
+        # Otherwise, convert all of them independently.
+        keys = images[0].keys()
+        batches = {k: [] for k in keys}
+        for sample in images:
+            for key in sample:
+                batches[key].append(sample[key])
+        return {k: self._batch_multi_image_inputs(i) for k, i in batches.items()}
+
+    def _batch_multi_output_annotations(self, annotations):
+        """Converts either a list of annotations or multiple annotation types into a batch."""
+        # If the output annotations are simple objects.
+        if (isinstance(annotations[0], (list, np.ndarray))
+            or isinstance(annotations, (list, np.ndarray))
+                and isinstance(annotations[0], (int, float))):
+            if not consistent_shapes(annotations):
+                annotations = np.array(annotations, dtype = object)
+            else:
+                annotations = np.array(annotations)
+            return annotations
+
+        # otherwise, convert all of them independently.
+        keys = annotations[0].keys()
+        batches = {k: [] for k in keys}
+        for sample in annotations:
+            for key in sample:
+                batches[key].append(sample[key])
+        return {k: self._batch_multi_output_annotations(i) for k, i in batches.items()}
+
     def _load_batch(self, batch_indexes):
         """Gets a batch of data from the dataset.
 
@@ -266,25 +312,13 @@ class DataManager(AgMLSerializable):
             annotations.append(annotation)
 
         # Attempt to create batched image arrays.
-        if not consistent_shapes(images):
-            images = np.array(images, dtype = object)
-            log("Created a batch of images with different "
-                "shapes. If you want the shapes to be consistent, "
-                "run `loader.resize_images('auto')`.")
-        else:
-            images = np.array(images)
+        images = self._batch_multi_image_inputs(images)
 
         # Attempt the same for the annotation arrays. This is more complex
         # since there are many different types of annotations, namely labels,
         # annotation masks, COCO JSON dictionaries, etc. We need to properly
         # create a batch in each of these cases.
-        if self._task in ['image_classification', 'object_detection']:
-            annotations = np.array(annotations)
-        elif self._task == 'semantic_segmentation':
-            if not consistent_shapes(annotations):
-                annotations = np.array(annotations, dtype = object)
-            else:
-                annotations = np.array(annotations)
+        annotations = self._batch_multi_output_annotations(annotations)
 
         # Return the batches.
         return self._train_manager.make_batch(

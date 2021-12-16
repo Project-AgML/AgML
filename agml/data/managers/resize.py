@@ -131,8 +131,8 @@ class ImageResizeManager(AgMLSerializable):
 
     def apply(self, contents):
         """Applies the resizing operation to the input data."""
-        if self._task == 'image_classification':
-            return self._resize_single_image(
+        if self._task in ['image_classification', 'image_regression']:
+            return self._resize_image_input(
                 contents, self._image_size)
         elif self._task == 'object_detection':
             return self._resize_image_and_coco(
@@ -202,7 +202,7 @@ class ImageResizeManager(AgMLSerializable):
         would do in the regular shape inference method, only with a
         random sample instead of the entire dataset for reference.
         """
-        log(f"Could not find shape information for {self._dataset_name}."
+        log(f"Could not find shape information for {self._dataset_name}. "
             f"Attempting to randomly inference the dataset shape.")
 
         image_path = os.path.join(self._dataset_root, 'images')
@@ -211,6 +211,7 @@ class ImageResizeManager(AgMLSerializable):
         # Get all of the shapes from the random sample of images.
         shapes = []
         for path in images:
+            path = os.path.join(image_path, path)
             with imread_context(path) as image:
                 shapes.append(image)
 
@@ -241,6 +242,19 @@ class ImageResizeManager(AgMLSerializable):
 
     # The following methods conduct the actual resizing of the images
     # and potentially their annotations for the different tasks.
+
+    def _resize_image_input(self, contents, image_size):
+        # If there is only one image input, just return that.
+        image, label = contents
+        if isinstance(image, np.ndarray):
+            return self._resize_single_image(contents, image_size)
+        if image_size is not None:
+            return {
+                k: cv2.resize(i.astype(np.uint16),
+                              image_size,
+                              cv2.INTER_NEAREST).astype(np.int32)
+                for k, i in image.items()}, label
+        return image, label
 
     @staticmethod
     def _resize_single_image(contents, image_size):

@@ -12,13 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import copy
-
 from enum import Enum
 
 import numpy as np
 
 from agml.framework import AgMLSerializable
+from agml.utils.image import needs_batch_dim
 from agml.backend.tftorch import (
     tf, torch, set_backend, get_backend,
     user_changed_backend, StrictBackendError,
@@ -225,20 +224,45 @@ class TrainingManager(AgMLSerializable):
         return images, annotations
 
     @staticmethod
+    def _tf_tensor_image_convert(image):
+        """Converts potential multi-image input dicts to tensors."""
+        if isinstance(image, np.ndarray):
+            return tf.constant(image)
+        return {k: tf.constant(i) for k, i in image.items()}
+
+    @staticmethod
+    def _tf_tensor_image_batch_convert(batch):
+        """Converts potential multi-image input batch dicts to tensor dicts."""
+        if isinstance(batch, np.ndarray):
+            return tf.stack(batch)
+        return {k: tf.stack(b) for k, b in batch.items()}
+
+    @staticmethod
     def _tf_tensor_convert(contents, task):
         """Converts contents to `tf.Tensor`s where possible."""
         # Convert the image and annotation to `tf.Tensor`s.
         image, annotation = contents
-        image = tf.constant(image)
-        if task in ['image_classification', 'semantic_segmentation']:
-            annotation = tf.constant(annotation)
+        image = TrainingManager._tf_tensor_image_convert(image)
+        if task in ['image_classification',
+                    'image_regression',
+                    'semantic_segmentation']:
+            if isinstance(annotation, (int, np.ndarray)):
+                annotation = tf.constant(annotation)
+            else:
+                for k, v in annotation.items():
+                    annotation[k] = tf.constant(v)
         elif task == 'object_detection':
             annotation = TrainingManager._tf_tensor_coco_convert(
                 annotation)
 
         # Add a first-dimension batch to the image.
-        if len(image.get_shape()) == 3:
-            image = tf.expand_dims(image, axis = 0)
+        if isinstance(image, tf.Tensor):
+            if needs_batch_dim(image):
+                image = tf.expand_dims(image, axis = 0)
+        else:
+            for k, v in image.items():
+                if needs_batch_dim(v):
+                    image[k] = tf.expand_dims(v, axis = 0)
         return image, annotation
 
     @staticmethod
@@ -246,9 +270,15 @@ class TrainingManager(AgMLSerializable):
         """Converts batch contents to `tf.Tensor`s where possible."""
         # This stacks the images and annotations together.
         images, annotations = contents
-        images = tf.constant(images)
+        images = TrainingManager._tf_tensor_image_batch_convert(images)
         if task == 'image_classification':
             annotations = tf.constant(annotations)
+        elif task == 'image_regression':
+            if isinstance(annotations, np.ndarray):
+                annotations = tf.constant(annotations)
+            else:
+                for k, v in annotations.items():
+                    annotations[k] = tf.constant(v)
         elif task == 'semantic_segmentation':
             annotations = tf.stack(annotations, axis = 0)
         elif task == 'object_detection':
@@ -265,12 +295,34 @@ class TrainingManager(AgMLSerializable):
         return coco_tensor
 
     @staticmethod
+    def _torch_tensor_image_convert(image):
+        """Converts potential multi-image input dicts to tensors."""
+        if isinstance(image, np.ndarray):
+            return _convert_image_to_torch(image)
+        return {k: _convert_image_to_torch(i) for k, i in image.items()}
+
+    @staticmethod
+    def _torch_tensor_image_batch_convert(batch):
+        """Converts potential multi-image input batch dicts to tensor dicts."""
+        if isinstance(batch, np.ndarray):
+            return torch.stack([
+                _convert_image_to_torch(image) for image in batch])
+        return {k: TrainingManager.
+            _torch_tensor_image_batch_convert(b) for k, b in batch.items()}
+
+    @staticmethod
     def _torch_tensor_convert(contents, task):
         """Converts contents to `torch.Tensor`s where possible."""
         image, annotation = contents
-        image = _convert_image_to_torch(image)
-        if task in ['image_classification', 'semantic_segmentation']:
-            annotation = torch.tensor(annotation)
+        image = TrainingManager._torch_tensor_image_convert(image)
+        if task in ['image_classification',
+                    'image_regression',
+                    'semantic_segmentation']:
+            if isinstance(annotation, (int, np.ndarray)):
+                annotation = torch.tensor(annotation)
+            else:
+                for k, v in annotation.items():
+                    annotation[k] = torch.tensor(v)
         elif task == 'object_detection':
             annotation = TrainingManager._torch_tensor_coco_convert(
                 annotation)
@@ -280,10 +332,15 @@ class TrainingManager(AgMLSerializable):
     def _torch_tensor_batch_convert(contents, task):
         """Converts batch contents to `torch.Tensor`s where possible."""
         images, annotations = contents
-        images = torch.stack([
-            _convert_image_to_torch(image) for image in images])
-        if task in ['image_classification', 'semantic_segmentation']:
-            annotations = torch.tensor(annotations)
+        images = TrainingManager._torch_tensor_image_batch_convert(images)
+        if task in ['image_classification',
+                    'image_regression',
+                    'semantic_segmentation']:
+            if isinstance(annotations, (int, np.ndarray)):
+                annotations = torch.tensor(annotations)
+            else:
+                for k, v in annotations.items():
+                    annotations[k] = torch.tensor(v)
         elif task == 'object_detection':
             annotations = [TrainingManager._torch_tensor_coco_convert(
                 a_set) for a_set in annotations]
