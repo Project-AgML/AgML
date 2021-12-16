@@ -118,6 +118,15 @@ class TransformManager(AgMLSerializable):
                 raise ValueError("There is no `dual_transform` for image "
                                  "classification tasks. Please pass the "
                                  "input as a `transform` or `target_transform`.")
+        elif self._task == 'image_regression':
+            if t_(kind) == TransformKind.Transform:
+                transform = self._maybe_normalization_or_regular_transform(transform)
+            elif t_(kind) == TransformKind.TargetTransform:
+                if isinstance(transform, tuple): # a special convenience case
+                    if transform[0] == 'one_hot':
+                        transform = OneHotLabelTransform(transform[1])
+            else:
+                pass
         elif self._task == 'semantic_segmentation':
             if t_(kind) == TransformKind.Transform:
                 transform = self._maybe_normalization_or_regular_transform(transform)
