@@ -50,13 +50,17 @@ if datasets[0] == 'all':
 
 # Parse through and update the shape contents.
 for ds in tqdm(datasets, desc = 'Processing Datasets'):
+    if hasattr(ds, 'name'):
+        ds = ds.name
     current_shapes, leave = [], True
     if not os.path.exists(os.path.join(
-            os.path.expanduser('~'), '.agml', 'datasets', ds.name)):
+            os.path.expanduser('~'), '.agml', 'datasets', ds)):
         leave = False
     loader = agml.data.AgMLDataLoader(ds)
     for contents in tqdm(loader, desc = 'Loader Iteration', leave = False):
         image, _ = contents
+        if isinstance(image, dict):
+            image = image['image']
         current_shapes.append(image.shape)
     shape_contents[loader.name] = np.unique(
         current_shapes, return_counts = True, axis = 0)

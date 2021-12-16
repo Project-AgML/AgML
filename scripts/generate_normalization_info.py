@@ -64,6 +64,8 @@ for ds in tqdm(datasets, desc = 'Processing Datasets'):
     for contents in tqdm(loader, desc = 'Loader Iteration', leave = False):
         num_images += 1
         image, _ = contents # noqa
+        if isinstance(image, dict):
+            image = image['image']
         image = (image / 255).astype(np.float32)
         image = np.reshape(np.transpose(image, (2, 0, 1)), (3, -1))
         mean += image.mean(-1)
