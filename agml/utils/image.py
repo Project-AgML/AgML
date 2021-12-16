@@ -17,10 +17,32 @@ import os
 import cv2
 
 
-def consistent_shapes(images):
-    """Determines whether the shapes of the images are consistent."""
-    shapes = [i.shape for i in images]
-    return shapes.count(shapes[0]) == len(shapes)
+def consistent_shapes(objects):
+    """Determines whether the shapes of the objects are consistent."""
+    try:
+        shapes = [i.shape for i in objects]
+        return shapes.count(shapes[0]) == len(shapes)
+    except:
+        try:
+            lens = [len(i) for i in objects]
+            return lens.count(lens[0]) == len(lens)
+        except:
+            if isinstance(objects[0], (int, float)):
+                return True
+            return False
+
+
+def needs_batch_dim(image):
+    """Determines whether an image has or is missing a batch dimension."""
+    if not hasattr(image, 'shape'):
+        raise TypeError(
+            "Can only determine batch dimensions for numpy arrays or tensors.")
+    if len(image.shape) == 2:
+        return True
+    elif len(image.shape) == 3:
+        if image.shape[0] != 1:
+            return True
+    return False
 
 
 class imread_context(object):
@@ -33,17 +55,21 @@ class imread_context(object):
     error message in future operations. This context catches such
     issues and raises a more detailed error message for the user.
     """
-    def __init__(self, path):
+    def __init__(self, path, flags = None):
         self._path = path
         if not os.path.exists(path):
             raise ValueError(
                 f"The image path '{path}' does not exist. "
                 f"Please check the dataset you are using, "
                 f"and if files are missing, re-download it.")
+        self.flags = flags
+        if self.flags is None:
+            self.flags = cv2.IMREAD_UNCHANGED
 
     def __enter__(self):
         try:
-            img = cv2.imread(self._path, cv2.IMREAD_UNCHANGED)
+
+            img = cv2.imread(self._path, self.flags)
         except cv2.error:
             raise ValueError(
                 f"An error was encountered when loading the image "

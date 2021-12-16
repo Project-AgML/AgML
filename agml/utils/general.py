@@ -66,6 +66,11 @@ def resolve_tuple(sequence):
     return tuple(i for i in sequence)
 
 
+def has_nested_dicts(obj):
+    """Returns whether a dictionary contains nested dicts."""
+    return any(isinstance(i, dict) for i in obj.values())
+
+
 def as_scalar(inp):
     """Converts an input value to a scalar."""
     if isinstance(inp, (int, float)):

@@ -29,7 +29,8 @@
             "0": "angular_leaf_spot",
             "1": "bean_rust",
             "2": "healthy"
-        }
+        },
+        "external_image_sources": []
     },
     "carrot_weeds_germany": {
         "ml_task": "semantic_segmentation",
@@ -60,7 +61,8 @@
         "classes": {
             "0": "carrot",
             "1": "weeds"
-        }
+        },
+        "external_image_sources": []
     },
     "plant_seedlings_aarhus": {
         "ml_task": "image_classification",
@@ -101,7 +103,8 @@
             "9": "smallflowered_cranesbill",
             "10": "black_grass",
             "11": "loose_silkybent"
-        }
+        },
+        "external_image_sources": []
     },
     "soybean_weed_uav_brazil": {
         "ml_task": "image_classification",
@@ -134,7 +137,8 @@
             "1": "grass",
             "2": "soybean",
             "3": "soil"
-        }
+        },
+        "external_image_sources": []
     },
     "sugarcane_damage_usa": {
         "ml_task": "image_classification",
@@ -168,7 +172,8 @@
             "3": "two_buds",
             "4": "single_damaged_buds",
             "5": "no_damage"
-        }
+        },
+        "external_image_sources": []
     },
     "crop_weeds_greece": {
         "ml_task": "image_classification",
@@ -200,7 +205,8 @@
             "1": "velvet_leaf",
             "2": "cotton",
             "3": "tomato"
-        }
+        },
+        "external_image_sources": []
     },
     "sugarbeet_weed_segmentation": {
         "ml_task": "semantic_segmentation",
@@ -231,7 +237,8 @@
         "classes": {
             "0": "sugar_beet",
             "1": "random_weeds"
-        }
+        },
+        "external_image_sources": []
     },
     "rangeland_weeds_australia": {
         "ml_task": "image_classification",
@@ -270,7 +277,8 @@
             "7": "siam_weed",
             "8": "snake_weed",
             "9": "negative"
-        }
+        },
+        "external_image_sources": []
     },
     "fruit_detection_worldwide": {
         "ml_task": "object_detection",
@@ -306,7 +314,8 @@
             "4": "strawberry",
             "5": "mango",
             "6": "capsicum"
-        }
+        },
+        "external_image_sources": []
     },
     "leaf_counting_denmark": {
         "ml_task": "image_classification",
@@ -338,7 +347,8 @@
             "6": "7",
             "7": "8",
             "8": "9+"
-        }
+        },
+        "external_image_sources": []
     },
     "apple_detection_usa": {
         "ml_task": "object_detection",
@@ -368,7 +378,8 @@
         },
         "classes": {
             "0": "apple"
-        }
+        },
+        "external_image_sources": []
     },
     "cotton_seedling_counting": {
         "ml_task": "object_detection",
@@ -399,7 +410,8 @@
         "classes": {
             "0": "Plant",
             "1": "Weed"
-        }
+        },
+        "external_image_sources": []
     },
     "mango_detection_australia": {
         "ml_task": "object_detection",
@@ -429,7 +441,8 @@
         },
         "classes": {
             "0": "mango"
-        }
+        },
+        "external_image_sources": []
     },
     "apple_flower_segmentation": {
         "ml_task": "semantic_segmentation",
@@ -459,7 +472,8 @@
         },
         "classes": {
             "0": "apple"
-        }
+        },
+        "external_image_sources": []
     },
     "apple_segmentation_minnesota": {
         "ml_task": "semantic_segmentation",
@@ -489,7 +503,8 @@
         },
         "classes": {
             "0": "apple"
-        }
+        },
+        "external_image_sources": []
     },
     "rice_seedling_segmentation": {
         "ml_task": "semantic_segmentation",
@@ -521,7 +536,8 @@
             "0": "Rice",
             "1": "Background",
             "2": "Weed"
-        }
+        },
+        "external_image_sources": []
     },
     "plant_village_classification": {
         "ml_task": "image_classification",
@@ -589,7 +605,8 @@
             "36": "Tomato___Tomato_Yellow_Leaf_Curl_Virus",
             "37": "Tomato___Tomato_mosaic_virus",
             "38": "Tomato___healthy"
-        }
+        },
+        "external_image_sources": []
     },
     "plant_doc_classification": {
         "ml_task": "image_classification",
@@ -646,6 +663,48 @@
             "25": "Tomato_two_spotted_spider_mites_leaf",
             "26": "grape_leaf_black_rot",
             "27": "grape_leaf"
+        },
+        "external_image_sources": []
+    },
+    "autonomous_greenhouse_regression": {
+        "ml_task": "image_regression",
+        "ag_task": "ag_regression",
+        "sensor_modality": "rgb",
+        "real_synthetic": "real",
+        "platform": "ground",
+        "input_data_format": "png",
+        "annotation_format": "json",
+        "n_images": "389",
+        "docs_url": "https://data.4tu.nl/articles/dataset/3rd_Autonomous_Greenhouse_Challenge_Online_Challenge_Lettuce_Images/15023088/1",
+        "classes": {
+            "regression": {
+                "0": "FreshWeightShoot",
+                "1": "DryWeightShoot",
+                "2": "Height",
+                "3": "Diameter",
+                "4": "LeafArea"
+            },
+            "classification": {
+                "0": "Aphylion",
+                "1": "Lugano",
+                "2": "Salanova",
+                "3": "Satine"
+            }
+        },
+        "external_image_sources": [
+            "depth"
+        ],
+        "stats": {
+            "mean": [
+                0.4848844110965729,
+                0.45935600996017456,
+                0.4063475430011749
+            ],
+            "std": [
+                0.13606780767440796,
+                0.13940763473510742,
+                0.19247490167617798
+            ]
         }
     }
 }

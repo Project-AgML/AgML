@@ -51,3 +51,6 @@ into a single training pipeline. To this end, we provide annotations in the foll
 
 We welcome contributions! If you would like to contribue a new feature, fix an issue that you've noticed, or even just mention
 a bug or feature that you would like to see implemented, please don't hesitate to use the *Issues* tab to bring it to our attention.
+
+## Funding
+This project was partly funded by the [National AI Institute for Food Systems (AIFS)](https://aifs.ucdavis.edu).

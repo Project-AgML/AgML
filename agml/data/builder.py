@@ -13,13 +13,14 @@
 # limitations under the License.
 
 import os
+import re
 import sys
 import json
 
 from agml.framework import AgMLSerializable
 from agml.backend.config import data_save_path
 from agml.utils.downloads import download_dataset
-from agml.utils.io import get_file_list, get_dir_list
+from agml.utils.io import get_file_list, get_dir_list, is_image_file
 
 
 class DataBuilder(AgMLSerializable):
@@ -36,13 +37,15 @@ class DataBuilder(AgMLSerializable):
     used by the `DataManager` inside the `AgMLDataLoader`.
     """
     serializable = frozenset(
-        ('name', 'task', 'info_map', 'dataset_root', 'data'))
+        ('name', 'task', 'info_map',
+         'dataset_root', 'data', 'external_image_sources'))
 
     def __init__(self, info, dataset_path, overwrite):
         # Attempt to locate or download the dataset.
         self._name = info.name
         self._task = info.tasks.ml
         self._info_map = info.class_to_num
+        self._external_image_sources = info.external_image_sources
         self._configure_dataset(
             dataset_path = dataset_path, overwrite = overwrite)
         self._data = None
@@ -146,6 +149,8 @@ class DataBuilder(AgMLSerializable):
             return
         if task == 'image_classification':
             self._generate_image_classification_data()
+        elif task == 'image_regression':
+            self._generate_image_regression_data()
         elif task == 'object_detection':
             self._generate_object_detection_data()
         else:
@@ -209,6 +214,32 @@ class DataBuilder(AgMLSerializable):
                 file_ = os.path.join(dir_path, file_)
                 image_label_mapping[file_] = self._info_map[dir_]
         self._data = image_label_mapping
+
+    def _generate_image_regression_data(self):
+        """Loads image regression data for the loader.
+
+        In this format, there are input images in an `images` folder as
+        well as other image formats in other various `*_images` folders,
+        and an `annotations.json` file containing the regression outputs.
+        """
+        with open(os.path.join(self._dataset_root, 'annotations.json'), 'r') as f:
+            annotations = json.load(f)
+        content_mapping = {'inputs': [], 'outputs': []}
+        annotation_types = set(list(self._info_map.keys()))
+        annotation_types.remove('regression')
+        for sample in annotations:
+            for k, v in sample.items():
+                if is_image_file(v):
+                    sample[k] = os.path.join(self._dataset_root, f'{k}s', v)
+            content_mapping['inputs'].append({
+                k: v for k, v in sample.items()
+                if re.match('(.*?)image', k)})
+            out = {'regression': list(sample['outputs']['regression'].values())}
+            out.update({
+                k: self._info_map[k][v] for k, v in sample['outputs'].items()
+                if k in annotation_types})
+            content_mapping['outputs'].append(out)
+        self._data = content_mapping
 
     def _generate_semantic_segmentation_data(self):
         """Loads semantic segmentation data for the loader.

@@ -516,7 +516,7 @@ class PublicDataPreprocessor(object):
         images = [os.path.basename(p) for p in images]
         labels = [os.path.basename(p) for p in labels]
 
-        # Move the images to the new directory
+        # Move the images to the new directory.
         move_segmentation_dataset(
             self.data_processed_dir, dataset_name,
             images, labels, data_dir, data_dir
@@ -533,3 +533,44 @@ class PublicDataPreprocessor(object):
 
     def plant_doc_classification(self, dataset_name):
         pass
+
+    def autonomous_greenhouse_regression(self, dataset_name):
+        # Get all of the data paths.
+        dataset_dir = os.path.join(self.data_original_dir, dataset_name)
+        image_dir = os.path.join(dataset_dir, 'RGBImages')
+        depth_dir = os.path.join(dataset_dir, 'DepthImages')
+        with open(os.path.join(dataset_dir, 'dataset.json'), 'r') as f:
+            contents = json.load(f)
+
+        # Construct the output annotation JSON file.
+        out = []
+        for sample in contents['labels'].values():
+            out.append({
+                'image': sample['rgb_image_path'],
+                'depth_image': sample['depth_image_path'],
+                'outputs': {
+                    'regression': sample['regression_outputs'],
+                    'classification': sample['classification_outputs']['Variety']
+                }
+            })
+
+        # Copy the images over.
+        out_dir = os.path.join(self.data_processed_dir, dataset_name)
+        out_image_dir = os.path.join(out_dir, 'images')
+        os.makedirs(out_image_dir, exist_ok = True)
+        out_depth_dir = os.path.join(out_dir, 'depth_images')
+        os.makedirs(out_depth_dir, exist_ok = True)
+        for image in tqdm(os.listdir(image_dir),
+                          desc = "Moving Images", file = sys.stdout):
+            shutil.copyfile(os.path.join(image_dir, image),
+                            os.path.join(out_image_dir, image))
+        for depth in tqdm(os.listdir(depth_dir),
+                          desc = "Moving Depth Images", file = sys.stdout):
+            shutil.copyfile(os.path.join(depth_dir, depth),
+                            os.path.join(out_depth_dir, depth))
+
+        # Save the annotation file.
+        with open(os.path.join(out_dir, 'annotations.json'), 'w') as f:
+            json.dump(out, f)
+
+

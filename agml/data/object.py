@@ -39,12 +39,12 @@ class DataObject(AgMLSerializable):
     expected contents (NumPy arrays/dictionaries/integers) when necessary.
     """
     serializable = frozenset(
-        ('image_path', 'annotation_obj', 'dataset_root'))
-    _abstract = frozenset(('_load_image', '_parse_annotation'))
+        ('image_object', 'annotation_obj', 'dataset_root'))
+    _abstract = frozenset(('_load_image_input', '_parse_annotation'))
 
     def __init__(self, image, annotation, root):
         # The `image` parameter is constant among different tasks.
-        self._image_path = image
+        self._image_object = image
 
         # The `annotation` parameter varies with the task.
         self._annotation_obj = annotation
@@ -61,12 +61,22 @@ class DataObject(AgMLSerializable):
         return self.get()[i]
 
     def __repr__(self):
-        return f"<DataObject: {self._image_path}, {self._annotation_obj}>"
+        return f"<DataObject: {self._image_object}, {self._annotation_obj}>"
 
     @staticmethod
     def _parse_image(path):
-        with imread_context(os.path.realpath(path)) as image:
+        with imread_context(os.path.abspath(path)) as image:
             return cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+
+    @staticmethod
+    def _parse_depth_image(path):
+        with imread_context(os.path.abspath(path), flags = -1) as image:
+            return image.astype(np.int32)
+
+    @staticmethod
+    def _parse_spectral_image(path):
+        None # noqa, prevents `all abstract methods must be implemented`
+        raise NotImplementedError("Multi/Hyperspectral images are not yet supported.")
 
     def get(self):
         """Returns the image and annotation pair with applied transforms.
@@ -78,7 +88,7 @@ class DataObject(AgMLSerializable):
 
     def _load(self):
         """Loads the image and annotation and returns them."""
-        image = self._load_image(self._image_path)
+        image = self._load_image_input(self._image_object)
         annotation = self._parse_annotation(self._annotation_obj)
         return image, annotation
 
@@ -100,6 +110,8 @@ class DataObject(AgMLSerializable):
         """Creates a new `DataObject` for the corresponding task."""
         if task == 'image_classification':
             cls = ImageClassificationDataObject
+        elif task == 'image_regression':
+            cls = ImageRegressionDataObject
         elif task == 'object_detection':
             cls = ObjectDetectionDataObject
         elif task == 'semantic_segmentation':
@@ -111,8 +123,8 @@ class DataObject(AgMLSerializable):
     # The following methods are used to load the image and annotation.
 
     @abc.abstractmethod
-    def _load_image(self, path):
-        """Loads an image based on the task. Derived by subclasses."""
+    def _load_image_input(self, path):
+        """Loads image inputs based on the task. Derived by subclasses."""
         raise NotImplementedError()
 
     @abc.abstractmethod
@@ -172,16 +184,39 @@ class DataObject(AgMLSerializable):
 
 class ImageClassificationDataObject(DataObject):
     """Serves as a `DataObject` for image classification tasks."""
-    def _load_image(self, path):
+    def _load_image_input(self, path):
         return self._parse_image(path)
 
     def _parse_annotation(self, obj):
         return self._parse_label(obj)
 
 
+class ImageRegressionDataObject(DataObject):
+    """Serves as a `DataObject` for image regression tasks."""
+    def _load_image_input(self, contents):
+        # The easy case, when there is only one input image.
+        if isinstance(contents, str) and os.path.exists(contents):
+            return self._parse_image(contents)
+
+        # Otherwise, we have a dictionary containing multiple
+        # input types, so we need to independently load those.
+        images = dict.fromkeys(contents.keys(), None)
+        for c_type, path in contents.items():
+            if c_type == 'image':
+                images[c_type] = self._parse_image(path)
+            elif c_type == 'depth_image':
+                images[c_type] = self._parse_depth_image(path)
+            else:
+                images[c_type] = self._parse_spectral_image(path)
+        return images
+
+    def _parse_annotation(self, obj):
+        return obj
+
+
 class ObjectDetectionDataObject(DataObject):
     """Serves as a `DataObject` from object detection tasks."""
-    def _load_image(self, path):
+    def _load_image_input(self, path):
         path = os.path.join(self._dataset_root, 'images', path)
         return self._parse_image(path)
 
@@ -191,7 +226,7 @@ class ObjectDetectionDataObject(DataObject):
 
 class SemanticSegmentationDataObject(DataObject):
     """Serves as a `DataObject` for semantic segmentation tasks."""
-    def _load_image(self, path):
+    def _load_image_input(self, path):
         return self._parse_image(path)
 
     def _parse_annotation(self, obj):

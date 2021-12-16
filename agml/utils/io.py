@@ -79,3 +79,12 @@ def recursive_dirname(dir_, level = 1):
     if level == 0:
         return dir_
     return recursive_dirname(os.path.dirname(dir_), level - 1)
+
+
+def is_image_file(file):
+    """Returns whether a file is an image file."""
+    if not isinstance(file, (str, bytes, os.PathLike)):
+        return False
+    end = os.path.splitext(file)[-1][1:]
+    return end.lower() in ['jpg', 'jpeg', 'png', 'bmp', 'tiff']
+
