@@ -155,7 +155,11 @@ class DataManager(AgMLSerializable):
         which are returned back to the `AgMLDataLoader` to be constructed into
         `DataBuilder`s and wrapped into new `DataManager`s.
         """
-        contents = np.array(list(self._builder.get_contents().items()))
+        if self._task == 'object_detection':
+            contents = np.array(list(
+                self._builder.get_contents().items()), dtype = object)
+        else:
+            contents = np.array(list(self._builder.get_contents().items()))
         return {
             k: dict(contents[v]) for k, v in splits.items()
         }
@@ -204,11 +208,11 @@ class DataManager(AgMLSerializable):
         self._accessors = np.array(batches, dtype = object)
         self._batch_size = batch_size
 
-    def assign_resize(self, image_size):
+    def assign_resize(self, image_size, method):
         """Assigns a resizing factor for the image and annotation data."""
         if image_size is None:
             image_size = 'default'
-        self._resize_manager.assign(image_size)
+        self._resize_manager.assign(image_size, method)
 
     def push_transforms(self, **transform_dict):
         """Pushes a transformation to the data transform pipeline."""
@@ -294,7 +298,11 @@ class DataManager(AgMLSerializable):
                 annotations = np.array(annotations)
             return annotations
 
-        # otherwise, convert all of them independently.
+        # For object detection, just return the COCO JSON dictionaries.
+        if self._task == 'object_detection':
+            return annotations
+
+        # Otherwise, convert all of them independently.
         keys = annotations[0].keys()
         batches = {k: [] for k in keys}
         for sample in annotations:

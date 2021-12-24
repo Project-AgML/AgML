@@ -55,11 +55,11 @@ def dice_loss(y_pred, y):
     return 1. - torch.mean(intersection / denominator)
 
 
-class ClassificationBenchmark(pl.LightningModule):
+class SegmentationBenchmark(pl.LightningModule):
     """Represents an image classification benchmark model."""
     def __init__(self, dataset, pretrained = False):
         # Initialize the module.
-        super(ClassificationBenchmark, self).__init__()
+        super(SegmentationBenchmark, self).__init__()
 
         # Construct the network.
         self._source = agml.data.source(dataset)
@@ -108,8 +108,7 @@ class ClassificationBenchmark(pl.LightningModule):
         return torch.optim.Adam(self.net.parameters())
 
     def get_metrics(self):
-        tqdm_dict = super(ClassificationBenchmark, self)\
-            .get_progress_bar_dict()
+        tqdm_dict = super(SegmentationBenchmark, self).get_progress_bar_dict()
         tqdm_dict.pop('v_num', None)
         return tqdm_dict
 
@@ -165,7 +164,7 @@ def train(dataset, pretrained, epochs, save_dir = None):
     ]
 
     # Construct the model.
-    model = ClassificationBenchmark(
+    model = SegmentationBenchmark(
         dataset = dataset, pretrained = pretrained)
 
     # Construct the data loaders.

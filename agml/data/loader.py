@@ -567,7 +567,7 @@ class AgMLDataLoader(AgMLSerializable):
             batch_size = batch_size
         )
 
-    def resize_images(self, image_size = None):
+    def resize_images(self, image_size = None, method = 'bilinear'):
         """Resizes images within the loader to a specified size.
 
         This method applies a resizing parameter for images before they are
@@ -602,6 +602,9 @@ class AgMLDataLoader(AgMLSerializable):
         ----------
         image_size : optional
             The resizing parameter for the image.
+        method : optional
+            The method to resize the images. Should be one of 'nearest',
+            'bilinear', 'linear', or 'cubic'. Defaults to 'bilinear'.
 
         Notes
         -----
@@ -609,7 +612,8 @@ class AgMLDataLoader(AgMLSerializable):
         *before* being passed into the transform pipeline.
         """
         self._manager.assign_resize(
-            image_size = image_size
+            image_size = image_size,
+            method = method
         )
 
     def transform(self,

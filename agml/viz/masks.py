@@ -50,6 +50,8 @@ def _preprocess_mask(mask):
 
 def _mask_2d_to_3d(mask):
     """Converts a mask from 2-dimensional to channel-by-channel."""
+    if mask.ndim == 3:
+        return mask
     mask = np.squeeze(mask)
     channels = np.unique(mask)[1:]
     out = np.zeros(shape = (*mask.shape[:2], int(max(channels))))
@@ -198,7 +200,7 @@ def overlay_segmentation_masks(image, mask = None, border = True):
         "If `image` is a tuple/list, it should contain "
         "two values: the image and its mask.")
     image = format_image(image)
-    mask = _mask_2d_to_3d(mask)
+    mask = _mask_2d_to_3d(format_image(mask))
 
     # Plot the segmentation masks over the image
     mask = np.transpose(mask, (2, 0, 1))

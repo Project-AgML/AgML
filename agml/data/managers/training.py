@@ -316,13 +316,14 @@ class TrainingManager(AgMLSerializable):
         image, annotation = contents
         image = TrainingManager._torch_tensor_image_convert(image)
         if task in ['image_classification',
-                    'image_regression',
-                    'semantic_segmentation']:
+                    'image_regression']:
             if isinstance(annotation, (int, np.ndarray)):
                 annotation = torch.tensor(annotation)
             else:
                 for k, v in annotation.items():
                     annotation[k] = torch.tensor(v)
+        elif task == 'semantic_segmentation':
+            annotation = _convert_image_to_torch(annotation)
         elif task == 'object_detection':
             annotation = TrainingManager._torch_tensor_coco_convert(
                 annotation)
@@ -334,13 +335,15 @@ class TrainingManager(AgMLSerializable):
         images, annotations = contents
         images = TrainingManager._torch_tensor_image_batch_convert(images)
         if task in ['image_classification',
-                    'image_regression',
-                    'semantic_segmentation']:
+                    'image_regression']:
             if isinstance(annotations, (int, np.ndarray)):
                 annotations = torch.tensor(annotations)
             else:
                 for k, v in annotations.items():
                     annotations[k] = torch.tensor(v)
+        elif task == 'semantic_segmentation':
+            annotations = torch.stack([
+                _convert_image_to_torch(a) for a in annotations])
         elif task == 'object_detection':
             annotations = [TrainingManager._torch_tensor_coco_convert(
                 a_set) for a_set in annotations]

@@ -63,6 +63,7 @@ class DataBuilder(AgMLSerializable):
         obj._name = info.name
         obj._task = info.tasks.ml
         obj._info_map = info.class_to_num
+        obj._external_image_sources = info.external_image_sources
         obj._dataset_root = root
         obj._data = contents
         return obj

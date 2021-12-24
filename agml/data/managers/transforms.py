@@ -81,8 +81,6 @@ class TransformManager(AgMLSerializable):
 
     def assign(self, kind, transform):
         """Assigns a new transform to the manager."""
-        prev = self._transforms.get(kind, None)
-
         # Determine if the transform is being reset or unchanged.
         if transform == 'reset':
             self._transforms.pop(kind, None)
@@ -100,12 +98,16 @@ class TransformManager(AgMLSerializable):
                 if 'albumentations' in transform.__module__:
                     if t_(kind) == TransformKind.Transform:
                         if len(transform.processors) != 0:
-                            kind = TransformKind.DualTransform
+                            kind = 'dual_transform'
                     if self._task == 'semantic_segmentation':
-                        kind = TransformKind.DualTransform
+                        kind = 'dual_transform'
             except AttributeError:
                 # Some type of object that doesn't have `__module__`.
                 pass
+
+        # We can only do this after the albumentations check, to ensure
+        # that we are adding the transforms to the correct location.
+        prev = self._transforms.get(kind, None)
 
         # Validate the transformation based on the task and kind.
         if self._task == 'image_classification':

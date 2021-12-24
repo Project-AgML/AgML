@@ -108,7 +108,10 @@ def is_array_like(inp):
 
 def shapes(seq):
     """Returns the shapes (or lengths) of all of the objects in the sequence."""
-    return [getattr(obj, 'shape', getattr(obj, '__len__', None)) for obj in seq]
+    try:
+        return [getattr(obj, 'shape', len(obj)) for obj in seq]
+    except:
+        raise ValueError(f"One or more of the objects has no shape or length: {seq}.")
 
 
 class seed_context(object):

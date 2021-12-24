@@ -13,12 +13,14 @@
 # limitations under the License.
 
 import cv2
-
+import numpy as np
 import matplotlib.pyplot as plt
 
 from agml.utils.general import resolve_tuple_values, as_scalar, scalar_unpack
 from agml.data.tools import _resolve_coco_annotations # noqa
-from agml.viz.tools import get_colormap, auto_resolve_image, format_image, show_when_allowed
+from agml.viz.tools import (
+    get_colormap, auto_resolve_image, format_image, show_when_allowed
+)
 
 
 def _resolve_proportional_bboxes(coords, shape):
@@ -68,8 +70,8 @@ def annotate_bboxes_on_image(image, bboxes = None, labels = None):
         "If `image` is a tuple/list, it should contain "
         "three values: the image, mask, and (optionally) labels.")
     if isinstance(bboxes, dict):
-        bboxes = _resolve_coco_annotations(bboxes)['bboxes']
-    image = format_image(image)
+        bboxes = _resolve_coco_annotations(bboxes)['bbox']
+    image = np.asarray(format_image(image))
     if labels is None:
         labels = [1] * len(bboxes)
 
@@ -78,9 +80,11 @@ def annotate_bboxes_on_image(image, bboxes = None, labels = None):
         x1, y1, width, height = \
             _resolve_proportional_bboxes(bbox, image.shape)
         x2, y2 = x1 + width, y1 + height
-        image = cv2.rectangle(image, (x1, y1),
-                      (x2, y2),
-                      get_colormap()[as_scalar(label)], 2)
+        # from cv2.cv2 import circle
+        # image = cv2.circle(image, (x1, y1), 5, (0, 255, 0))
+        image = cv2.rectangle(
+            image, (x1, y1), (x2, y2),
+            get_colormap()[as_scalar(label)], 2)
     return image
 
 
@@ -116,7 +120,6 @@ def visualize_image_and_boxes(image, bboxes = None, labels = None):
     plt.imshow(image)
     plt.gca().axis('off')
     plt.gca().set_aspect('equal')
-    plt.show()
     return image
 
 
