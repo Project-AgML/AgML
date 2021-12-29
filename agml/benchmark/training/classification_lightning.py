@@ -26,6 +26,7 @@ from torchvision.models import efficientnet_b4
 import albumentations as A
 
 import agml
+from tools import gpus
 
 
 class EfficientNetB4Transfer(nn.Module):
@@ -75,7 +76,8 @@ class ClassificationBenchmark(pl.LightningModule):
         y_pred = self(x)
         loss = self.loss(y_pred, y)
         acc = accuracy(y_pred, torch.argmax(y, 1)).item()
-        self.log('accuracy', acc, prog_bar = True)
+        self.log('accuracy', acc, prog_bar = True, logger = True)
+        self.log('loss', loss, logger = True)
         return {
             'loss': loss,
             'accuracy': acc
@@ -86,8 +88,8 @@ class ClassificationBenchmark(pl.LightningModule):
         y_pred = self(x)
         val_loss = self.loss(y_pred, y)
         val_acc = accuracy(y_pred, torch.argmax(y, 1))
-        self.log('val_loss', val_loss.item(), prog_bar = True)
-        self.log('val_accuracy', val_acc.item(), prog_bar = True)
+        self.log('val_loss', val_loss.item(), prog_bar = True, logger = True)
+        self.log('val_accuracy', val_acc.item(), prog_bar = True, logger = True)
         return {
             'val_loss': val_loss,
             'val_accuracy': val_acc
@@ -118,7 +120,7 @@ def accuracy(output, target):
 def build_loaders(name):
     loader = agml.data.AgMLDataLoader(name)
     loader.split(train = 0.8, val = 0.1, test = 0.1)
-    loader.batch(batch_size = 16)
+    loader.batch(batch_size = 2)
     loader.resize_images('imagenet')
     loader.normalize_images('imagenet')
     loader.labels_to_one_hot()
@@ -134,7 +136,10 @@ def build_loaders(name):
 def train(dataset, pretrained, epochs, save_dir = None):
     """Constructs the training loop and trains a model."""
     if save_dir is None:
-        save_dir = os.path.join(f"/data2/amnjoshi/checkpoints/{dataset}")
+        if os.path.isdir('/data2'):
+            save_dir = os.path.join(f"/data2/amnjoshi/checkpoints/{dataset}")
+        else:
+            save_dir = os.path.join(os.path.dirname(__file__), 'logs')
         os.makedirs(save_dir, exist_ok = True)
 
     # Set up the checkpoint saving callback.
@@ -168,8 +173,9 @@ def train(dataset, pretrained, epochs, save_dir = None):
 
     # Create the trainer and train the model.
     trainer = pl.Trainer(
-        max_epochs = epochs, gpus = 1,
-        callbacks = callbacks, logger = loggers)
+        max_epochs = epochs, gpus = gpus(None),
+        callbacks = callbacks, logger = loggers,
+        log_every_n_steps = 1)
     trainer.fit(
         model = model,
         train_dataloaders = train_ds,
@@ -192,6 +198,7 @@ if __name__ == '__main__':
         '--epochs', type = int, default = 50,
         help = "How many epochs to train for. Default is 50.")
     args = ap.parse_args()
+    args.dataset = 'bean_disease_uganda'
 
     # Train the model.
     train(args.dataset,
