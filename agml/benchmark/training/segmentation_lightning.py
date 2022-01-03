@@ -144,7 +144,10 @@ def build_loaders(name):
 def train(dataset, pretrained, epochs, save_dir = None):
     """Constructs the training loop and trains a model."""
     if save_dir is None:
-        save_dir = os.path.join(f"/data2/amnjoshi/checkpoints/{dataset}")
+        if os.path.isdir('/data2'):
+            save_dir = os.path.join(f"/data2/amnjoshi/checkpoints/{dataset}")
+        else:
+            save_dir = os.path.join(os.path.dirname(__file__), 'logs')
         os.makedirs(save_dir, exist_ok = True)
 
     # Set up the checkpoint saving callback.

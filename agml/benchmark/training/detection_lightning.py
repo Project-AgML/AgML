@@ -56,8 +56,7 @@ class DetectionBenchmark(pl.LightningModule):
         self.net = DetBenchTrain(EfficientDetTransfer(config))
 
     def forward(self, x, target):
-        x = self.net.forward(x, target)
-        return x
+        return self.net.forward(x, target)
 
     def training_step(self, batch, *args, **kwargs): # noqa
         x, y = process_data(*batch)
@@ -117,6 +116,7 @@ def process_data(image, coco):
         'img_scale': torch.ones(size = (len(coco),)).float()
     }
 
+
 # Build the data loaders.
 def build_loaders(name):
     loader = agml.data.AgMLDataLoader(name)
@@ -140,7 +140,10 @@ def build_loaders(name):
 def train(dataset, pretrained, epochs, save_dir = None):
     """Constructs the training loop and trains a model."""
     if save_dir is None:
-        save_dir = os.path.join(f"./data2/amnjoshi/checkpoints/{dataset}")
+        if os.path.isdir('/data2'):
+            save_dir = os.path.join(f"/data2/amnjoshi/checkpoints/{dataset}")
+        else:
+            save_dir = os.path.join(os.path.dirname(__file__), 'logs')
         os.makedirs(save_dir, exist_ok = True)
 
     # Construct the EfficientDet config.
