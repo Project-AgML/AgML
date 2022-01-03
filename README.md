@@ -20,18 +20,83 @@ To install the latest release of AgML, run the following command:
 pip install agml
 ```
 
-## Getting Started
+## Quick Start
+
+AgML is designed for easy usage of agricultural data in a variety of formats. You can start off by using the `AgMLDataLoader` to
+download and load a dataset into a container:
+
+```python
+import agml
+
+loader = agml.data.AgMLDataLoader('apple_flower_segmentation')
+```
+
+You can then use the in-built processing methods to get the loader ready for your training and evaluation pipelines. This includes, but
+is not limited to, batching data, shuffling data, splitting data into training, validation, and test sets, and applying transforms. 
+
+```python
+import albumentations as A
+
+# Batch the dataset into collections of 8 pieces of data:
+loader.batch(8)
+
+# Shuffle the data:
+loader.shuffle()
+
+# Apply transforms to the input images and output annotation masks:
+loader.mask_to_channel_basis()
+loader.transform(
+    transform = A.RandomContrast(),
+    dual_transform = A.Compose([A.RandomRotate90()])
+)
+
+# Split the data into train/val/test sets.
+loader.split(train = 0.8, val = 0.1, test = 0.1)
+```
+
+The split datasets can be accessed using `loader.train_data`, `loader.val_data`, and `loader.test_data`. Any further processing applied to the
+main loader will be applied to the split datasets, until the split attributes are accessed, at which point you need to apply processing independently
+to each of the loaders. You can also turn toggle processing on and off using the `loader.eval()`, `loader.reset_preprocessing()`, and `loader.disable_preprocessing()`
+methods.
+
+You can visualize data using the `agml.viz` module, which supports multiple different types of visualization for different data types:
+
+```python
+# Disable processing and batching for the test data:
+test_ds = loader.test_data
+test_ds.batch(None)
+test_ds.reset_prepreprocessing()
+
+# Visualize the image and mask side-by-side:
+agml.viz.visualize_image_and_mask(test_ds[0])
+
+# Visualize the mask overlaid onto the image:
+agml.viz.visualize_overlaid_masks(test_ds[0])
+```
+
+AgML supports both the TensorFlow and PyTorch libraries as backends, and provides functionality to export your loaders to native TensorFlow and PyTorch
+formats when you want to use them in a training pipeline. This includes both exporting the `AgMLDataLoader` to a `tf.data.Dataset` or `torch.utils.data.DataLoader`,
+but also internally converting data within the `AgMLDataLoader` itself, enabling access to its core functionality.
+
+
+```python
+# Export the loader as a `tf.data.Dataset`:
+train_ds = loader.train_data.export_tensorflow()
+
+# Convert to PyTorch tensors without exporting.
+train_ds = loader.train_data
+train_ds.as_torch_dataset()
+```
+
+You're now ready to use AgML for training your own models!
+
+## Usage Information
 
 ### Using Public Agricultural Data
 
 AgML aims to provide easy access to a range of existing public agricultural datasets The core of AgML's public data pipeline is 
-[`AgMLDataLoader`](/agml/data/loader.py). Simply running the following line of code:
-
-```python
-loader = AgMLDataLoader('<dataset_name_here>')
-```
-
-will download the dataset locally from which point it will be automatically loaded from the disk on future runs. 
+[`AgMLDataLoader`](/agml/data/loader.py). You can use the `AgMLDataLoader` or `agml.data.download_public_dataset()` to download 
+the dataset locally from which point it will be automatically loaded from the disk on future runs. 
 From this point, the data within the loader can be split into train/val/test sets, batched, have augmentations and transforms
 applied, and be converted into a training-ready dataset (including batching, tensor conversion, and image formatting).
 
