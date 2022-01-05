@@ -2,7 +2,8 @@ numpy
 matplotlib
 tqdm
 scikit-learn
-opencv-python
+opencv-python; sys.platform != 'linux'
+opencv-python-headless; sys.platform == 'linux'
 torch
 torchvision
 tensorflow
