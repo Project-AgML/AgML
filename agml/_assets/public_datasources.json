@@ -393,7 +393,7 @@
         "platform": "ground",
         "input_data_format": "png",
         "annotation_format": "coco_json",
-        "n_images": "2290",
+        "n_images": "1511",
         "docs_url": "https://github.com/UGA-BSAIL/deepseedling",
         "stats": {
             "mean": [

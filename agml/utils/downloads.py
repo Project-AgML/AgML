@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import os
+import shutil
 import zipfile
 
 from tqdm import tqdm
@@ -23,7 +24,7 @@ from agml.utils.data import (
 from agml.utils.logging import log
 
 
-def download_dataset(dataset_name, dest_dir):
+def download_dataset(dataset_name, dest_dir, redownload = False):
     """
     Downloads dataset from agdata-data s3 file storage.
 
@@ -33,6 +34,8 @@ def download_dataset(dataset_name, dest_dir):
         name of dataset to download
     dest_dir : str
         path for saving downloaded dataset
+    redownload : bool
+        Whether to re-download the dataset.
     """
     import requests
 
@@ -51,9 +54,19 @@ def download_dataset(dataset_name, dest_dir):
     # Connect to S3 and generate unsigned URL for bucket object
     url = f"https://agdata-data.s3.us-west-1.amazonaws.com/{dataset_name}.zip"
 
-    # File path of zipped dataset
+    # Check if dataset already exists
     if dataset_name in dest_dir:
         dest_dir = os.path.dirname(dest_dir)
+    exist_dir = os.path.join(dest_dir, dataset_name)
+    if not redownload:
+        if os.path.exists(exist_dir):
+            log(f"Dataset '{dataset_name}' already exists "
+                f"in '{exist_dir}', skipping download.")
+            return
+    elif os.path.exists(exist_dir) and redownload:
+        shutil.rmtree(exist_dir)
+
+    # File path of zipped dataset
     os.makedirs(dest_dir, exist_ok = True)
     dataset_download_path = os.path.join(
         dest_dir, dataset_name + '.zip')
@@ -64,9 +77,13 @@ def download_dataset(dataset_name, dest_dir):
             r = sess.get(url, stream = True)
             r.raise_for_status()
             content_size = int(r.headers['Content-Length'])
+            sz = round(content_size / 1000000, 1)
+            size_print = f"{sz} MB"
+            if sz > 1000:
+                size_print = f"{round(sz / 1000, 2)} GB"
             pg = tqdm(total = content_size,
                       desc = f"Downloading {dataset_name} "
-                             f"(size = {round(content_size/ 1000000, 1)} MB)")
+                             f"(size = {size_print})")
             with open(dataset_download_path, 'wb') as f:
                 for chunk in r.iter_content(chunk_size = 8192):
                     f.write(chunk)

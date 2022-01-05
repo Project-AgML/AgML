@@ -14,6 +14,7 @@
 
 import io
 import re
+import sys
 import yaml
 import collections
 
@@ -252,6 +253,7 @@ class DatasetMetadata(AgMLSerializable):
         print(_bold("Name") + f": {self._name}")
         print(content, end = '')
         print('=' * 57)
+        sys.stdout.flush()
 
     def citation_summary(self):
         """Prints out a summary of the citation information of the dataset.

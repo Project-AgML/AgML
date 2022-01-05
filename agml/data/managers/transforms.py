@@ -220,7 +220,7 @@ class TransformManager(AgMLSerializable):
             # general `torchvision.transforms` pipeline.
             if "PIL" in str(e):
                 raise TypeError("If using a `torchvision.transforms` pipeline "
-                                "when not in a PyTorch training mode, you need "
+                                "when not in PyTorch training mode, you need "
                                 "to include `ToTensor()` in the pipeline.")
 
             # Otherwise, raise the default exception.

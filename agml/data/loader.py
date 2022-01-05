@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import copy
+from typing import Union
 from decimal import getcontext, Decimal
 
 import numpy as np
@@ -21,7 +22,7 @@ from agml.framework import AgMLSerializable
 from agml.data.manager import DataManager
 from agml.data.builder import DataBuilder
 from agml.data.metadata import DatasetMetadata
-from agml.utils.general import NoArgument
+from agml.utils.general import NoArgument, resolve_list_value
 from agml.utils.logging import log
 from agml.backend.tftorch import (
     get_backend, set_backend,
@@ -99,11 +100,18 @@ class AgMLDataLoader(AgMLSerializable):
     def __len__(self):
         return self._manager.data_length()
 
-    def __getitem__(self, indexes):
+    def __getitem__(self, indexes: Union[list, int, slice]):
         if isinstance(indexes, slice):
             data = np.arange(self._manager.data_length())
             indexes = data[indexes].tolist()
-        return self._manager.get(indexes)
+        if isinstance(indexes, int):
+            indexes = [indexes]
+        for idx in indexes:
+            if idx not in range(len(self)):
+                raise IndexError(
+                    f"Index {idx} out of range of "
+                    f"AgMLDataLoader length: {len(self)}.")
+        return self._manager.get(resolve_list_value(indexes))
 
     def __iter__(self):
         for indx in range(len(self)):

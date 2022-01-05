@@ -18,6 +18,7 @@ from .tools import (
     get_colormap
 )
 from .masks import (
+    output_to_mask,
     visualize_image_and_mask,
     overlay_segmentation_masks,
     visualize_overlaid_masks,

@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import os
+import sys
 import json
 import shutil
 import difflib
@@ -104,6 +105,7 @@ def copyright_print(name, location = None):
     if location is not None:
         print(f"\nYou can find your dataset at {location}.")
     print('=' * max_print_length)
+    sys.stdout.flush()
 
 
 
