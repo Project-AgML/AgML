@@ -167,6 +167,8 @@ def _convert_image_to_torch(image):
     if isinstance(image, (list, tuple)):
         return torch.tensor(image)
     if isinstance(image, torch.Tensor) or image.ndim == 4:
+        if image.shape[0] == 1 and image.shape[-1] <= 3 and image.ndim == 4:
+            return torch.from_numpy(image).permute(0, 3, 1, 2).float()
         return image
     if image.shape[0] > image.shape[-1]:
         return torch.from_numpy(image).permute(2, 0, 1).float()
