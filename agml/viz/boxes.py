@@ -80,8 +80,6 @@ def annotate_bboxes_on_image(image, bboxes = None, labels = None):
         x1, y1, width, height = \
             _resolve_proportional_bboxes(bbox, image.shape)
         x2, y2 = x1 + width, y1 + height
-        # from cv2.cv2 import circle
-        # image = cv2.circle(image, (x1, y1), 5, (0, 255, 0))
         image = cv2.rectangle(
             image, (x1, y1), (x2, y2),
             get_colormap()[as_scalar(label)], 2)

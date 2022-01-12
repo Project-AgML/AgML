@@ -66,11 +66,26 @@ class TransformManager(AgMLSerializable):
     semantic segmentation and object detection transformations, but
     there is no `dual_transform` for image classification.
     """
-    serializable = frozenset(('task', 'transforms'))
+    serializable = frozenset(
+        ('task', 'transforms', 'time_inserted_transforms'))
 
     def __init__(self, task):
         self._task = task
         self._transforms = dict()
+
+        # A user might want to apply a certain set of transforms first,
+        # which are then followed by a different set of transforms. E.g.,
+        # calling `loader.transform()` with one set of transforms and then
+        # following with another call to `loader.transform()` with the
+        # intention that the transforms in the second call will only be
+        # applied after all of the transforms in the first call are.
+        #
+        # So, while the transform types are tracked in the `_transforms`
+        # attribute, we track the moment that transforms are inserted
+        # using this attribute, which is a list of different transforms.
+        # The `apply()` method loops sequentially through each transform
+        # in this list and applies them as required.
+        self._time_inserted_transforms = []
 
     def get_transform_states(self):
         """Returns a copy of the existing transforms."""
@@ -155,6 +170,7 @@ class TransformManager(AgMLSerializable):
                 self._transforms[kind].append(transform)
             else:
                 self._transforms[kind] = [transform]
+            self._time_inserted_transforms.append((kind, transform))
 
     def apply(self, contents):
         """Applies a transform to a set of input data.
@@ -182,25 +198,17 @@ class TransformManager(AgMLSerializable):
         """
         image, annotation = contents
 
-        # Iterate through the different types of transforms.
-        for kind in TransformKind:
+        # Iterate through the different transforms.
+        for (kind, transform) in self._time_inserted_transforms:
             if kind == TransformKind.Transform:
-                transform = self._transforms.get('transform', None)
-                if transform is not None:
-                    for t in transform:
-                        image = self._apply_to_objects(t, (image, ), kind)
+                image = self._apply_to_objects(
+                    transform, (image, ), kind)
             if kind == TransformKind.TargetTransform:
-                transform = self._transforms.get('target_transform', None)
-                if transform is not None:
-                    for t in transform:
-                        annotation = self._apply_to_objects(
-                            t, (annotation, ), kind)
+                annotation = self._apply_to_objects(
+                    transform, (annotation, ), kind)
             if kind == TransformKind.DualTransform:
-                transform = self._transforms.get('dual_transform', None)
-                if transform is not None:
-                    for t in transform:
-                        image, annotation = self._apply_to_objects(
-                            t, (image, annotation), kind)
+                image, annotation = self._apply_to_objects(
+                    transform, (image, annotation), kind)
 
         # Return the processed image and annotation.
         return image, annotation

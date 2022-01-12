@@ -242,9 +242,9 @@ class DataManager(AgMLSerializable):
             if transform_dict['dual_transform'] is None:
                 transform_dict['dual_transform'] = 'reset'
 
-        # Assign the transforms to the manager.
-        for key, transform in transform_dict.items():
-            self._transform_manager.assign(key, transform)
+        # Assign the transforms to the manager in order.
+        for key in ['transform', 'target_transform', 'dual_transform']:
+            self._transform_manager.assign(key, transform_dict[key])
 
     def _load_one_image_and_annotation(self, obj):
         """Loads one image and annotation from a `DataObject`."""

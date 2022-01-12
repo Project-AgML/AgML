@@ -143,8 +143,8 @@ def format_image(img):
         img = np.array(img.getdata())
     elif isinstance(img, torch.Tensor):
         if img.is_cuda:
-            return img.cpu().detach().numpy()
-        return img.numpy()
+            img = img.cpu().detach().numpy()
+        img = img.numpy()
     elif isinstance(img, tf.Tensor):
         img = img.numpy()
     else:
