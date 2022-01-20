@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import os
+import re
 import setuptools
 
 # ============== SETUP INFORMATION ==============
@@ -24,7 +25,7 @@ python_supported = ['3', '3.7', '3.8', '3.9', '3.10']
 os_supported = ['MacOS', 'Unix', 'POSIX', 'Microsoft :: Windows']
 
 CLASSIFIERS = [
-    "Development Status :: 3 - Alpha", # FIX: What is our actual development status?
+    "Development Status :: 3 - Alpha",
     "Topic :: Scientific/Engineering",
     *[f"Operating System :: {os}" for os in os_supported],
     *[f"Programming Language :: Python :: {v}" for v in python_supported]
@@ -49,11 +50,17 @@ dev_requires = [
     'pandas'
 ] + tests_require
 
+# ==================== VERSIONING ====================
+
+with open(os.path.join(os.path.dirname(__file__), 'agml', '__init__.py'), 'r') as f:
+    version = re.search(
+        r'^__version__ = [\'"]([^\'"]*)[\'"]', f.read(), re.M).group(1)
+
 # ==================== SETUP ====================
     
 setuptools.setup(
     name="agml",
-    version="0.13",
+    version=version,
     author="UC Davis Plant AI and Biophysics Lab",
     author_email="jmearles@ucdavis.edu",
     maintainer="Amogh Joshi",

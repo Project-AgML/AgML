@@ -17,12 +17,15 @@ import re
 import yaml
 import collections
 
+from agml.framework import AgMLSerializable
 import agml.utils.logging as logging
+from agml.utils.general import has_nested_dicts
 from agml.utils.data import (
     load_public_sources, load_citation_sources, maybe_you_meant, copyright_print
 )
 
-class DatasetMetadata(object):
+
+class DatasetMetadata(AgMLSerializable):
     """Stores metadata about a certain AgML dataset.
 
     When loading in a dataset using the `AgMLDataLoader`, the "info"
@@ -46,6 +49,8 @@ class DatasetMetadata(object):
     property of this class, but any additional info that is not can
     be accessed by treating the `info` object as a dictionary.
     """
+    serializable = frozenset(('name', 'metadata', 'citation_meta'))
+
     def __init__(self, name):
         self._load_source_info(name)
 
@@ -53,6 +58,9 @@ class DatasetMetadata(object):
         return self._name
 
     def __str__(self):
+        return self._name
+
+    def __fspath__(self):
         return self._name
 
     def __eq__(self, other):
@@ -66,6 +74,9 @@ class DatasetMetadata(object):
 
     def _load_source_info(self, name):
         """Loads the data source metadata into the class."""
+        if isinstance(name, DatasetMetadata):
+            name = name.name
+
         source_info = load_public_sources()
         if name not in source_info.keys():
             if name.replace('-', '_') not in source_info.keys():
@@ -83,12 +94,16 @@ class DatasetMetadata(object):
         self._citation_meta = load_citation_sources()[name]
 
     def __getattr__(self, key):
-        if key in self._metadata.keys():
-            return self._metadata[key]
-        raise AttributeError(
-            maybe_you_meant(
-                key, f"Received invalid info parameter: '{key}'.",
-                source = self._metadata.keys()))
+        try:
+            # Some weird behavior with lookups can happen.
+            return object.__getattribute__(self, key)
+        except:
+            if key in self._metadata.keys():
+                return self._metadata[key]
+            raise AttributeError(
+                maybe_you_meant(
+                    key, f"Received invalid info parameter: '{key}'.",
+                    source = self._metadata.keys()))
 
     def __getitem__(self, key):
         return getattr(self, key)
@@ -116,6 +131,13 @@ class DatasetMetadata(object):
         return Location(continent = continent, country = country)
 
     @property
+    def image_stats(self):
+        """Returns the mean and standard deviation of the RGB images."""
+        ImageStats = collections.namedtuple('ImageStats', ['mean', 'std'])
+        mean, std = self._metadata['stats'].values()
+        return ImageStats(mean = mean, std = std)
+
+    @property
     def sensor_modality(self):
         return self._metadata['sensor_modality']
 
@@ -133,19 +155,40 @@ class DatasetMetadata(object):
 
     @property
     def num_to_class(self):
-        mapping = self._metadata['crop_types']
+        mapping = self._metadata['classes']
+        if has_nested_dicts(mapping):
+            out = {}
+            for class_type in mapping.keys():
+                if isinstance(mapping[class_type], dict):
+                    nums = [int(float(i)) for i in mapping[class_type.keys()]]
+                    out[class_type] = dict(zip(nums, mapping[class_type].values()))
+                else:
+                    out[class_type] = mapping[class_type]
+            return out
         nums = [int(float(i)) for i in mapping.keys()]
         return dict(zip(nums, mapping.values()))
 
     @property
     def class_to_num(self):
-        mapping = self._metadata['crop_types']
+        mapping = self._metadata['classes']
+        if has_nested_dicts(mapping):
+            out = {}
+            for class_type in mapping.keys():
+                if isinstance(mapping[class_type], dict):
+                    nums = [int(float(i)) for i in mapping[class_type].keys()]
+                    out[class_type] = dict(zip(mapping[class_type].values(), nums))
+                else:
+                    out[class_type] = mapping[class_type]
+            return out
         nums = [int(float(i)) for i in mapping.keys()]
         return dict(zip(mapping.values(), nums))
 
     @property
     def classes(self):
-        return list(self._metadata['crop_types'].values())
+        classes = self._metadata['classes']
+        if has_nested_dicts(classes):
+            return {k: list(d.values()) for k, d in classes.items()}
+        return list(classes.values())
 
     @property
     def num_classes(self):
@@ -162,6 +205,10 @@ class DatasetMetadata(object):
         if self._citation_meta['citation'] == '':
             return None
         return self._citation_meta['citation']
+
+    @property
+    def external_image_sources(self):
+        return self._metadata['external_image_sources']
 
     def summary(self):
         """Prints out a summary of the dataset information.

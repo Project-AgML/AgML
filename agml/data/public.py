@@ -19,7 +19,8 @@ import numpy as np
 from agml.utils.downloads import download_dataset as _download # noqa
 from agml.utils.data import load_public_sources
 from agml.data.metadata import DatasetMetadata
-from agml.backend.config import default_data_save_path
+from agml.backend.config import data_save_path
+
 
 class _PublicSourceFilter(object):
     """Filters public datasets based on the input filters."""
@@ -89,6 +90,7 @@ class _PublicSourceFilter(object):
     def result(self):
         return [DatasetMetadata(s) for s in self._current_filtered_source]
 
+
 def public_data_sources(**filters):
     """Lists all of the public data sources in AgML.
 
@@ -127,6 +129,7 @@ def public_data_sources(**filters):
     s = _PublicSourceFilter().apply_filters(**filters)
     return s.result()
 
+
 def source(name):
     """Returns the metadata of a single public dataset source.
 
@@ -144,6 +147,7 @@ def source(name):
     The metadata of the dataset `name`.
     """
     return DatasetMetadata(name)
+
 
 def download_public_dataset(dataset, location = None):
     """Downloads a public dataset from AgML to a directory.
@@ -166,7 +170,7 @@ def download_public_dataset(dataset, location = None):
     The local directory of the dataset.
     """
     location = location if location \
-                        else default_data_save_path()
+                        else data_save_path()
     _download(dataset, location)
     return location
 
