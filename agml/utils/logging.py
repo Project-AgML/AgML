@@ -18,6 +18,15 @@ import time
 import inspect
 import logging
 
+
+# This is a simple hack to auto-adjust `tqdm` based on whether
+# we are in a Jupyter notebook or in a regular shell environment.
+if 'get_ipython' in globals():
+    from tqdm.notebook import tqdm
+else:
+    from tqdm import tqdm
+
+
 # Track already given warnings.
 _GIVEN_WARNINGS = {}
 

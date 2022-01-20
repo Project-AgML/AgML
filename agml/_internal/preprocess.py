@@ -32,9 +32,9 @@ import cv2
 import numpy as np
 import pandas as pd
 
-from tqdm import tqdm
 from PIL import Image
 
+from agml.utils.logging import tqdm
 from agml.utils.io import create_dir, nested_dir_list, get_dir_list, get_file_list
 from agml.utils.data import load_public_sources
 from agml._internal.process_utils import (
@@ -43,6 +43,7 @@ from agml._internal.process_utils import (
     mask_annotation_per_bbox, move_segmentation_dataset,
     create_sub_masks, create_sub_mask_annotation_per_bbox
 )
+
 
 class PublicDataPreprocessor(object):
     """Internal data preprocessing class.

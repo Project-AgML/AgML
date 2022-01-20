@@ -24,7 +24,9 @@ import warnings
 
 import boto3
 import botocore.exceptions
-from tqdm import tqdm
+
+from agml.utils.logging import tqdm
+
 
 class InternalAgMLS3API(object):
     """

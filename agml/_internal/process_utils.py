@@ -27,10 +27,12 @@ import xml.etree.ElementTree as ET
 import cv2
 import numpy as np
 
-from tqdm import tqdm
 from PIL import Image
 from skimage import measure
 from shapely.geometry import Polygon, MultiPolygon
+
+from agml.utils.logging import tqdm
+
 
 def read_txt_file(file_name, delimiter = ' ', header = False):
     with open(file_name, newline = '\n') as txt_file:

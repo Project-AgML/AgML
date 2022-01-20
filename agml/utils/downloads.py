@@ -15,12 +15,11 @@
 import os
 import zipfile
 
-from tqdm import tqdm
 
 from agml.utils.data import (
     load_public_sources, maybe_you_meant, copyright_print
 )
-from agml.utils.logging import log
+from agml.utils.logging import tqdm, log
 
 
 def download_dataset(dataset_name, dest_dir):
