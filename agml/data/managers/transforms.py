@@ -200,13 +200,13 @@ class TransformManager(AgMLSerializable):
 
         # Iterate through the different transforms.
         for (kind, transform) in self._time_inserted_transforms:
-            if kind == TransformKind.Transform:
+            if t_(kind) == TransformKind.Transform:
                 image = self._apply_to_objects(
                     transform, (image, ), kind)
-            if kind == TransformKind.TargetTransform:
+            if t_(kind) == TransformKind.TargetTransform:
                 annotation = self._apply_to_objects(
                     transform, (annotation, ), kind)
-            if kind == TransformKind.DualTransform:
+            if t_(kind) == TransformKind.DualTransform:
                 image, annotation = self._apply_to_objects(
                     transform, (image, annotation), kind)
 
