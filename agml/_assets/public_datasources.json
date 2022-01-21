@@ -539,6 +539,24 @@
         },
         "external_image_sources": []
     },
+    "grape_detection_syntheticday": {
+        "crop_types": {
+            "1": "grape"
+        },
+        "ml_task": "object_detection",
+        "ag_task": "fruit_detection",
+        "location": {
+            "continent": "north_america",
+            "country": "usa"
+        },
+        "sensor_modality": "rgb",
+        "real_synthetic": "synthetic",
+        "platform": "ground",
+        "input_data_format": "jpg",
+        "annotation_format": "coco_json",
+        "n_images": "448",
+        "docs_url": "N/A"
+    },
     "plant_village_classification": {
         "ml_task": "image_classification",
         "ag_task": "disease_classification",
