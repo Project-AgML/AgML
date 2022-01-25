@@ -754,7 +754,20 @@
         "input_data_format": "jpg",
         "annotation_format": "image",
         "n_images": "126",
-        "docs_url": ""
+        "docs_url": "",
+        "external_image_sources": [],
+        "stats": {
+            "mean": [
+                0.4455319046974182,
+                0.4638977646827698,
+                0.27496835589408875
+            ],
+            "std": [
+                0.2677213251590729,
+                0.25918272137641907,
+                0.2625304162502289
+            ]
+        }
     },
     "grape_detection_californianight": {
         "classes": {
@@ -772,6 +785,19 @@
         "input_data_format": "jpg",
         "annotation_format": "image",
         "n_images": "150",
-        "docs_url": ""
+        "docs_url": "",
+        "external_image_sources": [],
+        "stats": {
+            "mean": [
+                0.22235676646232605,
+                0.21305303275585175,
+                0.22475562989711761
+            ],
+            "std": [
+                0.20471057295799255,
+                0.20105913281440735,
+                0.20582404732704163
+            ]
+        }
     }
 }
