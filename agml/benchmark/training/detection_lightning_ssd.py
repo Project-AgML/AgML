@@ -15,126 +15,119 @@
 import os
 import argparse
 
+import numpy as np
 import torch
 import torch.nn as nn
+from torchvision.models.detection import ssd300_vgg16
 import pytorch_lightning as pl
-from torchmetrics import IoU
-from torchvision.models.segmentation import deeplabv3_resnet50
-
 import agml
 import albumentations as A
 
 
-class DeepLabV3Transfer(nn.Module):
+class EfficientDetTransfer(nn.Module):
     """Represents a transfer learning DeepLabV3 model.
 
     This is the base benchmarking model for semantic segmentation,
     using the DeepLabV3 model with a ResNet50 backbone.
     """
-    def __init__(self, num_classes, pretrained = True):
-        super(DeepLabV3Transfer, self).__init__()
-        self.base = deeplabv3_resnet50(
-            pretrained = pretrained,
-            num_classes = num_classes
-        )
+    def __init__(self):
+        super(EfficientDetTransfer, self).__init__()
+        self.base = ssd300_vgg16(pretrained=False)
 
-    def forward(self, x, **kwargs): # noqa
-        return self.base(x)
+    def forward(self, x, y, **kwargs): # noqa
+        return self.base(x, y)
 
 
-def dice_loss(y_pred, y):
-    y = y.float()
-    try: # Multi-class segmentation
-        c, h, w = y.shape[1:]
-    except: # Binary segmentation
-        h, w = y.shape[1:]; c = 1 # noqa
-    pred_flat = torch.reshape(y_pred, [-1, c * h * w])
-    y_flat = torch.reshape(y, [-1, c * h * w])
-    intersection = 2.0 * torch.sum(pred_flat * y_flat, dim = 1) + 1e-6
-    denominator = torch.sum(pred_flat, dim = 1) + torch.sum(y_flat, dim = 1) + 1e-6
-    return 1. - torch.mean(intersection / denominator)
-
-
-def dice_metric(y_pred, y):
-    intersection = 2.0 * (y_pred * y).sum()
-    union = y_pred.sum() + y.sum()
-    if union == 0.0:
-        return 1.0
-    return intersection / union
-
-
-class SegmentationBenchmark(pl.LightningModule):
+class DetectionBenchmark(pl.LightningModule):
     """Represents an image classification benchmark model."""
-    def __init__(self, dataset, pretrained = False):
+    def __init__(self):
         # Initialize the module.
-        super(SegmentationBenchmark, self).__init__()
+        super(DetectionBenchmark, self).__init__()
 
         # Construct the network.
-        self._source = agml.data.source(dataset)
-        self._pretrained = pretrained
-        self.net = DeepLabV3Transfer(
-            self._source.num_classes,
-            self._pretrained
-        )
+        self.net = ssd300_vgg16(pretrained=False)
 
-        # Construct the loss for training.
-        self.loss = dice_loss
-
-        # Construct the IoU metric.
-        self.iou = IoU(self._source.num_classes + 1)
-
-    def forward(self, x):
-        return self.net.forward(x)
-
-    def calculate_loss(self, y_pred, y):
-        if self._source.num_classes != 1:
-            return self.loss(y_pred, y.long())
-        return self.loss(y_pred, y.float())
+    def forward(self, x, target):
+        return self.net(x, target)
 
     def training_step(self, batch, *args, **kwargs): # noqa
-        x, y = batch
-        y_pred = self(x)['out'].float().squeeze()
-        loss = self.calculate_loss(y_pred, y)
-        iou = self.iou(y_pred, y.int())
-        self.log('iou', iou.item(), prog_bar = True)
-        self.log('dice', dice_metric(y_pred, y).item(), prog_bar = True)
+        x, y = process_data(*batch)
+        loss_dict = self(x, y)
+        self.log('class_loss', loss_dict['classification'], prog_bar = True)
+        self.log('reg_loss', loss_dict['bbox_regression'], prog_bar = True)
         return {
-            'loss': loss,
+            'loss': sum(i for i in loss_dict.values()),
+            'log': loss_dict
         }
 
     def validation_step(self, batch, *args, **kwargs): # noqa
-        x, y = batch
-        y_pred = self(x)['out'].float().squeeze()
-        val_loss = self.calculate_loss(y_pred, y)
-        self.log('val_loss', val_loss.item(), prog_bar = True)
-        val_iou = self.iou(y_pred, y.int())
-        self.log('val_iou', val_iou.item(), prog_bar = True)
-        self.log('val_dice', dice_metric(y_pred, y).item(), prog_bar = True)
+        x, y = process_data(*batch)
+        self.net.train()
+        loss_dict = self(x, y)
+        self.log('class_loss', loss_dict['classification'], prog_bar = True)
+        self.log('reg_loss', loss_dict['bbox_regression'], prog_bar = True)
         return {
-            'val_loss': val_loss,
+            'loss': sum(i for i in loss_dict.values()),
+            'log': loss_dict
         }
 
     def configure_optimizers(self):
         return torch.optim.Adam(self.net.parameters())
 
     def get_progress_bar_dict(self):
-        tqdm_dict = super(SegmentationBenchmark, self).get_progress_bar_dict()
+        tqdm_dict = super(DetectionBenchmark, self)\
+            .get_progress_bar_dict()
         tqdm_dict.pop('v_num', None)
         return tqdm_dict
+
+
+def accuracy(output, target):
+    """Computes the accuracy between `output` and `target`."""
+    with torch.no_grad():
+        batch_size = target.size(0)
+        _, pred = torch.topk(output, 1, 1)
+        pred = pred.t()
+        correct = pred.eq(target.view(1, -1).expand_as(pred))
+        correct_k = correct[:1].reshape(-1).float().sum(0, keepdim = True)
+        return correct_k.mul_(100.0 / batch_size)
+
+
+# Transform to swap bounding box order from `xyxy` to `yxyx` # noqa
+def bbox_swap(coco):
+    x1, y1, w, h = coco['bbox'].T
+    coco['bbox'] = np.squeeze(np.dstack((x1, y1, x1 + w, y1 + h)))
+    return coco
+
+
+# Transform to process the image and COCO JSON dictionaries
+# and make them compatible with the EfficientDet model. This
+# is used directly in the training loop.
+def _make_boxes(b):
+    if b.ndim == 1:
+        return torch.unsqueeze(b, dim = 0)
+    return b
+
+def process_data(image, coco):
+    return torch.unbind(image, dim = 0), [
+        {'boxes': _make_boxes(d['bbox'].float()),
+         'labels': d['category_id'].long()} for d in coco]
 
 
 # Build the data loaders.
 def build_loaders(name):
     loader = agml.data.AgMLDataLoader(name)
     loader.split(train = 0.8, val = 0.1, test = 0.1)
-    loader.batch(batch_size = 16)
-    loader.resize_images('imagenet')
-    loader.normalize_images('imagenet')
-    loader.mask_to_channel_basis()
+    loader.batch(4)
+    loader.resize_images((256, 256))
+    loader.normalize_images(method = 'scale')
     train_data = loader.train_data
-    train_data.transform(transform = A.RandomRotate90())
+    train_data.transform(transform = A.Compose([
+        A.RandomRotate90()
+    ], bbox_params = A.BboxParams('coco')))
+    train_data.transform(target_transform = bbox_swap)
     train_ds = train_data.copy().as_torch_dataset()
     val_ds = loader.val_data.as_torch_dataset()
+    val_ds.transform(target_transform = bbox_swap)
     val_ds.shuffle_data = False
     test_ds = loader.test_data.as_torch_dataset()
     return train_ds, val_ds, test_ds
@@ -166,15 +159,14 @@ def train(dataset, pretrained, epochs, save_dir = None):
     ]
 
     # Construct the model.
-    model = SegmentationBenchmark(
-        dataset = dataset, pretrained = pretrained)
+    model = DetectionBenchmark()
 
     # Construct the data loaders.
     train_ds, val_ds, test_ds = build_loaders(dataset)
 
     # Create the trainer and train the model.
     trainer = pl.Trainer(
-        max_epochs = epochs, gpus = 1, callbacks = callbacks)
+        max_epochs = epochs, gpus = 0, callbacks = callbacks)
     trainer.fit(
         model = model,
         train_dataloaders = train_ds,
@@ -183,6 +175,9 @@ def train(dataset, pretrained, epochs, save_dir = None):
 
 
 if __name__ == '__main__':
+    from agml.backend import set_seed
+    set_seed(0)
+
     # Parse input arguments.
     ap = argparse.ArgumentParser()
     ap.add_argument(
@@ -197,12 +192,16 @@ if __name__ == '__main__':
         '--epochs', type = int, default = 50,
         help = "How many epochs to train for. Default is 50.")
     args = ap.parse_args()
+    args.dataset = "apple_detection_usa"
 
     # Train the model.
     train(args.dataset,
           args.pretrained,
           epochs = args.epochs,
           save_dir = args.checkpoint_dir)
+
+
+
 
 
 
