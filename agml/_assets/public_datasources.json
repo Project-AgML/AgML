@@ -539,24 +539,6 @@
         },
         "external_image_sources": []
     },
-    "grape_detection_syntheticday": {
-        "crop_types": {
-            "1": "grape"
-        },
-        "ml_task": "object_detection",
-        "ag_task": "fruit_detection",
-        "location": {
-            "continent": "north_america",
-            "country": "usa"
-        },
-        "sensor_modality": "rgb",
-        "real_synthetic": "synthetic",
-        "platform": "ground",
-        "input_data_format": "jpg",
-        "annotation_format": "coco_json",
-        "n_images": "448",
-        "docs_url": "N/A"
-    },
     "plant_village_classification": {
         "ml_task": "image_classification",
         "ag_task": "disease_classification",
@@ -722,6 +704,37 @@
                 0.13606780767440796,
                 0.13940763473510742,
                 0.19247490167617798
+            ]
+        }
+    },
+    "grape_detection_syntheticday": {
+        "classes": {
+            "1": "grape"
+        },
+        "ml_task": "object_detection",
+        "ag_task": "fruit_detection",
+        "location": {
+            "continent": "north_america",
+            "country": "usa"
+        },
+        "sensor_modality": "rgb",
+        "real_synthetic": "synthetic",
+        "platform": "ground",
+        "input_data_format": "jpg",
+        "annotation_format": "coco_json",
+        "n_images": "448",
+        "docs_url": "N/A",
+        "external_image_sources": [],
+        "stats": {
+            "mean": [
+                0.24965472519397736,
+                0.2763761281967163,
+                0.20683138072490692
+            ],
+            "std": [
+                0.15098054707050323,
+                0.18630442023277283,
+                0.2241816222667694
             ]
         }
     }
