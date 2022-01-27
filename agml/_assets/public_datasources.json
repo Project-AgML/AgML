@@ -799,5 +799,26 @@
                 0.20582404732704163
             ]
         }
+    },
+    "guava_disease_pakistan": {
+        "crop_types": {
+            "1": "Canker",
+            "2": "Dot",
+            "3": "Mummification",
+            "4": "Rust",
+            
+        },
+        "ml_task": "image_classification",
+        "ag_task": "disease_classification",
+        "location": {
+            "continent": "asia",
+            "country": "pakistan"
+        },
+        "sensor_modality": "rgb",
+        "platform": "ground",
+        "input_data_format": "jpg",
+        "annotation_format": "directory_names",
+        "n_images": "306",
+        "docs_url": "https://data.mendeley.com/datasets/s8x6jn5cvr/1"
     }
 }

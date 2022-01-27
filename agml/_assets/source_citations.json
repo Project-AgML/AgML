@@ -86,5 +86,9 @@
     "grape_detection_californianight": {
         "license": "",
         "citation": "@misc{GrapeNight,\n  author    = {Plant AI and Biophysics Lab},\n  title     = {Grape Detection 2020 Night},\n  year      = {2020},\n  url       = {https://github.com/plant-ai-biophysics-lab/AgML} \n "
+    },
+    "guava_disease_pakistan": {
+        "license": "",
+        "citation": "Rauf, Hafiz Tayyab; Lali, Muhammad Ikram Ullah (2021), \u201cA Guava  Fruits and Leaves Dataset for Detection and Classification of Guava Diseases through Machine Learning\u201d, Mendeley Data, V1, doi: 10.17632/s8x6jn5cvr.1"
     }
 }

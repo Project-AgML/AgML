@@ -573,5 +573,8 @@ class PublicDataPreprocessor(object):
         # Save the annotation file.
         with open(os.path.join(out_dir, 'annotations.json'), 'w') as f:
             json.dump(out, f)
+    
+    def guava_disease_pakistan(self, dataset_name):
+        pass
 
 
