@@ -801,12 +801,11 @@
         }
     },
     "guava_disease_pakistan": {
-        "crop_types": {
+        "classes": {
             "1": "Canker",
             "2": "Dot",
             "3": "Mummification",
-            "4": "Rust",
-            
+            "4": "Rust"
         },
         "ml_task": "image_classification",
         "ag_task": "disease_classification",
@@ -819,6 +818,19 @@
         "input_data_format": "jpg",
         "annotation_format": "directory_names",
         "n_images": "306",
-        "docs_url": "https://data.mendeley.com/datasets/s8x6jn5cvr/1"
+        "docs_url": "https://data.mendeley.com/datasets/s8x6jn5cvr/1",
+        "external_image_sources": [],
+        "stats": {
+            "mean": [
+                0.44554805755615234,
+                0.4508753716945648,
+                0.3228892683982849
+            ],
+            "std": [
+                0.18661099672317505,
+                0.18359656631946564,
+                0.18744423985481262
+            ]
+        }
     }
 }
