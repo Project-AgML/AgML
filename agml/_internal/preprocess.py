@@ -573,5 +573,28 @@ class PublicDataPreprocessor(object):
         # Save the annotation file.
         with open(os.path.join(out_dir, 'annotations.json'), 'w') as f:
             json.dump(out, f)
+    
+    def guava_disease_pakistan(self, dataset_name):
+        # Get all of the images.
+        dataset_dir = os.path.join(self.data_original_dir, dataset_name)
+        classes = os.listdir(dataset_dir)
+        all_images = []
+        for cls in classes:
+            all_images.extend([
+                os.path.join(dataset_dir, cls, i)
+                for i in os.listdir(os.path.join(dataset_dir, cls))])
+
+        # Resize all of the images.
+        out_dir = os.path.join(self.data_processed_dir, dataset_name)
+        os.makedirs(out_dir, exist_ok = True)
+        for cls in classes:
+            os.makedirs(os.path.join(out_dir, cls), exist_ok = True)
+        for image in tqdm(all_images, 'Resizing Images'):
+            out_image = image.replace('/original/', '/processed/')
+            im = cv2.imread(image, cv2.IMREAD_UNCHANGED)
+            im = cv2.resize(im, (im.shape[1] // 5, im.shape[0] // 5), cv2.INTER_LINEAR)
+            cv2.imwrite(out_image, im)
 
 
+
+PublicDataPreprocessor('../../data_new').preprocess('guava_disease_pakistan')
