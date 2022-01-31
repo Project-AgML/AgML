@@ -88,7 +88,8 @@ def convert_bbox_format(annotations_or_bboxes, fmt):
     coordinates, and 'x2' and 'y2' are top-right):
 
     1. ('x1', 'x2', 'y1', 'y2') to COCO JSON.
-    2. ('x_min', 'y_min', 'x_max', 'y_max') to COCO JSON.
+    2. ('x_min', 'y_min', 'x_max', 'y_max') to COCO JSON. This format
+        can also be passed with the simple string `pascal_voc`.
     3. ('x_min', 'y_min', 'width', 'height') to COCO JSON.
 
     Note that the variables in the bounding boxes in the above format
@@ -116,6 +117,8 @@ def convert_bbox_format(annotations_or_bboxes, fmt):
         if isinstance(annotations[0], (int, float)):
             annotations = [annotations]
     if isinstance(fmt, str):
+        if fmt == 'pascal_voc':
+            fmt = 'x_min y_min x_max y_max'
         if ',' in fmt:
             fmt = fmt.split(',')
         else:
@@ -131,7 +134,7 @@ def convert_bbox_format(annotations_or_bboxes, fmt):
     def _xmin_ymin_xmax_ymax_to_coco(annotation): # noqa
         xmin, ymin, xmax, ymax = annotation
         width, height = abs(xmax - xmin), abs(ymax - ymin)
-        return [xmin, ymax, width, height]
+        return [xmin, ymin, width, height]
     def _xmin_ymin_width_height_to_coco(annotation): # noqa
         xmin, ymin, width, height = annotation
         x1, y1 = xmin, ymin - height

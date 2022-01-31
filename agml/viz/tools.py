@@ -26,6 +26,8 @@ from PIL import Image
 import matplotlib.pyplot as plt
 
 from agml.backend.tftorch import tf, torch
+from agml.utils.logging import log
+
 
 # Sets the colormaps used in the other `agml.viz` methods.
 @functools.lru_cache(maxsize = None)
@@ -140,7 +142,7 @@ def format_image(img):
     if isinstance(img, np.ndarray):
         img = img
     elif isinstance(img, Image.Image):
-        img = np.array(img.getdata())
+        img = np.array(img).reshape((img.height, img.width, len(img.getbands())))
     elif isinstance(img, torch.Tensor):
         if img.is_cuda:
             img = img.cpu().detach().numpy()
@@ -171,5 +173,11 @@ def format_image(img):
     if np.issubdtype(img.dtype, np.inexact):
         if not img.max() <= 1: # noqa
             img = img.astype(np.uint8)
+
+    # Convert int64 to int32.
+    if img.dtype == np.int64:
+        log("Converting image of dtype `np.int64` to `np.uint8` for display. "
+            "This may cause a loss in precision/invalid result.")
+        img = img.astype(np.uint8)
 
     return img
