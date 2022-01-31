@@ -17,7 +17,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from agml.utils.general import resolve_tuple_values, as_scalar, scalar_unpack
-from agml.data.tools import _resolve_coco_annotations # noqa
+from agml.data.tools import (
+    _resolve_coco_annotations, convert_bbox_format # noqa
+)
 from agml.viz.tools import (
     get_colormap, auto_resolve_image, format_image, show_when_allowed
 )
@@ -41,7 +43,8 @@ def _resolve_proportional_bboxes(coords, shape):
 
 
 @auto_resolve_image
-def annotate_bboxes_on_image(image, bboxes = None, labels = None):
+def annotate_bboxes_on_image(
+        image, bboxes = None, labels = None, bbox_format = None):
     """Annotates bounding boxes onto an image.
 
     Given an image with bounding boxes and labels, this method will
@@ -60,6 +63,10 @@ def annotate_bboxes_on_image(image, bboxes = None, labels = None):
         a dictionary with COCO JSON annotations, or just the boxes.
     labels : Any
         Optional category labels for the bounding box color.
+    bbox_format : optional
+        The format of the bounding box (for non-COCO-JSON bounding
+        boxes).  See `agml.data.convert_bbox_format` for information
+        on the valid parameters for the format.
 
     Returns
     -------
@@ -74,6 +81,8 @@ def annotate_bboxes_on_image(image, bboxes = None, labels = None):
     image = np.asarray(format_image(image))
     if labels is None:
         labels = [1] * len(bboxes)
+    if bbox_format is not None:
+        bboxes = convert_bbox_format(bboxes, bbox_format)
 
     for bbox, label in zip(bboxes, labels):
         bbox = scalar_unpack(bbox)
@@ -88,7 +97,8 @@ def annotate_bboxes_on_image(image, bboxes = None, labels = None):
 
 @show_when_allowed
 @auto_resolve_image
-def visualize_image_and_boxes(image, bboxes = None, labels = None):
+def visualize_image_and_boxes(
+        image, bboxes = None, labels = None, bbox_format = None):
     """Visualizes an image with annotated bounding boxes.
 
     This method performs the same actions as `annotate_bboxes_on_image`,
@@ -103,6 +113,10 @@ def visualize_image_and_boxes(image, bboxes = None, labels = None):
         The bounding boxes in COCO JSON format.
     labels : Any
         Optional category labels for the bounding box color.
+    bbox_format : optional
+        The format of the bounding box (for non-COCO-JSON bounding
+        boxes).  See `agml.data.convert_bbox_format` for information
+        on the valid parameters for the format.
 
     Returns
     -------
@@ -112,7 +126,7 @@ def visualize_image_and_boxes(image, bboxes = None, labels = None):
         image, bboxes, labels, custom_error =
         "If `image` is a tuple/list, it should contain "
         "three values: the image, mask, and (optionally) labels.")
-    image = annotate_bboxes_on_image(image, bboxes, labels)
+    image = annotate_bboxes_on_image(image, bboxes, labels, bbox_format)
 
     plt.figure(figsize = (10, 10))
     plt.imshow(image)
