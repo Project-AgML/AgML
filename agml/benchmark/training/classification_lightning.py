@@ -18,15 +18,15 @@ import argparse
 import torch
 import torch.nn as nn
 import pytorch_lightning as pl
-from pytorch_lightning.loggers import (
-    CSVLogger, TensorBoardLogger
-)
+from pytorch_lightning.loggers import CSVLogger, TensorBoardLogger
+from torchmetrics.classification import Precision, Recall, Accuracy
+
 from torchvision.models import efficientnet_b4
 
+import agml
 import albumentations as A
 
-import agml
-from tools import gpus
+from tools import gpus, checkpoint_dir, MetricLogger
 
 
 class EfficientNetB4Transfer(nn.Module):
@@ -53,7 +53,7 @@ class EfficientNetB4Transfer(nn.Module):
 
 class ClassificationBenchmark(pl.LightningModule):
     """Represents an image classification benchmark model."""
-    def __init__(self, dataset, pretrained = False):
+    def __init__(self, dataset, pretrained = False, save_dir = None):
         # Initialize the module.
         super(ClassificationBenchmark, self).__init__()
 
@@ -67,6 +67,14 @@ class ClassificationBenchmark(pl.LightningModule):
 
         # Construct the loss for training.
         self.loss = nn.CrossEntropyLoss()
+
+        # Add a metric calculator.
+        self.metric_logger = ClassificationMetricLogger({
+            'accuracy': Accuracy(num_classes = self._source.num_classes),
+            'precision': Precision(num_classes = self._source.num_classes),
+            'recall': Recall(num_classes = self._source.num_classes)},
+            os.path.join(save_dir, f'logs-{self._version}.csv'))
+        self._sanity_check_passed = False
 
     def forward(self, x):
         return self.net.forward(x)
@@ -88,6 +96,8 @@ class ClassificationBenchmark(pl.LightningModule):
         y_pred = self(x)
         val_loss = self.loss(y_pred, y)
         val_acc = accuracy(y_pred, torch.argmax(y, 1))
+        if self._sanity_check_passed:
+            self.metric_logger.update(y_pred, torch.argmax(y, 1))
         self.log('val_loss', val_loss.item(), prog_bar = True, logger = True)
         self.log('val_accuracy', val_acc.item(), prog_bar = True, logger = True)
         return {
@@ -104,6 +114,22 @@ class ClassificationBenchmark(pl.LightningModule):
         tqdm_dict.pop('v_num', None)
         return tqdm_dict
 
+    def on_validation_epoch_end(self) -> None:
+        if not self._sanity_check_passed:
+            self._sanity_check_passed = True
+            return
+        self.metric_logger.compile_epoch()
+
+    def on_fit_end(self) -> None:
+        self.metric_logger.save()
+
+
+# Calculate and log the metrics.
+class ClassificationMetricLogger(MetricLogger):
+    def update_metrics(self, y_pred, y_true) -> None:
+        for metric in self.metrics.values():
+            metric.update(y_pred, y_true)
+
 
 def accuracy(output, target):
     """Computes the accuracy between `output` and `target`."""
@@ -119,7 +145,7 @@ def accuracy(output, target):
 # Build the data loaders.
 def build_loaders(name):
     loader = agml.data.AgMLDataLoader(name)
-    loader.split(train = 0.8, val = 0.1, test = 0.1)
+    loader.split(train = 0.05, val = 0.05, test = 0.9)
     loader.batch(batch_size = 2)
     loader.resize_images('imagenet')
     loader.normalize_images('imagenet')
@@ -135,12 +161,7 @@ def build_loaders(name):
 
 def train(dataset, pretrained, epochs, save_dir = None):
     """Constructs the training loop and trains a model."""
-    if save_dir is None:
-        if os.path.isdir('/data2'):
-            save_dir = os.path.join(f"/data2/amnjoshi/checkpoints/{dataset}")
-        else:
-            save_dir = os.path.join(os.path.dirname(__file__), 'logs')
-        os.makedirs(save_dir, exist_ok = True)
+    save_dir = checkpoint_dir(save_dir, dataset)
 
     # Set up the checkpoint saving callback.
     callbacks = [
@@ -160,7 +181,7 @@ def train(dataset, pretrained, epochs, save_dir = None):
 
     # Construct the model.
     model = ClassificationBenchmark(
-        dataset = dataset, pretrained = pretrained)
+        dataset = dataset, pretrained = pretrained, save_dir = save_dir)
 
     # Construct the data loaders.
     train_ds, val_ds, test_ds = build_loaders(dataset)
@@ -199,6 +220,7 @@ if __name__ == '__main__':
         help = "How many epochs to train for. Default is 50.")
     args = ap.parse_args()
     args.dataset = 'bean_disease_uganda'
+    args.epochs = 2
 
     # Train the model.
     train(args.dataset,

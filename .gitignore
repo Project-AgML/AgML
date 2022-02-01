@@ -152,6 +152,8 @@ agml/_internal/*
 !agml/_internal/preprocess*.py
 !agml/_internal/s3internal.py
 !agml/_internal/__init__.py
+agml/benchmark/training/lightning_logs
+agml/benchmark/training/logs
 
 
 *.pptx

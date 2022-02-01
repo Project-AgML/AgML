@@ -132,7 +132,7 @@ def visualize_image_and_boxes(
     plt.imshow(image)
     plt.gca().axis('off')
     plt.gca().set_aspect('equal')
-    return image
+    return plt.gcf()
 
 
 

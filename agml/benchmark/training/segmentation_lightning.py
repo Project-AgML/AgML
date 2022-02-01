@@ -24,6 +24,8 @@ from torchvision.models.segmentation import deeplabv3_resnet50
 import agml
 import albumentations as A
 
+from tools import gpus, checkpoint_dir
+
 
 class DeepLabV3Transfer(nn.Module):
     """Represents a transfer learning DeepLabV3 model.
@@ -142,12 +144,7 @@ def build_loaders(name):
 
 def train(dataset, pretrained, epochs, save_dir = None):
     """Constructs the training loop and trains a model."""
-    if save_dir is None:
-        if os.path.isdir('/data2'):
-            save_dir = os.path.join(f"/data2/amnjoshi/checkpoints/{dataset}")
-        else:
-            save_dir = os.path.join(os.path.dirname(__file__), 'logs')
-        os.makedirs(save_dir, exist_ok = True)
+    save_dir = checkpoint_dir(save_dir, dataset)
 
     # Set up the checkpoint saving callback.
     callbacks = [
@@ -174,12 +171,14 @@ def train(dataset, pretrained, epochs, save_dir = None):
 
     # Create the trainer and train the model.
     trainer = pl.Trainer(
-        max_epochs = epochs, gpus = 1, callbacks = callbacks)
+        max_epochs = epochs, gpus = gpus(), callbacks = callbacks)
     trainer.fit(
         model = model,
         train_dataloaders = train_ds,
-        val_dataloaders = val_ds
-    )
+        val_dataloaders = val_ds)
+
+    # Run the testing loop and log benchmarks.
+
 
 
 if __name__ == '__main__':
