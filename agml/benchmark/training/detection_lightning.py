@@ -12,132 +12,422 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""
+Some of the training code in this file is adapted from the following sources:
+
+1. https://github.com/rwightman/efficientdet-pytorch
+2. https://gist.github.com/Chris-hughes10/73628b1d8d6fc7d359b3dcbbbb8869d7
+"""
+
 import os
 import argparse
+from typing import List
 
 import numpy as np
+from PIL import Image
+
 import torch
-import torch.nn as nn
+from torch.utils.data import Dataset, DataLoader
 import pytorch_lightning as pl
-from effdet.efficientdet import HeadNet
-from effdet import (
-    EfficientDet, get_efficientdet_config, DetBenchTrain
-)
+from pytorch_lightning.core.decorators import auto_move_data
+from torchmetrics.detection import MAP
 
 import agml
 import albumentations as A
+from albumentations.pytorch import ToTensorV2
+
+from effdet import EfficientDet, DetBenchTrain, get_efficientdet_config
+from effdet.efficientdet import HeadNet
+from effdet.config.model_config import efficientdet_model_param_dict
+
+from fastcore.dispatch import typedispatch
+from ensemble_boxes import ensemble_boxes_wbf
+
+from tools import gpus
 
 
-class EfficientDetTransfer(nn.Module):
-    """Represents a transfer learning DeepLabV3 model.
-
-    This is the base benchmarking model for semantic segmentation,
-    using the DeepLabV3 model with a ResNet50 backbone.
-    """
-    def __init__(self, config):
-        super(EfficientDetTransfer, self).__init__()
-        self.base = EfficientDet(
-            config, pretrained_backbone = config.pretrained)
-        self.base.class_net = HeadNet(
-            config, num_outputs = config.num_classes)
-        self.config = config
-
-    def forward(self, x, **kwargs): # noqa
-        return self.base(x)
+# Constants
+IMAGE_SIZE = 512
 
 
-class DetectionBenchmark(pl.LightningModule):
-    """Represents an image classification benchmark model."""
-    def __init__(self, config):
-        # Initialize the module.
-        super(DetectionBenchmark, self).__init__()
+def create_model(num_classes, architecture = 'efficientdet_d4'):
+    """Constructs the `EfficientDetD4` model architecture."""
+    if architecture not in efficientdet_model_param_dict.keys():
+        efficientdet_model_param_dict[architecture] = dict(
+            name = architecture,
+            backbone_name = architecture,
+            backbone_args = dict(drop_path_rate = 0.2),
+            num_classes = num_classes,
+            url = '', )
 
-        # Construct the network.
-        self.net = DetBenchTrain(EfficientDetTransfer(config))
+    config = get_efficientdet_config(architecture)
+    config.update({'num_classes': num_classes})
+    if IMAGE_SIZE != 512: # custom size passed
+        config.update({'image_size': (IMAGE_SIZE, IMAGE_SIZE)})
 
-    def forward(self, x, target):
-        return self.net.forward(x, target)
+    net = EfficientDet(config, pretrained_backbone = True)
+    net.class_net = HeadNet(
+        config, num_outputs = config.num_classes,)
+    return DetBenchTrain(net, config)
 
-    def training_step(self, batch, *args, **kwargs): # noqa
-        x, y = process_data(*batch)
-        loss_dict = self(x, y)
-        return {
-            'loss': loss_dict['loss'],
-            'log': loss_dict
-        }
 
-    def validation_step(self, batch, *args, **kwargs): # noqa
-        x, y = process_data(*batch)
-        loss_dict = self(x, y)
-        return {
-            'loss': loss_dict['loss'],
-            'log': loss_dict
-        }
+class AgMLDatasetAdaptor(object):
+    """Adapts an AgML dataset for use in a `LightningDataModule`."""
+    def __init__(self, loader):
+        self.loader = loader
+
+    def __len__(self) -> int:
+        return len(self.loader)
+
+    def get_image_and_labels_by_idx(self, index):
+        image, annotation = self.loader[index]
+        image = Image.fromarray(image)
+        bboxes = np.array(annotation['bbox']).astype(np.int32)
+        x_min = bboxes[:, 0]
+        y_min = bboxes[:, 1]
+        x_max = bboxes[:, 2] + x_min
+        y_max = bboxes[:, 3] + y_min
+        bboxes = np.dstack((x_min, y_min, x_max, y_max)).squeeze(axis = 0)
+        class_labels = np.array(annotation['category_id']).squeeze()
+        return image, bboxes, class_labels, index
+
+
+def get_transforms(mode = 'inference'):
+    """Returns a set of transforms corresponding to the mode."""
+    if mode == 'train':
+        return A.Compose(
+            [A.HorizontalFlip(p = 0.5),
+             A.Resize(height = IMAGE_SIZE, width = IMAGE_SIZE, p = 1),
+             ToTensorV2(p = 1)], p = 1.0,
+            bbox_params = A.BboxParams(
+                format = "pascal_voc", min_area = 0,
+                min_visibility = 0, label_fields = ["labels"]))
+
+    elif mode in ['val', 'validation']:
+        return A.Compose(
+            [A.Resize(height = IMAGE_SIZE, width = IMAGE_SIZE, p = 1),
+             ToTensorV2(p = 1)], p = 1.0,
+            bbox_params = A.BboxParams(
+                format = "pascal_voc", min_area = 0,
+                min_visibility = 0, label_fields = ["labels"]))
+
+    elif mode == 'inference':
+        return A.Compose(
+            [A.Resize(height = IMAGE_SIZE, width = IMAGE_SIZE, p = 1),
+             ToTensorV2(p = 1)], p = 1.0)
+
+
+class EfficientDetDataset(Dataset):
+    def __init__(self, adaptor, transforms = None):
+        self.ds = adaptor
+        if transforms is None:
+            transforms = get_transforms('val')
+        self.transforms = transforms
+
+    def __len__(self):
+        return len(self.ds)
+
+    def __getitem__(self, index):
+        image, pascal_bboxes, class_labels, image_id = \
+            self.ds.get_image_and_labels_by_idx(index)
+
+        # Add a label dimension for consistency.
+        if class_labels.ndim == 0:
+            class_labels = np.expand_dims(class_labels, axis = 0)
+
+        # Construct the sample.
+        sample = {
+            "image": np.array(image, dtype = np.float32),
+            "bboxes": pascal_bboxes, "labels": class_labels}
+
+        try:
+            sample = self.transforms(**sample)
+        except: # debugging
+            print(f"Failed sample: {sample}")
+
+        sample["bboxes"] = np.array(sample["bboxes"])
+        image = sample["image"]
+        pascal_bboxes = sample["bboxes"]
+        labels = sample["labels"]
+
+        # Convert 1-channel and 4-channel to 3-channel.
+        if image.shape[0] == 1:
+            image = torch.tile(image, (3, 1, 1))
+        if image.shape[0] == 4:
+            image = image[:3]
+
+        # Convert to yxyx from xyxy.
+        _, new_h, new_w = image.shape
+        sample["bboxes"][:, [0, 1, 2, 3]] = \
+            sample["bboxes"][:, [1, 0, 3, 2]]
+
+        # Create the target from the annotations.
+        target = {
+            "bboxes": torch.as_tensor(sample["bboxes"], dtype = torch.float32),
+            "labels": torch.as_tensor(labels), "image_id": torch.tensor([image_id]),
+            "img_size": (new_h, new_w), "img_scale": torch.tensor([1.0])}
+        return image, target, image_id
+
+
+class EfficientDetDataModule(pl.LightningDataModule):
+    """A `LightningDataModule` for the `LightningModule`."""
+
+    def __init__(self,
+                 train_dataset_adaptor,
+                 validation_dataset_adaptor,
+                 train_transforms = None,
+                 val_transforms = None,
+                 num_workers = 4,
+                 batch_size = 8):
+        self.train_ds = train_dataset_adaptor
+        self.valid_ds = validation_dataset_adaptor
+        if train_transforms is None:
+            train_transforms = get_transforms('train')
+        self.train_tfms = train_transforms
+        if val_transforms is None:
+            val_transforms = get_transforms('val')
+        self.val_tfms = val_transforms
+        self.num_workers = num_workers
+        self.batch_size = batch_size
+        super().__init__()
+
+    def train_dataset(self) -> EfficientDetDataset:
+        return EfficientDetDataset(
+            adaptor = self.train_ds,
+            transforms = self.train_tfms)
+
+    def train_dataloader(self) -> DataLoader:
+        return DataLoader(
+            self.train_dataset(),
+            batch_size = self.batch_size,
+            shuffle = True,
+            pin_memory = True,
+            drop_last = True,
+            num_workers = self.num_workers,
+            collate_fn = self.collate_fn,
+        )
+
+    def val_dataset(self) -> EfficientDetDataset:
+        return EfficientDetDataset(
+            adaptor = self.valid_ds,
+            transforms = self.val_tfms)
+
+    def val_dataloader(self) -> DataLoader:
+        return DataLoader(
+            self.val_dataset(),
+            batch_size = self.batch_size,
+            shuffle = False,
+            pin_memory = True,
+            drop_last = True,
+            num_workers = self.num_workers,
+            collate_fn = self.collate_fn,
+        )
+
+    @staticmethod
+    def collate_fn(batch):
+        images, targets, image_ids = tuple(zip(*batch))
+        images = torch.stack(images)
+        images = images.float()
+
+        boxes = [target["bboxes"].float() for target in targets]
+        labels = [target["labels"].float() for target in targets]
+        img_size = torch.tensor([target["img_size"] for target in targets]).float()
+        img_scale = torch.tensor([target["img_scale"] for target in targets]).float()
+
+        annotations = {
+            "bbox": boxes, "cls": labels,
+            "img_size": img_size, "img_scale": img_scale}
+        return images, annotations, targets, image_ids
+
+
+def run_wbf(predictions, image_size = 512, iou_thr = 0.44, skip_box_thr = 0.43, weights = None):
+    bboxes, confidences, class_labels = [], [], []
+
+    for prediction in predictions:
+        boxes = [(prediction["boxes"] / image_size).tolist()]
+        scores = [prediction["scores"].tolist()]
+        labels = [prediction["classes"].tolist()]
+
+        boxes, scores, labels = ensemble_boxes_wbf.weighted_boxes_fusion(
+            boxes, scores, labels, weights = weights,
+            iou_thr = iou_thr, skip_box_thr = skip_box_thr)
+        boxes = boxes * (image_size - 1)
+        bboxes.append(boxes.tolist())
+        confidences.append(scores.tolist())
+        class_labels.append(labels.tolist())
+
+    return bboxes, confidences, class_labels
+
+
+class EfficientDetModel(pl.LightningModule):
+    def __init__(self,
+                 num_classes = 1,
+                 prediction_confidence_threshold = 0.2,
+                 learning_rate = 0.0002,
+                 wbf_iou_threshold = 0.44,
+                 inference_transforms = None,
+                 architecture = 'efficientdet_d4'):
+        super().__init__()
+        self.model = create_model(
+            num_classes, architecture = architecture)
+        self.prediction_confidence_threshold = prediction_confidence_threshold
+        self.lr = learning_rate
+        self.wbf_iou_threshold = wbf_iou_threshold
+        if inference_transforms is None:
+            inference_transforms = get_transforms('inference')
+        self.inference_tfms = inference_transforms
+
+    @auto_move_data
+    def forward(self, images, targets):
+        return self.model(images, targets)
 
     def configure_optimizers(self):
-        return torch.optim.Adam(self.net.parameters())
+        return torch.optim.AdamW(self.model.parameters(), lr = self.lr)
 
-    def get_progress_bar_dict(self):
-        tqdm_dict = super(DetectionBenchmark, self)\
-            .get_progress_bar_dict()
-        tqdm_dict.pop('v_num', None)
-        return tqdm_dict
+    def training_step(self, batch, batch_idx):
+        images, annotations, _, image_ids = batch
+
+        # Calculate and log losses.
+        losses = self.model(images, annotations)
+        self.log("train_loss", losses["loss"], on_step = True,
+                 on_epoch = True, prog_bar = True, logger = True)
+        self.log("train_class_loss", losses["class_loss"], on_step = True,
+                 on_epoch = True, prog_bar = True, logger = True)
+        self.log("train_box_loss", losses["box_loss"], on_step = True,
+                 on_epoch = True, prog_bar = True, logger = True)
+
+        return losses['loss']
+
+    @torch.no_grad()
+    def validation_step(self, batch, batch_idx):
+        images, annotations, targets, image_ids = batch
+        outputs = self.model(images, annotations)
+
+        detections = outputs["detections"]
+
+        batch_predictions = {
+            "predictions": detections,
+            "targets": targets,
+            "image_ids": image_ids,
+        }
+
+        logging_losses = {
+            "class_loss": outputs["class_loss"].detach(),
+            "box_loss": outputs["box_loss"].detach(),
+        }
+
+        self.log("valid_loss", outputs["loss"], on_step = True, on_epoch = True,
+                 prog_bar = True, logger = True, sync_dist = True)
+        self.log("valid_class_loss", logging_losses["class_loss"], on_step = True,
+                 on_epoch = True, prog_bar = True, logger = True, sync_dist = True)
+        self.log("valid_box_loss", logging_losses["box_loss"], on_step = True,
+                 on_epoch = True, prog_bar = True, logger = True, sync_dist = True)
+
+        return {'loss': outputs["loss"], 'batch_predictions': batch_predictions}
+
+    @typedispatch
+    def predict(self, images: List):
+        """
+        For making predictions from images
+        Args:
+            images: a list of PIL images
+
+        Returns: a tuple of lists containing bboxes, predicted_class_labels, predicted_class_confidences
+
+        """
+        image_sizes = [(image.size[1], image.size[0]) for image in images]
+        images_tensor = torch.stack([
+                self.inference_tfms(
+                    image = np.array(image, dtype = np.float32),
+                )["image"] for image in images])
+        return self._run_inference(images_tensor, image_sizes)
+
+    @typedispatch
+    def predict(self, images_tensor: torch.Tensor):
+        """
+        For making predictions from tensors returned from the model's dataloader
+        Args:
+            images_tensor: the images tensor returned from the dataloader
+
+        Returns: a tuple of lists containing bboxes, predicted_class_labels, predicted_class_confidences
+
+        """
+        if images_tensor.ndim == 3:
+            images_tensor = images_tensor.unsqueeze(0)
+        if images_tensor.shape[-1] != self.img_size \
+                or images_tensor.shape[-2] != self.img_size:
+            raise ValueError(
+                f"Input tensors must be of shape "
+                f"(N, 3, {self.img_size}, {self.img_size})")
+
+        num_images = images_tensor.shape[0]
+        image_sizes = [(self.img_size, self.img_size)] * num_images
+        return self._run_inference(images_tensor, image_sizes)
+
+    def _run_inference(self, images_tensor, image_sizes):
+        dummy_targets = self._create_dummy_inference_targets(
+            num_images = images_tensor.shape[0])
+
+        detections = self.model(
+            images_tensor.to(self.device), dummy_targets)["detections"]
+
+        predicted_bboxes, predicted_class_confidences, predicted_class_labels = \
+            self.post_process_detections(detections)
+        scaled_bboxes = self._rescale_bboxes(
+            predicted_bboxes = predicted_bboxes,
+            image_sizes = image_sizes)
+        return scaled_bboxes, predicted_class_labels, predicted_class_confidences
+
+    def _create_dummy_inference_targets(self, num_images):
+        dummy_targets = {
+            "bbox": [
+                torch.tensor([[0.0, 0.0, 0.0, 0.0]], device = self.device)
+                for i in range(num_images)
+            ],
+            "cls": [torch.tensor([1.0], device = self.device) for i in range(num_images)],
+            "img_size": torch.tensor(
+                [(self.img_size, self.img_size)] * num_images, device = self.device
+            ).float(),
+            "img_scale": torch.ones(num_images, device = self.device).float(),
+        }
+
+        return dummy_targets
+
+    def post_process_detections(self, detections):
+        predictions = []
+        for i in range(detections.shape[0]):
+            predictions.append(
+                self._postprocess_single_prediction_detections(detections[i]))
+
+        predicted_bboxes, predicted_class_confidences, predicted_class_labels = run_wbf(
+            predictions, image_size = self.img_size, iou_thr = self.wbf_iou_threshold)
+        return predicted_bboxes, predicted_class_confidences, predicted_class_labels
+
+    def _postprocess_single_prediction_detections(self, detections):
+        boxes = detections.detach().cpu().numpy()[:, :4]
+        scores = detections.detach().cpu().numpy()[:, 4]
+        classes = detections.detach().cpu().numpy()[:, 5]
+        indexes = np.where(scores > self.prediction_confidence_threshold)[0]
+        boxes = boxes[indexes]
+
+        return {"boxes": boxes, "scores": scores[indexes], "classes": classes[indexes]}
+
+    def _rescale_bboxes(self, predicted_bboxes, image_sizes):
+        scaled_bboxes = []
+        for bboxes, img_dims in zip(predicted_bboxes, image_sizes):
+            im_h, im_w = img_dims
+            if len(bboxes) > 0:
+                scaled_bboxes.append(
+                    (np.array(bboxes) * [
+                        im_w / self.img_size, im_h / self.img_size,
+                        im_w / self.img_size, im_h / self.img_size
+                    ]).tolist())
+            else:
+                scaled_bboxes.append(bboxes)
+        return scaled_bboxes
 
 
-def accuracy(output, target):
-    """Computes the accuracy between `output` and `target`."""
-    with torch.no_grad():
-        batch_size = target.size(0)
-        _, pred = torch.topk(output, 1, 1)
-        pred = pred.t()
-        correct = pred.eq(target.view(1, -1).expand_as(pred))
-        correct_k = correct[:1].reshape(-1).float().sum(0, keepdim = True)
-        return correct_k.mul_(100.0 / batch_size)
-
-
-# Transform to swap bounding box order from `xyxy` to `yxyx` # noqa
-def bbox_swap(coco):
-    x1, y1, w, h = coco['bbox'].T
-    coco['bbox'] = np.squeeze(np.dstack((y1, x1, y1 + h, x1 + w)))
-    return coco
-
-
-# Transform to process the image and COCO JSON dictionaries
-# and make them compatible with the EfficientDet model. This
-# is used directly in the training loop.
-def process_data(image, coco):
-    return image, {
-        'bbox': [b['bbox'].float() for b in coco],
-        'cls': [c['category_id'].float() for c in coco],
-        'image_id': [i['image_id'] for i in coco],
-        'area': [a['area'] for a in coco],
-        'iscrowd': [i['iscrowd'] for i in coco],
-        'img_size': torch.tensor([[256, 256]] * len(coco)).float(),
-        'img_scale': torch.ones(size = (len(coco),)).float()
-    }
-
-
-# Build the data loaders.
-def build_loaders(name):
-    loader = agml.data.AgMLDataLoader(name)
-    loader.split(train = 0.8, val = 0.1, test = 0.1)
-    loader.batch(4)
-    loader.resize_images((256, 256))
-    loader.normalize_images('imagenet')
-    train_data = loader.train_data
-    train_data.transform(transform = A.Compose([
-        A.RandomRotate90()
-    ], bbox_params = A.BboxParams('coco')))
-    train_data.transform(target_transform = bbox_swap)
-    train_ds = train_data.copy().as_torch_dataset()
-    val_ds = loader.val_data.as_torch_dataset()
-    val_ds.transform(target_transform = bbox_swap)
-    val_ds.shuffle_data = False
-    test_ds = loader.test_data.as_torch_dataset()
-    return train_ds, val_ds, test_ds
-
-
-def train(dataset, pretrained, epochs, save_dir = None):
+def train(dataset, epochs, save_dir = None):
     """Constructs the training loop and trains a model."""
     if save_dir is None:
         if os.path.isdir('/data2'):
@@ -145,14 +435,6 @@ def train(dataset, pretrained, epochs, save_dir = None):
         else:
             save_dir = os.path.join(os.path.dirname(__file__), 'logs')
         os.makedirs(save_dir, exist_ok = True)
-
-    # Construct the EfficientDet config.
-    cfg = get_efficientdet_config('efficientdet_d4')
-    cfg.update({
-        'num_classes': agml.data.source(dataset).num_classes,
-        'image_size': (256, 256),
-        'pretrained': pretrained
-    })
 
     # Set up the checkpoint saving callback.
     callbacks = [
@@ -170,20 +452,25 @@ def train(dataset, pretrained, epochs, save_dir = None):
         )
     ]
 
-    # Construct the model.
-    model = DetectionBenchmark(cfg)
+    # Construct the data.
+    loader = agml.data.AgMLDataLoader(dataset)
+    loader.shuffle()
+    loader.split(train = 0.8, val = 0.1, test = 0.1)
+    dm = EfficientDetDataModule(
+        train_dataset_adaptor = AgMLDatasetAdaptor(loader.train_data),
+        validation_dataset_adaptor = AgMLDatasetAdaptor(loader.val_data),
+        num_workers = 0, batch_size = 2)
 
-    # Construct the data loaders.
-    train_ds, val_ds, test_ds = build_loaders(dataset)
+    # Construct the model.
+    model = EfficientDetModel(
+        num_classes = loader.info.num_classes,
+        architecture = 'efficientdet_d4')
 
     # Create the trainer and train the model.
     trainer = pl.Trainer(
-        max_epochs = epochs, gpus = 0, callbacks = callbacks)
+        max_epochs = epochs, gpus = gpus(None), callbacks = callbacks)
     trainer.fit(
-        model = model,
-        train_dataloaders = train_ds,
-        val_dataloaders = val_ds
-    )
+        model, dm)
 
 
 if __name__ == '__main__':
@@ -201,22 +488,12 @@ if __name__ == '__main__':
         '--epochs', type = int, default = 50,
         help = "How many epochs to train for. Default is 50.")
     args = ap.parse_args()
-    args.dataset = "apple_detection_usa"
+    args.dataset = 'grape_detection_californiaday'
 
     # Train the model.
     train(args.dataset,
-          args.pretrained,
           epochs = args.epochs,
           save_dir = args.checkpoint_dir)
-
-
-
-
-
-
-
-
-
 
 
 
