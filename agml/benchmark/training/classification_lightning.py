@@ -174,7 +174,7 @@ def train(dataset, pretrained, epochs, save_dir = None):
         ),
         pl.callbacks.EarlyStopping(
             monitor = 'val_loss',
-            min_delta = 0.001,
+            min_delta = 0.0001,
             patience = 3,
         )
     ]
@@ -208,7 +208,7 @@ if __name__ == '__main__':
     # Parse input arguments.
     ap = argparse.ArgumentParser()
     ap.add_argument(
-        '--dataset', type = str, help = "The name of the dataset.")
+        '--dataset', type = str, nargs = '+', help = "The name of the dataset.")
     ap.add_argument(
         '--not-pretrained', action = 'store_false',
         default = True, help = "Whether to load a pretrained model.")
@@ -219,17 +219,24 @@ if __name__ == '__main__':
         '--epochs', type = int, default = 50,
         help = "How many epochs to train for. Default is 50.")
     args = ap.parse_args()
-    args.dataset = 'bean_disease_uganda'
-    args.epochs = 2
 
     # Train the model.
-    train(args.dataset,
-          args.not_pretrained,
-          epochs = args.epochs,
-          save_dir = args.checkpoint_dir)
-
-
-
+    if args[0] in agml.data.public_data_sources(ml_task = 'image_classification'):
+        train(args.dataset,
+              args.not_pretrained,
+              epochs = args.epochs,
+              save_dir = args.checkpoint_dir)
+    else:
+        if args[0] == 'all':
+            datasets = [ds for ds in agml.data.public_data_sources(
+                ml_task = 'image_classification')]
+        else:
+            datasets = args.dataset
+        for dataset in datasets:
+            train(dataset,
+                  args.not_pretrained,
+                  epochs = args.epochs,
+                  save_dir = args.checkpoint_dir)
 
 
 

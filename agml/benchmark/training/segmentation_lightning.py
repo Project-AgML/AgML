@@ -177,15 +177,11 @@ def train(dataset, pretrained, epochs, save_dir = None):
         train_dataloaders = train_ds,
         val_dataloaders = val_ds)
 
-    # Run the testing loop and log benchmarks.
-
-
-
 if __name__ == '__main__':
     # Parse input arguments.
     ap = argparse.ArgumentParser()
     ap.add_argument(
-        '--dataset', type = str, help = "The name of the dataset.")
+        '--dataset', type = str, nargs = '+', help = "The name of the dataset.")
     ap.add_argument(
         '--pretrained', action = 'store_true',
         default = False, help = "Whether to load a pretrained model.")
@@ -198,10 +194,22 @@ if __name__ == '__main__':
     args = ap.parse_args()
 
     # Train the model.
-    train(args.dataset,
-          args.pretrained,
-          epochs = args.epochs,
-          save_dir = args.checkpoint_dir)
+    if args[0] in agml.data.public_data_sources(ml_task = 'semantic_segmentation'):
+        train(args.dataset,
+              args.not_pretrained,
+              epochs = args.epochs,
+              save_dir = args.checkpoint_dir)
+    else:
+        if args[0] == 'all':
+            datasets = [ds for ds in agml.data.public_data_sources(
+                ml_task = 'semantic_segmentation')]
+        else:
+            datasets = args.dataset
+        for dataset in datasets:
+            train(dataset,
+                  args.not_pretrained,
+                  epochs = args.epochs,
+                  save_dir = args.checkpoint_dir)
 
 
 
