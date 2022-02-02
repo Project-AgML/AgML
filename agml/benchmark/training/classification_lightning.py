@@ -128,7 +128,7 @@ class ClassificationBenchmark(pl.LightningModule):
 class ClassificationMetricLogger(MetricLogger):
     def update_metrics(self, y_pred, y_true) -> None:
         for metric in self.metrics.values():
-            metric.update(y_pred, y_true)
+            metric.update(y_pred.cpu(), y_true.cpu())
 
 
 def accuracy(output, target):
@@ -145,8 +145,8 @@ def accuracy(output, target):
 # Build the data loaders.
 def build_loaders(name):
     loader = agml.data.AgMLDataLoader(name)
-    loader.split(train = 0.05, val = 0.05, test = 0.9)
-    loader.batch(batch_size = 2)
+    loader.split(train = 0.8, val = 0.1, test = 0.1)
+    loader.batch(batch_size = 16)
     loader.resize_images('imagenet')
     loader.normalize_images('imagenet')
     loader.labels_to_one_hot()
@@ -162,6 +162,7 @@ def build_loaders(name):
 def train(dataset, pretrained, epochs, save_dir = None):
     """Constructs the training loop and trains a model."""
     save_dir = checkpoint_dir(save_dir, dataset)
+    log_dir = save_dir.replace('checkpoints', 'logs')
 
     # Set up the checkpoint saving callback.
     callbacks = [
@@ -188,15 +189,15 @@ def train(dataset, pretrained, epochs, save_dir = None):
 
     # Create the loggers.
     loggers = [
-        CSVLogger(save_dir),
-        TensorBoardLogger(save_dir)
+        CSVLogger(log_dir),
+        TensorBoardLogger(log_dir)
     ]
 
     # Create the trainer and train the model.
     trainer = pl.Trainer(
         max_epochs = epochs, gpus = gpus(None),
         callbacks = callbacks, logger = loggers,
-        log_every_n_steps = 1)
+        log_every_n_steps = 5)
     trainer.fit(
         model = model,
         train_dataloaders = train_ds,
@@ -219,8 +220,6 @@ if __name__ == '__main__':
         '--epochs', type = int, default = 50,
         help = "How many epochs to train for. Default is 50.")
     args = ap.parse_args()
-    args.dataset = 'bean_disease_uganda'
-    args.epochs = 2
 
     # Train the model.
     train(args.dataset,

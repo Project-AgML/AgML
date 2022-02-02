@@ -18,13 +18,14 @@ import argparse
 import torch
 import torch.nn as nn
 import pytorch_lightning as pl
+from pytorch_lightning.loggers import CSVLogger, TensorBoardLogger
 from torchmetrics import IoU
 from torchvision.models.segmentation import deeplabv3_resnet50
 
 import agml
 import albumentations as A
 
-from tools import gpus, checkpoint_dir
+from tools import gpus, checkpoint_dir, MetricLogger
 
 
 class DeepLabV3Transfer(nn.Module):
@@ -67,7 +68,7 @@ def dice_metric(y_pred, y):
 
 class SegmentationBenchmark(pl.LightningModule):
     """Represents an image classification benchmark model."""
-    def __init__(self, dataset, pretrained = False):
+    def __init__(self, dataset, pretrained = False, save_dir = None):
         # Initialize the module.
         super(SegmentationBenchmark, self).__init__()
 
@@ -84,6 +85,12 @@ class SegmentationBenchmark(pl.LightningModule):
 
         # Construct the IoU metric.
         self.iou = IoU(self._source.num_classes + 1)
+
+        # Add a metric calculator.
+        self.metric_logger = SegmentationMetricLogger({
+            'iou': IoU(self._source.num_classes + 1)},
+            os.path.join(save_dir, f'logs-{self._version}.csv'))
+        self._sanity_check_passed = False
 
     def forward(self, x):
         return self.net.forward(x)
@@ -110,6 +117,8 @@ class SegmentationBenchmark(pl.LightningModule):
         val_loss = self.calculate_loss(y_pred, y)
         self.log('val_loss', val_loss.item(), prog_bar = True)
         val_iou = self.iou(y_pred, y.int())
+        if self._sanity_check_passed:
+            self.metric_logger.update_metrics(y_pred, y.int())
         self.log('val_iou', val_iou.item(), prog_bar = True)
         self.log('val_dice', dice_metric(y_pred, y).item(), prog_bar = True)
         return {
@@ -123,6 +132,22 @@ class SegmentationBenchmark(pl.LightningModule):
         tqdm_dict = super(SegmentationBenchmark, self).get_progress_bar_dict()
         tqdm_dict.pop('v_num', None)
         return tqdm_dict
+
+    def on_validation_epoch_end(self) -> None:
+        if not self._sanity_check_passed:
+            self._sanity_check_passed = True
+            return
+        self.metric_logger.compile_epoch()
+
+    def on_fit_end(self) -> None:
+        self.metric_logger.save()
+
+
+# Calculate and log the metrics.
+class SegmentationMetricLogger(MetricLogger):
+    def update_metrics(self, y_pred, y_true) -> None:
+        for metric in self.metrics.values():
+            metric.update(y_pred.cpu(), y_true.cpu())
 
 
 # Build the data loaders.
@@ -145,18 +170,19 @@ def build_loaders(name):
 def train(dataset, pretrained, epochs, save_dir = None):
     """Constructs the training loop and trains a model."""
     save_dir = checkpoint_dir(save_dir, dataset)
+    log_dir = save_dir.replace('checkpoints', 'logs')
 
     # Set up the checkpoint saving callback.
     callbacks = [
         pl.callbacks.ModelCheckpoint(
             dirpath = save_dir, mode = 'min',
             filename = f"{dataset}" + "-epoch{epoch:02d}-val_loss_{val_loss:.2f}",
-            monitor = 'val_loss',
+            monitor = 'val_iou',
             save_top_k = 3,
             auto_insert_metric_name = False
         ),
         pl.callbacks.EarlyStopping(
-            monitor = 'val_loss',
+            monitor = 'val_iou',
             min_delta = 0.001,
             patience = 3,
         )
@@ -164,21 +190,26 @@ def train(dataset, pretrained, epochs, save_dir = None):
 
     # Construct the model.
     model = SegmentationBenchmark(
-        dataset = dataset, pretrained = pretrained)
+        dataset = dataset, pretrained = pretrained, save_dir = save_dir)
 
     # Construct the data loaders.
     train_ds, val_ds, test_ds = build_loaders(dataset)
 
+    # Create the loggers.
+    loggers = [
+        CSVLogger(log_dir),
+        TensorBoardLogger(log_dir)
+    ]
+
     # Create the trainer and train the model.
     trainer = pl.Trainer(
-        max_epochs = epochs, gpus = gpus(), callbacks = callbacks)
+        max_epochs = epochs, gpus = gpus(),
+        callbacks = callbacks, logger = loggers,
+        log_every_n_steps = 5)
     trainer.fit(
         model = model,
         train_dataloaders = train_ds,
         val_dataloaders = val_ds)
-
-    # Run the testing loop and log benchmarks.
-
 
 
 if __name__ == '__main__':
