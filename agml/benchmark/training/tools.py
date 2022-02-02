@@ -77,7 +77,7 @@ class MetricLogger(object):
         for metric in self.metrics.values():
             result = metric.compute()
             if isinstance(result, torch.Tensor):
-                result = metric.item()
+                result = result.item()
             metric_outs.append(result)
         self.log_outputs.append(metric_outs)
 
