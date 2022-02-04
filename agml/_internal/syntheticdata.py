@@ -290,7 +290,7 @@ class HeliosDataGenerator(object):
             with open(os.path.join(os.path.dirname(os.path.dirname(__file__)), '_helios/Helios/projects/SyntheticImageAnnotation/xml/tmp_canopy_params_image.xml'), "w") as f:
                 f.write(dict2xml(canopy_params_filtered))
 
-    def generate_data(self, n_imgs, canopy_type, simulation_type, annotation_type, output_directory = ".."):
+    def generate_data(self, n_imgs, canopy_type, simulation_type, annotation_type, label_elements='none', output_directory = ".."):
 
 
         """
@@ -309,6 +309,13 @@ class HeliosDataGenerator(object):
         assert simulation_type in ['rgb', 'lidar'], 'Simulation type unavailable.'
 
         assert annotation_type in ['semantic', 'object', 'instance', 'none'], 'Annotation type unavailable.'
+
+        # Labels = label_elements.replace(' ', '').split(',')
+
+        # for j in range(len(Labels)):
+        #     print(j)
+        #     assert Labels[j] in ['trunk', 'leaves', 'fruits', 'branches', 'ground', 'none'], 'Label type unavailable'
+
 
         param_ranges = self.canopy_param_ranges[canopy_type]
 
@@ -492,6 +499,34 @@ class HeliosDataGenerator(object):
                     main_cpp[i] = ' annotation.render( "' + images_dir + '" );\n'
 
                 # Choose elements to label
+
+                # for k in Labels:
+                    
+                #     if k == 'trunk':
+                #         if 'annotation.labelPrimitives(cgen.getTrunkUUIDs(p)' in string and simulation_type == 'rgb':
+                #             main_cpp[i] = ' annotation.labelPrimitives(cgen.getTrunkUUIDs(p), "trunks");'
+                #         else:
+                #             main_cpp[i] = ' //annotation.labelPrimitives(cgen.getTrunkUUIDs(p), "trunks");'
+                    
+                #     if k == 'branches':
+                #         if 'annotation.labelPrimitives(cgen.getBranchUUIDs(p)' in string and simulation_type == 'rgb':
+                #             main_cpp[i] = ' annotation.labelPrimitives(cgen.getBranchUUIDs(p), "branches");'
+                #         else:
+                #             main_cpp[i] = ' //annotation.labelPrimitives(cgen.getBranchUUIDs(p), "branches");'
+                    
+                #     if k == 'leaves':
+                #         if 'annotation.labelPrimitives(cgen.getLeafUUIDs(p)' in string and simulation_type == 'rgb':
+                #             main_cpp[i] = ' annotation.labelPrimitives(cgen.getLeafUUIDs(p), "leaves");'
+                #         else:
+                #             main_cpp[i] = ' //annotation.labelPrimitives(cgen.getLeafUUIDs(p), "leaves");'
+
+                #     if k == 'clusters':
+                #         if 'annotation.labelPrimitives( flatten(fruitUUIDs.at(c))' in string and simulation_type == 'rgb':
+                #             main_cpp[i] = ' annotation.labelPrimitives( flatten(fruitUUIDs.at(c)), "clusters" );'
+                #         else:
+                #             main_cpp[i] = ' //annotation.labelPrimitives( flatten(fruitUUIDs.at(c)), "clusters" );'
+
+
 
             # and write everything back
             with open(self.path_main_cpp, 'w') as f:

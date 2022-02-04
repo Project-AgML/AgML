@@ -28,4 +28,4 @@ hdg.canopy_param_ranges['VSPGrapevine']['canopy_origin'] = [[0, 0, 0]]
 #     hdg.canopy_param_ranges[k]['grape_color'] = [[0.15, 0.20], [0.15, 0.25], [0.2, 0.3]]
 #     hdg.canopy_param_ranges[k]['cluster_radius'] = [[0.025, 0.035]] 
 #     # ---------------- GENERATE SYNTHETIC DATA -------------
-hdg.generate_data(n_imgs=1, canopy_type='VSPGrapevine', annotation_type = 'semantic', simulation_type='rgb', output_directory='/home/dariojavo/Documents/UCDavis/AgML-dev') #object instance
+hdg.generate_data(n_imgs=1, canopy_type='VSPGrapevine', annotation_type = 'semantic', simulation_type='rgb', label_elements='leaves, trunk', output_directory='/home/dariojavo/Documents/UCDavis/AgML-dev') #object instance
