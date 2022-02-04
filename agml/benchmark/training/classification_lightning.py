@@ -222,13 +222,13 @@ if __name__ == '__main__':
     args = ap.parse_args()
 
     # Train the model.
-    if args[0] in agml.data.public_data_sources(ml_task = 'image_classification'):
+    if args.dataset[0] in agml.data.public_data_sources(ml_task = 'image_classification'):
         train(args.dataset,
               args.not_pretrained,
               epochs = args.epochs,
               save_dir = args.checkpoint_dir)
     else:
-        if args[0] == 'all':
+        if args.dataset[0] == 'all':
             datasets = [ds for ds in agml.data.public_data_sources(
                 ml_task = 'image_classification')]
         else:
