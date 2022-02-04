@@ -310,11 +310,11 @@ class HeliosDataGenerator(object):
 
         assert annotation_type in ['semantic', 'object', 'instance', 'none'], 'Annotation type unavailable.'
 
-        # Labels = label_elements.replace(' ', '').split(',')
+        Labels = label_elements.replace(' ', '').split(',')
 
-        # for j in range(len(Labels)):
-        #     print(j)
-        #     assert Labels[j] in ['trunk', 'leaves', 'fruits', 'branches', 'ground', 'none'], 'Label type unavailable'
+        for j in range(len(Labels)):
+            print(j)
+            assert Labels[j] in ['trunk', 'leaves', 'fruits', 'branches', 'ground', 'none'], 'Label type unavailable'
 
 
         param_ranges = self.canopy_param_ranges[canopy_type]
@@ -499,32 +499,27 @@ class HeliosDataGenerator(object):
                     main_cpp[i] = ' annotation.render( "' + images_dir + '" );\n'
 
                 # Choose elements to label
+                for k in Labels:
+                        
+                    if 'annotation.labelPrimitives(cgen.getTrunkUUIDs(p)' in string and simulation_type == 'rgb' and 'trunk' in Labels:
+                        main_cpp[i] = ' annotation.labelPrimitives(cgen.getTrunkUUIDs(p), "trunks");\n'
+                    elif  'annotation.labelPrimitives(cgen.getTrunkUUIDs(p)' in string and simulation_type == 'rgb' and 'trunk' not in Labels:
+                        main_cpp[i] = ' //annotation.labelPrimitives(cgen.getTrunkUUIDs(p), "trunks");\n'
+                    
+                    if 'annotation.labelPrimitives(cgen.getBranchUUIDs(p)' in string and simulation_type == 'rgb' and 'branches' in Labels:
+                        main_cpp[i] = ' annotation.labelPrimitives(cgen.getBranchUUIDs(p), "branches");\n'
+                    elif 'annotation.labelPrimitives(cgen.getBranchUUIDs(p)' in string and simulation_type == 'rgb' and 'branches' not in Labels:
+                        main_cpp[i] = ' //annotation.labelPrimitives(cgen.getBranchUUIDs(p), "branches");\n'
+                    
+                    if 'annotation.labelPrimitives(cgen.getLeafUUIDs(p)' in string and simulation_type == 'rgb' and 'leaves' in Labels:
+                        main_cpp[i] = ' annotation.labelPrimitives(cgen.getLeafUUIDs(p), "leaves");\n'
+                    elif 'annotation.labelPrimitives(cgen.getLeafUUIDs(p)' in string and simulation_type == 'rgb' and 'leaves' not in Labels:
+                        main_cpp[i] = ' //annotation.labelPrimitives(cgen.getLeafUUIDs(p), "leaves");\n'
 
-                # for k in Labels:
-                    
-                #     if k == 'trunk':
-                #         if 'annotation.labelPrimitives(cgen.getTrunkUUIDs(p)' in string and simulation_type == 'rgb':
-                #             main_cpp[i] = ' annotation.labelPrimitives(cgen.getTrunkUUIDs(p), "trunks");'
-                #         else:
-                #             main_cpp[i] = ' //annotation.labelPrimitives(cgen.getTrunkUUIDs(p), "trunks");'
-                    
-                #     if k == 'branches':
-                #         if 'annotation.labelPrimitives(cgen.getBranchUUIDs(p)' in string and simulation_type == 'rgb':
-                #             main_cpp[i] = ' annotation.labelPrimitives(cgen.getBranchUUIDs(p), "branches");'
-                #         else:
-                #             main_cpp[i] = ' //annotation.labelPrimitives(cgen.getBranchUUIDs(p), "branches");'
-                    
-                #     if k == 'leaves':
-                #         if 'annotation.labelPrimitives(cgen.getLeafUUIDs(p)' in string and simulation_type == 'rgb':
-                #             main_cpp[i] = ' annotation.labelPrimitives(cgen.getLeafUUIDs(p), "leaves");'
-                #         else:
-                #             main_cpp[i] = ' //annotation.labelPrimitives(cgen.getLeafUUIDs(p), "leaves");'
-
-                #     if k == 'clusters':
-                #         if 'annotation.labelPrimitives( flatten(fruitUUIDs.at(c))' in string and simulation_type == 'rgb':
-                #             main_cpp[i] = ' annotation.labelPrimitives( flatten(fruitUUIDs.at(c)), "clusters" );'
-                #         else:
-                #             main_cpp[i] = ' //annotation.labelPrimitives( flatten(fruitUUIDs.at(c)), "clusters" );'
+                    if 'annotation.labelPrimitives( flatten(fruitUUIDs.at(c))' in string and simulation_type == 'rgb' and 'fruits' in Labels:
+                        main_cpp[i] = ' annotation.labelPrimitives( flatten(fruitUUIDs.at(c)), "clusters" );\n'
+                    elif 'annotation.labelPrimitives( flatten(fruitUUIDs.at(c))' in string and simulation_type == 'rgb' and 'fruits' not in Labels:
+                        main_cpp[i] = ' //annotation.labelPrimitives( flatten(fruitUUIDs.at(c)), "clusters" );\n'
 
 
 
