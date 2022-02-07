@@ -229,20 +229,20 @@ if __name__ == '__main__':
     args = ap.parse_args()
 
     # Train the model.
-    if args[0] in agml.data.public_data_sources(ml_task = 'semantic_segmentation'):
+    if args.dataset[0] in agml.data.public_data_sources(ml_task = 'semantic_segmentation'):
         train(args.dataset,
               args.not_pretrained,
               epochs = args.epochs,
               save_dir = args.checkpoint_dir)
     else:
-        if args[0] == 'all':
+        if args.dataset[0] == 'all':
             datasets = [ds for ds in agml.data.public_data_sources(
                 ml_task = 'semantic_segmentation')]
         else:
             datasets = args.dataset
-        for dataset in datasets:
-            train(dataset,
-                  args.not_pretrained,
+        for ds in datasets:
+            train(ds,
+                  args.pretrained,
                   epochs = args.epochs,
                   save_dir = args.checkpoint_dir)
 

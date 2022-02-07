@@ -76,7 +76,7 @@
         "platform": "ground_fixed",
         "input_data_format": "png",
         "annotation_format": "directory_names",
-        "n_images": "5588",
+        "n_images": "5539",
         "docs_url": "https://vision.eng.au.dk/plant-seedlings-dataset/",
         "stats": {
             "mean": [
