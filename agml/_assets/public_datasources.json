@@ -320,6 +320,10 @@
     "leaf_counting_denmark": {
         "ml_task": "image_classification",
         "ag_task": "leaf_counting",
+        "location": {
+            "continent": "europe",
+            "country": "denmark"
+        },
         "platform": "mixed",
         "input_data_format": "png",
         "annotation_format": "directory_names",

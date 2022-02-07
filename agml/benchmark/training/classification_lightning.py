@@ -159,10 +159,17 @@ def build_loaders(name):
     return train_ds, val_ds, test_ds
 
 
-def train(dataset, pretrained, epochs, save_dir = None):
+def train(dataset, pretrained, epochs, save_dir = None, overwrite = None):
     """Constructs the training loop and trains a model."""
     save_dir = checkpoint_dir(save_dir, dataset)
     log_dir = save_dir.replace('checkpoints', 'logs')
+
+    # Check if the dataset already has benchmarks.
+    if os.path.exists(save_dir) and os.path.isdir(save_dir):
+        if not overwrite:
+            print(f"Checkpoints already exist for {dataset} "
+                  f"at {save_dir}, skipping generation.")
+            return
 
     # Set up the checkpoint saving callback.
     callbacks = [
@@ -211,6 +218,9 @@ if __name__ == '__main__':
     ap.add_argument(
         '--dataset', type = str, nargs = '+', help = "The name of the dataset.")
     ap.add_argument(
+        '--regenerate-existing', type = bool, action = 'store_true',
+        default = False, help = "Whether to re-generate existing benchmarks.")
+    ap.add_argument(
         '--not-pretrained', action = 'store_false',
         default = True, help = "Whether to load a pretrained model.")
     ap.add_argument(
@@ -237,7 +247,8 @@ if __name__ == '__main__':
             train(dataset,
                   args.not_pretrained,
                   epochs = args.epochs,
-                  save_dir = args.checkpoint_dir)
+                  save_dir = args.checkpoint_dir,
+                  overwrite = args.regenerate_existing)
 
 
 
