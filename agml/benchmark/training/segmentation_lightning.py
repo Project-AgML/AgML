@@ -152,6 +152,7 @@ class SegmentationMetricLogger(MetricLogger):
 
 # Build the data loaders.
 def build_loaders(name):
+    pl.seed_everything(42)
     loader = agml.data.AgMLDataLoader(name)
     loader.split(train = 0.8, val = 0.1, test = 0.1)
     loader.batch(batch_size = 16)
