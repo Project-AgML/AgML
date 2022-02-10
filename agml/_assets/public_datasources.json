@@ -220,7 +220,7 @@
         "platform": "ground",
         "input_data_format": "png",
         "annotation_format": "image",
-        "n_images": "1931",
+        "n_images": "125",
         "docs_url": "https://github.com/inkyusa/weedNet",
         "stats": {
             "mean": [
@@ -624,7 +624,7 @@
         "platform": "ground",
         "input_data_format": "jpg",
         "annotation_format": "directory_names",
-        "n_images": "2598",
+        "n_images": "2336",
         "docs_url": "https://github.com/pratikkayal/PlantDoc-Dataset",
         "stats": {
             "mean": [

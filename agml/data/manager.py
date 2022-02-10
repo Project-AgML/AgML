@@ -160,9 +160,13 @@ class DataManager(AgMLSerializable):
                 self._builder.get_contents().items()), dtype = object)
         else:
             contents = np.array(list(self._builder.get_contents().items()))
-        return {
-            k: dict(contents[v]) for k, v in splits.items()
-        }
+        try:
+            return {k: dict(contents[v]) for k, v in splits.items()}
+        except IndexError:
+            raise Exception(
+                f"Could not generate split contents, likely due to an error "
+                f"with the metadata for the dataset `{self._dataset_name}`. "
+                f"Please raise this error with the AgML team.")
 
     def batch_data(self, batch_size):
         """Batches the data into consistent groups.
