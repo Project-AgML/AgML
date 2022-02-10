@@ -175,7 +175,7 @@ def train(dataset, pretrained, epochs, save_dir = None, overwrite = None):
 
     # Check if the dataset already has benchmarks.
     if os.path.exists(save_dir) and os.path.isdir(save_dir):
-        if not overwrite:
+        if not overwrite and len(os.listdir(save_dir)) >= 4:
             print(f"Checkpoints already exist for {dataset} "
                   f"at {save_dir}, skipping generation.")
             return
@@ -226,7 +226,7 @@ if __name__ == '__main__':
     ap.add_argument(
         '--dataset', type = str, nargs = '+', help = "The name of the dataset.")
     ap.add_argument(
-        '--regenerate-existing', type = bool, action = 'store_true',
+        '--regenerate-existing', action = 'store_true',
         default = False, help = "Whether to re-generate existing benchmarks.")
     ap.add_argument(
         '--pretrained', action = 'store_true',
