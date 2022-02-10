@@ -21,7 +21,7 @@ Some of the training code in this file is adapted from the following sources:
 
 import os
 import argparse
-from typing import List
+from typing import List, Union
 
 import numpy as np
 from PIL import Image
@@ -29,8 +29,9 @@ from PIL import Image
 import torch
 from torch.utils.data import Dataset, DataLoader
 import pytorch_lightning as pl
+from pytorch_lightning.loggers import CSVLogger, TensorBoardLogger
 from pytorch_lightning.core.decorators import auto_move_data
-from torchmetrics.detection import MAP
+from lightning_map import MeanAveragePrecision
 
 import agml
 import albumentations as A
@@ -38,36 +39,29 @@ from albumentations.pytorch import ToTensorV2
 
 from effdet import EfficientDet, DetBenchTrain, get_efficientdet_config
 from effdet.efficientdet import HeadNet
-from effdet.config.model_config import efficientdet_model_param_dict
 
-from fastcore.dispatch import typedispatch
 from ensemble_boxes import ensemble_boxes_wbf
 
-from tools import gpus
+from tools import gpus, checkpoint_dir, MetricLogger
 
 
 # Constants
 IMAGE_SIZE = 512
 
 
-def create_model(num_classes, architecture = 'efficientdet_d4'):
-    """Constructs the `EfficientDetD4` model architecture."""
-    if architecture not in efficientdet_model_param_dict.keys():
-        efficientdet_model_param_dict[architecture] = dict(
-            name = architecture,
-            backbone_name = architecture,
-            backbone_args = dict(drop_path_rate = 0.2),
-            num_classes = num_classes,
-            url = '', )
-
+def create_model(num_classes = 1, architecture = "tf_efficientdet_b4"):
+    """Constructs an EfficientDet model architecture."""
     config = get_efficientdet_config(architecture)
     config.update({'num_classes': num_classes})
-    if IMAGE_SIZE != 512: # custom size passed
-        config.update({'image_size': (IMAGE_SIZE, IMAGE_SIZE)})
+    config.update({'image_size': (IMAGE_SIZE, IMAGE_SIZE)})
+
+    print("Using configuration:", str(config))
 
     net = EfficientDet(config, pretrained_backbone = True)
     net.class_net = HeadNet(
-        config, num_outputs = config.num_classes,)
+        config,
+        num_outputs = config.num_classes,
+    )
     return DetBenchTrain(net, config)
 
 
@@ -143,11 +137,10 @@ class EfficientDetDataset(Dataset):
         try:
             sample = self.transforms(**sample)
         except: # debugging
-            print(f"Failed sample: {sample}")
+            raise Exception(f"Failed sample: {sample}")
 
         sample["bboxes"] = np.array(sample["bboxes"])
         image = sample["image"]
-        pascal_bboxes = sample["bboxes"]
         labels = sample["labels"]
 
         # Convert 1-channel and 4-channel to 3-channel.
@@ -240,42 +233,37 @@ class EfficientDetDataModule(pl.LightningDataModule):
         return images, annotations, targets, image_ids
 
 
-def run_wbf(predictions, image_size = 512, iou_thr = 0.44, skip_box_thr = 0.43, weights = None):
-    bboxes, confidences, class_labels = [], [], []
-
-    for prediction in predictions:
-        boxes = [(prediction["boxes"] / image_size).tolist()]
-        scores = [prediction["scores"].tolist()]
-        labels = [prediction["classes"].tolist()]
-
-        boxes, scores, labels = ensemble_boxes_wbf.weighted_boxes_fusion(
-            boxes, scores, labels, weights = weights,
-            iou_thr = iou_thr, skip_box_thr = skip_box_thr)
-        boxes = boxes * (image_size - 1)
-        bboxes.append(boxes.tolist())
-        confidences.append(scores.tolist())
-        class_labels.append(labels.tolist())
-
-    return bboxes, confidences, class_labels
-
-
 class EfficientDetModel(pl.LightningModule):
     def __init__(self,
                  num_classes = 1,
-                 prediction_confidence_threshold = 0.2,
+                 confidence_threshold = 0.3,
                  learning_rate = 0.0002,
                  wbf_iou_threshold = 0.44,
                  inference_transforms = None,
-                 architecture = 'efficientdet_d4'):
+                 architecture = 'efficientdet_d4',
+                 save_dir = None,
+                 validation_dataset_adaptor = None):
         super().__init__()
         self.model = create_model(
             num_classes, architecture = architecture)
-        self.prediction_confidence_threshold = prediction_confidence_threshold
+        self.confidence_threshold = confidence_threshold
         self.lr = learning_rate
         self.wbf_iou_threshold = wbf_iou_threshold
         if inference_transforms is None:
             inference_transforms = get_transforms('inference')
         self.inference_tfms = inference_transforms
+
+        # Construct the metric.
+        self.val_dataset_adaptor = None
+        if validation_dataset_adaptor is not None:
+            # Add a metric calculator.
+            self.val_dataset_adaptor = AgMLDatasetAdaptor(
+                validation_dataset_adaptor)
+            self.map = MeanAveragePrecision()
+            self.metric_logger = DetectionMetricLogger({
+                'map': MeanAveragePrecision()},
+                os.path.join(save_dir, f'logs-{self._version}.csv'))
+        self._sanity_check_passed = False
 
     @auto_move_data
     def forward(self, images, targets):
@@ -285,17 +273,17 @@ class EfficientDetModel(pl.LightningModule):
         return torch.optim.AdamW(self.model.parameters(), lr = self.lr)
 
     def training_step(self, batch, batch_idx):
-        images, annotations, _, image_ids = batch
+        # Run a forward pass through the model.
+        images, annotations, _, _ = batch
+        losses = self.model(images, annotations)
 
         # Calculate and log losses.
-        losses = self.model(images, annotations)
         self.log("train_loss", losses["loss"], on_step = True,
                  on_epoch = True, prog_bar = True, logger = True)
         self.log("train_class_loss", losses["class_loss"], on_step = True,
                  on_epoch = True, prog_bar = True, logger = True)
         self.log("train_box_loss", losses["box_loss"], on_step = True,
                  on_epoch = True, prog_bar = True, logger = True)
-
         return losses['loss']
 
     @torch.no_grad()
@@ -304,6 +292,30 @@ class EfficientDetModel(pl.LightningModule):
         outputs = self.model(images, annotations)
 
         detections = outputs["detections"]
+        predicted_bboxes, predicted_class_confidences, predicted_class_labels = \
+            self.post_process_detections(detections)
+
+        # Update the metric.
+        if self.val_dataset_adaptor is not None and self._sanity_check_passed:
+            for idx, pred_box, pred_conf, pred_labels in zip(
+                    image_ids, predicted_bboxes, predicted_class_confidences, predicted_class_labels):
+                image, truth_boxes, truth_cls, _ = \
+                    self.val_dataset_adaptor.get_image_and_labels_by_idx(idx)
+                if truth_cls.ndim == 0:
+                    truth_cls = np.expand_dims(truth_cls, 0)
+                metric_values = [{
+                    'boxes': torch.tensor(pred_box), 'labels': torch.tensor(pred_labels).int(),
+                    'scores': torch.tensor(pred_conf)
+                }], [{
+                    'boxes': torch.tensor(truth_boxes), 'labels': torch.tensor(truth_cls)
+                }]
+                self.metric_logger.update_metrics(*metric_values)
+                self.map.update(*metric_values)
+
+            # Compute the metric result.
+            computed_map = self.map.compute()
+            self.log("map", computed_map['map'].item(), on_step = True, on_epoch = True,
+                     prog_bar = True, logger = True, sync_dist = True)
 
         batch_predictions = {
             "predictions": detections,
@@ -325,48 +337,47 @@ class EfficientDetModel(pl.LightningModule):
 
         return {'loss': outputs["loss"], 'batch_predictions': batch_predictions}
 
-    @typedispatch
-    def predict(self, images: List):
-        """
-        For making predictions from images
-        Args:
-            images: a list of PIL images
+    def predict(self, images: Union[torch.Tensor, List]):
+        """Runs inference on a set of images.
 
-        Returns: a tuple of lists containing bboxes, predicted_class_labels, predicted_class_confidences
+        Parameters
+        ----------
+        images : {torch.Tensor, list}
+            Either a list of images (which can be numpy arrays, tensors, or
+            another type), or a torch.Tensor returned from a DataLoader.
 
+        Returns
+        -------
+        A tuple containing bounding boxes, confidence scores, and class labels.
         """
-        image_sizes = [(image.size[1], image.size[0]) for image in images]
-        images_tensor = torch.stack([
+        if isinstance(images, list):
+            image_sizes = [(image.size[1], image.size[0]) for image in images]
+            images_tensor = torch.stack([
                 self.inference_tfms(
                     image = np.array(image, dtype = np.float32),
                 )["image"] for image in images])
-        return self._run_inference(images_tensor, image_sizes)
+            return self._run_inference(images_tensor, image_sizes)
+        elif isinstance(images, torch.Tensor):
+            image_tensor = images
+            if image_tensor.ndim == 3:
+                image_tensor = image_tensor.unsqueeze(0)
+            if image_tensor.shape[-1] != IMAGE_SIZE \
+                    or image_tensor.shape[-2] != IMAGE_SIZE:
+                raise ValueError(
+                    f"Input tensors must be of shape "
+                    f"(N, 3, {IMAGE_SIZE}, {IMAGE_SIZE})")
 
-    @typedispatch
-    def predict(self, images_tensor: torch.Tensor):
-        """
-        For making predictions from tensors returned from the model's dataloader
-        Args:
-            images_tensor: the images tensor returned from the dataloader
-
-        Returns: a tuple of lists containing bboxes, predicted_class_labels, predicted_class_confidences
-
-        """
-        if images_tensor.ndim == 3:
-            images_tensor = images_tensor.unsqueeze(0)
-        if images_tensor.shape[-1] != self.img_size \
-                or images_tensor.shape[-2] != self.img_size:
-            raise ValueError(
-                f"Input tensors must be of shape "
-                f"(N, 3, {self.img_size}, {self.img_size})")
-
-        num_images = images_tensor.shape[0]
-        image_sizes = [(self.img_size, self.img_size)] * num_images
-        return self._run_inference(images_tensor, image_sizes)
+            num_images = image_tensor.shape[0]
+            image_sizes = [(IMAGE_SIZE, IMAGE_SIZE)] * num_images
+            return self._run_inference(image_tensor, image_sizes)
+        else:
+            raise TypeError(
+                "Expected either a list of images or a "
+                "torch.Tensor of images for `predict()`.")
 
     def _run_inference(self, images_tensor, image_sizes):
         dummy_targets = self._create_dummy_inference_targets(
-            num_images = images_tensor.shape[0])
+            images_tensor.shape[0], self.device, IMAGE_SIZE)
 
         detections = self.model(
             images_tensor.to(self.device), dummy_targets)["detections"]
@@ -378,63 +389,106 @@ class EfficientDetModel(pl.LightningModule):
             image_sizes = image_sizes)
         return scaled_bboxes, predicted_class_labels, predicted_class_confidences
 
-    def _create_dummy_inference_targets(self, num_images):
-        dummy_targets = {
+    @staticmethod
+    def _create_dummy_inference_targets(num_images, device, size):
+        return {
             "bbox": [
-                torch.tensor([[0.0, 0.0, 0.0, 0.0]], device = self.device)
-                for i in range(num_images)
+                torch.tensor([[0.0, 0.0, 0.0, 0.0]], device = device)
+                for _ in range(num_images)
             ],
-            "cls": [torch.tensor([1.0], device = self.device) for i in range(num_images)],
+            "cls": [torch.tensor([1.0], device = device) for _ in range(num_images)],
             "img_size": torch.tensor(
-                [(self.img_size, self.img_size)] * num_images, device = self.device
-            ).float(),
-            "img_scale": torch.ones(num_images, device = self.device).float(),
+                [(size, size)] * num_images, device = device).float(),
+            "img_scale": torch.ones(num_images, device = device).float(),
         }
 
-        return dummy_targets
-
     def post_process_detections(self, detections):
-        predictions = []
-        for i in range(detections.shape[0]):
-            predictions.append(
-                self._postprocess_single_prediction_detections(detections[i]))
+        predictions = [self._postprocess_single_prediction_detections(d) for d in detections]
 
-        predicted_bboxes, predicted_class_confidences, predicted_class_labels = run_wbf(
-            predictions, image_size = self.img_size, iou_thr = self.wbf_iou_threshold)
+        predicted_bboxes, predicted_class_confidences, predicted_class_labels = self.run_wbf(
+            predictions, image_size = IMAGE_SIZE, iou_thr = self.wbf_iou_threshold)
         return predicted_bboxes, predicted_class_confidences, predicted_class_labels
 
     def _postprocess_single_prediction_detections(self, detections):
+        # Extract the bounding boxes, confidence scores,
+        # and class labels from the output detections.
         boxes = detections.detach().cpu().numpy()[:, :4]
         scores = detections.detach().cpu().numpy()[:, 4]
         classes = detections.detach().cpu().numpy()[:, 5]
-        indexes = np.where(scores > self.prediction_confidence_threshold)[0]
-        boxes = boxes[indexes]
 
-        return {"boxes": boxes, "scores": scores[indexes], "classes": classes[indexes]}
+        # Only return boxes which are above the confidence threshold.
+        valid_indexes = np.where(scores > self.confidence_threshold)[0]
+        boxes = boxes[valid_indexes]
+        scores = scores[valid_indexes]
+        classes = classes[valid_indexes]
+        return {"boxes": boxes, "scores": scores, "classes": classes}
 
-    def _rescale_bboxes(self, predicted_bboxes, image_sizes):
+    @staticmethod
+    def _rescale_bboxes(predicted_bboxes, image_sizes):
         scaled_bboxes = []
         for bboxes, img_dims in zip(predicted_bboxes, image_sizes):
             im_h, im_w = img_dims
             if len(bboxes) > 0:
                 scaled_bboxes.append(
                     (np.array(bboxes) * [
-                        im_w / self.img_size, im_h / self.img_size,
-                        im_w / self.img_size, im_h / self.img_size
+                        im_w / IMAGE_SIZE, im_h / IMAGE_SIZE,
+                        im_w / IMAGE_SIZE, im_h / IMAGE_SIZE
                     ]).tolist())
             else:
                 scaled_bboxes.append(bboxes)
         return scaled_bboxes
 
+    @staticmethod
+    def run_wbf(predictions, image_size = 512, iou_thr = 0.44, skip_box_thr = 0.43, weights = None):
+        bboxes, confidences, class_labels = [], [], []
 
-def train(dataset, epochs, save_dir = None):
+        for prediction in predictions:
+            boxes = [(prediction["boxes"] / image_size).tolist()]
+            scores = [prediction["scores"].tolist()]
+            labels = [prediction["classes"].tolist()]
+
+            boxes, scores, labels = ensemble_boxes_wbf.weighted_boxes_fusion(
+                boxes, scores, labels, weights = weights,
+                iou_thr = iou_thr, skip_box_thr = skip_box_thr)
+            boxes = boxes * (image_size - 1)
+            bboxes.append(boxes.tolist())
+            confidences.append(scores.tolist())
+            class_labels.append(labels.tolist())
+
+        return bboxes, confidences, class_labels
+
+    def on_validation_epoch_end(self) -> None:
+        if not self._sanity_check_passed:
+            self._sanity_check_passed = True
+            return
+        self.metric_logger.compile_epoch()
+
+    def on_fit_end(self) -> None:
+        self.metric_logger.save()
+    
+    def get_progress_bar_dict(self):
+        p_bar = super(EfficientDetModel, self).get_progress_bar_dict()
+        p_bar.pop('v_num', None)
+        return p_bar
+
+
+# Calculate and log the metrics.
+class DetectionMetricLogger(MetricLogger):
+    def update_metrics(self, y_pred, y_true) -> None:
+        self.metrics['map'].update(y_pred, y_true)
+
+
+def train(dataset, epochs, save_dir = None, overwrite = None):
     """Constructs the training loop and trains a model."""
-    if save_dir is None:
-        if os.path.isdir('/data2'):
-            save_dir = os.path.join(f"/data2/amnjoshi/checkpoints/{dataset}")
-        else:
-            save_dir = os.path.join(os.path.dirname(__file__), 'logs')
-        os.makedirs(save_dir, exist_ok = True)
+    save_dir = checkpoint_dir(save_dir, dataset)
+    log_dir = save_dir.replace('checkpoints', 'logs')
+
+    # Check if the dataset already has benchmarks.
+    if os.path.exists(save_dir) and os.path.isdir(save_dir):
+        if not overwrite:
+            print(f"Checkpoints already exist for {dataset} "
+                  f"at {save_dir}, skipping generation.")
+            return
 
     # Set up the checkpoint saving callback.
     callbacks = [
@@ -444,15 +498,17 @@ def train(dataset, epochs, save_dir = None):
             monitor = 'val_loss',
             save_top_k = 3,
             auto_insert_metric_name = False
-        ),
-        pl.callbacks.EarlyStopping(
-            monitor = 'val_loss',
-            min_delta = 0.001,
-            patience = 3,
         )
     ]
 
+    # Create the loggers.
+    loggers = [
+        CSVLogger(log_dir),
+        TensorBoardLogger(log_dir)
+    ]
+
     # Construct the data.
+    pl.seed_everything(42)
     loader = agml.data.AgMLDataLoader(dataset)
     loader.shuffle()
     loader.split(train = 0.8, val = 0.1, test = 0.1)
@@ -464,13 +520,15 @@ def train(dataset, epochs, save_dir = None):
     # Construct the model.
     model = EfficientDetModel(
         num_classes = loader.info.num_classes,
-        architecture = 'efficientdet_d4')
+        architecture = 'efficientdet_d4',
+        save_dir = save_dir,
+        validation_dataset_adaptor = loader.val_data)
 
     # Create the trainer and train the model.
     trainer = pl.Trainer(
-        max_epochs = epochs, gpus = gpus(None), callbacks = callbacks)
-    trainer.fit(
-        model, dm)
+        max_epochs = epochs, gpus = gpus(None),
+        callbacks = callbacks, logger = loggers)
+    trainer.fit(model, dm)
 
 
 if __name__ == '__main__':
@@ -479,8 +537,8 @@ if __name__ == '__main__':
     ap.add_argument(
         '--dataset', type = str, help = "The name of the dataset.")
     ap.add_argument(
-        '--pretrained', action = 'store_true',
-        default = False, help = "Whether to load a pretrained model.")
+        '--regenerate-existing', type = bool, action = 'store_true',
+        default = False, help = "Whether to re-generate existing benchmarks.")
     ap.add_argument(
         '--checkpoint_dir', type = str, default = None,
         help = "The checkpoint directory to save to.")
@@ -488,12 +546,23 @@ if __name__ == '__main__':
         '--epochs', type = int, default = 50,
         help = "How many epochs to train for. Default is 50.")
     args = ap.parse_args()
-    args.dataset = 'grape_detection_californiaday'
 
     # Train the model.
-    train(args.dataset,
-          epochs = args.epochs,
-          save_dir = args.checkpoint_dir)
+    if args.dataset[0] in agml.data.public_data_sources(ml_task = 'object_detection'):
+        train(args.dataset,
+              epochs = args.epochs,
+              save_dir = args.checkpoint_dir)
+    else:
+        if args.dataset[0] == 'all':
+            datasets = [ds for ds in agml.data.public_data_sources(
+                ml_task = 'object_detection')]
+        else:
+            datasets = args.dataset
+        for ds in datasets:
+            train(ds,
+                  epochs = args.epochs,
+                  save_dir = args.checkpoint_dir,
+                  overwrite = args.regenerate_existing)
 
 
 
