@@ -55,7 +55,7 @@ class MetricLogger(object):
     def __init__(self, metrics, file):
         if not isinstance(metrics, dict):
             raise TypeError("Expected a dictionary of metrics.")
-        self.metrics: Dict[Metric] = metrics
+        self.metrics: Dict[str, Metric] = metrics
 
         if not os.path.exists(os.path.dirname(file)):
             raise NotADirectoryError(

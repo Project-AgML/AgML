@@ -60,7 +60,7 @@ class PublicDataPreprocessor(object):
         self.data_processed_dir = os.path.join(self.data_dir, 'processed')
         self.data_sources = load_public_sources()
 
-    def preprocess(self, dataset_name):
+    def preprocess(self, dataset_name, *args, **kwargs):
         """Preprocesses the provided dataset.
 
         Parameters
@@ -68,7 +68,10 @@ class PublicDataPreprocessor(object):
         dataset_name : str
             name of dataset to preprocess
         """
-        getattr(self, dataset_name)(dataset_name)
+        meth = getattr(self, dataset_name)
+        if args is not None and kwargs is not None:
+            return meth(dataset_name, *args, **kwargs)
+        meth(dataset_name)
         
     def bean_disease_uganda(self, dataset_name):    
         # Get the dataset classes and paths
@@ -255,7 +258,57 @@ class PublicDataPreprocessor(object):
             get_label_from_folder=False,
             resize=resize, add_foldername=True)
 
-    def mango_detection_australia(self, dataset_name):
+    def mango_detection_australia(self, dataset_name, fix = False):
+        # Just a quick fix to update the IDs in the dataset.
+        if fix:
+            dataset_dir = os.path.join(self.data_original_dir, dataset_name)
+
+            # Load in the existing COCO JSON annotation file, and get all
+            # of the images and annotations (with their corresponding IDs).
+            with open(os.path.join(dataset_dir, 'annotations.json'), 'r') as f:
+                coco = json.load(f)
+            images = coco['images']
+            annotations = coco['annotations']
+
+            # Drop all of the duplicate IDs and their corresponding annotations.
+            ids = [i['id'] for i in images]
+            ids, counts = np.unique(ids, return_counts = True)
+            ids = np.delete(ids, np.where(counts > 1))
+
+            # Re-create the image and annotation lists without these IDs.
+            new_image_coco = []
+            valid_images = []
+            for image_coco in images:
+                if image_coco['id'] not in ids:
+                    continue
+                new_image_coco.append(image_coco)
+                valid_images.append(image_coco['file_name'])
+
+            new_annotation_coco = []
+            for a_coco in annotations:
+                if a_coco['image_id'] not in ids:
+                    continue
+                new_annotation_coco.append(a_coco)
+
+            new_coco = coco.copy()
+            new_coco['images'] = new_image_coco
+            new_coco['annotations'] = new_annotation_coco
+
+            # Move over all of the valid images.
+            out_dir = os.path.join(self.data_processed_dir, 'mango_detection_australia')
+            image_dir = os.path.join(out_dir, 'images')
+            os.makedirs(image_dir, exist_ok = True) # will by default make the parent dir
+
+            for image in tqdm(valid_images, desc = "Moving Images"):
+                exist_image_path = os.path.join(dataset_dir, 'images', image)
+                out_image_path = os.path.join(image_dir, image)
+                shutil.copyfile(exist_image_path, out_image_path)
+
+            # Save the annotations.
+            with open(os.path.join(out_dir, 'annotations.json'), 'w') as f:
+                json.dump(new_coco, f)
+            return
+
         # resize the dataset
         resize = 1.0
 
@@ -304,6 +357,7 @@ class PublicDataPreprocessor(object):
             "date_created": "2019/02/25"
         }
 
+        # Convert the XML files to COCO JSON.
         convert_xmls_to_cocojson(
             general_info,
             annotation_paths=anno_files,
@@ -314,6 +368,8 @@ class PublicDataPreprocessor(object):
             output_imgpath = output_img_path,
             extract_num_from_imgid=True
         )
+
+
 
     def cotton_seedling_counting(self, dataset_name):
        # Get all of the relevant data
@@ -338,15 +394,27 @@ class PublicDataPreprocessor(object):
        for indx, (img_path, annotation) in enumerate(
                zip(tqdm(images, file = sys.stdout, desc = "Generating Data"),
                    annotations['frames'].values())):
-           image_data.append(get_image_info(img_path, indx))
+           image_content = cv2.imread(img_path, cv2.IMREAD_UNCHANGED)
+           height, width = image_content.shape[:2]
+           image_data.append({
+               'file_name': os.path.basename(img_path),
+               'height': height,
+               'width': width,
+               'id': indx + 1})
            valid_paths.append(img_path)
            for a_set in annotation:
-               formatted_set = [
-                   a_set['x1'], a_set['y1'], a_set['x2'], a_set['y2'],
-                   label2id[a_set['tags'][0]]]
-               base_annotation_data = get_coco_annotation_from_obj(formatted_set, a_set['name'])
-               base_annotation_data['image_id'] = indx + 1
-               annotation_data.append(base_annotation_data)
+               x1, y1 = a_set['x1'], a_set['y1']
+               width, height = a_set['width'], a_set['height']
+               category_id = label2id[a_set['tags'][0]]
+               annotation_data.append({
+                   'bbox': [x1, y1, width, height],
+                   'area': width * height,
+                   'image_id': indx + 1,
+                   'iscrowd': 0,
+                   'category_id': category_id,
+                   'ignore': 0,
+                   'segmentation': []  # This script is not for segmentation
+               })
 
        # Set up the annotation dictionary
        all_annotation_data = {
@@ -380,12 +448,8 @@ class PublicDataPreprocessor(object):
            if path not in valid_paths:
                continue
            shutil.copyfile(path, os.path.join(processed_img_dir, os.path.basename(path)))
-       with open(os.path.join(processed_dir, 'labels.json'), 'w') as f:
+       with open(os.path.join(processed_dir, 'annotations.json'), 'w') as f:
            json.dump(all_annotation_data, f, indent = 4)
-
-       # Zip the dataset
-       shutil.make_archive(
-           processed_dir, "zip", os.path.dirname(processed_dir))
 
     def apple_flower_segmentation(self, dataset_name):
         # Get all of the relevant data.
@@ -596,5 +660,3 @@ class PublicDataPreprocessor(object):
             cv2.imwrite(out_image, im)
 
 
-
-PublicDataPreprocessor('../../data_new').preprocess('guava_disease_pakistan')
