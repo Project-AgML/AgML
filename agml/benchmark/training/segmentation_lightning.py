@@ -152,6 +152,7 @@ class SegmentationMetricLogger(MetricLogger):
 
 # Build the data loaders.
 def build_loaders(name):
+    pl.seed_everything(42)
     loader = agml.data.AgMLDataLoader(name)
     loader.split(train = 0.8, val = 0.1, test = 0.1)
     loader.batch(batch_size = 16)
@@ -191,7 +192,7 @@ def train(dataset, pretrained, epochs, save_dir = None, overwrite = None):
         pl.callbacks.EarlyStopping(
             monitor = 'val_iou',
             min_delta = 0.001,
-            patience = 3,
+            patience = 10,
         )
     ]
 
@@ -209,6 +210,8 @@ def train(dataset, pretrained, epochs, save_dir = None, overwrite = None):
     ]
 
     # Create the trainer and train the model.
+    msg = f"Training dataset {dataset}!"
+    print("\n" + "=" * len(msg) + "\n" + msg + "\n" + "=" * len(msg) + "\n")
     trainer = pl.Trainer(
         max_epochs = epochs, gpus = gpus(),
         callbacks = callbacks, logger = loggers,
@@ -234,8 +237,8 @@ if __name__ == '__main__':
         '--checkpoint_dir', type = str, default = None,
         help = "The checkpoint directory to save to.")
     ap.add_argument(
-        '--epochs', type = int, default = 50,
-        help = "How many epochs to train for. Default is 50.")
+        '--epochs', type = int, default = 20,
+        help = "How many epochs to train for. Default is 20.")
     args = ap.parse_args()
 
     # Train the model.
