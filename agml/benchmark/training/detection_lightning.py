@@ -21,6 +21,7 @@ Some of the training code in this file is adapted from the following sources:
 
 import os
 import argparse
+import warnings
 from typing import List, Union
 
 import numpy as np
@@ -31,7 +32,7 @@ from torch.utils.data import Dataset, DataLoader
 import pytorch_lightning as pl
 from pytorch_lightning.loggers import CSVLogger, TensorBoardLogger
 from pytorch_lightning.core.decorators import auto_move_data
-from lightning_map import MeanAveragePrecision
+from mean_average_precision import MeanAveragePrecision
 
 import agml
 import albumentations as A
@@ -265,6 +266,9 @@ class EfficientDetModel(pl.LightningModule):
                 os.path.join(save_dir, f'logs-{self._version}.csv'))
         self._sanity_check_passed = False
 
+        # Stop getting an irritating warning regarding `__floordiv__`.
+        warnings.filterwarnings('ignore', message = "*__floordiv__*")
+
     @auto_move_data
     def forward(self, images, targets):
         return self.model(images, targets)
@@ -298,23 +302,18 @@ class EfficientDetModel(pl.LightningModule):
         # Update the metric.
         if self.val_dataset_adaptor is not None and self._sanity_check_passed:
             for idx, pred_box, pred_conf, pred_labels in zip(
-                    image_ids, predicted_bboxes, predicted_class_confidences, predicted_class_labels):
+                    image_ids, predicted_bboxes,
+                    predicted_class_confidences,
+                    predicted_class_labels):
                 image, truth_boxes, truth_cls, _ = \
                     self.val_dataset_adaptor.get_image_and_labels_by_idx(idx)
-                if truth_cls.ndim == 0:
-                    truth_cls = np.expand_dims(truth_cls, 0)
-                metric_values = [{
-                    'boxes': torch.tensor(pred_box), 'labels': torch.tensor(pred_labels).int(),
-                    'scores': torch.tensor(pred_conf)
-                }], [{
-                    'boxes': torch.tensor(truth_boxes), 'labels': torch.tensor(truth_cls)
-                }]
-                self.metric_logger.update_metrics(*metric_values)
-                self.map.update(*metric_values)
+                metric_update_values = \
+                    [[pred_box, pred_labels, pred_conf], [truth_boxes, truth_cls]]
+                self.metric_logger.update_metrics(*metric_update_values)
+                self.map.update(*metric_update_values)
 
             # Compute the metric result.
-            computed_map = self.map.compute()
-            self.log("map", computed_map['map'].item(), on_step = True, on_epoch = True,
+            self.log("map", self.map.compute(), on_step = True, on_epoch = True,
                      prog_bar = True, logger = True, sync_dist = True)
 
         batch_predictions = {
@@ -485,7 +484,7 @@ def train(dataset, epochs, save_dir = None, overwrite = None):
 
     # Check if the dataset already has benchmarks.
     if os.path.exists(save_dir) and os.path.isdir(save_dir):
-        if not overwrite:
+        if not overwrite and len(os.listdir(save_dir)) >= 4:
             print(f"Checkpoints already exist for {dataset} "
                   f"at {save_dir}, skipping generation.")
             return
@@ -508,7 +507,7 @@ def train(dataset, epochs, save_dir = None, overwrite = None):
     ]
 
     # Construct the data.
-    pl.seed_everything(42)
+    pl.seed_everything(2499751)
     loader = agml.data.AgMLDataLoader(dataset)
     loader.shuffle()
     loader.split(train = 0.8, val = 0.1, test = 0.1)
@@ -537,7 +536,7 @@ if __name__ == '__main__':
     ap.add_argument(
         '--dataset', type = str, help = "The name of the dataset.")
     ap.add_argument(
-        '--regenerate-existing', type = bool, action = 'store_true',
+        '--regenerate-existing', action = 'store_true',
         default = False, help = "Whether to re-generate existing benchmarks.")
     ap.add_argument(
         '--checkpoint_dir', type = str, default = None,
