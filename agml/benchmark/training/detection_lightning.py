@@ -31,7 +31,6 @@ import torch
 from torch.utils.data import Dataset, DataLoader
 import pytorch_lightning as pl
 from pytorch_lightning.loggers import CSVLogger, TensorBoardLogger
-from pytorch_lightning.core.decorators import auto_move_data
 from mean_average_precision import MeanAveragePrecision
 
 import agml
@@ -43,7 +42,7 @@ from effdet.efficientdet import HeadNet
 
 from ensemble_boxes import ensemble_boxes_wbf
 
-from tools import gpus, checkpoint_dir, MetricLogger
+from tools import gpus, checkpoint_dir, MetricLogger, auto_move_data
 
 
 # Constants
@@ -266,9 +265,6 @@ class EfficientDetModel(pl.LightningModule):
                 os.path.join(save_dir, f'logs-{self._version}.csv'))
         self._sanity_check_passed = False
 
-        # Stop getting an irritating warning regarding `__floordiv__`.
-        warnings.filterwarnings('ignore', message = "*__floordiv__*")
-
     @auto_move_data
     def forward(self, images, targets):
         return self.model(images, targets)
@@ -283,10 +279,6 @@ class EfficientDetModel(pl.LightningModule):
 
         # Calculate and log losses.
         self.log("train_loss", losses["loss"], on_step = True,
-                 on_epoch = True, prog_bar = True, logger = True)
-        self.log("train_class_loss", losses["class_loss"], on_step = True,
-                 on_epoch = True, prog_bar = True, logger = True)
-        self.log("train_box_loss", losses["box_loss"], on_step = True,
                  on_epoch = True, prog_bar = True, logger = True)
         return losses['loss']
 
@@ -329,10 +321,6 @@ class EfficientDetModel(pl.LightningModule):
 
         self.log("valid_loss", outputs["loss"], on_step = True, on_epoch = True,
                  prog_bar = True, logger = True, sync_dist = True)
-        self.log("valid_class_loss", logging_losses["class_loss"], on_step = True,
-                 on_epoch = True, prog_bar = True, logger = True, sync_dist = True)
-        self.log("valid_box_loss", logging_losses["box_loss"], on_step = True,
-                 on_epoch = True, prog_bar = True, logger = True, sync_dist = True)
 
         return {'loss': outputs["loss"], 'batch_predictions': batch_predictions}
 
@@ -494,7 +482,7 @@ def train(dataset, epochs, save_dir = None, overwrite = None):
         pl.callbacks.ModelCheckpoint(
             dirpath = save_dir, mode = 'min',
             filename = f"{dataset}" + "-epoch{epoch:02d}-val_loss_{val_loss:.2f}",
-            monitor = 'val_loss',
+            monitor = 'map',
             save_top_k = 3,
             auto_insert_metric_name = False
         )
@@ -514,7 +502,7 @@ def train(dataset, epochs, save_dir = None, overwrite = None):
     dm = EfficientDetDataModule(
         train_dataset_adaptor = AgMLDatasetAdaptor(loader.train_data),
         validation_dataset_adaptor = AgMLDatasetAdaptor(loader.val_data),
-        num_workers = 0, batch_size = 2)
+        num_workers = 12, batch_size = 2)
 
     # Construct the model.
     model = EfficientDetModel(
@@ -524,6 +512,8 @@ def train(dataset, epochs, save_dir = None, overwrite = None):
         validation_dataset_adaptor = loader.val_data)
 
     # Create the trainer and train the model.
+    msg = f"Training dataset {dataset}!"
+    print("\n" + "=" * len(msg) + "\n" + msg + "\n" + "=" * len(msg) + "\n")
     trainer = pl.Trainer(
         max_epochs = epochs, gpus = gpus(None),
         callbacks = callbacks, logger = loggers)
@@ -534,7 +524,7 @@ if __name__ == '__main__':
     # Parse input arguments.
     ap = argparse.ArgumentParser()
     ap.add_argument(
-        '--dataset', type = str, help = "The name of the dataset.")
+        '--dataset', type = str, nargs = '+', help = "The name of the dataset.")
     ap.add_argument(
         '--regenerate-existing', action = 'store_true',
         default = False, help = "Whether to re-generate existing benchmarks.")

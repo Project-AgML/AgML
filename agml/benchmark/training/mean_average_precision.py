@@ -91,7 +91,7 @@ def mean_average_precision(pred_boxes,
             idx: where_true_box[np.where(where_true_box[:, 0] == idx)]
             for idx in training_ids}
 
-        # Determine the number of boxes for each of the training samples.
+        # Determine the number of boxes for each of the training samples
         numpy_gt = np.array(ground_truths)
         counts = np.bincount(numpy_gt[:, 0].astype(np.int64))
         indices = np.nonzero(counts)[0]
