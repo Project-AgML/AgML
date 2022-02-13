@@ -162,8 +162,10 @@ def build_loaders(name):
 
 def train(dataset, pretrained, epochs, save_dir = None, overwrite = None):
     """Constructs the training loop and trains a model."""
-    save_dir = "/data2/amnjoshi/resnet50_pretrained"
+    save_dir = "/data2/amnjoshi/resnet50_pretrained/checkpoints"
+    os.makedirs(save_dir, exist_ok = True)
     log_dir = save_dir.replace('checkpoints', 'logs')
+    os.makedirs(log_dir, exist_ok = True)
 
     # Check if the dataset already has benchmarks.
     if os.path.exists(save_dir) and os.path.isdir(save_dir):
