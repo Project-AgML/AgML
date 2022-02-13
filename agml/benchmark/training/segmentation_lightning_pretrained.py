@@ -35,12 +35,17 @@ class DeepLabV3Transfer(nn.Module):
     This is the base benchmarking model for semantic segmentation,
     using the DeepLabV3 model with a ResNet50 backbone.
     """
-    def __init__(self, num_classes, pretrained = True):
+    def __init__(self, num_classes, pretrained = False,
+                 unfreeze_backbone = False):
         super(DeepLabV3Transfer, self).__init__()
         self.base = deeplabv3_resnet50(
             pretrained = pretrained,
             num_classes = num_classes)
         self.base.load_state_dict(load_checkpoint(), strict = False)
+
+        if not unfreeze_backbone:
+            for parameter in self.base.backbone.parameters():
+                parameter.requires_grad = False
 
     def forward(self, x, **kwargs): # noqa
         return self.base(x)
@@ -82,7 +87,8 @@ def dice_metric(y_pred, y):
 
 class SegmentationBenchmark(pl.LightningModule):
     """Represents an image classification benchmark model."""
-    def __init__(self, dataset, pretrained = False, save_dir = None):
+    def __init__(self, dataset, pretrained = False,
+                 unfreeze_backbone = False, save_dir = None):
         # Initialize the module.
         super(SegmentationBenchmark, self).__init__()
 
@@ -91,7 +97,8 @@ class SegmentationBenchmark(pl.LightningModule):
         self._pretrained = pretrained
         self.net = DeepLabV3Transfer(
             self._source.num_classes,
-            self._pretrained
+            self._pretrained,
+            unfreeze_backbone = unfreeze_backbone
         )
 
         # Construct the loss for training.
@@ -185,10 +192,20 @@ def build_loaders(name):
     return train_ds, val_ds, test_ds
 
 
-def train(dataset, epochs, save_dir = None, overwrite = None):
+def train(dataset, epochs, save_dir = None,
+          unfreeze_backbone = False, overwrite = None):
     """Constructs the training loop and trains a model."""
-    save_dir = "/data2/amnjoshi/segmentation_pretrained"
+    save_dir = "/data2/amnjoshi/segmentation_pretrained/checkpoints"
+    os.makedirs(save_dir, exist_ok = True)
     log_dir = save_dir.replace('checkpoints', 'logs')
+    os.makedirs(log_dir, exist_ok = True)
+
+    # Check if the dataset already has benchmarks.
+    if os.path.exists(save_dir) and os.path.isdir(save_dir):
+        if not overwrite and len(os.listdir(save_dir)) >= 4:
+            print(f"Checkpoints already exist for {dataset} "
+                  f"at {save_dir}, skipping generation.")
+            return
 
     # Set up the checkpoint saving callback.
     callbacks = [
@@ -199,16 +216,12 @@ def train(dataset, epochs, save_dir = None, overwrite = None):
             save_top_k = 3,
             auto_insert_metric_name = False
         ),
-        pl.callbacks.EarlyStopping(
-            monitor = 'val_iou',
-            min_delta = 0.001,
-            patience = 10,
-        )
     ]
 
     # Construct the model.
     model = SegmentationBenchmark(
-        dataset = dataset, save_dir = save_dir)
+        dataset = dataset, save_dir = save_dir,
+        unfreeze_backbone = unfreeze_backbone)
 
     # Construct the data loaders.
     train_ds, val_ds, test_ds = build_loaders(dataset)
@@ -241,18 +254,25 @@ if __name__ == '__main__':
         '--regenerate-existing', action = 'store_true',
         default = False, help = "Whether to re-generate existing benchmarks.")
     ap.add_argument(
+        '--pretrained', action = 'store_true',
+        default = False, help = "Whether to load a pretrained model.")
+    ap.add_argument(
         '--checkpoint_dir', type = str, default = None,
         help = "The checkpoint directory to save to.")
     ap.add_argument(
         '--epochs', type = int, default = 20,
         help = "How many epochs to train for. Default is 20.")
+    ap.add_argument(
+        '--unfreeze-backbone', action = 'store_true',
+        default = False, help = "Whether to not freeze backbone weights.")
     args = ap.parse_args()
 
     # Train the model.
     if args.dataset[0] in agml.data.public_data_sources(ml_task = 'semantic_segmentation'):
-        train(args.dataset,
+        train(dataset = args.dataset,
               epochs = args.epochs,
-              save_dir = args.checkpoint_dir)
+              save_dir = args.checkpoint_dir,
+              unfreeze_backbone = args.unfreeze_backbone)
     else:
         if args.dataset[0] == 'all':
             datasets = [ds for ds in agml.data.public_data_sources(
@@ -260,9 +280,10 @@ if __name__ == '__main__':
         else:
             datasets = args.dataset
         for ds in datasets:
-            train(ds,
+            train(dataset = ds,
                   epochs = args.epochs,
                   save_dir = args.checkpoint_dir,
+                  unfreeze_backbone = args.unfreeze_backbone,
                   overwrite = args.regenerate_existing)
 
 
