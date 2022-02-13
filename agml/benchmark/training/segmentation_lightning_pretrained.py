@@ -187,15 +187,8 @@ def build_loaders(name):
 
 def train(dataset, epochs, save_dir = None, overwrite = None):
     """Constructs the training loop and trains a model."""
-    save_dir = checkpoint_dir(save_dir, dataset)
+    save_dir = "/data2/amnjoshi/segmentation_pretrained"
     log_dir = save_dir.replace('checkpoints', 'logs')
-
-    # Check if the dataset already has benchmarks.
-    if os.path.exists(save_dir) and os.path.isdir(save_dir):
-        if not overwrite and len(os.listdir(save_dir)) >= 4:
-            print(f"Checkpoints already exist for {dataset} "
-                  f"at {save_dir}, skipping generation.")
-            return
 
     # Set up the checkpoint saving callback.
     callbacks = [
