@@ -727,5 +727,5 @@ class PublicDataPreprocessor(object):
 
 
 
-PublicDataPreprocessor('../../data_new').preprocess('apple_detection_drone_brazil')
+
 
