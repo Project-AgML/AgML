@@ -27,6 +27,7 @@ import sys
 import json
 import glob
 import shutil
+import argparse
 
 import cv2
 import numpy as np
@@ -906,9 +907,17 @@ class PublicDataPreprocessor(object):
         with open(os.path.join(processed_dir, 'annotations.json'), 'w') as f:
             json.dump(all_annotation_data, f)
 
+if __name__ == '__main__':
+    # Initialize program arguments.
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--data_dir", type = str, default = '../../data',
+                    help = "The directory containing two sub-directories, "
+                           "`original` and `processed`, with the data.")
+    ap.add_argument("--dataset", type = str, required = True,
+                    help = "The dataset to process.")
+    args = ap.parse_args()
 
+    # Execute the preprocessing.
+    p = PublicDataPreprocessor(os.path.abspath(args.data_dir))
+    p.preprocess(args.dataset)
 
-
-
-
-PublicDataPreprocessor('../../data_new').preprocess('apple_detection_usa', resize_annotations = True)
