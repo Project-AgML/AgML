@@ -33,6 +33,7 @@ import numpy as np
 import pandas as pd
 
 from PIL import Image
+import albumentations as A
 
 from agml.utils.logging import tqdm
 from agml.utils.io import create_dir, nested_dir_list, get_dir_list, get_file_list
@@ -176,7 +177,7 @@ class PublicDataPreprocessor(object):
             anno_data_all, label2id, output_json_file,
             output_img_path, general_info)
 
-    def apple_detection_usa(self, dataset_name, fix = False):
+    def apple_detection_usa(self, dataset_name, fix = False, resize_annotations = False):
         # Just a quick fix to clip over-sized bounding boxes.
         if fix:
             # Load in the annotations.
@@ -208,6 +209,94 @@ class PublicDataPreprocessor(object):
             annotations['annotations'] = new_annotations
             with open(os.path.join(dataset_dir, 'annotations.json'), 'w') as f:
                 json.dump(annotations, f)
+            return
+
+        # Resize the images in the dataset.
+        if resize_annotations:
+            # Load in the annotations.
+            dataset_dir = os.path.join(self.data_original_dir, dataset_name)
+            with open(os.path.join(dataset_dir, 'annotations.json'), 'r') as f:
+                annotations = json.load(f)
+
+            # Get the images and all of their heights/widths.
+            images = annotations['images']
+
+            # Load all of the bounding boxes corresponding to the image.
+            bboxes_per_image_id = {}
+            categories_per_image_id = {}
+            for annotation in annotations['annotations']:
+                if annotation['image_id'] not in bboxes_per_image_id.keys():
+                    bboxes_per_image_id[annotation['image_id']] = [annotation['bbox']]
+                    categories_per_image_id[annotation['image_id']] = [annotation['category_id']]
+                else:
+                    bboxes_per_image_id[annotation['image_id']].append(annotation['bbox'])
+                    categories_per_image_id[annotation['image_id']].append(annotation['category_id'])
+
+            # Resize all images to a fair size.
+            out_image_coco = []
+            processed_bboxes_per_image_id = {}
+            processed_areas_per_image_id = {}
+            processed_dir = os.path.join(self.data_processed_dir, dataset_name)
+            out_image_dir = os.path.join(processed_dir, 'images')
+            os.makedirs(out_image_dir, exist_ok = True)
+            for image in tqdm(images, desc = "Processing Images"):
+                # Get the factor by which to reduce the image size.
+                if image['height'] == 3968:
+                    dividing_factor = 4
+                elif image['height'] == 1992:
+                    dividing_factor = 3
+                else:
+                    dividing_factor = 1.5
+
+                # Load in the image and apply transforms.
+                h_n = int(image['height'] // dividing_factor)
+                w_n = int(image['width'] // dividing_factor)
+                image_path = os.path.join(dataset_dir, 'images', image['file_name'])
+                tfm = A.Compose(
+                    [A.Resize(height = h_n, width = w_n)],
+                    bbox_params = A.BboxParams(format = "coco", min_area = 0,
+                                               min_visibility = 0, label_fields = ['labels']))
+                sample = {'image': cv2.imread(image_path),
+                          'bboxes': bboxes_per_image_id[image['id']],
+                          'labels': categories_per_image_id[image['id']]}
+                sample = tfm(**sample)
+
+                # Extract the processed bounding boxes and labels.
+                out_image = sample['image']
+                out_bboxes = np.array(sample['bboxes']).astype(np.int32).tolist()
+                processed_bboxes_per_image_id[image['id']] = out_bboxes
+                processed_areas_per_image_id[image['id']] = [
+                    b[2] * b[3] for b in out_bboxes]
+
+                # Save the output image.
+                out_image_path = os.path.join(out_image_dir, image['file_name'])
+                if not os.path.exists(out_image_path):
+                    cv2.imwrite(out_image_path, out_image)
+
+                # Update the COCO JSON with the image.
+                new_coco = image.copy()
+                new_coco['height'], new_coco['width'] = h_n, w_n
+                out_image_coco.append(new_coco)
+
+            # Create the output COCO JSON dictionary for the annotations.
+            num = 0
+            new_annotations = []
+            for (idx, bboxes), (_, areas) in zip(
+                    processed_bboxes_per_image_id.items(),
+                    processed_areas_per_image_id.items()):
+                for bbox, area in zip(bboxes, areas):
+                    new_annotations.append({
+                        'bbox': bbox, 'area': area, 'iscrowd': 0,
+                        'ignore': 0, 'segmentation': [], 'image_id': idx,
+                        'id': num, 'category_id': 1})
+                    num += 1
+
+            # Save the processed COCO JSON annotations.
+            out_coco = annotations.copy()
+            out_coco['images'] = out_image_coco
+            out_coco['annotations'] = new_annotations
+            with open(os.path.join(processed_dir, 'annotations.json'), 'w') as f:
+                json.dump(out_coco, f)
             return
 
         # resize the dataset
@@ -689,5 +778,137 @@ class PublicDataPreprocessor(object):
             im = cv2.resize(im, (im.shape[1] // 5, im.shape[0] // 5), cv2.INTER_LINEAR)
             cv2.imwrite(out_image, im)
 
+    def apple_detection_spain(self, dataset_name):
+        # resize the dataset
+        resize = 1.0
+
+        # Read public_datasources.json to get class information
+        datasource_file = os.path.join(os.path.dirname(__file__), "../_assets/public_datasources.json")
+        with open(datasource_file) as f:
+            data = json.load(f)
+            category_info = data[dataset_name]['crop_types']
+            labels_str = []
+            labels_ids = []
+            for info in category_info:
+                labels_str.append(category_info[info])
+                labels_ids.append(int(info))
+
+            name_converter = dict(zip(["Poma"], ["apple"]))  # src -> dst
+            label2id = dict(zip(labels_str, labels_ids))
+
+        dataset_dir = os.path.join(self.data_original_dir, dataset_name)
+        ann_dir = os.path.join(dataset_dir, "preprocessed data/square_annotations1")
+
+        # Get image file and xml file
+        all_files = get_file_list(ann_dir)
+        anno_files = [os.path.join(ann_dir, x) for x in all_files if "xml" in x]
+        img_files = [x.replace(".xml", "hr.jpg").replace("square_annotations1", "images") for x in anno_files]
+
+        # Process annotation files
+        save_dir_anno = os.path.join(self.data_processed_dir, dataset_name, 'annotations')
+        create_dir(save_dir_anno)
+        output_json_file = os.path.join(save_dir_anno, 'instances.json')
+
+        # Process image files
+        output_img_path = os.path.join(self.data_processed_dir, dataset_name, 'images')
+        create_dir(output_img_path)
+
+        general_info = {
+            "description": "KFuji RGB-DS database",
+            "url": "http://www.grap.udl.cat/en/publications/KFuji_RGBDS_database.html",
+            "version": "1.0",
+            "year": 2018,
+            "contributor": "Gené-Mola J, Vilaplana V, Rosell-Polo JR, Morros JR, Ruiz-Hidalgo J, Gregorio E",
+            "date_created": "2018/10/19"
+        }
+
+        convert_xmls_to_cocojson(
+            general_info,
+            annotation_paths = anno_files,
+            img_paths = img_files,
+            label2id = label2id,
+            name_converter = name_converter,
+            output_jsonpath = output_json_file,
+            output_imgpath = output_img_path,
+            extract_num_from_imgid = True
+        )
+
+    def apple_detection_drone_brazil(self, dataset_name):
+        # Get the data directory and rename it if necessary.
+        dataset_dir = os.path.join(self.data_original_dir, dataset_name)
+        if not os.path.exists(dataset_dir):
+            fallback = os.path.join(self.data_original_dir,
+                                    'thsant-add256-68d2f88') # noqa
+            if os.path.exists(fallback):
+                os.rename(fallback, dataset_dir)
+
+        # Get all of the images which have valid annotations.
+        with open(os.path.join(dataset_dir, 'all.json'), 'r') as f:
+            original_annotations = json.load(f)
+        valid_annotations = {k: v for k, v in
+                             original_annotations.items() if v != []}
+
+        # Construct the `images` part of the COCO JSON.
+        image_coco = []
+        image_id_map = {}
+        image_dir = os.path.join(dataset_dir, 'images')
+        for idx, image_name in tqdm(
+                enumerate(valid_annotations.keys()),
+                desc = "Parsing Images", total = len(valid_annotations)):
+            height, width = cv2.imread(os.path.join(image_dir, image_name)).shape[:2]
+            image_coco.append(
+                {'file_name': image_name, 'height': height,
+                 'width': width, 'id': idx})
+            image_id_map[image_name] = idx
+
+        # Construct the `annotations` part of the COCO JSON.
+        annotation_idx = 0
+        annotation_coco = []
+        for image_name, annotation_list in valid_annotations.items():
+            for annotation in annotation_list:
+                # Coordinates are in form (center_x, center_y, radius). We convert
+                # these to (top left x, top left y, width, height)
+                x_c, y_c, r = annotation['cx'], annotation['cy'], annotation['r']
+                x, y = x_c - r, y_c - r
+                w = h = r * 2
+                annotation_coco.append({
+                    'area': w * h, 'iscrowd': 0, 'bbox': [x, y, w, h],
+                    'category_id': 1, 'ignore': 0, 'segmentation': 0,
+                    'image_id': image_id_map[image_name], 'id': annotation_idx})
+                annotation_idx += 1
+
+        # Set up the annotation dictionary.
+        category_info = [{'supercategory': 'none', 'id': 1, 'name': 'apple'}]
+        all_annotation_data = {
+            "images": image_coco, "type": "instances",
+            "annotations": annotation_coco, "categories": category_info,
+            "info": {
+                "description": "apple detection dataset with drone imagery",
+                "url": "https://github.com/thsant/add256/tree/zenodo-1.0",
+                "version": "1.0",
+                "year": 2021,
+                "contributor": "Thiago T. Santos and Luciano Gebler",
+                "date_created": "2021/10/2021"
+            }
+        }
+
+        # Recreate the dataset and zip it
+        processed_dir = os.path.join(self.data_processed_dir, dataset_name)
+        processed_img_dir = os.path.join(processed_dir, 'images')
+        if os.path.exists(processed_dir):
+            shutil.rmtree(processed_dir)
+        os.makedirs(processed_dir, exist_ok = True)
+        os.makedirs(processed_img_dir, exist_ok = True)
+        for path in tqdm(valid_annotations.keys(), desc = "Moving Images"):
+            full_path = os.path.join(image_dir, path)
+            shutil.copyfile(full_path, os.path.join(
+                processed_img_dir, os.path.basename(path)))
+        with open(os.path.join(processed_dir, 'annotations.json'), 'w') as f:
+            json.dump(all_annotation_data, f)
 
 
+
+
+
+
+PublicDataPreprocessor('../../data_new').preprocess('apple_detection_usa', resize_annotations = True)
