@@ -385,38 +385,6 @@
         },
         "external_image_sources": []
     },
-    "cotton_seedling_counting": {
-        "ml_task": "object_detection",
-        "ag_task": "seedling_counting",
-        "location": {
-            "continent": "worldwide",
-            "country": "worldwide"
-        },
-        "sensor_modality": "rgb",
-        "real_synthetic": "real",
-        "platform": "ground",
-        "input_data_format": "png",
-        "annotation_format": "coco_json",
-        "n_images": "1511",
-        "docs_url": "https://github.com/UGA-BSAIL/deepseedling",
-        "stats": {
-            "mean": [
-                0.6695063710212708,
-                0.5673825144767761,
-                0.4538835883140564
-            ],
-            "std": [
-                0.07037307322025299,
-                0.07951230555772781,
-                0.07661264389753342
-            ]
-        },
-        "classes": {
-            "0": "Plant",
-            "1": "Weed"
-        },
-        "external_image_sources": []
-    },
     "mango_detection_australia": {
         "ml_task": "object_detection",
         "ag_task": "fruit_detection",
