@@ -381,7 +381,7 @@
             ]
         },
         "classes": {
-            "0": "apple"
+            "1": "apple"
         },
         "external_image_sources": []
     },
@@ -444,7 +444,7 @@
             ]
         },
         "classes": {
-            "0": "mango"
+            "1": "mango"
         },
         "external_image_sources": []
     },

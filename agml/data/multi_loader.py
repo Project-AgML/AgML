@@ -426,7 +426,7 @@ class AgMLMultiDatasetLoader(AgMLSerializable):
 
         # Create a new `CollectionWrapper` around the datasets.
         new_collection = CollectionWrapper(
-            [loaders], keys = [l_.name for l_ in loaders])
+            loaders, keys = [l_.name for l_ in loaders])
 
         # Get the state of the current loader and update it
         # with the new collection of loaders. Then, update
@@ -440,7 +440,7 @@ class AgMLMultiDatasetLoader(AgMLSerializable):
         loader_state['data_distributions'] = data_distributions
         accessors = np.arange(0, total_num_images)
         if self._shuffle_data:
-            accessors = np.random.shuffle(accessors)
+            np.random.shuffle(accessors)
         loader_state['loader_accessors'] = accessors
         batch_size = loader_state.pop('batch_size')
         loader_state['batch_size'] = None
