@@ -799,5 +799,98 @@
                 0.20582404732704163
             ]
         }
+    },
+    "guava_disease_pakistan": {
+        "classes": {
+            "1": "Canker",
+            "2": "Dot",
+            "3": "Mummification",
+            "4": "Rust"
+        },
+        "ml_task": "image_classification",
+        "ag_task": "disease_classification",
+        "location": {
+            "continent": "asia",
+            "country": "pakistan"
+        },
+        "sensor_modality": "rgb",
+        "platform": "ground",
+        "input_data_format": "jpg",
+        "annotation_format": "directory_names",
+        "n_images": "306",
+        "docs_url": "https://data.mendeley.com/datasets/s8x6jn5cvr/1",
+        "external_image_sources": [],
+        "stats": {
+            "mean": [
+                0.44554805755615234,
+                0.4508753716945648,
+                0.3228892683982849
+            ],
+            "std": [
+                0.18661099672317505,
+                0.18359656631946564,
+                0.18744423985481262
+            ]
+        }
+    },
+    "apple_detection_spain": {
+        "classes": {
+            "1": "apple"
+        },
+        "ml_task": "object_detection",
+        "ag_task": "fruit_detection",
+        "location": {
+            "continent": "europe",
+            "country": "spain"
+        },
+        "sensor_modality": "rgb",
+        "platform": "ground",
+        "input_data_format": "jpg",
+        "annotation_format": "coco_json",
+        "n_images": "967",
+        "docs_url": "https://www.grap.udl.cat/en/publications/KFuji_RGBDS_database.html",
+        "external_image_sources": [],
+        "stats": {
+            "mean": [
+                0.3745550215244293,
+                0.4699203670024872,
+                0.3931747078895569
+            ],
+            "std": [
+                0.2724320888519287,
+                0.27973315119743347,
+                0.2829023003578186
+            ]
+        }
+    },
+    "apple_detection_drone_brazil": {
+        "classes": {
+            "1": "apple"
+        },
+        "ml_task": "object_detection",
+        "ag_task": "fruit_detection",
+        "location": {
+            "continent": "south_america",
+            "country": "brazil"
+        },
+        "sensor_modality": "rgb",
+        "platform": "ground",
+        "input_data_format": "jpg",
+        "annotation_format": "coco_json",
+        "n_images": "689",
+        "docs_url": "https://github.com/thsant/add256/tree/zenodo-1.0",
+        "external_image_sources": [],
+        "stats": {
+            "mean": [
+                0.3362397849559784,
+                0.48177945613861084,
+                0.32026395201683044
+            ],
+            "std": [
+                0.18435567617416382,
+                0.1873108297586441,
+                0.1734534204006195
+            ]
+        }
     }
 }

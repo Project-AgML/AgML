@@ -65,6 +65,7 @@ class DataBuilder(AgMLSerializable):
         obj._info_map = info.class_to_num
         obj._dataset_root = root
         obj._data = contents
+        obj._external_image_sources = info.external_image_sources
         return obj
 
     @property
