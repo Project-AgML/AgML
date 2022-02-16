@@ -167,6 +167,7 @@ class AnnotationRemap(AgMLSerializable):
                     annotations['category_id'])
             else:
                 category_ids = annotations['category_id']
+                category_ids[np.where(category_ids == 0)[0]] = 1 # fix
                 new_ids = np.array([self._general_class_to_num[
                     self._num_to_class[name][c].lower()]
                                     for c in category_ids])
@@ -234,8 +235,10 @@ class AgMLMultiDatasetLoader(AgMLSerializable):
         self._set_to_keys = {}
         self._bounds = {s: b for s, b in zip(sets, bounds)}
         for i, set_ in enumerate(sets):
+            value = 0 if i == 0 else 1
             self._set_to_keys.update(dict.fromkeys(
-                np.arange(bounds[i], bounds[i + 1] - 1), set_))
+                np.arange(bounds[i] - value,
+                          bounds[i + 1] + 1), set_))
 
         # The batch size is modified similarly like the `DataManager`.
         # Since all of the data loaders should have the same properties,
@@ -351,9 +354,7 @@ class AgMLMultiDatasetLoader(AgMLSerializable):
         classes = self._info.classes.values()
         class_values = [[o.lower() for o in c] for c in classes]
         class_values = [i for s in class_values for i in s]
-        unique_classes, counts = np.unique(
-            class_values, return_counts = True)
-        unique_classes = unique_classes.tolist()
+        unique_classes = np.unique(class_values).tolist()
 
         # Create a class metadata storing all of the unique
         # classes belonging to this loader and their mappings.
@@ -444,6 +445,20 @@ class AgMLMultiDatasetLoader(AgMLSerializable):
         loader_state['loader_accessors'] = accessors
         batch_size = loader_state.pop('batch_size')
         loader_state['batch_size'] = None
+
+        # Re-generate the mapping for bounds.
+        sets = self._info.num_images.keys()
+        bound_ranges = np.cumsum([len(loader) for loader in loaders]).tolist()
+        bound_ranges = (0, ) + (*bound_ranges, )
+        set_to_keys = {}
+        bounds = {s: b for s, b in zip(sets, bound_ranges)}
+        for i, set_ in enumerate(sets):
+            value = 0 if i == 0 else 1
+            set_to_keys.update(dict.fromkeys(
+                np.arange(bound_ranges[i],
+                          bound_ranges[i + 1] + value), set_))
+        loader_state['set_to_keys'] = set_to_keys
+        loader_state['bounds'] = bounds
 
         # Create the new loader from the updated state.
         new_loader = AgMLMultiDatasetLoader.__new__(AgMLMultiDatasetLoader)
@@ -1059,8 +1074,13 @@ class AgMLMultiDatasetLoader(AgMLSerializable):
     @staticmethod
     def _calculate_data_and_loader_index(index, bound_map, set_map):
         loader_idx = set_map[index]
-        data_idx = int(index - list(bound_map.values())[int(np.searchsorted(
-            np.array(list(bound_map.values())), index) - 1)])
+        is_equal = np.where(index == np.array(list(bound_map.values())))[0]
+        if is_equal.size != 0:
+            data_idx = 0
+        else:
+            data_idx = int(index - list(bound_map.values())[int(
+                np.searchsorted(np.array(
+                    list(bound_map.values())), index) - 1)])
         if data_idx < 0:
             data_idx = 0
         return loader_idx, data_idx

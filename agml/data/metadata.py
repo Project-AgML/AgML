@@ -26,6 +26,12 @@ from agml.utils.data import (
 )
 
 
+# Named tuples which are used by the metadata.
+Tasks = collections.namedtuple('Tasks', ['ml', 'ag'])
+Location = collections.namedtuple('Location', ['continent', 'country'])
+ImageStats = collections.namedtuple('ImageStats', ['mean', 'std'])
+
+
 class _MetadataDict(dict):
     """Dictionary subclass that throws a custom error for metadata accesses."""
     def __init__(self, *args, dataset = None, **kwargs):
@@ -140,21 +146,18 @@ class DatasetMetadata(AgMLSerializable):
     @property
     def tasks(self):
         """Returns the ML and Agriculture tasks for this dataset."""
-        Tasks = collections.namedtuple('Tasks', ['ml', 'ag'])
         ml_task, ag_task = self._metadata['ml_task'], self._metadata['ag_task']
         return Tasks(ml = ml_task, ag = ag_task)
 
     @property
     def location(self):
         """Returns the continent and country in which the dataset was made."""
-        Location = collections.namedtuple('Location', ['continent', 'country'])
         continent, country = self._metadata['location'].values()
         return Location(continent = continent, country = country)
 
     @property
     def image_stats(self):
         """Returns the mean and standard deviation of the RGB images."""
-        ImageStats = collections.namedtuple('ImageStats', ['mean', 'std'])
         mean, std = self._metadata['stats'].values()
         return ImageStats(mean = mean, std = std)
 

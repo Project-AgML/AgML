@@ -153,6 +153,10 @@ class DataObject(AgMLSerializable):
         annotation = {'bbox': [], 'category_id': [], 'area': [],
                       'image_id': "", 'iscrowd': [], 'segmentation': []}
         for a_set in obj:
+            x, y, w, h = a_set['bbox']
+            x = int(np.clip(x, 0, None))
+            y = int(np.clip(y, 0, None))
+            a_set['bbox'] = [x, y, w, h]
             annotation['bbox'].append(a_set['bbox'])
             annotation['category_id'].append(a_set['category_id'])
             annotation['iscrowd'].append(a_set['iscrowd'])
