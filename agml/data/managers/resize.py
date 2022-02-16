@@ -61,7 +61,7 @@ class ImageResizeManager(AgMLSerializable):
     a transformation pipeline. This is to prevent data loss.
     """
     serializable = frozenset(
-        ('task', 'dataset_name', 'dataset_root',
+        ('task', 'dataset_name', 'dataset_root', 'auto_enabled',
          'resize_type', 'image_size', 'interpolation'))
 
     # Stores the path to the local file which contains the
@@ -83,7 +83,13 @@ class ImageResizeManager(AgMLSerializable):
 
         self._resize_type = 'default'
         self._image_size = None
-        self._interpolation = 'bilinear'
+        self._interpolation = cv2.INTER_LINEAR
+
+        self._auto_enabled = True
+
+    def disable_auto(self):
+        # For multi-dataset loaders, the `auto` option is disabled.
+        self._auto_enabled = False
 
     @property
     def state(self):
@@ -124,7 +130,10 @@ class ImageResizeManager(AgMLSerializable):
             # First, we check whether a different size has automatically been
             # set, since if it has, we don't want to override that size.
             if kind == 'train-auto':
-                if self._resize_type == 'default':
+                if not self._auto_enabled:
+                    self._resize_type = 'train'
+                    self._image_size = self._default_size
+                elif self._resize_type == 'default':
                     info = self._maybe_load_shape_info()
                     if info is None:
                         shape = self._random_inference_shape()

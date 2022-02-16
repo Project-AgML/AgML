@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+import copy
 from enum import Enum
 
 import numpy as np
@@ -55,11 +55,13 @@ class TrainingManager(AgMLSerializable):
     should be applied, allowing for independent train and eval modes.
     """
     serializable = frozenset((
-        'transform_manager', 'resize_manager', 'state', 'task'))
+        'transform_manager', 'resize_manager',
+        'state', 'task', 'multi_hook', 'name'))
 
     def __init__(self, transform_manager, resize_manager, task = None):
         # Update the general parameters for the loader.
         self._task = task
+        self._name = resize_manager._dataset_name
 
         # The `TrainingManager` is responsible for applying the
         # actual transforms, and thus controls the `TransformManager`
@@ -78,6 +80,9 @@ class TrainingManager(AgMLSerializable):
         #
         # See the `update_state()` method to see the valid states.
         self._state = TrainState.NONE
+
+        # A hook for multi-dataset loaders.
+        self._multi_hook = False
 
     @property
     def state(self):
@@ -163,6 +168,10 @@ class TrainingManager(AgMLSerializable):
         elif t_(state) == TrainState.NONE:
             self._state = TrainState.NONE
 
+    def _set_multi_hook(self, hook):
+        """Used to modify class annotations for multi-dataset loaders."""
+        self._multi_hook = hook
+
     def apply(self, obj, batch_state):
         """Applies preprocessing and conversions to the data contents.
 
@@ -178,6 +187,11 @@ class TrainingManager(AgMLSerializable):
         """
         # Extract the raw contents from the `DataObject`.
         contents = obj.get()
+
+        # If there is a hook to apply (for multi-dataset loaders),
+        # then apply the hook before doing anything else.
+        if self._multi_hook:
+            contents = self._multi_hook(contents, self._name) # noqa
 
         # If the state is set to `False`, then just return the raw contents.
         if self._state is TrainState.FALSE:
@@ -356,7 +370,8 @@ class TrainingManager(AgMLSerializable):
         for key, value in contents.items():
             if key == 'segmentation':
                 value = np.empty(0)
-            coco_tensor[key] = torch.tensor(value)
+            if not isinstance(value, torch.Tensor):
+                coco_tensor[key] = torch.tensor(value)
         return coco_tensor
 
 

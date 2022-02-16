@@ -208,7 +208,8 @@ class DataManager(AgMLSerializable):
                 f"batch size ({batch_size}). Consider using a smaller batch size.")
             batches = [self._accessors]
         else:
-            batches.append(extra_items)
+            if len(extra_items) < batch_size:
+                batches.append(extra_items)
         self._accessors = np.array(batches, dtype = object)
         self._batch_size = batch_size
 

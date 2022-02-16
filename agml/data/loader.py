@@ -14,6 +14,7 @@
 
 import copy
 from typing import Union
+from collections import Sequence
 from decimal import getcontext, Decimal
 
 import numpy as np
@@ -22,8 +23,8 @@ from agml.framework import AgMLSerializable
 from agml.data.manager import DataManager
 from agml.data.builder import DataBuilder
 from agml.data.metadata import DatasetMetadata
-from agml.utils.general import NoArgument, resolve_list_value
 from agml.utils.logging import log
+from agml.utils.general import NoArgument, resolve_list_value
 from agml.backend.tftorch import (
     get_backend, set_backend,
     user_changed_backend, StrictBackendError,
@@ -66,6 +67,20 @@ class AgMLDataLoader(AgMLSerializable):
     """
     serializable = frozenset((
         'info', 'builder', 'manager', 'train_data', 'val_data', 'test_data'))
+
+    def __new__(cls, dataset, **kwargs):
+        # If a single dataset is passed, then we use the base `AgMLDataLoader`.
+        # However, if an iterable of datasets is passed, then we need to
+        # dispatch to the subclass `AgMLMultiDatasetLoader` for them.
+        if isinstance(dataset, (str, DatasetMetadata)):
+            return super(AgMLDataLoader, cls).__new__(cls)
+        elif isinstance(dataset, Sequence):
+            from agml.data.multi_loader import AgMLMultiDatasetLoader
+            return AgMLMultiDatasetLoader(dataset, **kwargs)
+        raise TypeError(
+            "Expected either a single dataset name (or metadata), or"
+            "a list of dataset names/metadata when instantiating an "
+            "`AgMLDataLoader`. Got {dataset} of type {type(dataset)}.")
 
     def __init__(self, dataset, **kwargs):
         """Instantiates an `AgMLDataLoader` with the dataset."""
@@ -155,6 +170,36 @@ class AgMLDataLoader(AgMLSerializable):
     def task(self):
         """Returns the ML task that this dataset is constructed for."""
         return self._info.tasks.ml
+
+    @property
+    def num_images(self):
+        """Returns the number of images in the dataset."""
+        return self._info.num_images
+
+    @property
+    def classes(self):
+        """Returns the classes that the dataset is predicting."""
+        return self._info.classes
+
+    @property
+    def num_classes(self):
+        """Returns the number of classes in the dataset."""
+        return self._info.num_classes
+
+    @property
+    def num_to_class(self):
+        """Returns a mapping from a number to a class label."""
+        return self._info.num_to_class
+
+    @property
+    def class_to_num(self):
+        """Returns a mapping from a class label to a number."""
+        return self._info.class_to_num
+
+    @property
+    def data_distributions(self):
+        """Displays the distribution of images from each source."""
+        return {self.name: self.num_images}
 
     @property
     def image_size(self):
@@ -791,6 +836,21 @@ class AgMLDataLoader(AgMLSerializable):
         self.transform(
             target_transform = ('channel_basis', self._info.num_classes)
         )
+
+    def generalize_class_detections(self):
+        """Generalizes object detection classes to a single class.
+
+        This is a convenience method for object detection tasks, and
+        converts all of the individual class labels in the task into
+        a single class, essentially allowing the model to purely
+        focus on detection of objects and fine-tuning bounding boxes,
+        with no focus on differentiating classes of different boxes.
+
+        This method is intended to be used for multi-dataset loaders,
+        and will raise an error if using with a single-dataset loader.
+        """
+        raise ValueError(
+            "This method can only be used with multi-dataset loaders.")
 
     def export_contents(self, export_format = None):
         """Exports the internal contents of the `AgMLDataLoader`.

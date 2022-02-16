@@ -54,14 +54,14 @@ class AgMLSerializable(object):
         for field in state.keys():
             setattr(self, f'_{field}', state[field])
 
-    def __copy__(self):
+    def __deepcopy__(self, memo = None):
         params = self.__getstate__()
         cls = super(AgMLSerializable, self).__new__(self.__class__)
         cls.__setstate__(copy.deepcopy(params))
         return cls
 
-    def __deepcopy__(self, memo = None):
-        return self.__copy__()
+    def __copy__(self):
+        return self.__deepcopy__()
 
 
 
