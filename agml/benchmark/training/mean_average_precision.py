@@ -150,9 +150,8 @@ def mean_average_precision(pred_boxes,
 
 class MeanAveragePrecision(object):
     """Stores and calculates the mean average precision over data."""
-    def __init__(self, num_classes = 1, iou_threshold = 0.5):
+    def __init__(self, num_classes = 1):
         self._num_classes = num_classes
-        self._iou_threshold = iou_threshold
 
         # Store all of the ground truth and prediction data.
         self._prediction_data = []
@@ -222,13 +221,13 @@ class MeanAveragePrecision(object):
         """Returns historical mAP over past data."""
         return self._prior_maps
 
-    def compute(self):
+    def compute(self, iou_threshold = 0.5):
         """Computes the mAP with the data."""
         ap = mean_average_precision(
             self._prediction_data,
             self._ground_truth_data,
             num_classes = self._num_classes,
-            iou_threshold = self._iou_threshold)
+            iou_threshold = iou_threshold)
         self._prior_maps[self._num_updates] = ap
         return ap
 
