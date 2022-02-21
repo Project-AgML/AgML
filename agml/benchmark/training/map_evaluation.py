@@ -35,6 +35,8 @@ def run_evaluation(model, name):
     # Create the adaptor and load the test dataset.
     pl.seed_everything(2499751)
     loader = agml.data.AgMLDataLoader(name)
+    loader.shuffle()
+    loader.split(0.8, 0.1, 0.1)
     ds = AgMLDatasetAdaptor(loader.test_data)
 
     # Create the metric.
@@ -48,23 +50,28 @@ def run_evaluation(model, name):
         ma.update([pred_boxes, pred_labels, pred_conf], [bboxes, labels])
 
     # Compute the mAP for all of the thresholds.
-    return [ma.compute(thresh) for thresh in iou_thresholds]
+    map_values = [ma.compute(thresh).detach().cpu().numpy()
+                  for thresh in iou_thresholds]
+    return map_values, np.mean(map_values)
 
 
 def make_checkpoint(name):
     """Gets a checkpoint for the model name."""
     ckpt_path = os.path.join(
-        "/data2/amnjoshi/checkpoints", name, "model_state.pth")
+        "/data2/amnjoshi/checkpoints", name, "final_model.pth")
     state = torch.load(ckpt_path, map_location = 'cpu')
     model = EfficientDetModel(
         num_classes = agml.data.source(name).num_classes,
         architecture = 'efficientdet_d4')
     model.load_state_dict(state)
+    model.eval()
     return model
 
 
 def evaluate(names, log_file = None):
     """Runs the evaluation and saves results to a file."""
+    print(f"Running mAP evaluation for {names}.")
+
     # Create the log file.
     if log_file is None:
         log_file = os.path.join(os.getcwd(), 'map_evaluation.csv')
@@ -73,15 +80,17 @@ def evaluate(names, log_file = None):
     log_contents = {}
     bar = tqdm(names)
     for name in bar:
-        bar.set_description(f"Evaluating {name}")
         ckpt = make_checkpoint(name)
+        bar.set_description(f"Evaluating {name}")
+        if hasattr(name, 'name'):
+            name = name.name
         log_contents[name] = run_evaluation(ckpt, name)
 
     # Save the results.
     df = pd.DataFrame(columns = ('name', *[f'map@{float(th)}' for th in np.linspace(
-        0.5, 0.95, int(np.round((0.95 - .5) / .05) + 1))]))
+        0.5, 0.95, int(np.round((0.95 - .5) / .05) + 1))], 'map@[0.5,0.95]'))
     for name, values in log_contents.items():
-        df.loc[len(df.index)] = [name, *values]
+        df.loc[len(df.index)] = [name, *values[0], values[1]]
     df.to_csv(log_file)
 
 

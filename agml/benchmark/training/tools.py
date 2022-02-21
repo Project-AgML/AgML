@@ -35,6 +35,9 @@ def gpus(given = None):
 def checkpoint_dir(given = None, dataset = None):
     """Returns the directory to save logs/checkpoints to."""
     if given is not None:
+        if given.endswith('dataset'):
+            given = os.path.dirname(given)
+            given = os.path.join(given, dataset)
         if not os.path.exists(given):
             os.makedirs(given, exist_ok = True)
         return given

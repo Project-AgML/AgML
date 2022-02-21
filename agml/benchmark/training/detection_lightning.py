@@ -37,7 +37,7 @@ import agml
 import albumentations as A
 from albumentations.pytorch import ToTensorV2
 
-from effdet import EfficientDet, DetBenchTrain, get_efficientdet_config
+from effdet import get_efficientdet_config, EfficientDet, DetBenchTrain, create_model_from_config
 from effdet.efficientdet import HeadNet
 
 from ensemble_boxes import ensemble_boxes_wbf
@@ -49,18 +49,14 @@ from tools import gpus, checkpoint_dir, MetricLogger, auto_move_data
 IMAGE_SIZE = 512
 
 
-def create_model(num_classes = 1, architecture = "tf_efficientdet_b4"):
-    """Constructs an EfficientDet model architecture."""
+def create_model(num_classes = 1, architecture = "tf_efficientdet_d4", pretrained = False):
     config = get_efficientdet_config(architecture)
-    config.update({'num_classes': num_classes})
     config.update({'image_size': (IMAGE_SIZE, IMAGE_SIZE)})
 
-    print("Using configuration:", str(config))
-
-    net = EfficientDet(config, pretrained_backbone = True)
+    net = create_model_from_config(config, pretrained = pretrained, num_classes = num_classes)
     net.class_net = HeadNet(
         config,
-        num_outputs = config.num_classes,
+        num_outputs = num_classes,
     )
     return DetBenchTrain(net, config)
 
@@ -81,6 +77,8 @@ class AgMLDatasetAdaptor(object):
         y_min = bboxes[:, 1]
         x_max = bboxes[:, 2] + x_min
         y_max = bboxes[:, 3] + y_min
+        x_min, y_min = np.clip(x_min, 0, image.width), np.clip(y_min, 0, image.height)
+        x_max, y_max = np.clip(x_max, 0, image.width), np.clip(y_max, 0, image.height)
         bboxes = np.dstack((x_min, y_min, x_max, y_max)).squeeze(axis = 0)
         class_labels = np.array(annotation['category_id']).squeeze()
         return image, bboxes, class_labels, index
@@ -242,10 +240,12 @@ class EfficientDetModel(pl.LightningModule):
                  inference_transforms = None,
                  architecture = 'efficientdet_d4',
                  save_dir = None,
+                 pretrained = False,
                  validation_dataset_adaptor = None):
         super().__init__()
         self.model = create_model(
-            num_classes, architecture = architecture)
+            num_classes, architecture = architecture,
+            pretrained = pretrained)
         self.confidence_threshold = confidence_threshold
         self.lr = learning_rate
         self.wbf_iou_threshold = wbf_iou_threshold
@@ -280,19 +280,22 @@ class EfficientDetModel(pl.LightningModule):
         # Calculate and log losses.
         self.log("train_loss", losses["loss"], on_step = True,
                  on_epoch = True, prog_bar = True, logger = True)
+        self.log("train_class_loss", losses["class_loss"],
+                 on_step = True, on_epoch = True, logger = True)
+        self.log("train_box_loss", losses["box_loss"], on_step = True,
+                 on_epoch = True, logger = True)
         return losses['loss']
 
     @torch.no_grad()
     def validation_step(self, batch, batch_idx):
         images, annotations, targets, image_ids = batch
         outputs = self.model(images, annotations)
-
         detections = outputs["detections"]
-        predicted_bboxes, predicted_class_confidences, predicted_class_labels = \
-            self.post_process_detections(detections)
 
         # Update the metric.
         if self.val_dataset_adaptor is not None and self._sanity_check_passed:
+            predicted_bboxes, predicted_class_confidences, predicted_class_labels = \
+                self.post_process_detections(detections)
             for idx, pred_box, pred_conf, pred_labels in zip(
                     image_ids, predicted_bboxes,
                     predicted_class_confidences,
@@ -321,6 +324,12 @@ class EfficientDetModel(pl.LightningModule):
 
         self.log("valid_loss", outputs["loss"], on_step = True, on_epoch = True,
                  prog_bar = True, logger = True, sync_dist = True)
+        self.log("valid_class_loss", logging_losses["class_loss"],
+                 on_step = True, on_epoch = True,
+                 logger = True, sync_dist = True)
+        self.log("valid_box_loss", logging_losses["box_loss"],
+                 on_step = True, on_epoch = True,
+                 logger = True, sync_dist = True)
 
         return {'loss': outputs["loss"], 'batch_predictions': batch_predictions}
 
@@ -448,10 +457,12 @@ class EfficientDetModel(pl.LightningModule):
         if not self._sanity_check_passed:
             self._sanity_check_passed = True
             return
-        self.metric_logger.compile_epoch()
+        if hasattr(self, 'metric_logger'):
+            self.metric_logger.compile_epoch()
 
     def on_fit_end(self) -> None:
-        self.metric_logger.save()
+        if hasattr(self, 'metric_logger'):
+            self.metric_logger.save()
     
     def get_progress_bar_dict(self):
         p_bar = super(EfficientDetModel, self).get_progress_bar_dict()
@@ -481,8 +492,8 @@ def train(dataset, epochs, save_dir = None, overwrite = None):
     callbacks = [
         pl.callbacks.ModelCheckpoint(
             dirpath = save_dir, mode = 'min',
-            filename = f"{dataset}" + "-epoch{epoch:02d}-val_loss_{val_loss:.2f}",
-            monitor = 'map',
+            filename = f"{dataset}" + "-epoch{epoch:02d}-valid_loss_{valid_loss:.2f}",
+            monitor = 'valid_loss',
             save_top_k = 3,
             auto_insert_metric_name = False
         )
@@ -502,14 +513,13 @@ def train(dataset, epochs, save_dir = None, overwrite = None):
     dm = EfficientDetDataModule(
         train_dataset_adaptor = AgMLDatasetAdaptor(loader.train_data),
         validation_dataset_adaptor = AgMLDatasetAdaptor(loader.val_data),
-        num_workers = 12, batch_size = 2)
+        num_workers = 12, batch_size = 4)
 
     # Construct the model.
     model = EfficientDetModel(
-        num_classes = loader.info.num_classes,
-        architecture = 'efficientdet_d4',
-        save_dir = save_dir,
-        validation_dataset_adaptor = loader.val_data)
+        num_classes = loader.num_classes,
+        architecture = 'tf_efficientdet_d4',
+        pretrained = True)
 
     # Create the trainer and train the model.
     msg = f"Training dataset {dataset}!"
@@ -518,6 +528,9 @@ def train(dataset, epochs, save_dir = None, overwrite = None):
         max_epochs = epochs, gpus = gpus(None),
         callbacks = callbacks, logger = loggers)
     trainer.fit(model, dm)
+
+    # Save the final state.
+    torch.save(model.state_dict(), os.path.join(save_dir, 'final_model.pth'))
 
 
 if __name__ == '__main__':
