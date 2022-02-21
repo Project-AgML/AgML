@@ -154,6 +154,7 @@ agml/_internal/*
 !agml/_internal/__init__.py
 agml/benchmark/training/lightning_logs
 agml/benchmark/training/logs
-
+agml/benchmark/training/*.log
+agml/benchmark/training/*.err
 
 *.pptx
