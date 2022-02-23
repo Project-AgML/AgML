@@ -13,6 +13,16 @@
 # limitations under the License.
 
 import re
+import numpy as np
+import cv2
+import glob
+import math
+import matplotlib.pyplot as plt
+import matplotlib.patches as patches
+import numpy as np
+
+from math import pi, floor
+from scipy import signal
 
 import numpy as np
 
@@ -105,6 +115,173 @@ def is_array_like(inp):
         return True
     return False
 
+def txt2image(path):
+    """Converts txt to numpy array"""
+    data = np.loadtxt(path)
+    data = np.where(data > 20, 0, data) # Change background numbers to zero
+    return data
+
+
+def txt2image2(path):
+    """Converts txt to numpy array, not consider first row"""
+    data = np.loadtxt(path,skiprows=1)
+    data = np.where(data > 20, 0, data) # Change background numbers to zero
+    return data
+
+def genEnvironmentMap(Origin, Spacing_plants, Spacing_rows, TreesXrow, rows = 1, plant_height = 1):
+    """Generate Map in the same way as Helios plant simulator"""
+    if TreesXrow ==1 and rows ==1:
+        return [[np.concatenate([np.array([Origin[0]]), np.array([Origin[1]]), plant_height/2 + np.array([Origin[2]])])]]
+        
+    if TreesXrow % 2 != 0 and TreesXrow>1: #odd number
+        Pos_x = np.concatenate([np.array([Origin[0]]), np.linspace(Origin[0]+Spacing_plants, TreesXrow/2*Spacing_plants-(Spacing_plants)/2, int(TreesXrow/2))])
+        Pos_x = np.concatenate([np.sort(-Pos_x[1:]) ,Pos_x])
+    else:
+        Pos_x = np.linspace(Origin[0]+(Spacing_plants/2), TreesXrow/2*Spacing_plants-(Spacing_plants)/2, int(TreesXrow/2))
+        Pos_x = np.concatenate([np.sort(-Pos_x[:]) ,Pos_x])
+
+        
+    if rows % 2 != 0: #odd number
+        Pos_y = np.concatenate([np.array([Origin[0]]), np.linspace(Origin[1]+Spacing_rows, rows/2*Spacing_rows-(Spacing_rows)/2, int(rows/2))])
+        Pos_y = np.concatenate([np.sort(-Pos_y[1:]) ,Pos_y])
+    else:
+        Pos_y =np.linspace(Origin[1]+(Spacing_rows/2), rows/2*Spacing_rows-(Spacing_rows)/2, int(rows/2))
+        Pos_y = np.concatenate([np.sort(-Pos_y[:]) ,Pos_y])
+        
+    return [[[Pos_x[x], Pos_y[y], plant_height/2 + Origin[2]] for x in range(len(Pos_x))] for y in range(len(Pos_y))]
+
+
+def genCameraPositions(type, Origin, Spacing_camera, views, d=4, height=1):
+    """Camera position and Lookat values generation"""
+    if type == 'circular':
+        r=d
+        return [[[math.cos(2*pi/views*x)*r,math.sin(2*pi/views*x)*r, height] for x in range(0,views)], [[0,0,1] for x in range(0,views)]]
+    elif type == 'linear':
+        Pos_camera = np.arange(Origin[0], Spacing_camera*views + Origin[0], Spacing_camera)
+        return [[[Pos_camera[x], d + Origin[1], height] for x in range(len(Pos_camera))], [[Pos_camera[x], Origin[1], height] for x in range(len(Pos_camera))]]
+    elif type == 'aerial':
+        t = Spacing_camera*np.linspace(0, 1, views)
+        triangle = Spacing_camera*signal.sawtooth(1 * np.pi * 5 * t, 0.5)
+        return [[[t[x] + Origin[0], triangle[x] + Origin[1], d + Origin[2]] for x in range(len(triangle))], [[t[x] + Origin[0], triangle[x] + Origin[1] +1, height + Origin[2]] for x in range(len(triangle))]]
+
+
+def PlotAllViews(path, Pos):
+    """Plot all the RGB images"""
+    fig, axs = plt.subplots(round(len(Pos)/2 + 0.1),2)
+    fig.subplots_adjust(hspace = .5, wspace=.001)
+    axs = axs.ravel()
+    
+    for i in range(len(Pos)):
+        if i<10:
+            img = cv2.imread(path + 'view0000' + str(i) + '/RGB_rendering.jpeg')
+            axs[i].imshow(img)
+        if i>10:
+            img = cv2.imread(path + 'view000' + str(i) + '/RGB_rendering.jpeg')
+            axs[i].imshow(img)
+        axs[i].set_title('Camera view: #' + str(i),fontsize=50)
+
+def PlotAllViewsSemantic(path, Pos):
+    """Plot all the Semantic segmentation images"""
+    fig, axs = plt.subplots(floor(len(Pos)/2),len(Pos)-floor(len(Pos)/2))
+    fig.subplots_adjust(hspace = .5, wspace=.001)
+    axs = axs.ravel()
+
+    for i in range(len(Pos)):
+        if i<10:
+            data = txt2image(path + 'view0000' + str(i) + '/semantic_segmentation.txt')
+            img = data
+            axs[i].imshow(img)
+            im = axs[i].pcolormesh(data, cmap='gist_rainbow')
+
+        if i>10:
+            data = txt2image(path + 'view000' + str(i) + '/semantic_segmentation.txt')
+            img = data
+            axs[i].imshow(img,'gray')
+            axs[i].pcolormesh(data, cmap='gist_rainbow')
+            axs[i].colorbar()
+            axs[i].show()
+    fig.subplots_adjust(right=0.8)
+    cbar_ax = fig.add_axes([0.85, 0.15, 0.05, 0.7])
+    fig.colorbar(im, cax=cbar_ax)
+
+    plt.show()
+
+
+def PlotInstanceSegmentation(path, view, Label, Number_images = 0):
+    """Plot specific instance segmentaation images"""
+    L = Label
+
+    i = view
+    
+    
+    if i<10:
+        data1 = path + 'view0000' + str(i) 
+    elif i>=10:
+        data1 = path + 'view000' + str(i)
+    
+    if Number_images == 0:
+        View_size = len(glob.glob(data1 + '/instance_segmentation_' + str(L) + '_*'))
+        print(View_size)
+    else:
+        View_size = Number_images
+        print(View_size)
+    
+    if View_size == 1:
+        axs = plt.axes()
+    else:
+        fig, axs = plt.subplots(round(View_size/2),2)
+        fig.subplots_adjust(hspace = .5, wspace=.001)
+        axs = axs.ravel()
+    
+    for j in range(1,View_size+1):
+        if j<10:
+            data = txt2image2(data1 + '/instance_segmentation_' + str(L) + '_' + '000000' + str(j) +'.txt')
+        elif j>=10:
+            data = txt2image2(data1 + '/instance_segmentation_' + str(L) + '_' + '00000' + str(j) +'.txt')                
+        img = data
+        
+        if View_size == 1:
+            axs.imshow(img)
+        else:
+            axs[j-1].imshow(img)
+            fig.subplots_adjust(right=0.8)
+        
+    plt.show()
+
+
+
+
+def PlotObjectDetection(path, view, Label):
+    """Plot object detection on one RGB image"""
+    plt.rcParams['figure.figsize'] = [15, 15]
+    axs = plt.axes()
+    
+    L = Label
+
+    if view<10:
+        img = cv2.imread(path + 'view0000' + str(view) + '/RGB_rendering.jpeg')
+        axs.imshow(img)
+        data = np.loadtxt(path + 'view0000' + str(view) + '/rectangular_labels_' + str(L) + '.txt')
+
+    if view>10:
+        img = cv2.imread(path + 'view000' + str(view) + '/RGB_rendering.jpeg')
+        axs.imshow(img)
+        data = np.loadtxt(path + 'view000' + str(view) + '/rectangular_labels_' + str(L) + '.txt')
+        
+    axs.set_title('Camera view: #' + str(view),fontsize=50)
+    # Create a Rectangle patch
+    img_shape = img.shape
+    for l in range(len(data)):
+        data[l][1] = data[l][1]*img.shape[1]
+        data[l][3] = data[l][3]*img.shape[1]
+        data[l][2] = data[l][2]*img.shape[0]
+        data[l][4] = data[l][4]*img.shape[0]
+        rect = patches.Rectangle(((data[l][1])-0.5*data[l][3],  (img.shape[0] - data[l][2])- 0.5* data[l][4]), data[l][3], data[l][4], linewidth=3, edgecolor='r', facecolor='none')
+        # Add the patch to the Axes
+        axs.add_patch(rect)
+
+    plt.show()
+
 
 class seed_context(object):
     """Creates a context with a custom random seed, then resets it.
@@ -129,6 +306,4 @@ class seed_context(object):
 
     def reset(self):
         np.random.seed(self._seed)
-
-
 
