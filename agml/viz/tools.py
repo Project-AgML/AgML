@@ -27,6 +27,7 @@ import matplotlib.pyplot as plt
 
 from agml.backend.tftorch import tf, torch
 from agml.utils.logging import log
+from agml.utils.image import imread_context
 
 
 # Sets the colormaps used in the other `agml.viz` methods.
@@ -81,7 +82,8 @@ def auto_resolve_image(f):
             if not os.path.exists(image):
                 raise FileNotFoundError(
                     f"The provided image file {image} does not exist.")
-            image = cv2.imread(image)
+            with imread_context(image) as img:
+                image = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         elif isinstance(image, (list, tuple)):
             if not isinstance(image[0], (str, bytes, os.PathLike)):
                 pass
@@ -89,7 +91,9 @@ def auto_resolve_image(f):
                 processed_images = []
                 for image_path in image:
                     if isinstance(image_path, (str, bytes, os.PathLike)):
-                        processed_images.append(cv2.imread(image_path))
+                        with imread_context(image_path) as img:
+                            image = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+                        processed_images.append(image)
                     else:
                         processed_images.append(image_path)
                 image = processed_images

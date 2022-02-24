@@ -37,7 +37,7 @@ class DataBuilder(AgMLSerializable):
     used by the `DataManager` inside the `AgMLDataLoader`.
     """
     serializable = frozenset(
-        ('name', 'task', 'info_map',
+        ('name', 'task', 'info_map', 'labels_for_image',
          'dataset_root', 'data', 'external_image_sources'))
 
     def __init__(self, info, dataset_path, overwrite):
@@ -49,6 +49,7 @@ class DataBuilder(AgMLSerializable):
         self._configure_dataset(
             dataset_path = dataset_path, overwrite = overwrite)
         self._data = None
+        self._labels_for_image = None
 
     @classmethod
     def from_data(cls, contents, info, root):
@@ -65,8 +66,9 @@ class DataBuilder(AgMLSerializable):
         obj._info_map = info.class_to_num
         obj._external_image_sources = info.external_image_sources
         obj._dataset_root = root
-        obj._data = contents
+        obj._data = contents[0]
         obj._external_image_sources = info.external_image_sources
+        obj._labels_for_image = contents[1]
         return obj
 
     @property
@@ -275,7 +277,11 @@ class DataBuilder(AgMLSerializable):
         for img_meta in coco_annotations['images']:
             image_id_mapping[img_meta['id']] = img_meta['file_name']
         coco_map = {fname: [] for fname in image_id_mapping.values()}
+        image_category_map = {k: [] for k in coco_map.keys()}
         for a_meta in coco_annotations['annotations']:
+            image_category_map[image_id_mapping[a_meta['image_id']]] \
+                .append(a_meta['category_id'])
             coco_map[image_id_mapping[a_meta['image_id']]].append(a_meta)
+        self._labels_for_image = image_category_map
         self._data = coco_map
 

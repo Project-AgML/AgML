@@ -66,7 +66,8 @@ class AgMLDataLoader(AgMLSerializable):
     See the methods for examples on how to use an `AgMLDataLoader` effectively.
     """
     serializable = frozenset((
-        'info', 'builder', 'manager', 'train_data', 'val_data', 'test_data'))
+        'info', 'builder', 'manager', 'train_data',
+        'val_data', 'test_data', 'meta_properties'))
 
     def __new__(cls, dataset, **kwargs):
         # If a single dataset is passed, then we use the base `AgMLDataLoader`.
@@ -111,6 +112,17 @@ class AgMLDataLoader(AgMLSerializable):
         self._val_data = None
         self._test_data = None
         self._is_split = False
+
+        # Set the direct access metadata properties like `num_images` and
+        # `classes`, since these can be modified depending on the state of
+        # the loader, whilst the `info` parameter attributes cannot.
+        self._meta_properties = {
+            'num_images': self._info.num_images,
+            'classes': self._info.classes,
+            'num_classes': self._info.num_classes,
+            'num_to_class': self._info.num_to_class,
+            'class_to_num': self._info.class_to_num,
+            'data_distributions': {self.name: self._info.num_images}}
 
     def __len__(self):
         return self._manager.data_length()
@@ -174,32 +186,32 @@ class AgMLDataLoader(AgMLSerializable):
     @property
     def num_images(self):
         """Returns the number of images in the dataset."""
-        return self._info.num_images
+        return self._meta_properties.get('num_images')
 
     @property
     def classes(self):
         """Returns the classes that the dataset is predicting."""
-        return self._info.classes
+        return self._meta_properties.get('classes')
 
     @property
     def num_classes(self):
         """Returns the number of classes in the dataset."""
-        return self._info.num_classes
+        return self._meta_properties.get('num_classes')
 
     @property
     def num_to_class(self):
         """Returns a mapping from a number to a class label."""
-        return self._info.num_to_class
+        return self._meta_properties.get('num_to_class')
 
     @property
     def class_to_num(self):
         """Returns a mapping from a class label to a number."""
-        return self._info.class_to_num
+        return self._meta_properties.get('class_to_num')
 
     @property
     def data_distributions(self):
         """Displays the distribution of images from each source."""
-        return {self.name: self.num_images}
+        return self._meta_properties.get('data_distributions')
 
     @property
     def image_size(self):
@@ -211,7 +223,8 @@ class AgMLDataLoader(AgMLSerializable):
         """
         return self._manager._resize_manager.size
 
-    def _generate_split_loader(self, contents, split):
+    def _generate_split_loader(
+            self, contents, split, meta_properties = None, **kwargs):
         """Generates a split `AgMLDataLoader`."""
         # Check if the data split exists.
         if contents is None:
@@ -222,7 +235,7 @@ class AgMLDataLoader(AgMLSerializable):
         # Load a new `DataManager` and update its internal managers
         # using the state of the existing loader's `DataManager`.
         builder = DataBuilder.from_data(
-            contents = contents,
+            contents = [contents, kwargs.get('labels_for_image', None)],
             info = self.info,
             root = self.dataset_root)
         current_manager = copy.deepcopy(self._manager.__getstate__())
@@ -255,10 +268,18 @@ class AgMLDataLoader(AgMLSerializable):
         if batch_size is not None:
             new_manager.batch_data(batch_size = batch_size)
 
+        # Update the metadata parameters.
+        if meta_properties is None:
+            meta_properties = self._meta_properties
+            meta_properties['num_images'] = len(contents)
+            meta_properties['data_distributions'] = {
+                self.name: len(contents)}
+
         # Instantiate a new `AgMLDataLoader` from the contents.
         loader_state = self.copy().__getstate__()
         loader_state['builder'] = builder
         loader_state['manager'] = new_manager
+        loader_state['meta_properties'] = meta_properties
         cls = super(AgMLDataLoader, self).__new__(AgMLDataLoader)
         cls.__setstate__(loader_state)
         for attr in ['train', 'val', 'test']:
@@ -474,6 +495,104 @@ class AgMLDataLoader(AgMLSerializable):
         self._manager.shuffle(seed = seed)
         return self
 
+    def take_class(self, classes):
+        """Reduces the dataset to a subset of class labels.
+
+        This method, given a set of either integer or string class labels,
+        will return a new `AgMLDataLoader` containing a subset of the
+        original dataset, where the only classes in the dataset are those
+        specified in the `classes` argument.
+
+        The new loader will have info parameters like `num_classes` and
+        `class_to_num` updated for the new set of classes; however, the
+        original `info` metadata will remain the same as the original.
+
+        Note that if the dataset contains images which have bounding boxes
+        corresponding to multiple classes, this method will not work.
+
+        Parameters
+        ----------
+        classes : list, int, str
+            Either a single integer/string for a single class, or a list
+            of integers or strings for multiple classes. Integers should
+            be one-indexed for object detection.
+
+        Notes
+        -----
+        This method only works for object detection datasets.
+        """
+        if self._info.tasks.ml != 'object_detection':
+            raise RuntimeError("The `take_class` method can only be "
+                               "used for object detection datasets.")
+
+        # Parse the provided classes and determine their numerical labels.
+        if isinstance(classes, str):
+            if classes not in self.classes:
+                raise ValueError(
+                    f"Received a class '{classes}' for `loader.take_class`, "
+                    f"which is not in the classes for {self.name}: {self.classes}")
+            classes = [self.class_to_num[classes]]
+        elif isinstance(classes, int):
+            try: self.num_to_class[classes]
+            except IndexError:
+                raise ValueError(
+                    f"The provided class number {classes} is out of "
+                    f"range for {self.num_classes} classes. Make sure "
+                    f"you are using zero-indexing.")
+            classes = [classes]
+        else:
+            parsed_classes = []
+            if isinstance(classes[0], str):
+                for cls in classes:
+                    if cls not in self.classes:
+                        raise ValueError(
+                            f"Received a class '{cls}' for `loader.take_class`, which "
+                            f"is not in the classes for {self.name}: {self.classes}")
+                    parsed_classes.append(self.class_to_num[cls])
+            elif isinstance(classes[0], int):
+                for cls in classes:
+                    try:
+                        self.num_to_class[cls]
+                    except IndexError:
+                        raise ValueError(
+                            f"The provided class number {cls} is out of "
+                            f"range for {self.num_classes} classes. Make "
+                            f"sure you are using zero-indexing.")
+                    parsed_classes.append(cls)
+            classes = parsed_classes.copy()
+
+        # Ensure that there are no images with multi-category boxes.
+        categories = self._builder._labels_for_image
+        if not all(len(np.unique(c)) == 1 for c in categories.values()):
+            raise ValueError(
+                f"Dataset {self.name} has images with multiple categories for "
+                f"bounding boxes, cannot take an individual set of classes.")
+
+        # Get the new data which will go in the loader. The `DataBuilder`
+        # stores a mapping of category IDs corresponding to the bounding
+        # boxes in each image, so we use these to determine the new boxes.
+        new_category_map = {
+            k: v for k, v in categories.items() if v[0] in classes}
+        new_coco_map = {
+            k: v for k, v in self._builder._data.items()
+            if k in new_category_map.keys()}
+
+        # Create the new info parameters for the class.
+        new_properties = {
+            'num_images': len(new_coco_map.keys()),
+            'classes': [self.num_to_class[c] for c in classes],
+            'num_classes': len(classes),
+            'num_to_class': {c: self.num_to_class[c] for c in classes},
+            'class_to_num': {self.num_to_class[c]: c for c in classes}}
+
+        # Create the new loader.
+        obj = self._generate_split_loader(
+            new_coco_map, 'train',
+            meta_properties = new_properties,
+            labels_for_image = new_category_map)
+        obj._is_split = False
+        return obj
+
     def split(self, train = None, val = None, test = None, shuffle = True):
         """Splits the data into train, val and test splits.
 
@@ -535,7 +654,7 @@ class AgMLDataLoader(AgMLSerializable):
             # Convert the splits from floats to ints. If the sum of the int
             # splits are greater than the total number of data, then the largest
             # split is decreased in order to keep compatibility in usage.
-            num_images = self._info.num_images
+            num_images = self.num_images
             proportions = {k: int(v * Decimal(num_images)) for k, v in valid_args.items()}
             if sum(proportions.values()) != num_images:
                 diff = sum(proportions.values()) - num_images
@@ -548,14 +667,14 @@ class AgMLDataLoader(AgMLSerializable):
         # Create the actual data splits.
         if all(isinstance(i, int) for i in valid_args.values()):
             # Ensure that the sum of the splits is the length of the dataset.
-            if not sum(valid_args.values()) == self._info.num_images:
+            if not sum(valid_args.values()) == self.num_images:
                 raise ValueError(f"Got ints for input splits and expected a sum "
-                                 f"equal to the dataset length, {self._info.num_images},"
+                                 f"equal to the dataset length, {self.num_images},"
                                  f"but instead got {sum(valid_args.values())}.")
 
             # The splits will be generated as sequences of indices.
             generated_splits = {}
-            split = np.arange(0, self._info.num_images)
+            split = np.arange(0, self.num_images)
             names, splits = list(valid_args.keys()), list(valid_args.values())
 
             # Shuffling of the indexes will occur first, such that there is an even
