@@ -513,8 +513,11 @@ def train(dataset, epochs, save_dir = None, overwrite = None, generalize_detecti
     pl.seed_everything(2499751)
     loader = agml.data.AgMLDataLoader(dataset)
     loader.shuffle()
+    num_classes = loader.num_classes
     if generalize_detections:
+        print("Generalizing class detections.")
         loader.generalize_class_detections()
+        num_classes = 1
     loader.split(train = 0.8, val = 0.1, test = 0.1)
     dm = EfficientDetDataModule(
         train_dataset_adaptor = AgMLDatasetAdaptor(loader.train_data),
@@ -523,7 +526,7 @@ def train(dataset, epochs, save_dir = None, overwrite = None, generalize_detecti
 
     # Construct the model.
     model = EfficientDetModel(
-        num_classes = loader.num_classes,
+        num_classes = num_classes,
         architecture = 'tf_efficientdet_d4',
         save_dir = save_dir,
         pretrained = True)

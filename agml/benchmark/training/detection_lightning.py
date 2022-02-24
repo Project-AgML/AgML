@@ -520,6 +520,10 @@ def train(dataset, epochs, save_dir = None, overwrite = None):
         num_classes = loader.num_classes,
         architecture = 'tf_efficientdet_d4',
         pretrained = True)
+    model.load_state_dict(torch.load(
+        '/data2/amnjoshi/checkpoints/amg-generalized/model_state.pth',
+        map_location = 'cpu'
+    ))
 
     # Create the trainer and train the model.
     msg = f"Training dataset {dataset}!"

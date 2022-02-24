@@ -176,16 +176,11 @@ def train(dataset, pretrained, epochs, save_dir = None, overwrite = None):
     callbacks = [
         pl.callbacks.ModelCheckpoint(
             dirpath = save_dir, mode = 'min',
-            filename = f"{dataset}" + "-epoch{epoch:02d}-val_loss_{val_loss:.2f}",
-            monitor = 'val_loss',
+            filename = f"{dataset}" + "-epoch{epoch:02d}-val_accuracy_{val_accuracy:.2f}",
+            monitor = 'val_accuracy',
             save_top_k = 3,
             auto_insert_metric_name = False
         ),
-        pl.callbacks.EarlyStopping(
-            monitor = 'val_loss',
-            min_delta = 0.0001,
-            patience = 10,
-        )
     ]
 
     # Construct the model.
@@ -213,6 +208,9 @@ def train(dataset, pretrained, epochs, save_dir = None, overwrite = None):
         train_dataloaders = train_ds,
         val_dataloaders = val_ds,
     )
+
+    # Save the final state.
+    torch.save(model.state_dict(), os.path.join(save_dir, 'final_model.pth'))
 
 
 if __name__ == '__main__':
