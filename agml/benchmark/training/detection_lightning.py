@@ -63,8 +63,9 @@ def create_model(num_classes = 1, architecture = "tf_efficientdet_d4", pretraine
 
 class AgMLDatasetAdaptor(object):
     """Adapts an AgML dataset for use in a `LightningDataModule`."""
-    def __init__(self, loader):
+    def __init__(self, loader, adapt_class = False):
         self.loader = loader
+        self.adapt_class = adapt_class
 
     def __len__(self) -> int:
         return len(self.loader)
@@ -81,6 +82,8 @@ class AgMLDatasetAdaptor(object):
         x_max, y_max = np.clip(x_max, 0, image.width), np.clip(y_max, 0, image.height)
         bboxes = np.dstack((x_min, y_min, x_max, y_max)).squeeze(axis = 0)
         class_labels = np.array(annotation['category_id']).squeeze()
+        if self.adapt_class:
+            class_labels = np.ones_like(class_labels)
         return image, bboxes, class_labels, index
 
 
@@ -537,6 +540,79 @@ def train(dataset, epochs, save_dir = None, overwrite = None):
     torch.save(model.state_dict(), os.path.join(save_dir, 'final_model.pth'))
 
 
+
+def train_per_class(dataset, epochs, save_dir = None, overwrite = None):
+    """Constructs the training loop and trains a model."""
+    save_dir = checkpoint_dir(save_dir, dataset)
+    log_dir = save_dir.replace('checkpoints', 'logs')
+
+    # Check if the dataset already has benchmarks.
+    if os.path.exists(save_dir) and os.path.isdir(save_dir):
+        if not overwrite and len(os.listdir(save_dir)) >= 4:
+            print(f"Checkpoints already exist for {dataset} "
+                  f"at {save_dir}, skipping generation.")
+            return
+
+    # Construct the loader.
+    pl.seed_everything(2499751)
+    loader = agml.data.AgMLDataLoader(dataset)
+    loader.shuffle()
+
+    # Create the loop for each class.
+    for cl in range(agml.data.source(dataset).num_classes):
+        # Create the data module with the new, reduced class.
+        cls = cl + 1
+        new_loader = loader.take_class(cls)
+        new_loader.split(train = 0.8, val = 0.1, test = 0.1)
+        dm = EfficientDetDataModule(
+            train_dataset_adaptor = AgMLDatasetAdaptor(
+                new_loader.train_data, adapt_class = True),
+            validation_dataset_adaptor = AgMLDatasetAdaptor(
+                new_loader.val_data, adapt_class = True),
+            num_workers = 12, batch_size = 4)
+
+        this_save_dir = os.path.join(
+            save_dir, f'{new_loader.num_to_class[cls]}-{cls}')
+        this_log_dir = this_save_dir.replace('checkpoints', 'logs')
+
+        # Set up the checkpoint saving callback.
+        callbacks = [
+            pl.callbacks.ModelCheckpoint(
+                dirpath = this_save_dir, mode = 'min',
+                filename = f"{dataset}" + "-epoch{epoch:02d}-valid_loss_{valid_loss:.2f}",
+                monitor = 'valid_loss',
+                save_top_k = 3,
+                auto_insert_metric_name = False
+            )
+        ]
+
+        # Create the loggers.
+        loggers = [
+            CSVLogger(this_log_dir),
+            TensorBoardLogger(this_log_dir)
+        ]
+
+        # Construct the model.
+        model = EfficientDetModel(
+            num_classes = 1,
+            architecture = 'tf_efficientdet_d4',
+            pretrained = True)
+        model.load_state_dict(
+            torch.load('/data2/amnjoshi/checkpoints/amg-generalized/model_state.pth',
+                       map_location = 'cpu'))
+
+        # Create the trainer and train the model.
+        msg = f"Training dataset {dataset} for class {cls}: {loader.num_to_class[cls]}!"
+        print("\n" + "=" * len(msg) + "\n" + msg + "\n" + "=" * len(msg) + "\n")
+        trainer = pl.Trainer(
+            max_epochs = epochs, gpus = gpus(None),
+            callbacks = callbacks, logger = loggers)
+        trainer.fit(model, dm)
+
+        # Save the final state.
+        torch.save(model.state_dict(), os.path.join(this_save_dir, 'final_model.pth'))
+
+
 if __name__ == '__main__':
     # Parse input arguments.
     ap = argparse.ArgumentParser()
@@ -551,10 +627,18 @@ if __name__ == '__main__':
     ap.add_argument(
         '--epochs', type = int, default = 50,
         help = "How many epochs to train for. Default is 50.")
+    ap.add_argument(
+        '--per-class-for-dataset', action = 'store_true',
+        default = False, help = "Whether to generate benchmarks per class.")
     args = ap.parse_args()
 
     # Train the model.
-    if args.dataset[0] in agml.data.public_data_sources(ml_task = 'object_detection'):
+    if args.per_class_for_dataset:
+        train_per_class(args.dataset[0],
+                        epochs = args.epochs,
+                        save_dir = args.checkpoint_dir)
+    elif args.dataset[0] in agml.data.public_data_sources(ml_task = 'object_detection') \
+            and len(args.dataset) > 1:
         train(args.dataset,
               epochs = args.epochs,
               save_dir = args.checkpoint_dir)
