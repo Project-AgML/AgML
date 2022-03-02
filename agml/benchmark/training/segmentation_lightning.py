@@ -135,7 +135,7 @@ class SegmentationBenchmark(pl.LightningModule):
         }
 
     def configure_optimizers(self):
-        return torch.optim.Adam(self.net.parameters())
+        return torch.optim.AdamW(self.net.parameters(), lr = 0.0005)
 
     def get_progress_bar_dict(self):
         tqdm_dict = super(SegmentationBenchmark, self).get_progress_bar_dict()
