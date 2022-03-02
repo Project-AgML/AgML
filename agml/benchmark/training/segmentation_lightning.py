@@ -96,9 +96,10 @@ class SegmentationBenchmark(pl.LightningModule):
         self.iou = IoU(self._source.num_classes + 1)
 
         # Add a metric calculator.
-        self.metric_logger = SegmentationMetricLogger({
-            'iou': IoU(self._source.num_classes + 1)},
-            os.path.join(save_dir, f'logs-{self._version}.csv'))
+        if save_dir is not None:
+            self.metric_logger = SegmentationMetricLogger({
+                'iou': IoU(self._source.num_classes + 1)},
+                os.path.join(save_dir, f'logs-{self._version}.csv'))
         self._sanity_check_passed = False
 
     def forward(self, x):
@@ -126,7 +127,7 @@ class SegmentationBenchmark(pl.LightningModule):
         val_loss = self.calculate_loss(y_pred, y)
         self.log('val_loss', val_loss.item(), prog_bar = True)
         val_iou = self.iou(y_pred, y.int())
-        if self._sanity_check_passed:
+        if self._sanity_check_passed and hasattr(self, 'metric_logger'):
             self.metric_logger.update_metrics(y_pred, y.int())
         self.log('val_iou', val_iou.item(), prog_bar = True)
         self.log('val_dice', dice_metric(y_pred, y).item(), prog_bar = True)
@@ -146,10 +147,12 @@ class SegmentationBenchmark(pl.LightningModule):
         if not self._sanity_check_passed:
             self._sanity_check_passed = True
             return
-        self.metric_logger.compile_epoch()
+        if hasattr(self, 'metric_logger'):
+            self.metric_logger.compile_epoch()
 
     def on_fit_end(self) -> None:
-        self.metric_logger.save()
+        if hasattr(self, 'metric_logger'):
+            self.metric_logger.save()
 
 
 # Calculate and log the metrics.

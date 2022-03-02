@@ -69,11 +69,12 @@ class ClassificationBenchmark(pl.LightningModule):
         self.loss = nn.CrossEntropyLoss()
 
         # Add a metric calculator.
-        self.metric_logger = ClassificationMetricLogger({
-            'accuracy': Accuracy(num_classes = self._source.num_classes),
-            'precision': Precision(num_classes = self._source.num_classes),
-            'recall': Recall(num_classes = self._source.num_classes)},
-            os.path.join(save_dir, f'logs-{self._version}.csv'))
+        if save_dir is not None:
+            self.metric_logger = ClassificationMetricLogger({
+                'accuracy': Accuracy(num_classes = self._source.num_classes),
+                'precision': Precision(num_classes = self._source.num_classes),
+                'recall': Recall(num_classes = self._source.num_classes)},
+                os.path.join(save_dir, f'logs-{self._version}.csv'))
         self._sanity_check_passed = False
 
     def forward(self, x):
@@ -96,7 +97,7 @@ class ClassificationBenchmark(pl.LightningModule):
         y_pred = self(x)
         val_loss = self.loss(y_pred, y)
         val_acc = accuracy(y_pred, torch.argmax(y, 1))
-        if self._sanity_check_passed:
+        if self._sanity_check_passed and hasattr(self, 'metric_logger'):
             self.metric_logger.update(y_pred, torch.argmax(y, 1))
         self.log('val_loss', val_loss.item(), prog_bar = True, logger = True)
         self.log('val_accuracy', val_acc.item(), prog_bar = True, logger = True)
@@ -118,10 +119,12 @@ class ClassificationBenchmark(pl.LightningModule):
         if not self._sanity_check_passed:
             self._sanity_check_passed = True
             return
-        self.metric_logger.compile_epoch()
+        if hasattr(self, 'metric_logger'):
+            self.metric_logger.compile_epoch()
 
     def on_fit_end(self) -> None:
-        self.metric_logger.save()
+        if hasattr(self, 'metric_logger'):
+            self.metric_logger.save()
 
 
 # Calculate and log the metrics.
