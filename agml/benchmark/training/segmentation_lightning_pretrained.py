@@ -41,7 +41,7 @@ class DeepLabV3Transfer(nn.Module):
         self.base = deeplabv3_resnet50(
             pretrained = pretrained,
             num_classes = num_classes)
-        self.base.load_state_dict(load_checkpoint(), strict = False)
+        # self.base.load_state_dict(load_checkpoint(), strict = False)
 
         if not unfreeze_backbone:
             for parameter in self.base.backbone.parameters():
@@ -195,10 +195,8 @@ def build_loaders(name):
 def train(dataset, epochs, save_dir = None,
           unfreeze_backbone = False, overwrite = None):
     """Constructs the training loop and trains a model."""
-    save_dir = "/data2/amnjoshi/segmentation_pretrained/checkpoints"
-    os.makedirs(save_dir, exist_ok = True)
+    save_dir = checkpoint_dir(save_dir, dataset)
     log_dir = save_dir.replace('checkpoints', 'logs')
-    os.makedirs(log_dir, exist_ok = True)
 
     # Check if the dataset already has benchmarks.
     if os.path.exists(save_dir) and os.path.isdir(save_dir):

@@ -165,7 +165,7 @@ def build_loaders(name):
     loader = agml.data.AgMLDataLoader(name)
     loader.split(train = 0.8, val = 0.1, test = 0.1)
     loader.batch(batch_size = 16)
-    loader.resize_images('imagenet')
+    loader.resize_images((512, 512))
     loader.normalize_images('imagenet')
     loader.mask_to_channel_basis()
     train_data = loader.train_data
@@ -226,6 +226,9 @@ def train(dataset, pretrained, epochs, save_dir = None,
         model = model,
         train_dataloaders = train_ds,
         val_dataloaders = val_ds)
+
+    # Save the final state.
+    torch.save(model.state_dict(), os.path.join(save_dir, 'final_model.pth'))
 
 
 if __name__ == '__main__':

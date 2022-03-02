@@ -49,8 +49,12 @@ IMAGE_SIZE = 512
 
 
 def create_model(num_classes = 1, architecture = "tf_efficientdet_d4", pretrained = (False, False)):
-    if not pretrained[0]:
-        pretrained = True
+    if isinstance(pretrained, bool):
+        if pretrained is False:
+            pretrained = True
+    else:
+        if not pretrained[0]:
+            pretrained = True
     if isinstance(pretrained, str):
         return create_model_from_pretrained(num_classes, architecture, pretrained)
     config = get_efficientdet_config(architecture)
