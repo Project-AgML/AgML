@@ -510,7 +510,24 @@ class PublicDataPreprocessor(object):
             annotation_preprocess_fn = _annotation_preprocess_fn
         )
 
-    def rice_seedling_segmentation(self, dataset_name):
+    def rice_seedling_segmentation(self, dataset_name, fix = False):
+        # Re-mapping labels to remove the `Background` class.
+        if fix:
+            data_dir = os.path.join(self.data_original_dir, dataset_name)
+            annotations = sorted([
+                os.path.join(data_dir, 'annotations', i)
+                for i in os.listdir(os.path.join(data_dir, 'annotations'))])
+            os.makedirs(os.path.join(data_dir, 'new_annotations'))
+
+            # Create the remap.
+            for annotation in tqdm(annotations):
+                a = cv2.imread(annotation)
+                a[a == 2] = 0
+                a[a == 3] = 2
+                cv2.imwrite(os.path.join(
+                    data_dir, 'new_annotations', os.path.basename(annotation)), a)
+            return
+
         # Get all of the relevant data.
         data_dir = os.path.join(self.data_original_dir, dataset_name)
         images = sorted(glob.glob(os.path.join(data_dir, 'image_*.jpg')))
