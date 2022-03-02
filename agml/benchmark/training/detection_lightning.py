@@ -21,7 +21,6 @@ Some of the training code in this file is adapted from the following sources:
 
 import os
 import argparse
-import warnings
 from typing import List, Union
 
 import numpy as np
@@ -37,7 +36,7 @@ import agml
 import albumentations as A
 from albumentations.pytorch import ToTensorV2
 
-from effdet import get_efficientdet_config, EfficientDet, DetBenchTrain, create_model_from_config
+from effdet import get_efficientdet_config, DetBenchTrain, create_model_from_config
 from effdet.efficientdet import HeadNet
 
 from ensemble_boxes import ensemble_boxes_wbf
@@ -49,7 +48,11 @@ from tools import gpus, checkpoint_dir, MetricLogger, auto_move_data
 IMAGE_SIZE = 512
 
 
-def create_model(num_classes = 1, architecture = "tf_efficientdet_d4", pretrained = False):
+def create_model(num_classes = 1, architecture = "tf_efficientdet_d4", pretrained = (False, False)):
+    if not pretrained[0]:
+        pretrained = True
+    if isinstance(pretrained, str):
+        return create_model_from_pretrained(num_classes, architecture, pretrained)
     config = get_efficientdet_config(architecture)
     config.update({'image_size': (IMAGE_SIZE, IMAGE_SIZE)})
 
@@ -58,6 +61,23 @@ def create_model(num_classes = 1, architecture = "tf_efficientdet_d4", pretraine
         config,
         num_outputs = num_classes,
     )
+    return DetBenchTrain(net, config)
+
+
+# Modification of the above to load pretrained weights from a path.
+def create_model_from_pretrained(
+        num_classes = 1,
+        architecture = "tf_efficientdet_d4",
+        pretrained_path = None):
+    config = get_efficientdet_config(architecture)
+    config.update({'image_size': (IMAGE_SIZE, IMAGE_SIZE)})
+
+    net = create_model_from_config(
+        config, num_classes = pretrained_path[1], pretrained = False)
+    if net.num_classes != num_classes:
+        net.reset_head(num_classes = num_classes)
+    net.load_state_dict(
+        torch.load(pretrained_path[0], map_location = 'cpu'))
     return DetBenchTrain(net, config)
 
 
@@ -479,7 +499,8 @@ class DetectionMetricLogger(MetricLogger):
         self.metrics['map'].update(y_pred, y_true)
 
 
-def train(dataset, epochs, save_dir = None, overwrite = None):
+def train(dataset, epochs, save_dir = None,
+          overwrite = None, pretrained_path = None):
     """Constructs the training loop and trains a model."""
     save_dir = checkpoint_dir(save_dir, dataset)
     log_dir = save_dir.replace('checkpoints', 'logs')
@@ -522,11 +543,7 @@ def train(dataset, epochs, save_dir = None, overwrite = None):
     model = EfficientDetModel(
         num_classes = loader.num_classes,
         architecture = 'tf_efficientdet_d4',
-        pretrained = True)
-    model.load_state_dict(torch.load(
-        '/data2/amnjoshi/checkpoints/amg-generalized/model_state.pth',
-        map_location = 'cpu'
-    ))
+        pretrained = pretrained_path)
 
     # Create the trainer and train the model.
     msg = f"Training dataset {dataset}!"
@@ -538,7 +555,6 @@ def train(dataset, epochs, save_dir = None, overwrite = None):
 
     # Save the final state.
     torch.save(model.state_dict(), os.path.join(save_dir, 'final_model.pth'))
-
 
 
 def train_per_class(dataset, epochs, save_dir = None, overwrite = None):
@@ -630,6 +646,12 @@ if __name__ == '__main__':
     ap.add_argument(
         '--per-class-for-dataset', action = 'store_true',
         default = False, help = "Whether to generate benchmarks per class.")
+    ap.add_argument(
+        '--pretrained-model-path', type = str, default = None,
+        help = "The path to a set of pretrained weights for the model.")
+    ap.add_argument(
+        '--pretrained-num-classes', type = str, default = None,
+        help = "The number of classes in the pretrained model..")
     args = ap.parse_args()
 
     # Train the model.
@@ -641,7 +663,9 @@ if __name__ == '__main__':
             and len(args.dataset) > 1:
         train(args.dataset,
               epochs = args.epochs,
-              save_dir = args.checkpoint_dir)
+              save_dir = args.checkpoint_dir,
+              pretrained_path = (args.pretrained_model_path,
+                                 args.pretrained_num_classes))
     else:
         if args.dataset[0] == 'all':
             datasets = [ds for ds in agml.data.public_data_sources(
@@ -652,7 +676,9 @@ if __name__ == '__main__':
             train(ds,
                   epochs = args.epochs,
                   save_dir = args.checkpoint_dir,
-                  overwrite = args.regenerate_existing)
+                  overwrite = args.regenerate_existing,
+                  pretrained_path = (args.pretrained_model_path,
+                                     args.pretrained_num_classes))
 
 
 
