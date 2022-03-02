@@ -64,7 +64,7 @@ def make_checkpoint(name):
         num_classes = agml.data.source(name).num_classes,
         architecture = 'efficientdet_d4')
     model.load_state_dict(state)
-    model.eval()
+    model.eval().cuda()
     return model
 
 
