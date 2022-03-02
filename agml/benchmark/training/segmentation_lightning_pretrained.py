@@ -54,7 +54,7 @@ class DeepLabV3Transfer(nn.Module):
 def load_checkpoint():
     """Loads a ResNet50 pretrained checkpoint."""
     ckpt_path = "/data2/amnjoshi/resnet50_pretrained/checkpoints/" \
-                "plant_village_classification-epoch19-val_loss_0.08.ckpt"
+                "plant_village_classification-epoch42-val_loss_0.05.ckpt"
     state = torch.load(ckpt_path, map_location = 'cpu')['state_dict']
     new_state = []
     for key in state:
