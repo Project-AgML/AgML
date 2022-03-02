@@ -15,6 +15,7 @@
 import os
 import argparse
 
+import numpy as np
 import pandas as pd
 from tqdm import tqdm
 
@@ -22,53 +23,54 @@ import torch
 import pytorch_lightning as pl
 
 import agml
-from torchmetrics import IoU
-from segmentation_lightning import SegmentationBenchmark
+from classification_lightning import ClassificationBenchmark
+from torchmetrics import Accuracy
 
 
 def run_evaluation(model, name):
-    """Runs evaluation for mean intersection over union.."""
-    # Load the test dataset.
+    """Runs evaluation for categorical accuracy."""
+    # Create and load the test dataset.
     pl.seed_everything(2499751)
     loader = agml.data.AgMLDataLoader(name)
-    loader.split(train = 0.8, val = 0.1, test = 0.1)
+    loader.shuffle()
+    loader.split(0.8, 0.1, 0.1)
     loader.batch(batch_size = 16)
     loader.resize_images('imagenet')
     loader.normalize_images('imagenet')
-    loader.mask_to_channel_basis()
+    loader.labels_to_one_hot()
     ds = loader.test_data.as_torch_dataset()
 
     # Create the metric.
-    iou = IoU(num_classes = ds.num_classes + 1)
+    acc = Accuracy(num_classes = loader.num_classes)
 
     # Run inference for all of the images in the test dataset.
     for i in tqdm(range(len(ds)), leave = False):
-        image, annotation = ds[i]
-        y_pred = model.predict(image)['out'].float().squeeze()
-        iou(y_pred, annotation.int())
+        image, y = ds[i]
+        y_pred = model.predict(image)
+        acc(y_pred, torch.argmax(y, 1))
 
     # Compute the mAP for all of the thresholds.
-    return iou.compute()
+    return acc.compute()
 
 
 def make_checkpoint(name):
     """Gets a checkpoint for the model name."""
     ckpt_path = os.path.join(
-        "/data2/amnjoshi/final/segmentation_checkpoints", name, "final_model.pth")
+        "/data2/amnjoshi/final/classification_checkpoints", name, "final_model.pth")
     state = torch.load(ckpt_path, map_location = 'cpu')
-    model = SegmentationBenchmark(dataset = name)
+    model = ClassificationBenchmark(dataset = name)
     model.load_state_dict(state)
-    model.eval()
+    model.eval().cuda()
     return model
 
 
 def evaluate(names, log_file = None):
     """Runs the evaluation and saves results to a file."""
-    print(f"Running mIoU evaluation for {names}.")
+    print(f"Running accuracy evaluation for {names}.")
 
     # Create the log file.
     if log_file is None:
-        log_file = os.path.join(os.getcwd(), 'miou_evaluation.csv')
+        log_file = os.path.join(os.getcwd(), 'accuracy_evaluation.csv')
 
     # Run the evaluation.
     log_contents = {}
@@ -81,9 +83,9 @@ def evaluate(names, log_file = None):
         log_contents[name] = run_evaluation(ckpt, name)
 
     # Save the results.
-    df = pd.DataFrame(columns = ('name', 'miou'))
-    for name, value in log_contents.items():
-        df.loc[len(df.index)] = [name, value]
+    df = pd.DataFrame(columns = ('name', 'accuracy'))
+    for name, values in log_contents.items():
+        df.loc[len(df.index)] = [name, *values[0], values[1]]
     df.to_csv(log_file)
 
 
@@ -97,17 +99,17 @@ if __name__ == '__main__':
     args = ap.parse_args()
 
     # Train the model.
-    if args.dataset[0] in agml.data.public_data_sources(ml_task = 'semantic_segmentation'):
+    if args.dataset[0] in agml.data.public_data_sources(ml_task = 'image_classification'):
         datasets = args.dataset[0]
     else:
         if args.dataset[0] == 'all':
             datasets = [ds for ds in agml.data.public_data_sources(
-                ml_task = 'semantic_segmentation')]
+                ml_task = 'image_classification')]
         elif args.dataset[0] == 'except':
             exclude_datasets = args.dataset[1:]
             datasets = [
                 dataset for dataset in agml.data.public_data_sources(
-                    ml_task = 'semantic_segmentation')
+                    ml_task = 'image_classification')
                 if dataset.name not in exclude_datasets]
         else:
             datasets = args.dataset
