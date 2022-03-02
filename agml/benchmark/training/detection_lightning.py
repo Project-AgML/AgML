@@ -598,7 +598,7 @@ def train_per_class(dataset, epochs, save_dir = None, overwrite = None):
             architecture = 'tf_efficientdet_d4',
             pretrained = True)
         model.load_state_dict(
-            torch.load('/data2/amnjoshi/checkpoints/amg-generalized/model_state.pth',
+            torch.load('/data2/amnjoshi/full_grape/checkpoints/final_model.pth',
                        map_location = 'cpu'))
 
         # Create the trainer and train the model.
