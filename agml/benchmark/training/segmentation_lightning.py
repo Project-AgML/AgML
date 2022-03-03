@@ -46,7 +46,7 @@ class DeepLabV3Transfer(nn.Module):
                 parameter.requires_grad = False
 
     def forward(self, x, **kwargs): # noqa
-        return self.base(x)
+        return self.base(x)['out']
 
 
 def dice_loss(y_pred, y):
@@ -55,6 +55,7 @@ def dice_loss(y_pred, y):
         c, h, w = y.shape[1:]
     except: # Binary segmentation
         h, w = y.shape[1:]; c = 1 # noqa
+    y_pred = torch.sigmoid(y_pred)
     pred_flat = torch.reshape(y_pred, [-1, c * h * w])
     y_flat = torch.reshape(y, [-1, c * h * w])
     intersection = 2.0 * torch.sum(pred_flat * y_flat, dim = 1) + 1e-6
@@ -112,28 +113,30 @@ class SegmentationBenchmark(pl.LightningModule):
 
     def training_step(self, batch, *args, **kwargs): # noqa
         x, y = batch
-        y_pred = self(x)['out'].float().squeeze()
+        y_pred = self(x).float().squeeze()
         loss = self.calculate_loss(y_pred, y)
         iou = self.iou(y_pred, y.int())
         self.log('iou', iou.item(), prog_bar = True)
-        self.log('dice', dice_metric(y_pred, y).item(), prog_bar = True)
         return {
             'loss': loss,
         }
 
     def validation_step(self, batch, *args, **kwargs): # noqa
         x, y = batch
-        y_pred = self(x)['out'].float().squeeze()
+        y_pred = self(x).float().squeeze()
         val_loss = self.calculate_loss(y_pred, y)
         self.log('val_loss', val_loss.item(), prog_bar = True)
         val_iou = self.iou(y_pred, y.int())
         if self._sanity_check_passed and hasattr(self, 'metric_logger'):
             self.metric_logger.update_metrics(y_pred, y.int())
         self.log('val_iou', val_iou.item(), prog_bar = True)
-        self.log('val_dice', dice_metric(y_pred, y).item(), prog_bar = True)
         return {
             'val_loss': val_loss,
         }
+
+    @torch.no_grad()
+    def predict(self, inp):
+        return torch.sigmoid(self(inp))
 
     def configure_optimizers(self):
         return torch.optim.AdamW(self.net.parameters(), lr = 0.0005)
