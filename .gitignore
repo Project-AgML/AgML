@@ -156,5 +156,7 @@ agml/benchmark/training/lightning_logs
 agml/benchmark/training/logs
 agml/benchmark/training/*.log
 agml/benchmark/training/*.err
+agml/benchmark/training/*.out
+agml/benchmark/training/*.csv
 
 *.pptx
