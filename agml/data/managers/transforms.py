@@ -251,11 +251,15 @@ class TransformManager(AgMLSerializable):
         """
         # First, we check if a normalization transform already exists
         # within the transform dict, and then we get its location.
-        norm_transform_index = -1
+        norm_transform_index, norm_transform_index_time = -1, -1
         try:
             for i, t in enumerate(self._transforms['transform']):
                 if isinstance(t, NormalizationTransformBase):
                     norm_transform_index = i
+                    break
+            for i, (_, t) in enumerate(self._time_inserted_transforms):
+                if isinstance(t, NormalizationTransformBase):
+                    norm_transform_index_time = i
                     break
         except:
             self._transforms['transform'] = []
@@ -264,8 +268,11 @@ class TransformManager(AgMLSerializable):
             tfm = ScaleTransform(None)
             if norm_transform_index != -1:
                 self._transforms['transform'][norm_transform_index] = tfm
+                self._time_inserted_transforms[norm_transform_index_time] \
+                    = ('transform', tfm)
             else:
                 self._transforms['transform'].append(tfm)
+                self._time_inserted_transforms.append(('transform', tfm))
         elif hasattr(transform[1], 'mean') or transform[1] == 'imagenet':
             try:
                 mean, std = transform[1].mean, transform[1].std
@@ -276,12 +283,16 @@ class TransformManager(AgMLSerializable):
             tfm = NormalizationTransform((mean, std))
             if norm_transform_index != -1:
                 self._transforms['transform'][norm_transform_index] = tfm
+                self._time_inserted_transforms[norm_transform_index_time] \
+                    = ('transform', tfm)
             else:
                 self._transforms['transform'].append(tfm)
+                self._time_inserted_transforms.append(('transform', tfm))
         elif transform[1] == 'reset':
             if norm_transform_index != -1:
                 self._transforms['transform'].pop(norm_transform_index)
-        return
+                self._time_inserted_transforms.pop(norm_transform_index_time)
+        return None
 
     # The following methods implement different checks which validate
     # as well as process input transformations, and manage the backend.
