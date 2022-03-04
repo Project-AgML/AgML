@@ -27,6 +27,10 @@ from classification_lightning import ClassificationBenchmark
 from torchmetrics import Accuracy
 
 
+# Define device.
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
+
 def run_evaluation(model, name):
     """Runs evaluation for categorical accuracy."""
     # Create and load the test dataset.
@@ -46,11 +50,11 @@ def run_evaluation(model, name):
     # Run inference for all of the images in the test dataset.
     for i in tqdm(range(len(ds)), leave = False):
         image, y = ds[i]
-        y_pred = model.predict(image)
-        acc(y_pred, torch.argmax(y, 1))
+        y_pred = model(image.to(device))
+        acc(y_pred.detach().cpu(), torch.argmax(y, 1).cpu())
 
     # Compute the mAP for all of the thresholds.
-    return acc.compute()
+    return acc.compute().detach().cpu().numpy()
 
 
 def make_checkpoint(name):
@@ -60,7 +64,7 @@ def make_checkpoint(name):
     state = torch.load(ckpt_path, map_location = 'cpu')
     model = ClassificationBenchmark(dataset = name)
     model.load_state_dict(state)
-    model.eval().cuda()
+    model.eval().to(device)
     return model
 
 
@@ -84,8 +88,8 @@ def evaluate(names, log_file = None):
 
     # Save the results.
     df = pd.DataFrame(columns = ('name', 'accuracy'))
-    for name, values in log_contents.items():
-        df.loc[len(df.index)] = [name, *values[0], values[1]]
+    for name, value in log_contents.items():
+        df.loc[len(df.index)] = [name, value]
     df.to_csv(log_file)
 
 

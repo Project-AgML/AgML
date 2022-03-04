@@ -26,14 +26,18 @@ from torchmetrics import IoU
 from segmentation_lightning import SegmentationBenchmark
 
 
+# Define device.
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
+
 def run_evaluation(model, name):
     """Runs evaluation for mean intersection over union.."""
     # Load the test dataset.
     pl.seed_everything(2499751)
     loader = agml.data.AgMLDataLoader(name)
     loader.split(train = 0.8, val = 0.1, test = 0.1)
-    loader.batch(batch_size = 16)
-    loader.resize_images('imagenet')
+    loader.batch(batch_size = 2)
+    loader.resize_images((512, 512))
     loader.normalize_images('imagenet')
     loader.mask_to_channel_basis()
     ds = loader.test_data.as_torch_dataset()
@@ -44,21 +48,22 @@ def run_evaluation(model, name):
     # Run inference for all of the images in the test dataset.
     for i in tqdm(range(len(ds)), leave = False):
         image, annotation = ds[i]
-        y_pred = model.predict(image)['out'].float().squeeze()
-        iou(y_pred, annotation.int())
+        y_pred = model(image.to(device)).float().squeeze()
+        iou(y_pred.detach().cpu(), annotation.int().cpu())
 
     # Compute the mAP for all of the thresholds.
-    return iou.compute()
+    print(iou.compute().detach().cpu().numpy())
+    return iou.compute().detach().cpu().numpy()
 
 
 def make_checkpoint(name):
     """Gets a checkpoint for the model name."""
     ckpt_path = os.path.join(
-        "/data2/amnjoshi/final/segmentation_checkpoints", name, "final_model.pth")
+        "/data2/amnjoshi/sigmoid-segmentation/segmentation_checkpoints", name, "final_model.pth")
     state = torch.load(ckpt_path, map_location = 'cpu')
     model = SegmentationBenchmark(dataset = name)
     model.load_state_dict(state)
-    model.eval()
+    model.eval().to(device)
     return model
 
 
