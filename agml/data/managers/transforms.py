@@ -94,6 +94,17 @@ class TransformManager(AgMLSerializable):
             transform_dict[name] = state.copy()
         return transform_dict
 
+    def _pop_transform(self, t_type, search_param):
+        """Removes a certain type of transform from the manager."""
+        for i, tfm in enumerate(self._transforms[search_param]):
+            if isinstance(tfm, t_type):
+                self._transforms[search_param].pop(i)
+                break
+        for i, tfm in enumerate(self._time_inserted_transforms):
+            if isinstance(tfm[1], t_type):
+                self._time_inserted_transforms.pop(i)
+                break
+
     def assign(self, kind, transform):
         """Assigns a new transform to the manager."""
         # Determine if the transform is being reset or unchanged.
@@ -131,6 +142,9 @@ class TransformManager(AgMLSerializable):
             elif t_(kind) == TransformKind.TargetTransform:
                 if isinstance(transform, tuple): # a special convenience case
                     if transform[0] == 'one_hot':
+                        if transform[2] is not True: # removing the transform
+                            self._pop_transform(OneHotLabelTransform, kind)
+                            return
                         transform = OneHotLabelTransform(transform[1])
             else:
                 raise ValueError("There is no `dual_transform` for image "
@@ -142,6 +156,9 @@ class TransformManager(AgMLSerializable):
             elif t_(kind) == TransformKind.TargetTransform:
                 if isinstance(transform, tuple): # a special convenience case
                     if transform[0] == 'one_hot':
+                        if transform[2] is not True: # removing the transform
+                            self._pop_transform(OneHotLabelTransform, kind)
+                            return
                         transform = OneHotLabelTransform(transform[1])
             else:
                 pass
@@ -151,6 +168,8 @@ class TransformManager(AgMLSerializable):
             elif t_(kind) == TransformKind.TargetTransform:
                 if isinstance(transform, tuple): # a special convenience case
                     if transform[0] == 'channel_basis':
+                        if transform[2] is not True: # removing the transform
+                            self._pop_transform(MaskToChannelBasisTransform, kind)
                         transform = MaskToChannelBasisTransform(transform[1])
                 else:
                     transform = self._maybe_normalization_or_regular_transform(transform)

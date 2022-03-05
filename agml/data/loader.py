@@ -914,23 +914,31 @@ class AgMLDataLoader(AgMLSerializable):
             transform = ('normalize', normalization_params)
         )
 
-    def labels_to_one_hot(self):
+    def labels_to_one_hot(self, add = True):
         """Converts image classification numerical labels to one-hot labels.
 
         This is a convenience method to apply one-hot vector transformations
         to the output labels for image classification. Essentially, if we have
         a set of labels, [1, 2], it will convert it to [[0, 1, 0], [0, 0, 1]].
         This is a more commonly used format for image classification.
+
+        Parameters
+        ----------
+        add : bool
+            If set to `None` or `False`, this will remove the one-hot
+            label transformation from the manager. This is `True` by default,
+            which adds the one-hot label transformation.
+
         """
         if self._info.tasks.ml != 'image_classification':
             raise RuntimeError("The `one_hot` label transformation can only "
                                "be used for image classification tasks.")
 
         self.transform(
-            target_transform = ('one_hot', self._info.num_classes)
+            target_transform = ('one_hot', self._info.num_classes, add)
         )
 
-    def mask_to_channel_basis(self):
+    def mask_to_channel_basis(self, add = True):
         """Converts semantic segmentation masks to channel-wise.
 
         This is a convenience method to convert integer-labeled semantic
@@ -941,6 +949,13 @@ class AgMLDataLoader(AgMLSerializable):
 
         This method should traditionally be called *after* applying general
         transformations to the loader, in order to prevent any issues.
+
+        Parameters
+        ----------
+        add : bool
+            If set to `None` or `False`, this will remove the one-hot
+            label transformation from the manager. This is `True` by default,
+            which adds the one-hot label transformation.
         """
         if self._info.tasks.ml != 'semantic_segmentation':
             raise ValueError("The `mask_to_channel_basis` transformation "
@@ -953,7 +968,7 @@ class AgMLDataLoader(AgMLSerializable):
             return
 
         self.transform(
-            target_transform = ('channel_basis', self._info.num_classes)
+            target_transform = ('channel_basis', self._info.num_classes, add)
         )
 
     def generalize_class_detections(self):

@@ -83,6 +83,8 @@ def annotate_bboxes_on_image(
         labels = [1] * len(bboxes)
     if bbox_format is not None:
         bboxes = convert_bbox_format(bboxes, bbox_format)
+    if not isinstance(bboxes[0], (list, np.ndarray)):
+        bboxes = [bboxes]
 
     for bbox, label in zip(bboxes, labels):
         bbox = scalar_unpack(bbox)
