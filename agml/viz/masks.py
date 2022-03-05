@@ -169,6 +169,7 @@ def visualize_image_mask_and_predicted(image, mask = None, predicted = None):
         ax.set_title(label)
         ax.set_aspect('equal')
         ax.axis('off')
+    fig.tight_layout()
     return fig
 
 
