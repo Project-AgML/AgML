@@ -34,19 +34,28 @@ class AgMLModelBase(AgMLSerializable, LightningModule):
     such as weight loading and image input preprocessing, as
     well as other stubs for common methods (and typing).
     """
-    serializable = frozenset(("model",))
+    serializable = frozenset(("net",))
+
+    @property
+    def original(self):
+        """Returns the original model architecture (without weights)."""
+        return self.net.base
 
     @overload
-    def preprocess_input(self, images: str) -> "torch.Tensor": ...
+    def preprocess_input(self, images: str) -> "torch.Tensor":
+        ...
 
     @overload
-    def preprocess_input(self, images: List[str]) -> "torch.Tensor": ...
+    def preprocess_input(self, images: List[str]) -> "torch.Tensor":
+        ...
 
     @overload
-    def preprocess_input(self, images: Union[np.ndarray, torch.Tensor]) -> "torch.Tensor": ...
+    def preprocess_input(self, images: Union[np.ndarray, torch.Tensor]) -> "torch.Tensor":
+        ...
 
     @overload
-    def preprocess_input(self, images: List[Union[np.ndarray, torch.Tensor]]) -> "torch.Tensor": ...
+    def preprocess_input(self, images: List[Union[np.ndarray, torch.Tensor]]) -> "torch.Tensor":
+        ...
 
     @abc.abstractmethod
     def preprocess_input(self, *args, **kwargs):
@@ -54,16 +63,20 @@ class AgMLModelBase(AgMLSerializable, LightningModule):
         raise NotImplementedError
 
     @overload
-    def predict(self, images: str) -> "torch.Tensor": ...
+    def predict(self, images: str) -> "torch.Tensor":
+        ...
 
     @overload
-    def predict(self, images: List[str]) -> "torch.Tensor": ...
+    def predict(self, images: List[str]) -> "torch.Tensor":
+        ...
 
     @overload
-    def predict(self, images: Union[np.ndarray, torch.Tensor]) -> "torch.Tensor": ...
+    def predict(self, images: Union[np.ndarray, torch.Tensor]) -> "torch.Tensor":
+        ...
 
     @overload
-    def predict(self, images: List[Union[np.ndarray, torch.Tensor]]) -> "torch.Tensor": ...
+    def predict(self, images: List[Union[np.ndarray, torch.Tensor]]) -> "torch.Tensor":
+        ...
 
     @abc.abstractmethod
     def predict(self, *args, **kwargs):
@@ -98,7 +111,7 @@ class AgMLModelBase(AgMLSerializable, LightningModule):
             # Check if there is one single input image, or a batch of input
             # images. If there is a single input image, just return this.
             if images.ndim == 3:
-                return [images[0], ]
+                return [images, ]
 
             # Check if we have a batch of images first. This check is
             # done by seeing if the input is 4-dimensional.
@@ -116,5 +129,8 @@ class AgMLModelBase(AgMLSerializable, LightningModule):
             "single path or image, or a batched image tensor for "
             f"preprocessing inputs, instead got {type(images)}.")
 
+    @staticmethod
+    def _to_out(tensor: "torch.Tensor") -> "torch.Tensor":
+        return tensor.detach().cpu().numpy()
 
 

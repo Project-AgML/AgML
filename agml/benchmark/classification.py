@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import numpy as np
-import albumentations as A
 from typing import final
 
 import torch
@@ -21,9 +19,8 @@ import torch.nn as nn
 from torchvision.models import efficientnet_b4
 
 from agml.benchmark.model import AgMLModelBase
-from agml.benchmark.tools import auto_move_data
+from agml.benchmark.tools import auto_move_data, imagenet_style_process
 from agml.data.public import source
-from agml.utils.general import is_array_like
 
 
 class EfficientNetB4Transfer(nn.Module):
@@ -60,12 +57,12 @@ class ClassificationModel(AgMLModelBase):
     This will also return a one-hot label feature vector instead of integer
     labels, in the case that you want further customization of the outputs.
 
-    This model can be subclasses in order to run a full training job; the
+    This model can be subclassed in order to run a full training job; the
     actual transfer `EfficientNetB4` model can be accessed through the
     parameter `net`, and you'll need to implement methods like `training_step`,
     `configure_optimizers`, etc. See PyTorch Lightning for more information.
     """
-    serializable = frozenset(("model", ))
+    serializable = frozenset(("net", ))
 
     def __init__(self, dataset):
         # Construct the network and load in pretrained weights.
@@ -98,42 +95,10 @@ class ClassificationModel(AgMLModelBase):
         as well as other intermediate steps such as adding a channel
         dimension for two-channel inputs, for example.
         """
-        # Convert the image to a NumPy array.
-        if is_array_like(image) and hasattr(image, 'numpy'):
-            image = image.numpy()
+        return imagenet_style_process(image)
 
-        # Add a channel dimension for grayscale imagery.
-        if image.ndim == 2:
-            image = np.expand_dims(image, axis = -1)
-
-        # If the image is already in channels-first format, convert
-        # it back temporarily until preprocessing has concluded.
-        if image.shape[0] <= 3:
-            image = np.transpose(image, (1, 2, 0))
-
-        # Resize the image to ImageNet standards.
-        rz = A.Resize(height = 224, width = 224)
-        if image.shape[0] != 224 and image.shape[1] != 224:
-            image = rz(image = image)['image']
-
-        # Normalize the image to ImageNet standards.
-        if 1 <= image.max() <= 255:
-            mean = [0.485, 0.456, 0.406]
-            std = [0.229, 0.224, 0.225]
-            image = image.astype(np.float32) / 255.
-            mean = np.array(mean, dtype = np.float32)
-            std = np.array(std, dtype = np.float32)
-            denominator = np.reciprocal(std, dtype = np.float32)
-            image = (image - mean) * denominator
-
-        # Convert the image into a PyTorch tensor.
-        image = torch.from_numpy(image).permute(2, 0, 1)
-
-        # Return the processed image.
-        return image
-
-    @final
     @staticmethod
+    @final
     def preprocess_input(images = None) -> "torch.Tensor":
         """Preprocesses the input image to the specification of the model.
 
@@ -199,11 +164,10 @@ class ClassificationModel(AgMLModelBase):
 
         Returns
         -------
-        A `torch.Tensor` with integer labels for each image.
+        A `np.ndarray` with integer labels for each image.
         """
         images = self.preprocess_input(images)
-        return torch.argmax(self.forward(images), 1).numpy()
-
+        return self._to_out(torch.squeeze(torch.argmax(self.forward(images), 1)))
 
 
 
