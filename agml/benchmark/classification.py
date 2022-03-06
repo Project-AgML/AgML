@@ -62,7 +62,8 @@ class ClassificationModel(AgMLModelBase):
     parameter `net`, and you'll need to implement methods like `training_step`,
     `configure_optimizers`, etc. See PyTorch Lightning for more information.
     """
-    serializable = frozenset(("net", ))
+    serializable = frozenset(("model", ))
+    state_override = serializable
 
     def __init__(self, dataset):
         # Construct the network and load in pretrained weights.

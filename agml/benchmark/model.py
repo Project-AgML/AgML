@@ -133,4 +133,18 @@ class AgMLModelBase(AgMLSerializable, LightningModule):
     def _to_out(tensor: "torch.Tensor") -> "torch.Tensor":
         return tensor.detach().cpu().numpy()
 
+    @staticmethod
+    def _get_shapes(images: list) -> list:
+        """Gets the height and width of each of the input images."""
+        shapes = []
+        for image in images:
+            if image.ndim == 2:
+                shapes.append(image.shape)
+                continue
+            if image.shape[0] <= 3: # channels first
+                shapes.append(image.shape[1:])
+            else: # channels last
+                shapes.append(image.shape[:2])
+        return shapes
+
 

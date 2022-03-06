@@ -59,7 +59,8 @@ class SegmentationModel(AgMLModelBase):
     parameter `net`, and you'll need to implement methods like `training_step`,
     `configure_optimizers`, etc. See PyTorch Lightning for more information.
     """
-    serializable = frozenset(("net", ))
+    serializable = frozenset(("model", ))
+    state_override = serializable
 
     def __init__(self, dataset):
         # Construct the network and load in pretrained weights.
@@ -93,20 +94,6 @@ class SegmentationModel(AgMLModelBase):
         dimension for two-channel inputs, for example.
         """
         return imagenet_style_process(image, size = (512, 512))
-
-    @staticmethod
-    def _get_shapes(images):
-        """Gets the height and width of each of the input images."""
-        shapes = []
-        for image in images:
-            if image.ndim == 2:
-                shapes.append(image.shape)
-                continue
-            if image.shape[0] <= 3: # channels first
-                shapes.append(image.shape[1:])
-            else: # channels last
-                shapes.append(image.shape[:2])
-        return shapes
 
     @final
     def preprocess_input(self, images, return_shapes = False):
@@ -148,15 +135,18 @@ class SegmentationModel(AgMLModelBase):
         A 4-dimensional, preprocessed `torch.Tensor`. If `return_shapes`
         is set to True, it also returns the original shapes of the images.
         """
-        images = SegmentationModel._expand_input_images(images)
-        shapes = SegmentationModel._get_shapes(images)
-        return torch.stack(
-            [SegmentationModel._preprocess_image(
-                image) for image in images], dim = 0), shapes
+        images = self._expand_input_images(images)
+        shapes = self._get_shapes(images)
+        images = torch.stack(
+            [self._preprocess_image(
+                image) for image in images], dim = 0)
+        if return_shapes:
+            return images, shapes
+        return images
 
     @torch.no_grad()
     def predict(self, images):
-        """Runs `EfficientNetB4` inference on the input image(s).
+        """Runs `DeepLabV3` inference on the input image(s).
 
         This method is the primary inference method for the model; it
         accepts a set of input images (see `preprocess_input()` for a
@@ -181,7 +171,7 @@ class SegmentationModel(AgMLModelBase):
         A list of `np.ndarray`s with resized output masks.
         """
         # Process the images and run inference.
-        images, shapes = self.preprocess_input(images)
+        images, shapes = self.preprocess_input(images, return_shapes = True)
         out = torch.sigmoid(self.forward(images))
 
         # Post-process the output masks to a valid format.
