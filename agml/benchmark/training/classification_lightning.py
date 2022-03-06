@@ -181,7 +181,7 @@ def train(dataset, pretrained, epochs, save_dir = None, overwrite = None):
             dirpath = save_dir, mode = 'min',
             filename = f"{dataset}" + "-epoch{epoch:02d}-val_accuracy_{val_accuracy:.2f}",
             monitor = 'val_accuracy',
-            save_top_k = 3,
+            save_top_k = 2,
             auto_insert_metric_name = False
         ),
     ]

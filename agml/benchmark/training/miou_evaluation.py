@@ -59,7 +59,7 @@ def run_evaluation(model, name):
 def make_checkpoint(name):
     """Gets a checkpoint for the model name."""
     ckpt_path = os.path.join(
-        "/data2/amnjoshi/sigmoid-segmentation/segmentation_checkpoints", name, "final_model.pth")
+        "/data2/amnjoshi/final/segmentation_checkpoints", name, "final_model.pth")
     state = torch.load(ckpt_path, map_location = 'cpu')
     model = SegmentationBenchmark(dataset = name)
     model.load_state_dict(state)
