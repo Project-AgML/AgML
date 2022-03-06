@@ -127,7 +127,7 @@ def visualize_image_and_boxes(
     image, bboxes, labels = resolve_tuple_values(
         image, bboxes, labels, custom_error =
         "If `image` is a tuple/list, it should contain "
-        "three values: the image, mask, and (optionally) labels.")
+        "three values: the image, boxes, and (optionally) labels.")
     image = annotate_bboxes_on_image(image, bboxes, labels, bbox_format)
 
     plt.figure(figsize = (10, 10))
@@ -137,4 +137,45 @@ def visualize_image_and_boxes(
     return plt.gcf()
 
 
+@show_when_allowed
+@auto_resolve_image
+def visualize_real_and_predicted_bboxes(
+        image, truth_boxes = None, predicted_boxes = None):
+    """Visualizes an image with annotated bounding boxes.
+
+    This method performs the same actions as `annotate_bboxes_on_image`,
+    but simply displays the image once it has been formatted.
+
+    Parameters
+    ----------
+    image : Any
+        Either the image, or a tuple consisting of the image,
+        bounding boxes, and (optional) labels.
+    truth_boxes : Any
+        The true bounding boxes in COCO JSON format.
+    predicted_boxes : Any
+        The predicted bounding boxes in COCO JSON format.
+
+    Returns
+    -------
+    The matplotlib figure with the image.
+    """
+    image, truth_boxes, predicted_boxes = resolve_tuple_values(
+        image, truth_boxes, predicted_boxes, custom_error =
+        "If `image` is a tuple/list, it should contain "
+        "three values: the image, truth boxes, and predicted boxes.")
+    real_image = annotate_bboxes_on_image(image.copy(), truth_boxes)
+    predicted_image = annotate_bboxes_on_image(image.copy(), predicted_boxes)
+
+    # Create two side-by-side figures with the images.
+    fig, axes = plt.subplots(1, 2, figsize = (10, 5))
+    for ax, img, label in zip(
+            axes, (real_image, predicted_image),
+            ("Ground Truth Boxes", "Predicted Boxes")):
+        ax.imshow(img)
+        ax.set_axis_off()
+        ax.set_title(label, fontsize = 15)
+        ax.set_aspect('equal')
+    fig.tight_layout()
+    return fig
 
