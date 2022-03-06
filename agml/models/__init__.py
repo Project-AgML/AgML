@@ -13,6 +13,8 @@
 # limitations under the License.
 
 """
-This module contains pre-trained weights and benchmarks for commonly used
-deep learning models on agricultural datasets within AgML.
+This module contains PyTorch pre-trained weights and benchmarks for
+commonly used deep learning models on agricultural datasets within AgML.
 """
+
+

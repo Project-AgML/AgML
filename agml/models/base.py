@@ -34,7 +34,6 @@ class AgMLModelBase(AgMLSerializable, LightningModule):
     such as weight loading and image input preprocessing, as
     well as other stubs for common methods (and typing).
     """
-    serializable = frozenset(("net",))
 
     @property
     def original(self):
