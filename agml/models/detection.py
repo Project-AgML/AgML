@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import warnings
-from typing import final
 
 import torch
 import numpy as np
@@ -27,7 +26,6 @@ from effdet import (
     DetBenchPredict
 )
 
-import agml.data
 from agml.models.base import AgMLModelBase
 from agml.models.tools import auto_move_data
 from agml.data.public import source
@@ -56,13 +54,14 @@ class DetectionModel(AgMLModelBase):
     parameter `model`, and you'll need to implement methods like `training_step`,
     `configure_optimizers`, etc. See PyTorch Lightning for more information.
     """
-    serializable = frozenset(("model", "confidence_threshold"))
+    serializable = frozenset(("model", "confidence_threshold", "source"))
     state_override = frozenset(("model", ))
 
     def __init__(self, dataset, conf_threshold = 0.3):
         # Construct the network and load in pretrained weights.
         super(DetectionModel, self).__init__()
         self._confidence_threshold = conf_threshold
+        self._source = source(dataset)
         self.model = self._construct_sub_net(dataset)
 
         # Filter out unnecessary warnings.
@@ -87,6 +86,18 @@ class DetectionModel(AgMLModelBase):
     @property
     def original(self): # override for detection models.
         return self.model.model
+
+    @torch.jit.ignore()
+    def reset_class_net(self, num_classes = 1):
+        """Reconfigures the output class net for a new number of classes.
+
+        Parameters
+        ----------
+        num_classes : int
+            The number of classes to reconfigure the output net to use.
+        """
+        if num_classes != self._source.num_classes:
+            self.model.model.reset_head(num_classes = num_classes)
 
     @staticmethod
     def _preprocess_image(image):
@@ -135,7 +146,7 @@ class DetectionModel(AgMLModelBase):
         # Return the processed image.
         return image
 
-    @final
+    @torch.jit.ignore()
     def preprocess_input(self, images, return_shapes = False):
         """Preprocesses the input image to the specification of the model.
 

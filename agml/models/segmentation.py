@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import final
-
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -95,7 +93,6 @@ class SegmentationModel(AgMLModelBase):
         """
         return imagenet_style_process(image, size = (512, 512))
 
-    @final
     def preprocess_input(self, images, return_shapes = False):
         """Preprocesses the input image to the specification of the model.
 

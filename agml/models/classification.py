@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import final
-
 import torch
 import torch.nn as nn
 from torchvision.models import efficientnet_b4
@@ -99,7 +97,6 @@ class ClassificationModel(AgMLModelBase):
         return imagenet_style_process(image)
 
     @staticmethod
-    @final
     def preprocess_input(images = None) -> "torch.Tensor":
         """Preprocesses the input image to the specification of the model.
 
