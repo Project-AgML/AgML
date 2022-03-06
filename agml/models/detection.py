@@ -28,7 +28,7 @@ from effdet import (
 )
 
 import agml.data
-from agml.models.model import AgMLModelBase
+from agml.models.base import AgMLModelBase
 from agml.models.tools import auto_move_data
 from agml.data.public import source
 from agml.utils.general import is_array_like

@@ -18,7 +18,7 @@ import torch
 import torch.nn as nn
 from torchvision.models import efficientnet_b4
 
-from agml.models.model import AgMLModelBase
+from agml.models.base import AgMLModelBase
 from agml.models.tools import auto_move_data, imagenet_style_process
 from agml.data.public import source
 
