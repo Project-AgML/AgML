@@ -42,6 +42,10 @@ class AgMLSerializable(object):
     serializable: "frozenset"
     state_override: "frozenset"
 
+    def __init_subclass__(cls, **kwargs):
+        if not hasattr(cls, 'state_override'):
+            cls.state_override = frozenset(())
+
     def __getstate__(self):
         state = {}
         for param in self.serializable:
