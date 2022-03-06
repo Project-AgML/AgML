@@ -152,11 +152,13 @@ agml/_internal/*
 !agml/_internal/preprocess*.py
 !agml/_internal/s3internal.py
 !agml/_internal/__init__.py
-agml/benchmark/training/lightning_logs
-agml/benchmark/training/logs
-agml/benchmark/training/*.log
-agml/benchmark/training/*.err
-agml/benchmark/training/*.out
-agml/benchmark/training/*.csv
+
+# Training
+agml/models/training/lightning_logs
+agml/models/training/logs
+agml/models/training/*.log
+agml/models/training/*.err
+agml/models/training/*.out
+agml/models/training/*.csv
 
 *.pptx

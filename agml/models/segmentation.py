@@ -16,32 +16,29 @@ from typing import final
 
 import torch
 import torch.nn as nn
-from torchvision.models import efficientnet_b4
+import torch.nn.functional as F
+from torchvision.models.segmentation import deeplabv3_resnet50
 
-from agml.benchmark.model import AgMLModelBase
-from agml.benchmark.tools import auto_move_data, imagenet_style_process
+from agml.models.model import AgMLModelBase
+from agml.models.tools import auto_move_data, imagenet_style_process
 from agml.data.public import source
+from agml.utils.general import resolve_list_value
 
 
-class EfficientNetB4Transfer(nn.Module):
-    """Wraps an EfficientDetB4 model with a classification head."""
+class DeepLabV3Transfer(nn.Module):
+    """Wraps a DeepLabV3 model with the right number of classes."""
     def __init__(self, num_classes):
-        super(EfficientNetB4Transfer, self).__init__()
-        self.base = efficientnet_b4(pretrained = False)
-        self.l1 = nn.Linear(1000, 256)
-        self.dropout = nn.Dropout(0.1)
-        self.relu = nn.ReLU()
-        self.l2 = nn.Linear(256, num_classes)
-
+        super(DeepLabV3Transfer, self).__init__()
+        self.base = deeplabv3_resnet50(
+            pretrained = False,
+            num_classes = num_classes)
+        
     def forward(self, x, **kwargs): # noqa
-        x = self.base(x)
-        x = x.view(x.size(0), -1)
-        x = self.dropout(self.relu(self.l1(x)))
-        return self.l2(x)
+        return self.base(x)['out']
 
 
-class ClassificationModel(AgMLModelBase):
-    """Wraps an `EfficientNetB4` model for agricultural image classification.
+class SegmentationModel(AgMLModelBase):
+    """Wraps a `DeepLabV3` model for agricultural semantic segmentation.
 
     When using the model for inference, you should use the `predict()` method
     on any set of input images. This method wraps the `forward()` call with
@@ -67,7 +64,7 @@ class ClassificationModel(AgMLModelBase):
 
     def __init__(self, dataset):
         # Construct the network and load in pretrained weights.
-        super(ClassificationModel, self).__init__()
+        super(SegmentationModel, self).__init__()
         self.net = self._construct_sub_net(dataset)
 
     @auto_move_data
@@ -76,7 +73,7 @@ class ClassificationModel(AgMLModelBase):
 
     @staticmethod
     def _construct_sub_net(dataset):
-        return EfficientNetB4Transfer(source(dataset).num_classes)
+        return DeepLabV3Transfer(source(dataset).num_classes)
 
     @staticmethod
     def _preprocess_image(image):
@@ -96,15 +93,14 @@ class ClassificationModel(AgMLModelBase):
         as well as other intermediate steps such as adding a channel
         dimension for two-channel inputs, for example.
         """
-        return imagenet_style_process(image)
+        return imagenet_style_process(image, size = (512, 512))
 
-    @staticmethod
     @final
-    def preprocess_input(images = None) -> "torch.Tensor":
+    def preprocess_input(self, images, return_shapes = False):
         """Preprocesses the input image to the specification of the model.
 
         This method takes in a set of inputs and preprocesses them into the
-        expected format for the `EfficientNetB4` image classification model.
+        expected format for the `DeepLabV3` semantic segmentation model.
         There are a variety of inputs which are accepted, including images,
         image paths, as well as fully-processed image tensors. The inputs
         are expanded and standardized, then run through a preprocessing
@@ -131,19 +127,26 @@ class ClassificationModel(AgMLModelBase):
                 3. A single image (np.ndarray, torch.Tensor)
                 4. A list of images (List[np.ndarray, torch.Tensor])
                 5. A batched tensor of images (np.ndarray, torch.Tensor)
+        return_shapes : bool
+            Whether to return the original shapes of the input images.
 
         Returns
         -------
-        A 4-dimensional, preprocessed `torch.Tensor`.
+        A 4-dimensional, preprocessed `torch.Tensor`. If `return_shapes`
+        is set to True, it also returns the original shapes of the images.
         """
-        images = ClassificationModel._expand_input_images(images)
-        return torch.stack(
-            [ClassificationModel._preprocess_image(
+        images = self._expand_input_images(images)
+        shapes = self._get_shapes(images)
+        images = torch.stack(
+            [self._preprocess_image(
                 image) for image in images], dim = 0)
+        if return_shapes:
+            return images, shapes
+        return images
 
     @torch.no_grad()
     def predict(self, images):
-        """Runs `EfficientNetB4` inference on the input image(s).
+        """Runs `DeepLabV3` inference on the input image(s).
 
         This method is the primary inference method for the model; it
         accepts a set of input images (see `preprocess_input()` for a
@@ -165,10 +168,29 @@ class ClassificationModel(AgMLModelBase):
 
         Returns
         -------
-        A `np.ndarray` with integer labels for each image.
+        A list of `np.ndarray`s with resized output masks.
         """
-        images = self.preprocess_input(images)
-        return self._to_out(torch.squeeze(torch.argmax(self.forward(images), 1)))
+        # Process the images and run inference.
+        images, shapes = self.preprocess_input(images, return_shapes = True)
+        out = torch.sigmoid(self.forward(images))
+
+        # Post-process the output masks to a valid format.
+        if out.shape[1] == 1: # binary class predictions
+            out[out >= 0.2] = 1
+            out[out != 1] = 0
+            out = torch.squeeze(out, dim = 1)
+        else: # multi-class predictions to integer labels
+            out = torch.argmax(out, 1)
+
+        # Resize the masks to their original shapes.
+        masks = []
+        for mask, shape in zip(
+                torch.index_select(out, 0, torch.arange(len(out))), shapes):
+            masks.append(self._to_out(torch.squeeze(F.interpolate(
+                torch.unsqueeze(torch.unsqueeze(mask, 0), 0).float(),
+                size = shape).int())))
+        return resolve_list_value(masks)
+
 
 
 
