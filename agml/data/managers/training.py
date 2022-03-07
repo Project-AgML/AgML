@@ -79,7 +79,7 @@ class TrainingManager(AgMLSerializable):
         # which steps that it should apply.
         #
         # See the `update_state()` method to see the valid states.
-        self._state = TrainState.NONE
+        self._state: "TrainState" = TrainState.NONE
 
         # A hook for multi-dataset loaders.
         self._multi_hook = False

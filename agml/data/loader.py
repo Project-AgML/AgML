@@ -32,7 +32,20 @@ from agml.backend.tftorch import (
 )
 
 
-class AgMLDataLoader(AgMLSerializable):
+class AgMLDataLoaderMeta(type):
+    def __instancecheck__(self, instance):
+        # This override allows for objects of type `AgMLMultiDatasetLoader`
+        # to be treated as an `AgMLDataLoader` when the following command
+        # is run: `isinstance(a, AgMLDataLoader)` (hacky fix, essentially).
+        if isinstance(instance, self.__class__):
+            return True
+        from agml.data.multi_loader import AgMLMultiDatasetLoader
+        if isinstance(instance, AgMLMultiDatasetLoader):
+            return True
+        return False
+
+
+class AgMLDataLoader(AgMLSerializable, metaclass = AgMLDataLoaderMeta):
     """Loads and provides a processing interface for a dataset.
 
     The `AgMLDataLoader` is the main interface to AgML's public dataset
@@ -79,9 +92,9 @@ class AgMLDataLoader(AgMLSerializable):
             from agml.data.multi_loader import AgMLMultiDatasetLoader
             return AgMLMultiDatasetLoader(dataset, **kwargs)
         raise TypeError(
-            "Expected either a single dataset name (or metadata), or"
-            "a list of dataset names/metadata when instantiating an "
-            "`AgMLDataLoader`. Got {dataset} of type {type(dataset)}.")
+            f"Expected either a single dataset name (or metadata), or"
+            f"a list of dataset names/metadata when instantiating an "
+            f"`AgMLDataLoader`. Got {dataset} of type {type(dataset)}.")
 
     def __init__(self, dataset, **kwargs):
         """Instantiates an `AgMLDataLoader` with the dataset."""
