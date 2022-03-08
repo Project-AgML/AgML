@@ -15,6 +15,7 @@
 import types
 import collections
 from typing import Union
+from decimal import Decimal, getcontext
 
 import numpy as np
 
@@ -60,15 +61,17 @@ class CollectionWrapper(AgMLSerializable):
         return [getattr(c, attr) for c in self._collection]
 
     def call_method(self, method, args = None, kwargs = None):
-        if args is None:
-            args = ()
         if kwargs is None:
             kwargs = {}
+        if args is None:
+            args = ()
         elif isinstance(args, tuple):
             if not len(args) == len(self._collection):
                 raise IndexError(
                     f"Got {len(args)} unique arguments for a "
                     f"collection of length {len(self._collection)}.")
+            return [getattr(c, method)(arg, **kwargs)
+                    for c, arg in zip(self._collection, args)]
         return [getattr(c, method)(*args, **kwargs) for c in self._collection]
 
     def apply(self, method):
@@ -388,6 +391,11 @@ class AgMLMultiDatasetLoader(AgMLSerializable):
         return self._info._task.ml
 
     @property
+    def num_images(self):
+        """Returns the number of images in the entire dataset."""
+        return sum(self.data_distributions.values())
+
+    @property
     def classes(self):
         """Returns the classes that the dataset is predicting."""
         return self._class_meta['classes']
@@ -683,6 +691,82 @@ class AgMLMultiDatasetLoader(AgMLSerializable):
             with seed_context(seed):
                 np.random.shuffle(self._loader_accessors)
         return self
+
+    def take_random(self, k):
+        """Takes a random set of contents from the loader.
+
+        This method selects a sub-sample of the contents in the loader,
+        based on the provided number of (or proportion of) elements `k`.
+        It then returns a new loader with just this reduced number of
+        elements. The new loader is functionally similar to the original
+        loader, and contains all of the transforms/batching/other settings
+        which have been applied to it up until this method is called.
+
+        Note that the data which is sampled as part of this new loader
+        is not removed from the original loader; this simply serves as an
+        interface to use a random set of images from the full dataset.
+
+        For a multi-dataset loader, data is sampled from each of the
+        sub-datasets proportionally, e.g., the proportion of images
+        in the new dataset (per each sub-dataset) will be the same as
+        in the original dataset.
+
+        Parameters
+        ----------
+        k : {int, float}
+            Either an integer specifying the number of samples or a float
+            specifying the proportion of images from the total to take.
+
+        Returns
+        -------
+        A reduced `AgMLDataLoader` with the new data.
+        """
+        # Parse the input to an integer.
+        if isinstance(k, float):
+            # Check that 0.0 <= k <= 1.0.
+            if not 0.0 <= k <= 1.0:
+                raise ValueError(
+                    "If passing a proportion to `take_class`, "
+                    "it should be in range [0.0, 1.0].")
+
+            # Convert the proportion float to an absolute int. Note that
+            # the method used is rounding up to the nearest int for cases
+            # where there is not an exact proportional equivalent.
+            getcontext().prec = 4  # noqa
+            proportion = Decimal(k) / Decimal(1)
+            num_images = self.num_images
+            k = int(proportion * num_images)
+
+        # If the input is an integer (or the float is converted to an int
+        # above), then select a random sampling of images from the dataset.
+        if isinstance(k, int):
+            # Check that `k` is valid for the number of images in the dataset.
+            if not 0 <= k <= self.num_images:
+                raise ValueError(
+                    f"Received a request to take a random sampling of "
+                    f"{k} images, when the dataset has {self.num_images}.")
+
+            # Calculate the proportions. If the total sum is less than `k`,
+            # add 1 to the dataset with the lowest number of images.
+            getcontext().prec = 4  # noqa
+            num_images = self.num_images
+            proportions = {key: int((Decimal(val) / Decimal(num_images)) * k)
+                            for key, val in self._data_distributions.items()}
+            if sum(proportions.values()) != num_images:
+                diff = sum(proportions.values()) - k
+                smallest_split = list(proportions.keys())[
+                    list(proportions.values()).index(
+                        min(proportions.values()))]
+                proportions[smallest_split] = proportions[smallest_split] - diff
+            return self._generate_split_loader(
+                self._loaders.call_method(
+                    'take_random', tuple(proportions.values())), 'train')
+
+        # Otherwise, raise an error.
+        else:
+            raise TypeError(
+                f"Expected only an int or a float when "
+                f"taking a random split, got {type(k)}.")
 
     def split(self, train = None, val = None, test = None, shuffle = True):
         """Splits the data into train, val and test splits.

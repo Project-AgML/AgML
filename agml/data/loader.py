@@ -606,6 +606,73 @@ class AgMLDataLoader(AgMLSerializable, metaclass = AgMLDataLoaderMeta):
         obj._is_split = False
         return obj
 
+    def take_random(self, k, **kwargs):
+        """Takes a random set of contents from the loader.
+
+        This method selects a sub-sample of the contents in the loader,
+        based on the provided number of (or proportion of) elements `k`.
+        It then returns a new loader with just this reduced number of
+        elements. The new loader is functionally similar to the original
+        loader, and contains all of the transforms/batching/other settings
+        which have been applied to it up until this method is called.
+
+        Note that the data which is sampled as part of this new loader
+        is not removed from the original loader; this simply serves as an
+        interface to use a random set of images from the full dataset.
+
+        Parameters
+        ----------
+        k : {int, float}
+            Either an integer specifying the number of samples or a float
+            specifying the proportion of images from the total to take.
+
+        Returns
+        -------
+        A reduced `AgMLDataLoader` with the new data.
+        """
+        # Parse the input to an integer.
+        if isinstance(k, float):
+            # Check that 0.0 <= k <= 1.0.
+            if not 0.0 <= k <= 1.0:
+                raise ValueError(
+                    "If passing a proportion to `take_class`, "
+                    "it should be in range [0.0, 1.0].")
+
+            # Convert the proportion float to an absolute int. Note that
+            # the method used is rounding up to the nearest int for cases
+            # where there is not an exact proportional equivalent.
+            getcontext().prec = 4  # noqa
+            proportion = Decimal(k) / Decimal(1)
+            num_images = self.num_images
+            k = int(proportion * num_images)
+
+        # If the input is an integer (or the float is converted to an int
+        # above), then select a random sampling of images from the dataset.
+        if isinstance(k, int):
+            # Check that `k` is valid for the number of images in the dataset.
+            if not 0 <= k <= self.num_images:
+                raise ValueError(
+                    f"Received a request to take a random sampling of "
+                    f"{k} images, when the dataset has {self.num_images}.")
+
+            # We use a similar functionality to the `split` method here,
+            # essentially choosing a random sampling up until `k` and then
+            # using the `DataManager` to access the reduced data.
+            split = np.arange(0, self.num_images)
+            np.random.shuffle(split)
+            indices = split[:k]
+            content = list(self._manager.generate_split_contents(
+                {'content': indices}).values())[0]
+
+            # Create a new `AgMLDataLoader` from the new contents.
+            return self._generate_split_loader(content, 'train')
+
+        # Otherwise, raise an error.
+        else:
+            raise TypeError(
+                f"Expected only an int or a float when "
+                f"taking a random split, got {type(k)}.")
+
     def split(self, train = None, val = None, test = None, shuffle = True):
         """Splits the data into train, val and test splits.
 

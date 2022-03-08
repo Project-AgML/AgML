@@ -161,4 +161,5 @@ agml/models/training/*.err
 agml/models/training/*.out
 agml/models/training/*.csv
 
+.paper/
 *.pptx
