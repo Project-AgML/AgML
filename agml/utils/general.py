@@ -125,7 +125,7 @@ def txt2image(path):
 def txt2image2(path):
     """Converts txt to numpy array, not consider first row"""
     data = np.loadtxt(path,skiprows=1)
-    data = np.where(data > 20, 0, data) # Change background numbers to zero
+    data = np.where(data > 1000, 1001, data) # Change background numbers to zero
     return data
 
 def genEnvironmentMap(Origin, Spacing_plants, Spacing_rows, TreesXrow, rows = 1, plant_height = 1):
@@ -206,8 +206,14 @@ def PlotAllViewsSemantic(path, Pos):
 
     plt.show()
 
+def generate_specific_rows(filePath, userows=[]):
+    """Read specific line from txt file"""
+    with open(filePath) as f:
+        for i, line in enumerate(f):
+            if i == userows:
+                return line
 
-def PlotInstanceSegmentation(path, view, Label, Number_images = 0):
+def PlotInstanceSegmentation(path, view, Label):
     """Plot specific instance segmentaation images"""
     L = Label
 
@@ -219,34 +225,50 @@ def PlotInstanceSegmentation(path, view, Label, Number_images = 0):
     elif i>=10:
         data1 = path + 'view000' + str(i)
     
-    if Number_images == 0:
-        View_size = len(glob.glob(data1 + '/instance_segmentation_' + str(L) + '_*'))
-        print(View_size)
-    else:
-        View_size = Number_images
-        print(View_size)
-    
-    if View_size == 1:
-        axs = plt.axes()
-    else:
-        fig, axs = plt.subplots(round(View_size/2),2)
-        fig.subplots_adjust(hspace = .5, wspace=.001)
-        axs = axs.ravel()
-    
-    for j in range(1,View_size+1):
-        if j<10:
-            data = txt2image2(data1 + '/instance_segmentation_' + str(L) + '_' + '000000' + str(j) +'.txt')
-        elif j>=10:
-            data = txt2image2(data1 + '/instance_segmentation_' + str(L) + '_' + '00000' + str(j) +'.txt')                
-        img = data
+    Path_elements = glob.glob(data1 + '/instance_segmentation_' + str(L) + '_*')
+    View_size = len(Path_elements)
+    print('Number of ' + str(L) +':' + str(View_size))
         
-        if View_size == 1:
-            axs.imshow(img)
-        else:
-            axs[j-1].imshow(img)
-            fig.subplots_adjust(right=0.8)
+    axs = plt.axes()
+    
+    img = cv2.imread(path + 'view0000' + str(view) + '/RGB_rendering.jpeg')
+    
+    for j in range(0,View_size):                                             
+        data = txt2image2(Path_elements[j])
+        rectangular_label = generate_specific_rows(Path_elements[j], userows=0)
+        rectangular_label = rectangular_label.replace("\n", "").split(" ")
+        data2 = rectangular_label
+        data2[0] = int(data2[0])
+        data2[1] = int(data2[1])
+        data2[2] = int(data2[2]) 
+        data2[3] = int(data2[3]) 
+        X_min = data2[0]
+        Y_min = img.shape[0] - data2[2] - (data2[3] - data2[2])
+        W = data2[1] - data2[0]
+        H = data2[3] - data2[2]
+        rect = patches.Rectangle((X_min, Y_min ), W , H , linewidth=1, edgecolor='r', facecolor='none')
+        # Add the patch to the Axes
+        axs.add_patch(rect)
+        
+        #Add instance segmentation
+        A = np.zeros(img.shape) + 1001
+
+        imgray = data[1:,1:]
+        img2 = cv2.merge((imgray,imgray,imgray))
+    
+        A[Y_min:Y_min+H,data2[0]:data2[1],:] = img2
+    
+        for x in range(0,img.shape[0]):
+            for y in range(0,img.shape[1]):
+                if x > Y_min and x < Y_min+H and y > data2[0] and y < data2[1]:
+                    if A[x,y,0]<1000: 
+                        img[x,y,0] = 50*A[x,y,0]
+                        img[x,y,1] = 20*A[x,y,0]
+                        img[x,y,2] = 40*A[x,y,0]
+        axs.imshow(img)
         
     plt.show()
+
 
 
 
