@@ -155,7 +155,8 @@ class DataManager(AgMLSerializable):
         which are returned back to the `AgMLDataLoader` to be constructed into
         `DataBuilder`s and wrapped into new `DataManager`s.
         """
-        contents = np.array(list(self._builder.get_contents().items()))
+        contents = np.array(
+            list(self._builder.get_contents().items()), dtype = object)
         return {
             k: dict(contents[v]) for k, v in splits.items()
         }
