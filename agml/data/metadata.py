@@ -25,6 +25,24 @@ from agml.utils.data import (
 )
 
 
+class _MetadataDict(dict):
+    """Dictionary subclass that throws a custom error for metadata accesses."""
+    def __init__(self, *args, dataset = None, **kwargs):
+        if dataset is None:
+            raise ValueError(
+                "Cannot instantiate metadata dictionary without the dataset name.")
+        super(_MetadataDict, self).__init__(*args, **kwargs)
+        self._dataset = dataset
+
+    def __getitem__(self, item):
+        try:
+            return super(_MetadataDict, self).__getitem__(item)
+        except KeyError:
+            raise KeyError(
+                f"The dataset '{self._dataset}' is missing metadata '{item}'. "
+                f"Please bring this issue to the attention of the AgML team.")
+
+
 class DatasetMetadata(AgMLSerializable):
     """Stores metadata about a certain AgML dataset.
 
@@ -88,10 +106,12 @@ class DatasetMetadata(AgMLSerializable):
                     f"Interpreted dataset '{name}' as '{name.replace('-', '_')}.'")
                 name = name.replace('-', '_')
         self._name = name
-        self._metadata = source_info[name]
+        self._metadata = _MetadataDict(
+            **source_info[name], dataset = name)
 
         # Load citation information.
-        self._citation_meta = load_citation_sources()[name]
+        self._citation_meta = _MetadataDict(
+            **load_citation_sources()[name], dataset = name)
 
     def __getattr__(self, key):
         try:
