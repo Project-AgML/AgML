@@ -576,64 +576,6 @@
         },
         "external_image_sources": []
     },
-    "plant_doc_classification": {
-        "ml_task": "image_classification",
-        "ag_task": "disease_classification",
-        "location": {
-            "continent": "worldwide",
-            "country": "worldwide"
-        },
-        "sensor_modality": "rgb",
-        "real_synthetic": "real",
-        "platform": "ground",
-        "input_data_format": "jpg",
-        "annotation_format": "directory_names",
-        "n_images": "2598",
-        "docs_url": "https://github.com/pratikkayal/PlantDoc-Dataset",
-        "stats": {
-            "mean": [
-                0.4769977033138275,
-                0.5441237688064575,
-                0.37798669934272766
-            ],
-            "std": [
-                0.2114635556936264,
-                0.20371955633163452,
-                0.2188636064529419
-            ]
-        },
-        "classes": {
-            "0": "Apple_Scab_Leaf",
-            "1": "Apple_leaf",
-            "2": "Apple_rust_leaf",
-            "3": "Bell_pepper_leaf_spot",
-            "4": "Bell_pepper_leaf",
-            "5": "Blueberry_leaf",
-            "6": "Cherry_leaf",
-            "7": "Corn_Gray_leaf_spot",
-            "8": "Corn_leaf_blight",
-            "9": "Corn_rust_leaf",
-            "10": "Peach_leaf",
-            "11": "Potato_leaf_early_blight",
-            "12": "Potato_leaf_late_blight",
-            "13": "Raspberry_leaf",
-            "14": "Soybean_leaf",
-            "15": "Squash_Powdery_mildew_leaf",
-            "16": "Strawberry_leaf",
-            "17": "Tomato_Early_blight_leaf",
-            "18": "Tomato_Septoria_leaf_spot",
-            "19": "Tomato_leaf_bacterial_spot",
-            "20": "Tomato_leaf_late_blight",
-            "21": "Tomato_leaf_mosaic_virus",
-            "22": "Tomato_leaf_yellow_virus",
-            "23": "Tomato_leaf",
-            "24": "Tomato_mold_leaf",
-            "25": "Tomato_two_spotted_spider_mites_leaf",
-            "26": "grape_leaf_black_rot",
-            "27": "grape_leaf"
-        },
-        "external_image_sources": []
-    },
     "autonomous_greenhouse_regression": {
         "ml_task": "image_regression",
         "ag_task": "ag_regression",
@@ -860,5 +802,99 @@
                 0.1734534204006195
             ]
         }
+    },
+    "plant_doc_classification": {
+        "classes": {
+            "1": "Corn leaf blight",
+            "2": "Tomato Early blight leaf",
+            "3": "Potato leaf early blight",
+            "4": "Potato leaf late blight",
+            "5": "Blueberry leaf",
+            "6": "grape leaf black rot",
+            "7": "Bell_pepper leaf spot",
+            "8": "Cherry leaf",
+            "9": "Peach leaf",
+            "10": "Soyabean leaf",
+            "11": "Strawberry leaf",
+            "12": "Apple Scab Leaf",
+            "13": "Corn rust leaf",
+            "14": "Apple leaf",
+            "15": "Corn Gray leaf spot",
+            "16": "Tomato leaf mosaic virus",
+            "17": "Tomato mold leaf",
+            "18": "Tomato leaf yellow virus",
+            "19": "Tomato leaf bacterial spot",
+            "20": "Tomato leaf late blight",
+            "21": "Squash Powdery mildew leaf",
+            "22": "Bell_pepper leaf",
+            "23": "grape leaf",
+            "24": "Apple rust leaf",
+            "25": "Tomato Septoria leaf spot",
+            "26": "Tomato leaf",
+            "27": "Raspberry leaf",
+            "28": "Tomato two spotted spider mites leaf"
+        },
+        "ml_task": "image_classification",
+        "ag_task": "disease_classification",
+        "location": {
+            "continent": "worldwide",
+            "country": "worldwide"
+        },
+        "sensor_modality": "rgb",
+        "real_synthetic": "real",
+        "platform": "ground",
+        "input_data_format": "jpg",
+        "annotation_format": "directory_names",
+        "n_images": "2598",
+        "docs_url": "https://github.com/pratikkayal/PlantDoc-Dataset",
+        "external_image_sources": []
+    },
+    "plant_doc_detection": {
+        "classes": {
+            "1": "Corn leaf blight",
+            "2": "Tomato Early blight leaf",
+            "3": "Potato leaf early blight",
+            "4": "Potato leaf late blight",
+            "5": "Blueberry leaf",
+            "6": "grape leaf black rot",
+            "7": "Bell_pepper leaf spot",
+            "8": "Cherry leaf",
+            "9": "Peach leaf",
+            "10": "Soyabean leaf",
+            "11": "Strawberry leaf",
+            "12": "Apple Scab Leaf",
+            "13": "Corn rust leaf",
+            "14": "Apple leaf",
+            "15": "Corn Gray leaf spot",
+            "16": "Tomato leaf mosaic virus",
+            "17": "Tomato mold leaf",
+            "18": "Tomato leaf yellow virus",
+            "19": "Tomato leaf bacterial spot",
+            "20": "Tomato leaf late blight",
+            "21": "Squash Powdery mildew leaf",
+            "22": "Bell_pepper leaf",
+            "23": "grape leaf",
+            "24": "Apple rust leaf",
+            "25": "Tomato Septoria leaf spot",
+            "26": "Tomato leaf",
+            "27": "Raspberry leaf",
+            "28": "Potato leaf",
+            "29": "Tomato two spotted spider mites leaf"
+        },
+
+        "ml_task": "object_detection",
+        "ag_task": "disease_classification",
+        "location": {
+            "continent": "worldwide",
+            "country": "worldwide"
+        },
+        "sensor_modality": "rgb",
+        "real_synthetic": "real",
+        "platform": "ground",
+        "input_data_format": "jpg",
+        "annotation_format": "coco_json",
+        "n_images": "2598",
+        "docs_url": "https://github.com/pratikkayal/PlantDoc-Object-Detection-Dataset",
+        "external_image_sources": []
     }
 }
