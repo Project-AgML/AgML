@@ -847,7 +847,19 @@
         "annotation_format": "directory_names",
         "n_images": "2598",
         "docs_url": "https://github.com/pratikkayal/PlantDoc-Dataset",
-        "external_image_sources": []
+        "external_image_sources": [],
+        "stats": {
+            "mean": [
+                0.4822138547897339,
+                0.5498747229576111,
+                0.3833077549934387
+            ],
+            "std": [
+                0.2124069482088089,
+                0.20360232889652252,
+                0.2210727334022522
+            ]
+        }
     },
     "plant_doc_detection": {
         "classes": {
@@ -881,7 +893,6 @@
             "28": "Potato leaf",
             "29": "Tomato two spotted spider mites leaf"
         },
-
         "ml_task": "object_detection",
         "ag_task": "disease_classification",
         "location": {
@@ -895,6 +906,18 @@
         "annotation_format": "coco_json",
         "n_images": "2598",
         "docs_url": "https://github.com/pratikkayal/PlantDoc-Object-Detection-Dataset",
-        "external_image_sources": []
+        "external_image_sources": [],
+        "stats": {
+            "mean": [
+                0.4819715917110443,
+                0.5496680736541748,
+                0.38318973779678345
+            ],
+            "std": [
+                0.21210965514183044,
+                0.20354853570461273,
+                0.22038120031356812
+            ]
+        }
     }
 }
