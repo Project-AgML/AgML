@@ -35,7 +35,7 @@ def _load_colormaps():
         cmaps = json.load(f)
     ret_dict = {}
     for map_ in cmaps.items():
-        ret_dict[map_[0]] = {int(k): v for k, v in map_[1].items()}
+        ret_dict[map_[0]] = map_[1] * 5
     return ret_dict
 
 
