@@ -23,8 +23,9 @@ from agml.framework import AgMLSerializable
 from agml.data.metadata import DatasetMetadata
 from agml.data.loader import AgMLDataLoader
 from agml.utils.general import (
-    seed_context, resolve_list_value, NoArgument, is_array_like
+    resolve_list_value, NoArgument, is_array_like
 )
+from agml.utils.random import seed_context
 from agml.utils.image import consistent_shapes
 from agml.utils.logging import log
 from agml.backend.tftorch import (

@@ -25,6 +25,7 @@ from agml.data.builder import DataBuilder
 from agml.data.metadata import DatasetMetadata
 from agml.utils.logging import log
 from agml.utils.general import NoArgument, resolve_list_value
+from agml.utils.random import inject_random_state
 from agml.backend.tftorch import (
     get_backend, set_backend,
     user_changed_backend, StrictBackendError,
@@ -606,7 +607,8 @@ class AgMLDataLoader(AgMLSerializable, metaclass = AgMLDataLoaderMeta):
         obj._is_split = False
         return obj
 
-    def take_random(self, k, **kwargs):
+    @inject_random_state
+    def take_random(self, k):
         """Takes a random set of contents from the loader.
 
         This method selects a sub-sample of the contents in the loader,
@@ -622,9 +624,10 @@ class AgMLDataLoader(AgMLSerializable, metaclass = AgMLDataLoaderMeta):
 
         Parameters
         ----------
-        k : {int, float}
+        k : int, float
             Either an integer specifying the number of samples or a float
             specifying the proportion of images from the total to take.
+        {random_state}
 
         Returns
         -------
@@ -673,6 +676,7 @@ class AgMLDataLoader(AgMLSerializable, metaclass = AgMLDataLoaderMeta):
                 f"Expected only an int or a float when "
                 f"taking a random split, got {type(k)}.")
 
+    @inject_random_state
     def split(self, train = None, val = None, test = None, shuffle = True):
         """Splits the data into train, val and test splits.
 
@@ -689,14 +693,15 @@ class AgMLDataLoader(AgMLSerializable, metaclass = AgMLDataLoaderMeta):
 
         Parameters
         ----------
-        train : {int, float}
+        train : int, float
             The split for training data.
-        val : {int, float}
+        val : int, float
             The split for validation data.
-        test : {int, float}
+        test : int, float
             The split for testing data.
         shuffle : bool
             Whether to shuffle the split data.
+        {random_state}
 
         Notes
         -----

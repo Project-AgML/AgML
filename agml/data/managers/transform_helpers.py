@@ -17,7 +17,7 @@ import abc
 import numpy as np
 
 from agml.framework import AgMLSerializable
-from agml.utils.general import seed_context
+from agml.utils.random import seed_context
 
 
 class TransformApplierBase(AgMLSerializable):
