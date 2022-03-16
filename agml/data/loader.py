@@ -509,7 +509,7 @@ class AgMLDataLoader(AgMLSerializable, metaclass = AgMLDataLoaderMeta):
         self._manager.shuffle(seed = seed)
         return self
 
-    def take_class(self, classes):
+    def take_class(self, classes) -> "AgMLDataLoader":
         """Reduces the dataset to a subset of class labels.
 
         This method, given a set of either integer or string class labels,
@@ -608,7 +608,7 @@ class AgMLDataLoader(AgMLSerializable, metaclass = AgMLDataLoaderMeta):
         return obj
 
     @inject_random_state
-    def take_random(self, k):
+    def take_random(self, k) -> "AgMLDataLoader":
         """Takes a random set of contents from the loader.
 
         This method selects a sub-sample of the contents in the loader,
