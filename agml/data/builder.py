@@ -37,8 +37,8 @@ class DataBuilder(AgMLSerializable):
     used by the `DataManager` inside the `AgMLDataLoader`.
     """
     serializable = frozenset(
-        ('name', 'labels_for_image', 'data', 'info'
-         'dataset_root', 'data_length', 'external_image_sources'))
+        ('name', 'labels_for_image', 'data',
+         'info' 'dataset_root', 'data_length'))
 
     def __init__(self, info, dataset_path, overwrite):
         # Attempt to locate or download the dataset.
