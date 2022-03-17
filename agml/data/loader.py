@@ -22,7 +22,7 @@ import numpy as np
 from agml.framework import AgMLSerializable
 from agml.data.manager import DataManager
 from agml.data.builder import DataBuilder
-from agml.data.metadata import DatasetMetadata
+from agml.data.metadata import DatasetMetadata, make_metadata
 from agml.utils.logging import log
 from agml.utils.general import NoArgument, resolve_list_value
 from agml.utils.random import inject_random_state
@@ -64,16 +64,29 @@ class AgMLDataLoader(AgMLSerializable, metaclass = AgMLDataLoaderMeta):
     seamless usage in training or inference pipelines. Data can also be
     exported into native TensorFlow and PyTorch objects.
 
+    There is also support for using custom datasets outside of the AgML
+    public data repository. To do this, you need to pass an extra argument
+    containing metadata for the dataset, after which point the loader
+    will work as normal (and all interfaces, except for the info parameters
+    which are not provided, will also be available for standard use).
+
     Parameters
     ----------
     dataset : str
         The name of the public dataset you want to load. See the helper
         method `agml.data.public_data_sources()` for a list of datasets.
+        If using a custom dataset, this can be any valid string.
     kwargs : dict, optional
         dataset_path : str, optional
             A custom path to download and load the dataset from.
         overwrite : bool, optional
             Whether to rewrite and re-install the dataset.
+        meta : dict, optional
+            A dictionary consisting of metadata properties, if you want
+            to create a custom loader. At minimum, this needs to contain
+            two parameters: `task`, indicating the type of machine learning
+            task that the dataset is for, and `classes`, a list of the
+            classes that the dataset contains.
 
     Notes
     -----
@@ -84,6 +97,13 @@ class AgMLDataLoader(AgMLSerializable, metaclass = AgMLDataLoaderMeta):
         'val_data', 'test_data', 'meta_properties'))
 
     def __new__(cls, dataset, **kwargs):
+        # First, check for whether the dataset is a custom dataset, e.g.,
+        # there is no metadata to search for in the public source JSON and
+        # instead we need to infer it/use the provided metadata.
+        meta = kwargs.get('meta', None)
+        if meta is not None:
+            pass
+
         # If a single dataset is passed, then we use the base `AgMLDataLoader`.
         # However, if an iterable of datasets is passed, then we need to
         # dispatch to the subclass `AgMLMultiDatasetLoader` for them.
@@ -100,7 +120,7 @@ class AgMLDataLoader(AgMLSerializable, metaclass = AgMLDataLoaderMeta):
     def __init__(self, dataset, **kwargs):
         """Instantiates an `AgMLDataLoader` with the dataset."""
         # Set up the dataset and its associated metadata.
-        self._info = DatasetMetadata(dataset)
+        self._info = make_metadata(dataset, kwargs.get('meta', None))
 
         # The data for the class is constructed in two stages. First, the
         # internal contents are constructed using a `DataBuilder`, which
