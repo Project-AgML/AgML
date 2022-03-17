@@ -38,7 +38,7 @@ class DataBuilder(AgMLSerializable):
     """
     serializable = frozenset(
         ('name', 'labels_for_image', 'data',
-         'info' 'dataset_root', 'data_length'))
+         'info', 'dataset_root', 'data_length'))
 
     def __init__(self, info, dataset_path, overwrite):
         # Attempt to locate or download the dataset.
@@ -299,9 +299,6 @@ class DataBuilder(AgMLSerializable):
         with open(os.path.join(self._dataset_root, 'annotations.json')) as f:
             self._default_coco_annotations = json.load(f)
         coco_annotations = self._default_coco_annotations
-        categories, labels = coco_annotations['categories'], []
-        for category in categories:
-            labels.append(category['name'])
         image_id_mapping = {}
         for img_meta in coco_annotations['images']:
             image_id_mapping[img_meta['id']] = img_meta['file_name']
