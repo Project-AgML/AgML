@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
+import json
 import copy
 from typing import Union
 from collections import Sequence
@@ -24,8 +26,11 @@ from agml.data.manager import DataManager
 from agml.data.builder import DataBuilder
 from agml.data.metadata import DatasetMetadata, make_metadata
 from agml.utils.logging import log
+from agml.utils.io import get_file_list, get_dir_list
+from agml.utils.data import load_public_sources
 from agml.utils.general import NoArgument, resolve_list_value
 from agml.utils.random import inject_random_state
+from agml.backend.config import data_save_path
 from agml.backend.tftorch import (
     get_backend, set_backend,
     user_changed_backend, StrictBackendError,
@@ -97,13 +102,6 @@ class AgMLDataLoader(AgMLSerializable, metaclass = AgMLDataLoaderMeta):
         'val_data', 'test_data', 'meta_properties'))
 
     def __new__(cls, dataset, **kwargs):
-        # First, check for whether the dataset is a custom dataset, e.g.,
-        # there is no metadata to search for in the public source JSON and
-        # instead we need to infer it/use the provided metadata.
-        meta = kwargs.get('meta', None)
-        if meta is not None:
-            pass
-
         # If a single dataset is passed, then we use the base `AgMLDataLoader`.
         # However, if an iterable of datasets is passed, then we need to
         # dispatch to the subclass `AgMLMultiDatasetLoader` for them.
@@ -157,6 +155,108 @@ class AgMLDataLoader(AgMLSerializable, metaclass = AgMLDataLoaderMeta):
             'num_to_class': self._info.num_to_class,
             'class_to_num': self._info.class_to_num,
             'data_distributions': {self.name: self._info.num_images}}
+
+    @classmethod
+    def from_custom_data(cls, name, dataset_path = None, classes = None, **kwargs):
+        """Creates an `AgMLDataLoader` with a set of custom data.
+
+        If you have a custom dataset that you want to use in an `AgMLDataLoader`,
+        this method constructs the loader using similar semantics to the regular
+        loader instantiation. It is a wrapper around using the `meta` argument to
+        provide dataset properties that provides additional convenience for some
+        circumstances, as summarized below.
+
+        Functionally, this method is equivalent to instantiating `AgMLDataLoader`
+        with an extra argument `meta` that contains metadata for the dataset, with
+        the `task` and `classes` keys required and the others not necessary. This
+        would look like follows:
+
+        > loader = AgMLDataLoader('name', meta = {'task': task, 'classes': classes})
+
+        This method replaces the meta dictionary with keyword arguments to allow
+        for a more Pythonic construction of the custom loader. This method, however
+        includes additional optimizations which allow for a more convenient way
+        to instantiate the loader:
+
+        1. It automatically inferences the task from the structure which the data is
+           in, so you don't need to provide the task at all to this method.
+        2. For image classification and object detection task, this method will
+           attempt to automatically inference the classes in the loader (by searching
+           for the image directories for image classification tasks, and searching
+           in the COCO JSON file for object detection). Semantic segmentation tasks,
+           however, still require the list of classes to be passed.
+
+        This makes it so that in a variety of cases, the loader can be instantiated
+        without even requiring any metadata, as most of it can be inferred directly
+        by this method and thus streamlines the procedure for using custom data.
+
+        Parameters
+        ----------
+        name : str
+            A name for the custom dataset (this can be any valid string).
+        dataset_path : str, optional
+            A custom path to load the dataset from. If this is not passed,
+            we will assume that the dataset is at the traditional path:
+            `~/.agml/datasets/<name>` (or the changed default data path).
+            Otherwise, we assume that the passed directory is the root
+            of the dataset (not that `<name>` is a directory within the path).
+        classes : list, tuple
+            A list of string-labels for the classes of the dataset, in order.
+            This is not required for image classification/object detection.
+        kwargs : dict
+            Any other metadata for the dataset, this is not required.
+
+        Returns
+        -------
+        An `AgMLDataLoader` outfitted with the custom dataset.
+        """
+        # Check the name and ensure that no dataset with that name exists.
+        if name in load_public_sources().keys() or not isinstance(name, str):
+            raise ValueError(f"Invalid name '{name}', the name should be "
+                             f"a string that is not an existing dataset in "
+                             f"the AgML public data source repository.")
+
+        # Locate the path to the dataset.
+        if dataset_path is None:
+            dataset_path = os.path.abspath(os.path.join(data_save_path(), name))
+            if not os.path.exists(dataset_path):
+                raise NotADirectoryError(
+                    f"Existing directory '{dataset_path}' for dataset of name "
+                    f"{name} not found, pass a custom path if you want to use "
+                    f"a custom dataset path for the dataset.")
+        else:
+            dataset_path = os.path.abspath(os.path.expanduser(dataset_path))
+            if not os.path.exists(dataset_path):
+                raise NotADirectoryError(
+                    f"Could not find a directory for dataset '{name}' at the "
+                    f"provided dataset path: {dataset_path}.")
+
+        # Infer the task based on the provided dataset path.
+        if os.path.exists(os.path.join(dataset_path, 'annotations.json')):
+            task = 'object_detection'
+        elif os.path.exists(os.path.join(dataset_path, 'images')) and \
+                os.path.exists(os.path.join(dataset_path, 'annotations')):
+            task = 'semantic_segmentation'
+        elif len(get_file_list(dataset_path)) == 0 and \
+                len(get_dir_list(dataset_path)) != 0:
+            task = 'image_classification'
+        else:
+            raise TypeError("Unrecognized dataset annotation format.")
+
+        # Infer the classes for image classification/object detection.
+        if classes is None:
+            if task == 'semantic_segmentation':
+                raise ValueError(
+                    "Classes are required for a semantic segmentation task.")
+            elif task == 'image_classification':
+                classes = get_dir_list(dataset_path)
+            else:  # object detection
+                with open(os.path.join(dataset_path, 'annotations.json'), 'r') as f:
+                    classes = [c['name'] for c in json.load(f)['categories']]
+
+        # Construct and return the `AgMLDataLoader`.
+        return cls(name, dataset_path = dataset_path,
+                   meta = {'task': task, 'classes': classes, **kwargs})
 
     def __len__(self):
         return self._manager.data_length()
