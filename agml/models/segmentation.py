@@ -21,6 +21,7 @@ from agml.models.base import AgMLModelBase
 from agml.models.tools import auto_move_data, imagenet_style_process
 from agml.data.public import source
 from agml.utils.general import resolve_list_value
+from agml.viz.masks import visualize_overlaid_masks
 
 
 class DeepLabV3Transfer(nn.Module):
@@ -187,6 +188,28 @@ class SegmentationModel(AgMLModelBase):
                 torch.unsqueeze(torch.unsqueeze(mask, 0), 0).float(),
                 size = shape).int())))
         return resolve_list_value(masks)
+
+    def show_prediction(self, image):
+        """Shows the output predictions for one input image.
+
+        This method is useful for instantly visualizing the predictions
+        for a single input image. It accepts a single input image (or
+        any type of valid 'image' input, as described in the method
+        `preprocess_input()`), and then runs inference on that input
+        image and displays its predictions in a matplotlib window.
+
+        Parameters
+        ----------
+        image : Any
+            See `preprocess_input()` for allowed types of inputs.
+
+        Returns
+        -------
+        The matplotlib figure containing the image.
+        """
+        image = self._expand_input_images(image)[0]
+        mask = self.predict(image)
+        return visualize_overlaid_masks(image, mask)
 
 
 
