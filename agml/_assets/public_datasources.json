@@ -919,5 +919,25 @@
                 0.22038120031356812
             ]
         }
+    },
+    "sugarbeet_weed_segmentation_europe": {
+        "classes": {
+            "1": "background",
+            "2": "sugarbeet",
+            "3": "weed"
+        },
+        "ml_task": "semantic_segmentation",
+        "ag_task": "weed_segmentation",
+        "location": {
+            "continent": "Europe",
+            "country": "Switzerland and Germany"
+        },
+        "sensor_modality": "multispectral",
+        "platform": "uav",
+        "input_data_format": "png",
+        "annotation_format": "image",
+        "n_images": "11971",
+        "docs_url": "https://projects.asl.ethz.ch/datasets/doku.php?id=weedmap:remotesensing2018weedmap#dataset_summary",
+        "external_image_sources": ["rgb-images", "g-images", "b-images", "cir-images", "ndvi-images", "nir-images", "re-images", "binary_masks-images"]
     }
 }

@@ -102,5 +102,9 @@
     "plant_doc_detection": {
         "license": "CC BY-SA 4.0",
         "citation": "@inproceedings{10.1145/3371158.3371196,\n  author = {Singh, Davinder and Jain, Naman and Jain, Pranjali and Kayal, Pratik and Kumawat, Sudhakar and Batra, Nipun},\n  title = {PlantDoc: A Dataset for Visual Plant Disease Detection},\n  year = {2020},\n  isbn = {9781450377386},\n  publisher = {Association for Computing Machinery},\n  address = {New York, NY, USA},\n  url = {https://doi.org/10.1145/3371158.3371196},\n  doi = {10.1145/3371158.3371196},\n  booktitle = {Proceedings of the 7th ACM IKDD CoDS and 25th COMAD},\n  pages = {249–253},\n  numpages = {5},\n  keywords = {Deep Learning, Object Detection, Image Classification},\n  location = {Hyderabad, India},\n  series = {CoDS COMAD 2020}\n  }"
+    },
+    "sugarbeet_weed_segmentation_europe": {
+        "license": "CC BY-SA 4.0",
+        "citation": "@ARTICLE{weedMap-2018, \n  author={I. Sa, M. Popovic, R. Khanna, Z. Chen, P. Lottes, F. Liebisch, J. Nieto, C. Stachniss, A. Walter, and R. Siegwart}, \n  journal={MDPI Remote Sensing}, \n  title={WeedMap: A large-scale semantic weed mapping framework using aerial multispectral imaging and deep neural network for precision farming}, \n  year={2018}, \n  volume={10}, \n  number={9}, \n  doi={doi: 10.3390/rs10091423}, \n  month={Aug}}"
     }
 }
