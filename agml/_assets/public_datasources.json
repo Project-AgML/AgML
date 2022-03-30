@@ -919,5 +919,47 @@
                 0.22038120031356812
             ]
         }
+    },
+    "carrot_weeds_uk": {
+        "ml_task": "semantic_segmentation",
+        "ag_task": "weed_segmentation",
+        "location": {
+            "continent": "europe",
+            "country": "united kingdom"
+        },
+        "sensor_modality": "multispectral",
+        "real_synthetic": "real",
+        "platform": "ground_mobile",
+        "input_data_format": "png",
+        "annotation_format": "image",
+        "n_images": "20",
+        "docs_url": "https://lcas.lincoln.ac.uk/wp/research/data-sets-software/crop-vs-weed-discrimination-dataset/",
+        "classes": {
+            "0": "carrot",
+            "1": "weeds",
+            "2": "non-vegetation"
+        },
+        "external_image_sources": ["ndvi-images", "nir-images"]
+    },
+    "onions_weeds_uk": {
+        "ml_task": "semantic_segmentation",
+        "ag_task": "weed_segmentation",
+        "location": {
+            "continent": "europe",
+            "country": "united kingdom"
+        },
+        "sensor_modality": "multispectral",
+        "real_synthetic": "real",
+        "platform": "ground_mobile",
+        "input_data_format": "png",
+        "annotation_format": "image",
+        "n_images": "20",
+        "docs_url": "https://lcas.lincoln.ac.uk/wp/research/data-sets-software/crop-vs-weed-discrimination-dataset/",
+        "classes": {
+            "0": "onion",
+            "1": "weeds",
+            "2": "non-vegetation"
+        },
+        "external_image_sources": ["ndvi-images", "nir-images"]
     }
 }
