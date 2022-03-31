@@ -41,7 +41,7 @@ from agml._internal.process_utils import (
     read_txt_file, get_image_info, get_label2id,
     convert_bbox_to_coco, get_coco_annotation_from_obj, convert_xmls_to_cocojson,
     mask_annotation_per_bbox, move_segmentation_dataset,
-    create_sub_masks, create_sub_mask_annotation_per_bbox
+    create_sub_masks, create_sub_mask_annotation_per_bbox, rgb2mask
 )
 
 
@@ -816,9 +816,82 @@ class PublicDataPreprocessor(object):
             extract_num_from_imgid=False
         )
 
+    def carrot_weeds_uk(self, dataset_name):
+      dataset_dir = os.path.join(self.data_original_dir, dataset_name)
+      rgb_paths, nir_paths, ndvi_paths, rgb_masks = ['images'], ['nir-images'], ['ndvi-images'], []
 
+      # get all rbg images, add unique identifier
+      for root, subdirs, files in list(os.walk(dataset_dir))[1:]:
+        id_ = root.split('/')[-1]
+        rgb_paths.append([os.path.join(root, "rgbreg_crop.png"), id_ + ".png"])
+        nir_paths.append([os.path.join(root, "depth_crop.png"), id_ + ".png"])
+        ndvi_paths.append([os.path.join(root, "ndvi_crop.png"), id_ + ".png"])
+        rgb_masks.append([os.path.join(root, "truth_crop.png"), id_ + "mask.png"])
 
+      processed_dir = os.path.join(self.data_processed_dir, dataset_name)
+      os.makedirs(processed_dir, exist_ok = True)
+      processed_annotation_dir = os.path.join(processed_dir, 'annotations')
+      os.makedirs(processed_annotation_dir, exist_ok = True)
 
+      image_types = [rgb_paths, nir_paths, ndvi_paths]
 
+      for image_type in image_types:
+        processed_image_dir = os.path.join(processed_dir, image_type[0])
+        os.makedirs(processed_image_dir, exist_ok = True)
+        for image_path in image_type[1:]:
+          shutil.copyfile(image_path[0], os.path.join(processed_image_dir, image_path[1])) 
 
+      color2index = {
+                  (0, 0, 0) : 0, # black is non-vegetation
+                  (0, 0, 255) : 1, # red is carrot
+                  (255, 0, 0) : 2, # blue is weed
+              }
 
+      for rgb_mask in rgb_masks:
+        rgb_mask_img = cv2.imread(rgb_mask[0])
+        index_mask = rgb2mask(rgb_mask_img, color2index)
+        anno_out = os.path.join(processed_annotation_dir, rgb_mask[1])
+        cv2.imwrite(anno_out, index_mask)
+
+    def onion_weeds_uk(self, dataset_name):
+      dataset_dir = os.path.join(self.data_original_dir, dataset_name)
+      rgb_paths, nir_paths, ndvi_paths, rgb_masks = ['images'], ['nir-images'], ['ndvi-images'], []
+
+      # get all rbg images, add unique identifier
+      for root, subdirs, files in list(os.walk(dataset_dir))[1:]:
+        id_ = root.split('/')[-1]
+        for file in files:
+          if file != 'partialc_crop.png' and file != 'truth.png':
+            img_type = file.split('_')[-2]
+            if img_type == 'depth':
+              nir_paths.append([os.path.join(root, file), id_ + ".png"])
+            elif img_type == 'ndvi':
+              ndvi_paths.append([os.path.join(root, file), id_ + ".png"])
+            elif img_type == 'rgbreg':
+              rgb_paths.append([os.path.join(root, file), id_ + ".png"])         
+        rgb_masks.append([os.path.join(root, "truth.png"), id_ + "mask.png"])
+
+      processed_dir = os.path.join(self.data_processed_dir, dataset_name)
+      os.makedirs(processed_dir, exist_ok = True)
+      processed_annotation_dir = os.path.join(processed_dir, 'annotations')
+      os.makedirs(processed_annotation_dir, exist_ok = True)
+
+      image_types = [rgb_paths, nir_paths, ndvi_paths]
+
+      for image_type in image_types:
+        processed_image_dir = os.path.join(processed_dir, image_type[0])
+        os.makedirs(processed_image_dir, exist_ok = True)
+        for image_path in image_type[1:]:
+          shutil.copyfile(image_path[0], os.path.join(processed_image_dir, image_path[1])) 
+
+      color2index = {
+                  (0, 0, 0) : 0, # black is non-vegetation
+                  (0, 0, 255) : 1, # red is onion
+                  (255, 0, 0) : 2, # blue is weed
+              }
+
+      for rgb_mask in rgb_masks:
+        rgb_mask_img = cv2.imread(rgb_mask[0])
+        index_mask = rgb2mask(rgb_mask_img, color2index)
+        anno_out = os.path.join(processed_annotation_dir, rgb_mask[1])
+        cv2.imwrite(anno_out, index_mask)
