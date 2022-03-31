@@ -568,3 +568,31 @@ def move_segmentation_dataset(
             shutil.copyfile(orig_annotation_path, out_label_path)
         else:
             annotation_preprocess_fn(orig_annotation_path, out_label_path)
+
+def rgb2mask(img, color2index):
+    '''
+    Convert rgb image to mask
+    Arguments:
+        img: image with 3 channels, rbg
+        color2index: dictionary. key: tuple containing color values (b, g, r). value: corresponding index.
+    Returns:
+        a mask with no channels and index values assigned to each pixel
+    Source: https://stackoverflow.com/a/62170172
+    '''
+    assert len(img.shape) == 3
+    height, width, ch = img.shape
+    assert ch == 3
+
+    W = np.power(256, [[0],[1],[2]])
+
+    img_id = img.dot(W).squeeze(-1) 
+    values = np.unique(img_id)
+
+    mask = np.zeros(img_id.shape)
+
+    for i, c in enumerate(values):
+        try:
+            mask[img_id==c] = color2index[tuple(img[img_id==c][0])] 
+        except:
+            pass
+    return mask

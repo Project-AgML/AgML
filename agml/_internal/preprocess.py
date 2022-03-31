@@ -41,7 +41,7 @@ from agml._internal.process_utils import (
     read_txt_file, get_image_info, get_label2id,
     convert_bbox_to_coco, get_coco_annotation_from_obj, convert_xmls_to_cocojson,
     mask_annotation_per_bbox, move_segmentation_dataset,
-    create_sub_masks, create_sub_mask_annotation_per_bbox
+    create_sub_masks, create_sub_mask_annotation_per_bbox, rgb2mask
 )
 
 
@@ -815,10 +815,72 @@ class PublicDataPreprocessor(object):
             output_imgpath = output_img_path,
             extract_num_from_imgid=False
         )
+        
+    def sugarbeet_weed_segmentation_europe(self, dataset_name):
+        dataset_dir = os.path.join(self.data_original_dir, dataset_name)
+        tiles_dir = os.path.join(dataset_dir, 'Tiles')
+        rgb_paths, r_paths, g_paths, b_paths, cir_paths, ndvi_paths, nir_paths, re_paths, binary_masks, rgb_masks = \
+        ['rgb-images'], ['images'], ['g-images'], ['b-images'], ['cir-images'], \
+        ['ndvi-images'], ['nir-images'], ['re-images'], ['binary_masks-images'], []
 
+        def getImages(root, files):
+          images = []
+          for file in sorted(files):
+              unique_name = root.split('/')[-3] + file
+              images.append([os.path.join(root, file), unique_name])
+          return images
 
+        # Get image paths for each type of image
+        for root, subdirs, files in os.walk(tiles_dir):
+          dir_ = root.split('/')[-1]
+          if dir_ == 'R':
+            r_paths.extend(getImages(root, files))
+          elif dir_ == 'G':
+            g_paths.extend(getImages(root, files))
+          elif dir_ == 'CIR':
+            cir_paths.extend(getImages(root, files))
+          elif dir_ == 'NDVI':
+            ndvi_paths.extend(getImages(root, files))
+          elif dir_ == 'NIR':
+            nir_paths.extend(getImages(root, files))
+          elif dir_ == 'RE':
+            re_paths.extend(getImages(root, files))
+          elif dir_ == 'mask':
+            for file in sorted(files):
+              unique_name = root.split('/')[-2] + file
+              binary_masks.append([os.path.join(root, file), unique_name])
+          elif dir_ == 'B':
+            b_paths.extend(getImages(root, files))
+          elif dir_ == 'RGB':
+            rgb_paths.extend(getImages(root, files))
+          elif dir_ == 'groundtruth':
+            for file in sorted(files):
+              if file.split('_')[-1] == 'color.png':
+                rgb_masks.append([os.path.join(root, file), file])
 
+        image_types = [rgb_paths, r_paths, g_paths, b_paths, cir_paths, ndvi_paths, nir_paths, re_paths, binary_masks]
+            
+        processed_dir = os.path.join(self.data_processed_dir, dataset_name)
+        os.makedirs(processed_dir, exist_ok = True)
+        processed_annotation_dir = os.path.join(processed_dir, 'annotations')
+        os.makedirs(processed_annotation_dir, exist_ok = True)
 
+        for image_type in image_types:
+          processed_image_dir = os.path.join(processed_dir, image_type[0])
+          os.makedirs(processed_image_dir, exist_ok = True)
+          for image_path in image_type[1:]:
+            shutil.copyfile(image_path[0], os.path.join(processed_image_dir, image_path[1]))
 
+        color2index = {
+            (0, 0, 0) : 0, # black is background
+            (0, 255, 0) : 1, # green is sugarbeet
+            (0, 0, 255) : 2, # red is weed
+        }
 
+        for rgb_mask in rgb_masks:
+          rgb_mask_img = cv2.imread(rgb_mask[0])
+          index_mask = rgb2mask(rgb_mask_img, color2index)
+          mask_name = rgb_mask[1].split('_')[0] + rgb_mask[1].split('_')[1] + ".png"
+          anno_out = os.path.join(processed_annotation_dir, mask_name)
+          cv2.imwrite(anno_out, index_mask)
 
