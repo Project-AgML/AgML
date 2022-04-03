@@ -545,9 +545,15 @@ def train(dataset, epochs, save_dir = None,
 
     # Construct the model.
     model = EfficientDetModel(
-        num_classes = loader.num_classes,
+        num_classes = 7,
         architecture = 'tf_efficientdet_d4',
         pretrained = pretrained_path)
+    model.model.model.reset_head(num_classes = 1)
+    model.load_state_dict(
+        torch.load(
+            '/data2/amnjoshi/final/detection_checkpoints/grape_detection_californiaday/final_model.pth',
+            map_location = 'cpu'))
+    model.model.model.reset_head(num_classes = loader.num_classes)
 
     # Create the trainer and train the model.
     msg = f"Training dataset {dataset}!"

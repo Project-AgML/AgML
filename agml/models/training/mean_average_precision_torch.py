@@ -1,6 +1,8 @@
 import torch
 import numpy as np
 
+from tqdm import tqdm
+
 
 def _scalar_to_array(*args):
     """Converts 0-dimensional scalar arrays to 1-d arrays."""
@@ -103,7 +105,7 @@ def mean_average_precision(
     # used for numerical stability later on
     epsilon = 1e-6
 
-    for c in range(num_classes):
+    for c in tqdm(range(num_classes), leave = False):
         detections = []
         ground_truths = []
 

@@ -58,7 +58,7 @@ def run_evaluation(model, name):
 def make_checkpoint(name):
     """Gets a checkpoint for the model name."""
     ckpt_path = os.path.join(
-        "/data2/amnjoshi/final/detection_checkpoints", name, "final_model.pth")
+        "/data2/amnjoshi/apple-detection/checkpoints", "model_state.pth")
     state = torch.load(ckpt_path, map_location = 'cpu')
     model = EfficientDetModel(
         num_classes = agml.data.source(name).num_classes,
