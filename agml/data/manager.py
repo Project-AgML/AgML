@@ -22,7 +22,8 @@ from agml.data.managers.transforms import TransformManager
 from agml.data.managers.resize import ImageResizeManager
 from agml.data.managers.training import TrainingManager
 
-from agml.utils.general import seed_context, NoArgument
+from agml.utils.general import NoArgument
+from agml.utils.random import seed_context
 from agml.utils.image import consistent_shapes
 from agml.utils.logging import log
 

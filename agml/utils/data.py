@@ -21,7 +21,7 @@ import functools
 
 
 @functools.lru_cache(maxsize = None)
-def load_public_sources():
+def load_public_sources() -> dict:
     """Loads the public data sources JSON file."""
     with open(os.path.join(
             os.path.dirname(os.path.dirname(__file__)),
@@ -30,7 +30,7 @@ def load_public_sources():
 
 
 @functools.lru_cache(maxsize = None)
-def load_citation_sources():
+def load_citation_sources() -> dict:
     """Loads the citation sources JSON file."""
     with open(os.path.join(
             os.path.dirname(os.path.dirname(__file__)),
@@ -38,7 +38,7 @@ def load_citation_sources():
         return json.load(f)
 
 
-def maybe_you_meant(name, msg, source = None):
+def maybe_you_meant(name, msg, source = None) -> str:
     """Suggests potential correct spellings for an invalid name."""
     source = source if source is not None \
                     else load_public_sources().keys()

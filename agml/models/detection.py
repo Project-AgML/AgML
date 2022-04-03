@@ -30,6 +30,7 @@ from agml.models.base import AgMLModelBase
 from agml.models.tools import auto_move_data
 from agml.data.public import source
 from agml.utils.general import is_array_like
+from agml.viz.boxes import visualize_image_and_boxes
 
 
 class DetectionModel(AgMLModelBase):
@@ -133,7 +134,7 @@ class DetectionModel(AgMLModelBase):
         # Resize the image to ImageNet standards.
         h = w = 512
         rz = A.Resize(height = h, width = w)
-        if image.shape[0] != h and image.shape[1] != w:
+        if image.shape[0] != h or image.shape[1] != w:
             image = rz(image = image)['image']
 
         # Normalize the image to ImageNet standards.
@@ -310,5 +311,27 @@ class DetectionModel(AgMLModelBase):
         boxes = self._rescale_bboxes(boxes, shapes)
         ret = self._remap_outputs(boxes, labels, confidences)
         return ret[0] if len(ret) == 1 else ret
+
+    def show_prediction(self, image):
+        """Shows the output predictions for one input image.
+
+        This method is useful for instantly visualizing the predictions
+        for a single input image. It accepts a single input image (or
+        any type of valid 'image' input, as described in the method
+        `preprocess_input()`), and then runs inference on that input
+        image and displays its predictions in a matplotlib window.
+
+        Parameters
+        ----------
+        image : Any
+            See `preprocess_input()` for allowed types of inputs.
+
+        Returns
+        -------
+        The matplotlib figure containing the image.
+        """
+        image = self._expand_input_images(image)[0]
+        bboxes, labels, _ = self.predict(image)
+        return visualize_image_and_boxes(image, bboxes, labels)
 
 

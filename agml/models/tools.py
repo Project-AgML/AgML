@@ -57,7 +57,7 @@ def imagenet_style_process(image, size = None):
     if size is not None:
         h, w = size
     rz = A.Resize(height = h, width = w)
-    if image.shape[0] != h and image.shape[1] != w:
+    if image.shape[0] != h or image.shape[1] != w:
         image = rz(image = image)['image']
 
     # Normalize the image to ImageNet standards.

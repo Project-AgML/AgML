@@ -114,29 +114,4 @@ def shapes(seq):
         raise ValueError(f"One or more of the objects has no shape or length: {seq}.")
 
 
-class seed_context(object):
-    """Creates a context with a custom random seed, then resets it.
-
-    This allows for setting a custom seed (for reproducibility) in a
-    context, then resetting the original state after exiting, to
-    prevent interfering with the program execution.
-    """
-
-    def __init__(self, seed):
-        self._seed = seed
-        self._prev_state = None
-
-    def __enter__(self):
-        self._prev_state = np.random.get_state()
-        np.random.seed(self._seed)
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        np.random.set_state(self._prev_state)
-        self._prev_state = None
-
-    def reset(self):
-        np.random.seed(self._seed)
-
-
 

@@ -23,8 +23,9 @@ from agml.framework import AgMLSerializable
 from agml.data.metadata import DatasetMetadata
 from agml.data.loader import AgMLDataLoader
 from agml.utils.general import (
-    seed_context, resolve_list_value, NoArgument, is_array_like
+    resolve_list_value, NoArgument, is_array_like
 )
+from agml.utils.random import seed_context, inject_random_state
 from agml.utils.image import consistent_shapes
 from agml.utils.logging import log
 from agml.backend.tftorch import (
@@ -692,7 +693,8 @@ class AgMLMultiDatasetLoader(AgMLSerializable):
                 np.random.shuffle(self._loader_accessors)
         return self
 
-    def take_random(self, k):
+    @inject_random_state
+    def take_random(self, k) -> "AgMLMultiDatasetLoader":
         """Takes a random set of contents from the loader.
 
         This method selects a sub-sample of the contents in the loader,
@@ -768,6 +770,7 @@ class AgMLMultiDatasetLoader(AgMLSerializable):
                 f"Expected only an int or a float when "
                 f"taking a random split, got {type(k)}.")
 
+    @inject_random_state
     def split(self, train = None, val = None, test = None, shuffle = True):
         """Splits the data into train, val and test splits.
 
