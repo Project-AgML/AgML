@@ -859,4 +859,4 @@ class PublicDataPreprocessor(object):
 
         convert_bbox_to_coco(
             annotations, label2id, output_json_file,
-            output_img_path, general_info, resize=424/1024)
+            output_img_path, general_info, resize=512/1024)
