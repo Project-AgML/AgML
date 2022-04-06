@@ -935,7 +935,7 @@
         "platform": "ground",
         "input_data_format": "jpg",
         "annotation_format": "coco_json",
-        "n_images": "6000",
+        "n_images": "6512",
         "docs_url": "https://zenodo.org/record/5092309",
         "external_image_sources": []
     }
