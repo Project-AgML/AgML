@@ -149,6 +149,8 @@ agml/_internal/*
 !agml/_internal/preprocess*.py
 !agml/_internal/s3internal.py
 !agml/_internal/__init__.py
+!agml/_internal/utils.py
+
 .*/
 
 *.pptx
