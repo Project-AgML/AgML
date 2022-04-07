@@ -167,8 +167,9 @@ def genCameraPositions(type, Origin, Spacing_camera, views, d=4, height=1):
 
 def PlotAllViews(path, Pos):
     """Plot all the RGB images"""
+    plt.rcParams['figure.figsize'] = [50, 50]
     fig, axs = plt.subplots(round(len(Pos)/2 + 0.1),2)
-    fig.subplots_adjust(hspace = .5, wspace=.001)
+    fig.subplots_adjust(hspace = .1, wspace=.001)
     axs = axs.ravel()
     
     for i in range(len(Pos)):
@@ -180,13 +181,18 @@ def PlotAllViews(path, Pos):
             axs[i].imshow(img)
         axs[i].set_title('Camera view: #' + str(i),fontsize=50)
 
+        plt.rcParams['figure.figsize'] = [50, 50]
+    if len(Pos) % 2 != 0:
+        fig.delaxes(axs[i+1])
+
 def PlotAllViewsSemantic(path, Pos):
     """Plot all the Semantic segmentation images"""
-    fig, axs = plt.subplots(floor(len(Pos)/2),len(Pos)-floor(len(Pos)/2))
+    fig, axs = plt.subplots(round(len(Pos)/2 + 0.1),2)
     fig.subplots_adjust(hspace = .5, wspace=.001)
     axs = axs.ravel()
 
     for i in range(len(Pos)):
+        # print(i)
         if i<10:
             data = txt2image(path + 'view0000' + str(i) + '/semantic_segmentation.txt')
             img = data
@@ -200,6 +206,8 @@ def PlotAllViewsSemantic(path, Pos):
             axs[i].pcolormesh(data, cmap='gist_rainbow')
             axs[i].colorbar()
             axs[i].show()
+    if len(Pos) % 2 != 0:
+        fig.delaxes(axs[i+1])
     fig.subplots_adjust(right=0.8)
     cbar_ax = fig.add_axes([0.85, 0.15, 0.05, 0.7])
     fig.colorbar(im, cax=cbar_ax)
