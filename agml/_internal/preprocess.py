@@ -833,17 +833,12 @@ class PublicDataPreprocessor(object):
                   bboxs = row[1].split(";")
                   anno.append(len(bboxs))
                   for bbox in bboxs:
-                      #bbox = bbox.split(" ")
                       if bbox != "no_box":
-                        #x = bbox[0]
-                        #y = bbox[3]
-                        #width = str(int(bbox[2]) - int(bbox[0]))
-                        #height = str((int(bbox[3]) - int(bbox[1])))
                         bbox = bbox.split(" ")
                         bbox.append("1")
                         anno.append(bbox)
                   annotations.append(anno)
-        print(annotations)
+
         # Define path to processed annotation files
         output_json_file = os.path.join(
             self.data_processed_dir, dataset_name, 'annotations.json')
@@ -864,4 +859,4 @@ class PublicDataPreprocessor(object):
 
         convert_bbox_to_coco(
             annotations, label2id, output_json_file,
-            output_img_path, general_info)
+            output_img_path, general_info, resize=512/1024)
