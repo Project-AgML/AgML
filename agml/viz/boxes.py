@@ -77,7 +77,10 @@ def annotate_bboxes_on_image(
         "If `image` is a tuple/list, it should contain "
         "three values: the image, mask, and (optionally) labels.")
     if isinstance(bboxes, dict):
-        bboxes = _resolve_coco_annotations(bboxes)['bbox']
+        try:
+            bboxes = _resolve_coco_annotations(bboxes)['bboxes']
+        except KeyError:
+            bboxes = _resolve_coco_annotations(bboxes)['bbox']
     image = np.asarray(format_image(image))
     if labels is None:
         labels = [1] * len(bboxes)

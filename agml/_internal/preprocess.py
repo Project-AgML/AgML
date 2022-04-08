@@ -26,6 +26,7 @@ import json
 import glob
 import shutil
 import argparse
+import csv
 
 import cv2
 import numpy as np
@@ -815,6 +816,49 @@ class PublicDataPreprocessor(object):
             output_imgpath = output_img_path,
             extract_num_from_imgid = False
         )
+
+    def wheat_head_counting(self, dataset_name):
+        label2id = {"Wheat Head": 1}
+        dataset_dir = os.path.join(self.data_original_dir, dataset_name)
+        anno_files = [os.path.join(dataset_dir, 'competition_train.csv'), os.path.join(dataset_dir, 'competition_test.csv'), os.path.join(dataset_dir, 'competition_val.csv')]
+        
+        annotations = []
+        for anno_file in anno_files:
+          with open(anno_file, 'r') as file:
+              reader = csv.reader(file)
+              for row in reader:
+                  img_path = os.path.join(dataset_dir, "images", row[0])
+                  anno = [img_path]
+                  bboxs = row[1].split(";")
+                  anno.append(len(bboxs))
+                  for bbox in bboxs:
+                      if bbox != "no_box":
+                        bbox = bbox.split(" ")
+                        bbox.append("1")
+                        anno.append(bbox)
+                  annotations.append(anno)
+
+        # Define path to processed annotation files
+        output_json_file = os.path.join(
+            self.data_processed_dir, dataset_name, 'annotations.json')
+
+        # Create directory for processed image files
+        output_img_path = os.path.join(
+            self.data_processed_dir, dataset_name, 'images')
+        create_dir(output_img_path) 
+
+        general_info = {
+            "description": "Global Wheat Head Detection (GWHD) dataset",
+            "url": "http://www.global-wheat.com/",
+            "version": "1.0",
+            "year": 2021,
+            "contributor": "David, Etienne and Madec, Simon and Sadeghi-Tehran, Pouria and Aasen, Helge and Zheng, Bangyou and Liu, Shouyang and Kirchgessner, Norbert and Ishikawa, Goro and Nagasawa, Koichi and Badhon, Minhajul A and others",
+            "date_created": "2021/7/12"
+        }
+
+        convert_bbox_to_coco(
+            annotations, label2id, output_json_file,
+            output_img_path, general_info, resize=512/1024)
 
 
 if __name__ == '__main__':
