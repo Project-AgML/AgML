@@ -922,5 +922,36 @@
                 0.22038120031356812
             ]
         }
+    },
+    "wheat_head_counting": {
+        "classes": {
+            "1": "Wheat Head"
+        },
+        "ml_task": "object_detection",
+        "ag_task": "wheat_head_counting",
+        "location": {
+            "continent": "worldwide",
+            "country": "worldwide"
+        },
+        "sensor_modality": "rgb",
+        "real_synthetic": "real",
+        "platform": "ground",
+        "input_data_format": "jpg",
+        "annotation_format": "coco_json",
+        "n_images": "6512",
+        "docs_url": "https://zenodo.org/record/5092309",
+        "external_image_sources": [],
+        "stats": {
+            "mean": [
+                0.371184766292572,
+                0.36074304580688477,
+                0.23014496266841888
+            ],
+            "std": [
+                0.2190379649400711,
+                0.21708978712558746,
+                0.17700935900211334
+            ]
+        }
     }
 }

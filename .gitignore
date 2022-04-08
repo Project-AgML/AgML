@@ -152,6 +152,7 @@ agml/_internal/*
 !agml/_internal/preprocess*.py
 !agml/_internal/s3internal.py
 !agml/_internal/__init__.py
+!agml/_internal/utils.py
 
 # Training
 agml/models/training/lightning_logs
@@ -160,6 +161,6 @@ agml/models/training/*.log
 agml/models/training/*.err
 agml/models/training/*.out
 agml/models/training/*.csv
-
-.paper/
+.*/
+/
 *.pptx
