@@ -268,11 +268,17 @@ class EfficientDetModel(pl.LightningModule):
                  architecture = 'efficientdet_d4',
                  save_dir = None,
                  pretrained = False,
+                 pretrained_path = None,
                  validation_dataset_adaptor = None):
         super().__init__()
-        self.model = create_model(
-            num_classes, architecture = architecture,
-            pretrained = pretrained)
+        if pretrained_path is not None:
+            self.model = create_model_from_pretrained(
+                num_classes, architecture = architecture,
+                pretrained_path = pretrained_path)
+        else:
+            self.model = create_model(
+                num_classes, architecture = architecture,
+                pretrained = pretrained)
         self.confidence_threshold = confidence_threshold
         self.lr = learning_rate
         self.wbf_iou_threshold = wbf_iou_threshold
@@ -548,12 +554,6 @@ def train(dataset, epochs, save_dir = None,
         num_classes = 7,
         architecture = 'tf_efficientdet_d4',
         pretrained = pretrained_path)
-    model.model.model.reset_head(num_classes = 1)
-    model.load_state_dict(
-        torch.load(
-            '/data2/amnjoshi/final/detection_checkpoints/grape_detection_californiaday/final_model.pth',
-            map_location = 'cpu'))
-    model.model.model.reset_head(num_classes = loader.num_classes)
 
     # Create the trainer and train the model.
     msg = f"Training dataset {dataset}!"
