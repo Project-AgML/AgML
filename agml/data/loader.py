@@ -794,7 +794,9 @@ class AgMLDataLoader(AgMLSerializable, metaclass = AgMLDataLoaderMeta):
                 {'content': indices}).values())[0]
 
             # Create a new `AgMLDataLoader` from the new contents.
-            return self._generate_split_loader(content, 'train')
+            obj = self._generate_split_loader(content, 'train')
+            obj._is_split = False
+            return obj
 
         # Otherwise, raise an error.
         else:

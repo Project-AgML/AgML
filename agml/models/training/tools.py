@@ -36,6 +36,7 @@ def checkpoint_dir(given = None, dataset = None):
     """Returns the directory to save logs/checkpoints to."""
     if given is not None:
         if given.endswith('dataset'):
+            # if a path is passed like /root/dataset, this updates to the name
             given = os.path.dirname(given)
             given = os.path.join(given, dataset)
         if not os.path.exists(given):
