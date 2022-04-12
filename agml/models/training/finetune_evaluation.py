@@ -32,7 +32,7 @@ from tools import gpus, checkpoint_dir
 from tqdm import tqdm
 
 
-FINETUNE_EPOCHS = 5
+FINETUNE_EPOCHS = [1, 2, 3, 4, 5, 7, 10]
 EVAL_CLASSES = ['orange', 'avocado', 'capsicum', 'mango']
 EVAL_QUANTITIES = [6, 12, 18, 24, 30, 36]
 PRETRAINED_PATH = '/data2/amnjoshi/amg/checkpoints/model_state.pth'
@@ -61,7 +61,7 @@ def generate_splits():
     return cls_quant_loaders
 
 
-def train(cls, loader, save_dir, overwrite = False):
+def train(cls, loader, save_dir, epochs, overwrite = False):
     """Constructs the training loop and trains a model."""
     dataset = loader.name
     save_dir = checkpoint_dir(save_dir, dataset)
@@ -93,10 +93,10 @@ def train(cls, loader, save_dir, overwrite = False):
     model.load_state_dict(torch.load(PRETRAINED_PATH, map_location = 'cpu'))
 
     # Create the trainer and train the model.
-    msg = f"Finetuning class {cls} of size {len(loader.train_data)}!"
+    msg = f"Finetuning class {cls} of size {len(loader.train_data)} for {epochs} epochs!"
     print("\n" + "=" * len(msg) + "\n" + msg + "\n" + "=" * len(msg) + "\n")
     trainer = pl.Trainer(
-        max_epochs = FINETUNE_EPOCHS, gpus = None, logger = loggers)
+        max_epochs = epochs, gpus = gpus(None), logger = loggers)
     trainer.fit(model, dm)
 
     # Save the final state.
@@ -155,16 +155,21 @@ def train_all():
             loader.split(train = train_q, val = val_q)
 
             # Train the model.
-            try:
-                model = train(cls, loader = loader, save_dir = quant_path)
-            except KeyboardInterrupt:
-                raise ValueError
+            if quant not in results[cls].keys():
+                results[cls][quant] = {}
+            for epoch_quant in FINETUNE_EPOCHS:
+                try:
+                    model = train(cls, loader = loader,
+                                  save_dir = quant_path,
+                                  epochs = epoch_quant)
+                except KeyboardInterrupt:
+                    raise ValueError
 
-            # Evaluate the model.
-            model.eval()
-            eval_dict = run_evaluation(model, test_loader)
-            results[cls][quant] = eval_dict
-            print("\n", eval_dict, "\n")
+                # Evaluate the model.
+                model.eval()
+                eval_dict = run_evaluation(model, test_loader)
+                results[cls][quant][epoch_quant] = eval_dict
+                print("\n", eval_dict, "\n")
 
     # Save all of the results.
     from pprint import pprint
