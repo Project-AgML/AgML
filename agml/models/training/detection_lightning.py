@@ -78,10 +78,10 @@ def create_model_from_pretrained(
 
     net = create_model_from_config(
         config, num_classes = pretrained_path[1], pretrained = False)
-    if net.num_classes != num_classes:
-        net.reset_head(num_classes = num_classes)
     net.load_state_dict(
         torch.load(pretrained_path[0], map_location = 'cpu'))
+    if net.config.num_classes != num_classes:
+        net.reset_head(num_classes = num_classes)
     return DetBenchTrain(net, config)
 
 

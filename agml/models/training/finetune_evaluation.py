@@ -32,8 +32,8 @@ from tools import gpus, checkpoint_dir
 from tqdm import tqdm
 
 
-FINETUNE_EPOCHS = 1
-EVAL_CLASSES = ['avocado', 'orange', 'capsicum']
+FINETUNE_EPOCHS = 5
+EVAL_CLASSES = ['orange', 'avocado', 'capsicum', 'mango']
 EVAL_QUANTITIES = [6, 12, 18, 24, 30, 36]
 PRETRAINED_PATH = '/data2/amnjoshi/amg/checkpoints/model_state.pth'
 BASE = '/data2/amnjoshi/finetune'
@@ -61,7 +61,7 @@ def generate_splits():
     return cls_quant_loaders
 
 
-def train(loader, save_dir, overwrite = False):
+def train(cls, loader, save_dir, overwrite = False):
     """Constructs the training loop and trains a model."""
     dataset = loader.name
     save_dir = checkpoint_dir(save_dir, dataset)
@@ -83,20 +83,20 @@ def train(loader, save_dir, overwrite = False):
     dm = EfficientDetDataModule(
         train_dataset_adaptor = AgMLDatasetAdaptor(loader.train_data),
         validation_dataset_adaptor = AgMLDatasetAdaptor(loader.val_data),
-        num_workers = 12, batch_size = 4)
+        num_workers = 12, batch_size = 1)
 
     # Construct the model.
     model = EfficientDetModel(
         num_classes = loader.num_classes,
         architecture = 'tf_efficientdet_d4',
-        pretrained = PRETRAINED_PATH,
         validation_dataset_adaptor = loader.val_data)
+    model.load_state_dict(torch.load(PRETRAINED_PATH, map_location = 'cpu'))
 
     # Create the trainer and train the model.
-    msg = f"Training dataset {dataset} of size {len(loader.train_data)}!"
+    msg = f"Finetuning class {cls} of size {len(loader.train_data)}!"
     print("\n" + "=" * len(msg) + "\n" + msg + "\n" + "=" * len(msg) + "\n")
     trainer = pl.Trainer(
-        max_epochs = FINETUNE_EPOCHS, gpus = gpus(None), logger = loggers)
+        max_epochs = FINETUNE_EPOCHS, gpus = None, logger = loggers)
     trainer.fit(model, dm)
 
     # Save the final state.
@@ -118,7 +118,7 @@ def run_evaluation(model, loader) -> dict:
     ma = MeanAveragePrecision(num_classes = loader.num_classes)
 
     # Run inference for all of the images in the test dataset.
-    for i in tqdm(range(len(ds)), leave = False):
+    for i in tqdm(range(len(ds)), leave = False, desc = "Running mAP Evaluation"):
         image, bboxes, labels, _ = ds.get_image_and_labels_by_idx(i)
         pred_boxes, pred_labels, pred_conf = model.predict([image])
         pred_boxes = np.squeeze(pred_boxes)
@@ -155,11 +155,16 @@ def train_all():
             loader.split(train = train_q, val = val_q)
 
             # Train the model.
-            model = train(loader = loader, save_dir = quant_path)
+            try:
+                model = train(cls, loader = loader, save_dir = quant_path)
+            except KeyboardInterrupt:
+                raise ValueError
 
             # Evaluate the model.
+            model.eval()
             eval_dict = run_evaluation(model, test_loader)
             results[cls][quant] = eval_dict
+            print("\n", eval_dict, "\n")
 
     # Save all of the results.
     from pprint import pprint
