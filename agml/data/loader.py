@@ -286,6 +286,7 @@ class AgMLDataLoader(AgMLSerializable, metaclass = AgMLDataLoaderMeta):
     def __repr__(self):
         out = f"<AgMLDataLoader: (dataset={self.name}"
         out += f", task={self.task}"
+        out += f", images={self.num_images}"
         out += f") at {hex(id(self))}>"
         return out
 
@@ -409,7 +410,7 @@ class AgMLDataLoader(AgMLSerializable, metaclass = AgMLDataLoaderMeta):
 
         # Update the metadata parameters.
         if meta_properties is None:
-            meta_properties = self._meta_properties
+            meta_properties = self._meta_properties.copy()
             meta_properties['num_images'] = len(contents)
             meta_properties['data_distributions'] = {
                 self.name: len(contents)}
