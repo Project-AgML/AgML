@@ -274,9 +274,10 @@ class AgMLDataLoader(AgMLSerializable, metaclass = AgMLDataLoaderMeta):
             indexes = [indexes]
         for idx in indexes:
             if idx not in range(len(self)):
-                raise IndexError(
-                    f"Index {idx} out of range of "
-                    f"AgMLDataLoader length: {len(self)}.")
+                if idx not in [-i for i in range(1, len(self) + 1, 1)]:
+                    raise IndexError(
+                        f"Index {idx} out of range of "
+                        f"AgMLDataLoader length: {len(self)}.")
         return self._manager.get(resolve_list_value(indexes))
 
     def __iter__(self):
@@ -635,7 +636,7 @@ class AgMLDataLoader(AgMLSerializable, metaclass = AgMLDataLoaderMeta):
         self._manager.shuffle(seed = seed)
         return self
 
-    def take_class(self, classes) -> "AgMLDataLoader":
+    def take_class(self, classes, reindex = True) -> "AgMLDataLoader":
         """Reduces the dataset to a subset of class labels.
 
         This method, given a set of either integer or string class labels,
@@ -656,6 +657,9 @@ class AgMLDataLoader(AgMLSerializable, metaclass = AgMLDataLoaderMeta):
             Either a single integer/string for a single class, or a list
             of integers or strings for multiple classes. Integers should
             be one-indexed for object detection.
+        reindex : bool
+            Re-indexes all of the new classes starting from 1, in ascending
+            order based on their number in the original dataset.
 
         Notes
         -----
@@ -717,13 +721,27 @@ class AgMLDataLoader(AgMLSerializable, metaclass = AgMLDataLoaderMeta):
             k: v for k, v in self._builder._data.items()
             if k in new_category_map.keys()}
 
-        # Create the new info parameters for the class.
-        new_properties = {
-            'num_images': len(new_coco_map.keys()),
-            'classes': [self.num_to_class[c] for c in classes],
-            'num_classes': len(classes),
-            'num_to_class': {c: self.num_to_class[c] for c in classes},
-            'class_to_num': {self.num_to_class[c]: c for c in classes}}
+        # Create the new info parameters for the class. If reindexing
+        # is requested, then we re-index the classes based on the order
+        # in which they are given, and then create a new dictionary
+        # to map the original annotations to the new ones (used later).
+        if reindex:
+            old_to_new = {cls: idx + 1 for idx, cls in enumerate(classes)}
+            new_classes = [self.num_to_class[c] for c in classes]
+            new_properties = {
+                'num_images': len(new_coco_map.keys()),
+                'classes': new_classes,
+                'num_classes': len(new_classes),
+                'num_to_class': {i + 1: c for i, c in enumerate(new_classes)},
+                'class_to_num': {c: i + 1 for i, c in enumerate(new_classes)}}
+        else:
+            new_classes = [self.num_to_class[c] for c in classes]
+            new_properties = {
+                'num_images': len(new_coco_map.keys()),
+                'classes': new_classes,
+                'num_classes': len(classes),
+                'num_to_class': {c: self.num_to_class[c] for c in classes},
+                'class_to_num': {self.num_to_class[c]: c for c in classes}}
 
         # Create the new loader.
         obj = self._generate_split_loader(
@@ -731,6 +749,33 @@ class AgMLDataLoader(AgMLSerializable, metaclass = AgMLDataLoaderMeta):
             meta_properties = new_properties,
             labels_for_image = new_category_map)
         obj._is_split = False
+
+        # Re-index the loader if requested to.
+        if reindex:
+            class AnnotationRemap(AgMLSerializable):
+                """A helper class to remap annotation labels for multiple datasets."""
+                serializable = frozenset(("map",))
+
+                def __init__(self, o2n):
+                    self._map = o2n
+
+                def __call__(self, contents, name):
+                    """Re-maps the annotation for the new, multi-dataset mapping."""
+                    image, annotations = contents
+
+                    # Re-map the annotation ID.
+                    category_ids = annotations['category_id']
+                    category_ids[np.where(category_ids == 0)[0]] = 1  # fix
+                    new_ids = np.array([self._map[c]
+                                        for c in category_ids])
+                    annotations['category_id'] = new_ids
+                    return image, annotations
+
+            # Maps the annotations.
+            obj._manager._train_manager._set_multi_hook(
+                AnnotationRemap(old_to_new)) # noqa
+
+        # Return the loader.
         return obj
 
     @inject_random_state
