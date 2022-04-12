@@ -108,6 +108,11 @@ class AgMLDataLoader(AgMLSerializable, metaclass = AgMLDataLoaderMeta):
         if isinstance(dataset, (str, DatasetMetadata)):
             return super(AgMLDataLoader, cls).__new__(cls)
         elif isinstance(dataset, Sequence):
+            if len(dataset) == 1:
+                log("Received a sequence with only one element when "
+                    "instantiating an `AgMLDataLoader`. Returning "
+                    "a regular, single-element data loader.")
+                return super(AgMLDataLoader, cls).__new__(cls)
             from agml.data.multi_loader import AgMLMultiDatasetLoader
             return AgMLMultiDatasetLoader(dataset, **kwargs)
         raise TypeError(

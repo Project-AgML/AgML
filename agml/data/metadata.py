@@ -17,6 +17,7 @@ import re
 import sys
 import yaml
 import collections
+from typing import Iterable
 
 from agml.framework import AgMLSerializable
 import agml.utils.logging as logging
@@ -40,6 +41,8 @@ def make_metadata(name, meta = None):
     the dataset. Otherwise, it returns a `CustomDatasetMetadata` object,
     containing only the provided information in a `meta` dictionary.
     """
+    if isinstance(name, Iterable): # a single dataset
+        name = next(iter(name))
     if name in load_public_sources().keys():
         return DatasetMetadata(name)
     return CustomDatasetMetadata(name, meta)
