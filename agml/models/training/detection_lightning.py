@@ -30,7 +30,7 @@ import torch
 from torch.utils.data import Dataset, DataLoader
 import pytorch_lightning as pl
 from pytorch_lightning.loggers import CSVLogger, TensorBoardLogger
-from mean_average_precision import MeanAveragePrecision
+from mean_average_precision_torch import MeanAveragePrecision as MAP
 
 import agml
 import albumentations as A
@@ -266,7 +266,6 @@ class EfficientDetModel(pl.LightningModule):
                  wbf_iou_threshold = 0.44,
                  inference_transforms = None,
                  architecture = 'efficientdet_d4',
-                 save_dir = None,
                  pretrained = False,
                  pretrained_path = None,
                  validation_dataset_adaptor = None):
@@ -292,10 +291,7 @@ class EfficientDetModel(pl.LightningModule):
             # Add a metric calculator.
             self.val_dataset_adaptor = AgMLDatasetAdaptor(
                 validation_dataset_adaptor)
-            self.map = MeanAveragePrecision()
-            self.metric_logger = DetectionMetricLogger({
-                'map': MeanAveragePrecision()},
-                os.path.join(save_dir, f'logs-{self._version}.csv'))
+            self.map = MAP()
         self._sanity_check_passed = False
 
     @auto_move_data
@@ -327,22 +323,21 @@ class EfficientDetModel(pl.LightningModule):
 
         # Update the metric.
         if self.val_dataset_adaptor is not None and self._sanity_check_passed:
-            predicted_bboxes, predicted_class_confidences, predicted_class_labels = \
-                self.post_process_detections(detections)
-            for idx, pred_box, pred_conf, pred_labels in zip(
-                    image_ids, predicted_bboxes,
-                    predicted_class_confidences,
-                    predicted_class_labels):
+            for idx in image_ids:
                 image, truth_boxes, truth_cls, _ = \
                     self.val_dataset_adaptor.get_image_and_labels_by_idx(idx)
+                pred_box, pred_labels, pred_conf = self.predict([image])
+                if not isinstance(pred_labels[0], float):
+                    pred_box, pred_labels, pred_conf = pred_box[0], pred_labels[0], pred_conf[0]
+                if truth_cls.ndim == 0:
+                    truth_cls = np.expand_dims(truth_cls, 0)
                 metric_update_values = \
-                    [[pred_box, pred_labels, pred_conf], [truth_boxes, truth_cls]]
-                self.metric_logger.update_metrics(*metric_update_values)
+                    dict(boxes = torch.tensor(pred_box, dtype = torch.float32),
+                         labels = torch.tensor(pred_labels, dtype = torch.int32),
+                         scores = torch.tensor(pred_conf)), \
+                    dict(boxes = torch.tensor(truth_boxes, dtype = torch.float32),
+                         labels = torch.tensor(truth_cls, dtype = torch.int32))
                 self.map.update(*metric_update_values)
-
-            # Compute the metric result.
-            self.log("map", self.map.compute(), on_step = True, on_epoch = True,
-                     prog_bar = True, logger = True, sync_dist = True)
 
         batch_predictions = {
             "predictions": detections,
@@ -492,11 +487,19 @@ class EfficientDetModel(pl.LightningModule):
             return
         if hasattr(self, 'metric_logger'):
             self.metric_logger.compile_epoch()
+        if hasattr(self, 'map'):
+            map = self.map.compute().detach().cpu().numpy().item()
+            self.log("map", map, prog_bar = True,
+                     on_epoch = True,
+                     logger = True, sync_dist = True)
+            self.map.reset()
 
     def on_fit_end(self) -> None:
         if hasattr(self, 'metric_logger'):
             self.metric_logger.save()
-    
+        if hasattr(self, 'map'):
+            self.map.reset()
+
     def get_progress_bar_dict(self):
         p_bar = super(EfficientDetModel, self).get_progress_bar_dict()
         p_bar.pop('v_num', None)
@@ -551,9 +554,10 @@ def train(dataset, epochs, save_dir = None,
 
     # Construct the model.
     model = EfficientDetModel(
-        num_classes = 7,
+        num_classes = loader.num_classes,
         architecture = 'tf_efficientdet_d4',
-        pretrained = pretrained_path)
+        pretrained = pretrained_path,
+        validation_dataset_adaptor = loader.val_data)
 
     # Create the trainer and train the model.
     msg = f"Training dataset {dataset}!"
