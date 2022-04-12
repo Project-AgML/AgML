@@ -79,7 +79,8 @@ def intersection_over_union(boxes_preds, boxes_labels, box_format = "midpoint"):
 
 
 def mean_average_precision(
-        pred_boxes, true_boxes, iou_threshold = 0.5, box_format = "midpoint", num_classes = 20
+        pred_boxes, true_boxes, iou_threshold = 0.5,
+        box_format = "midpoint", num_classes = 20, use_bar = False
 ):
     """
     Calculates mean average precision
@@ -105,7 +106,11 @@ def mean_average_precision(
     # used for numerical stability later on
     epsilon = 1e-6
 
-    for c in tqdm(range(num_classes), leave = False):
+    classes = range(num_classes)
+    if use_bar:
+        classes = tqdm(classes, leave = False)
+
+    for c in classes:
         detections = []
         ground_truths = []
 
@@ -194,7 +199,7 @@ def mean_average_precision(
 class MeanAveragePrecision(object):
     """Stores and calculates the mean average precision over data."""
 
-    def __init__(self, num_classes = 1):
+    def __init__(self, num_classes = 1, use_bar = False):
         self._num_classes = num_classes
 
         # Store all of the ground truth and prediction data.
@@ -205,6 +210,9 @@ class MeanAveragePrecision(object):
         # and any past MAP values which are computed.
         self._num_updates = 0
         self._prior_maps = {}
+
+        # Whether to use a progress bar.
+        self._use_bar = use_bar
 
     def batch_update(self, pred_data, gt_data):
         """Same as `update()`, but for batches of data."""
@@ -271,10 +279,18 @@ class MeanAveragePrecision(object):
             self._prediction_data,
             self._ground_truth_data,
             num_classes = self._num_classes,
-            iou_threshold = iou_threshold)
+            iou_threshold = iou_threshold,
+            use_bar = self._use_bar)
         self._prior_maps[self._num_updates] = ap
         return ap
 
+    def reset(self):
+        """Resets the internal lists."""
+        del self._prediction_data
+        del self._ground_truth_data
+        self._prediction_data = []
+        self._ground_truth_data = []
+        self._num_updates = 0
 
 
 

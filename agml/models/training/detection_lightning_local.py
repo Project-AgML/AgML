@@ -21,7 +21,6 @@ Some of the training code in this file is adapted from the following sources:
 
 import os
 import argparse
-import warnings
 from typing import List, Union
 
 import numpy as np
@@ -31,29 +30,34 @@ import torch
 from torch.utils.data import Dataset, DataLoader
 import pytorch_lightning as pl
 from pytorch_lightning.loggers import CSVLogger, TensorBoardLogger
-from mean_average_precision_torch import MeanAveragePrecision as MAP
+from mean_average_precision import MeanAveragePrecision
 
 import agml
 import albumentations as A
 from albumentations.pytorch import ToTensorV2
 
-from effdet import get_efficientdet_config, EfficientDet, DetBenchTrain, create_model_from_config
-from effdet.efficientdet import HeadNet
+from agml.models.efficientdet.model import get_efficientdet_config, HeadNet, create_model_from_config
+from agml.models.efficientdet.bench import DetBenchTrain, DetBenchPredict
 
 from ensemble_boxes import ensemble_boxes_wbf
 
 from tools import gpus, checkpoint_dir, MetricLogger, auto_move_data
 
-
 # Constants
 IMAGE_SIZE = 512
 
 
-def create_model(num_classes = 1, architecture = "tf_efficientdet_d4", pretrained = False):
+def create_model(num_classes = 1, architecture = "tf_efficientdet_d4", pretrained = (False, False)):
+    if isinstance(pretrained, bool):
+        if pretrained is False:
+            pretrained = True
+    else:
+        if not pretrained[0]:
+            pretrained = True
+    if isinstance(pretrained, str):
+        return create_model_from_pretrained(num_classes, architecture, pretrained)
     config = get_efficientdet_config(architecture)
     config.update({'image_size': (IMAGE_SIZE, IMAGE_SIZE)})
-
-    print(config)
 
     net = create_model_from_config(config, pretrained = pretrained, num_classes = num_classes)
     net.class_net = HeadNet(
@@ -63,11 +67,29 @@ def create_model(num_classes = 1, architecture = "tf_efficientdet_d4", pretraine
     return DetBenchTrain(net, config)
 
 
+# Modification of the above to load pretrained weights from a path.
+def create_model_from_pretrained(
+        num_classes = 1,
+        architecture = "tf_efficientdet_d4",
+        pretrained_path = None):
+    config = get_efficientdet_config(architecture)
+    config.update({'image_size': (IMAGE_SIZE, IMAGE_SIZE)})
+
+    net = create_model_from_config(
+        config, num_classes = pretrained_path[1], pretrained = False)
+    if net.num_classes != num_classes:
+        net.reset_head(num_classes = num_classes)
+    net.load_state_dict(
+        torch.load(pretrained_path[0], map_location = 'cpu'))
+    return DetBenchTrain(net, config)
+
+
 class AgMLDatasetAdaptor(object):
     """Adapts an AgML dataset for use in a `LightningDataModule`."""
 
-    def __init__(self, loader):
+    def __init__(self, loader, adapt_class = False):
         self.loader = loader
+        self.adapt_class = adapt_class
 
     def __len__(self) -> int:
         return len(self.loader)
@@ -84,6 +106,8 @@ class AgMLDatasetAdaptor(object):
         x_max, y_max = np.clip(x_max, 0, image.width), np.clip(y_max, 0, image.height)
         bboxes = np.dstack((x_min, y_min, x_max, y_max)).squeeze(axis = 0)
         class_labels = np.array(annotation['category_id']).squeeze()
+        if self.adapt_class:
+            class_labels = np.ones_like(class_labels)
         return image, bboxes, class_labels, index
 
 
@@ -262,7 +286,10 @@ class EfficientDetModel(pl.LightningModule):
             # Add a metric calculator.
             self.val_dataset_adaptor = AgMLDatasetAdaptor(
                 validation_dataset_adaptor)
-            self.map = MAP()
+            self.map = MeanAveragePrecision()
+            self.metric_logger = DetectionMetricLogger({
+                'map': MeanAveragePrecision()},
+                os.path.join(save_dir, f'logs-{self._version}.csv'))
         self._sanity_check_passed = False
 
     @auto_move_data
@@ -294,21 +321,22 @@ class EfficientDetModel(pl.LightningModule):
 
         # Update the metric.
         if self.val_dataset_adaptor is not None and self._sanity_check_passed:
-            for idx in image_ids:
+            predicted_bboxes, predicted_class_confidences, predicted_class_labels = \
+                self.post_process_detections(detections)
+            for idx, pred_box, pred_conf, pred_labels in zip(
+                    image_ids, predicted_bboxes,
+                    predicted_class_confidences,
+                    predicted_class_labels):
                 image, truth_boxes, truth_cls, _ = \
                     self.val_dataset_adaptor.get_image_and_labels_by_idx(idx)
-                pred_box, pred_labels, pred_conf = self.predict([image])
-                if not isinstance(pred_labels[0], float):
-                    pred_box, pred_labels, pred_conf = pred_box[0], pred_labels[0], pred_conf[0]
-                if truth_cls.ndim == 0:
-                    truth_cls = np.expand_dims(truth_cls, 0)
                 metric_update_values = \
-                    dict(boxes = torch.tensor(pred_box, dtype = torch.float32),
-                         labels = torch.tensor(pred_labels, dtype = torch.int32),
-                         scores = torch.tensor(pred_conf)), \
-                    dict(boxes = torch.tensor(truth_boxes, dtype = torch.float32),
-                         labels = torch.tensor(truth_cls, dtype = torch.int32))
+                    [[pred_box, pred_labels, pred_conf], [truth_boxes, truth_cls]]
+                self.metric_logger.update_metrics(*metric_update_values)
                 self.map.update(*metric_update_values)
+
+            # Compute the metric result.
+            self.log("map", self.map.compute(), on_step = True, on_epoch = True,
+                     prog_bar = True, logger = True, sync_dist = True)
 
         batch_predictions = {
             "predictions": detections,
@@ -458,17 +486,10 @@ class EfficientDetModel(pl.LightningModule):
             return
         if hasattr(self, 'metric_logger'):
             self.metric_logger.compile_epoch()
-        if hasattr(self, 'map'):
-            map = self.map.compute().detach().cpu().numpy().item()
-            self.log("map", map, prog_bar = True,
-                     on_epoch = True,
-                     logger = True, sync_dist = True)
-            self.map.reset()
 
     def on_fit_end(self) -> None:
         if hasattr(self, 'metric_logger'):
             self.metric_logger.save()
-        self.map.reset()
 
     def get_progress_bar_dict(self):
         p_bar = super(EfficientDetModel, self).get_progress_bar_dict()
@@ -482,9 +503,10 @@ class DetectionMetricLogger(MetricLogger):
         self.metrics['map'].update(y_pred, y_true)
 
 
-def train(dataset, epochs, save_dir = None, overwrite = None, generalize_detections = False):
+def train(dataset, epochs, save_dir = None,
+          overwrite = None, pretrained_path = None):
     """Constructs the training loop and trains a model."""
-    save_dir = checkpoint_dir(None, save_dir)
+    save_dir = checkpoint_dir(save_dir, dataset)
     log_dir = save_dir.replace('checkpoints', 'logs')
 
     # Check if the dataset already has benchmarks.
@@ -512,15 +534,9 @@ def train(dataset, epochs, save_dir = None, overwrite = None, generalize_detecti
     ]
 
     # Construct the data.
-    print(f"Saving to {log_dir}.")
     pl.seed_everything(2499751)
     loader = agml.data.AgMLDataLoader(dataset)
     loader.shuffle()
-    num_classes = loader.num_classes
-    if generalize_detections:
-        print("Generalizing class detections.")
-        loader.generalize_class_detections()
-        num_classes = 1
     loader.split(train = 0.8, val = 0.1, test = 0.1)
     dm = EfficientDetDataModule(
         train_dataset_adaptor = AgMLDatasetAdaptor(loader.train_data),
@@ -529,11 +545,9 @@ def train(dataset, epochs, save_dir = None, overwrite = None, generalize_detecti
 
     # Construct the model.
     model = EfficientDetModel(
-        num_classes = num_classes,
+        num_classes = loader.info.num_classes,
         architecture = 'tf_efficientdet_d4',
-        save_dir = save_dir,
-        pretrained = True,
-        validation_dataset_adaptor = loader.val_data)
+        pretrained = True)
 
     # Create the trainer and train the model.
     msg = f"Training dataset {dataset}!"
@@ -543,8 +557,80 @@ def train(dataset, epochs, save_dir = None, overwrite = None, generalize_detecti
         callbacks = callbacks, logger = loggers)
     trainer.fit(model, dm)
 
-    # Save the model state.
-    torch.save(model.state_dict(), os.path.join(save_dir, 'model_state.pth'))
+    # Save the final state.
+    torch.save(model.state_dict(), os.path.join(save_dir, 'final_model.pth'))
+
+
+def train_per_class(dataset, epochs, save_dir = None, overwrite = None):
+    """Constructs the training loop and trains a model."""
+    save_dir = checkpoint_dir(save_dir, dataset)
+    log_dir = save_dir.replace('checkpoints', 'logs')
+
+    # Check if the dataset already has benchmarks.
+    if os.path.exists(save_dir) and os.path.isdir(save_dir):
+        if not overwrite and len(os.listdir(save_dir)) >= 4:
+            print(f"Checkpoints already exist for {dataset} "
+                  f"at {save_dir}, skipping generation.")
+            return
+
+    # Construct the loader.
+    pl.seed_everything(2499751)
+    loader = agml.data.AgMLDataLoader(dataset)
+    loader.shuffle()
+
+    # Create the loop for each class.
+    for cl in range(agml.data.source(dataset).num_classes):
+        # Create the data module with the new, reduced class.
+        cls = cl + 1
+        new_loader = loader.take_class(cls)
+        new_loader.split(train = 0.8, val = 0.1, test = 0.1)
+        dm = EfficientDetDataModule(
+            train_dataset_adaptor = AgMLDatasetAdaptor(
+                new_loader.train_data, adapt_class = True),
+            validation_dataset_adaptor = AgMLDatasetAdaptor(
+                new_loader.val_data, adapt_class = True),
+            num_workers = 12, batch_size = 4)
+
+        this_save_dir = os.path.join(
+            save_dir, f'{new_loader.num_to_class[cls]}-{cls}')
+        this_log_dir = this_save_dir.replace('checkpoints', 'logs')
+
+        # Set up the checkpoint saving callback.
+        callbacks = [
+            pl.callbacks.ModelCheckpoint(
+                dirpath = this_save_dir, mode = 'min',
+                filename = f"{dataset}" + "-epoch{epoch:02d}-valid_loss_{valid_loss:.2f}",
+                monitor = 'valid_loss',
+                save_top_k = 3,
+                auto_insert_metric_name = False
+            )
+        ]
+
+        # Create the loggers.
+        loggers = [
+            CSVLogger(this_log_dir),
+            TensorBoardLogger(this_log_dir)
+        ]
+
+        # Construct the model.
+        model = EfficientDetModel(
+            num_classes = 1,
+            architecture = 'tf_efficientdet_d4',
+            pretrained = True)
+        model.load_state_dict(
+            torch.load('/data2/amnjoshi/full_grape/checkpoints/final_model.pth',
+                       map_location = 'cpu'))
+
+        # Create the trainer and train the model.
+        msg = f"Training dataset {dataset} for class {cls}: {loader.num_to_class[cls]}!"
+        print("\n" + "=" * len(msg) + "\n" + msg + "\n" + "=" * len(msg) + "\n")
+        trainer = pl.Trainer(
+            max_epochs = epochs, gpus = gpus(None),
+            callbacks = callbacks, logger = loggers)
+        trainer.fit(model, dm)
+
+        # Save the final state.
+        torch.save(model.state_dict(), os.path.join(this_save_dir, 'final_model.pth'))
 
 
 if __name__ == '__main__':
@@ -559,29 +645,44 @@ if __name__ == '__main__':
         '--checkpoint_dir', type = str, default = None,
         help = "The checkpoint directory to save to.")
     ap.add_argument(
-        '--epochs', type = int, default = 20,
-        help = "How many epochs to train for. Default is 20.")
+        '--epochs', type = int, default = 50,
+        help = "How many epochs to train for. Default is 50.")
     ap.add_argument(
-        '--generalize-detections', action = 'store_true',
-        default = False, help = "Whether to generalize class labels.")
+        '--per-class-for-dataset', action = 'store_true',
+        default = False, help = "Whether to generate benchmarks per class.")
+    ap.add_argument(
+        '--pretrained-model-path', type = str, default = None,
+        help = "The path to a set of pretrained weights for the model.")
+    ap.add_argument(
+        '--pretrained-num-classes', type = str, default = None,
+        help = "The number of classes in the pretrained model..")
     args = ap.parse_args()
 
     # Train the model.
-    if args.dataset[0] == 'except':
-        exclude_datasets = args.dataset[1:]
-        datasets = [
-            dataset.name for dataset in agml.data.public_data_sources(
-                ml_task = 'object_detection')
-            if dataset.name not in exclude_datasets]
+    if args.per_class_for_dataset:
+        train_per_class(args.dataset[0],
+                        epochs = args.epochs,
+                        save_dir = args.checkpoint_dir)
+    elif args.dataset[0] in agml.data.public_data_sources(ml_task = 'object_detection') \
+            and len(args.dataset) > 1:
+        train(args.dataset,
+              epochs = args.epochs,
+              save_dir = args.checkpoint_dir,
+              pretrained_path = (args.pretrained_model_path,
+                                 args.pretrained_num_classes))
     else:
-        datasets = args.dataset
-    train(
-        dataset = datasets,
-        epochs = args.epochs,
-        save_dir = args.checkpoint_dir,
-        overwrite = args.regenerate_existing,
-        generalize_detections = args.generalize_detections)
-
+        if args.dataset[0] == 'all':
+            datasets = [ds for ds in agml.data.public_data_sources(
+                ml_task = 'object_detection')]
+        else:
+            datasets = args.dataset
+        for ds in datasets:
+            train(ds,
+                  epochs = args.epochs,
+                  save_dir = args.checkpoint_dir,
+                  overwrite = args.regenerate_existing,
+                  pretrained_path = (args.pretrained_model_path,
+                                     args.pretrained_num_classes))
 
 
 
