@@ -31,6 +31,7 @@ from agml.utils.data import load_public_sources
 from agml.utils.general import NoArgument, resolve_list_value
 from agml.utils.random import inject_random_state
 from agml.backend.config import data_save_path
+from agml.backend.experimental import AgMLExperimentalFeatureWrapper
 from agml.backend.tftorch import (
     get_backend, set_backend,
     user_changed_backend, StrictBackendError,
@@ -925,8 +926,9 @@ class AgMLDataLoader(AgMLSerializable, metaclass = AgMLDataLoaderMeta):
         don't want these to be applied, access them right after splitting.
         """
         # Check if the data is already split or batched.
-        if self._is_split:
-            raise ValueError("Cannot split already split data.")
+        if not AgMLExperimentalFeatureWrapper.nested_splitting():
+            if self._is_split:
+                raise ValueError("Cannot split already split data.")
         elif self._manager._batch_size is not None:
             raise ValueError("Cannot split already batched data. "
                              "Split the data before batching.")
