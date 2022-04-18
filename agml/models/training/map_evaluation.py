@@ -58,7 +58,7 @@ def run_evaluation(model, name):
 def make_checkpoint(name):
     """Gets a checkpoint for the model name."""
     ckpt_path = os.path.join(
-        "/data2/amnjoshi/apple-detection/checkpoints", "model_state.pth")
+        "/data2/amnjoshi/final/detection_checkpoints/grape_detection_californiaday", "final_model.pth")
     state = torch.load(ckpt_path, map_location = 'cpu')
     model = EfficientDetModel(
         num_classes = agml.data.source(name).num_classes,
@@ -87,7 +87,7 @@ def evaluate(names, log_file = None):
         log_contents[name] = run_evaluation(ckpt, name)
 
     # Save the results.
-    df = pd.DataFrame(columns = ('name', *[f'map@{float(th)}' for th in np.linspace(
+    df = pd.DataFrame(columns = ('name', *[f'map@{round(float(th), 2)}' for th in np.linspace(
         0.5, 0.95, int(np.round((0.95 - .5) / .05) + 1))], 'map@[0.5,0.95]'))
     for name, values in log_contents.items():
         df.loc[len(df.index)] = [name, *values[0], values[1]]

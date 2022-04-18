@@ -32,16 +32,23 @@ from tools import gpus, checkpoint_dir
 from tqdm import tqdm
 
 
+<<<<<<< Updated upstream
 FINETUNE_EPOCHS = [1, 2, 3, 4, 5, 7, 10]
 EVAL_CLASSES = ['orange', 'avocado', 'capsicum', 'mango']
 EVAL_QUANTITIES = [6, 12, 18, 24, 30, 36]
+=======
+FINETUNE_EPOCHS = 5
+EVAL_CLASSES = ['orange', 'apple', 'mango', 'capsicum']
+EVAL_QUANTITIES = [6, 12, 14, 15, 16, 18, 20, 21, 23, 24, 30, 36, 42]
+print("Eval splits:", EVAL_QUANTITIES)
+>>>>>>> Stashed changes
 PRETRAINED_PATH = '/data2/amnjoshi/amg/checkpoints/model_state.pth'
 BASE = '/data2/amnjoshi/finetune'
 
 
 def generate_splits():
     # Generate the base loader.
-    pl.seed_everything(81923801)
+    pl.seed_everything(2499751)
     loader = agml.data.AgMLDataLoader('fruit_detection_worldwide')
 
     # Create the new loaders for each of the classes.
@@ -50,13 +57,18 @@ def generate_splits():
         # We set aside a random pool of 36 from which the finetuning images
         # will be selected, and then another pool of 15 which will be used
         # purely for testing the mean average precision.
-        cls_loader = loader.take_class(cls).take_random(36 + 15)
-        cls_loader.split(train = 36, test = 15)
+        cls_loader = loader.take_class(cls).take_random(42 + 15)
+        cls_loader.split(train = 42, test = 15)
         pool_loader = cls_loader.train_data
         test_loader = cls_loader.test_data
         quant_loaders = {'test': test_loader}
-        for quant in EVAL_QUANTITIES:
-            quant_loaders[quant] = pool_loader.take_random(quant)
+
+        # Starting from 35, we pool a loader with 35 images. Then we take
+        # a pool of 30 images from the 35, then 25 from the 30, and so on
+        # so forth, so we can see the effect of "adding" more images for
+        # finetuning as opposed to just using new sets of random images.
+        for quant in reversed(EVAL_QUANTITIES):
+            quant_loaders[quant] = pool_loader = pool_loader.take_random(quant)
         cls_quant_loaders[cls] = quant_loaders
     return cls_quant_loaders
 
@@ -96,11 +108,12 @@ def train(cls, loader, save_dir, epochs, overwrite = False):
     msg = f"Finetuning class {cls} of size {len(loader.train_data)} for {epochs} epochs!"
     print("\n" + "=" * len(msg) + "\n" + msg + "\n" + "=" * len(msg) + "\n")
     trainer = pl.Trainer(
+<<<<<<< Updated upstream
         max_epochs = epochs, gpus = gpus(None), logger = loggers)
+=======
+        max_epochs = FINETUNE_EPOCHS, gpus = gpus(None), logger = loggers)
+>>>>>>> Stashed changes
     trainer.fit(model, dm)
-
-    # Save the final state.
-    torch.save(model.state_dict(), os.path.join(save_dir, 'final_model.pth'))
 
     # Return the model state.
     return model
@@ -126,7 +139,7 @@ def run_evaluation(model, loader) -> dict:
 
     # Compute the mAP for all of the thresholds.
     map_values = {f'map@{round(float(thresh), 2)}':
-                      ma.compute(thresh).detach().cpu().numpy()
+                      ma.compute(thresh).detach().cpu().numpy().item()
                   for thresh in iou_thresholds}
     map_values['map@[0.5,0.95]'] = np.mean(list(map_values.values()))
     return map_values
@@ -138,11 +151,13 @@ def train_all():
 
     # Create a dictionary with all of the results.
     results = {}
+    nice_print_results = {}
 
     # Iterate over each finetuning class and image quantity.
     for cls in EVAL_CLASSES:
         if cls not in results.keys():
             results[cls] = {}
+            nice_print_results[cls] = {}
         cls_path = os.path.join(BASE, cls)
         test_loader = splits[cls]['test']
         for quant in EVAL_QUANTITIES:
@@ -151,10 +166,13 @@ def train_all():
 
             # Get the loader and split it accordingly.
             loader = splits[cls][quant]
-            train_q, val_q = 5 * (quant // 6), quant // 6
+            train_q, val_q = int(5 * (quant / 6)), quant // 6
+            if train_q + val_q < len(loader):
+                val_q = len(loader) - train_q
             loader.split(train = train_q, val = val_q)
 
             # Train the model.
+<<<<<<< Updated upstream
             if quant not in results[cls].keys():
                 results[cls][quant] = {}
             for epoch_quant in FINETUNE_EPOCHS:
@@ -170,15 +188,28 @@ def train_all():
                 eval_dict = run_evaluation(model, test_loader)
                 results[cls][quant][epoch_quant] = eval_dict
                 print("\n", eval_dict, "\n")
+=======
+            try:
+                model = train(cls, loader = loader, save_dir = quant_path)
+            except KeyboardInterrupt:
+                raise ValueError
+
+            # Evaluate the model.
+            model.eval()
+            eval_dict = run_evaluation(model, test_loader)
+            results[cls][train_q] = eval_dict
+            nice_print_results[cls][train_q] = eval_dict['map@[0.5,0.95]']
+            print("\n", eval_dict, "\n")
+>>>>>>> Stashed changes
 
     # Save all of the results.
     from pprint import pprint
     print("\n\nRESULTS:\n")
-    pprint(results)
+    pprint(nice_print_results)
+
     with open(os.path.join(BASE, 'results.pickle'), 'wb') as f:
         pickle.dump(results, f)
 
 
 if __name__ == '__main__':
     train_all()
-
