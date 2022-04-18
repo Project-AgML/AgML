@@ -38,12 +38,13 @@ class CollectionWrapper(AgMLSerializable):
     """Wraps a collection of items and calls their attributes and methods."""
     serializable = frozenset(('collection', 'keys'))
 
-    def __init__(self, collection, keys = None):
+    def __init__(self, collection, keys = None, ignore_types = False):
         self._collection = collection
-        if not all(isinstance(c, type(collection[0])) for c in collection):
-            raise TypeError(
-                f"Items in a collection should all be of the "
-                f"same type, got {[type(i) for i in collection]}")
+        if not ignore_types:
+            if not all(isinstance(c, type(collection[0])) for c in collection):
+                raise TypeError(
+                    f"Items in a collection should all be of the "
+                    f"same type, got {[type(i) for i in collection]}")
         self._keys = keys
 
     def __len__(self):
@@ -97,6 +98,18 @@ class MultiDatasetMetadata(AgMLSerializable):
         self._metas = CollectionWrapper(
             [DatasetMetadata(d) for d in datasets])
         self._validate_tasks()
+        
+    @classmethod
+    def _from_collection(cls, metas):
+        """Instantiates a `MultiDatasetMetadata` object from a collection."""
+        obj = MultiDatasetMetadata.__new__(MultiDatasetMetadata)
+        obj._names = [meta.name for meta in metas]
+
+        # We need to ignore types since some metadata objects might be
+        # regular `DatasetMetadata`, but some might be `CustomDatasetMetadata`.
+        obj._metas = CollectionWrapper(metas, ignore_types = True)
+        obj._validate_tasks()
+        return obj
 
     def _validate_tasks(self):
         # For a collection of datasets to work, they all need
@@ -290,6 +303,68 @@ class AgMLMultiDatasetLoader(AgMLSerializable):
 
         # Total number of images in the entire dataset.
         self._num_images = sum(self._info.num_images.values())
+        
+    @classmethod
+    def _instantiate_from_collection(cls, *loaders):
+        """Instantiates an `AgMLMultiDatasetLoader` directly from a collection.
+        
+        This method is, in essence, a wrapper around the actual `__init__`
+        method for the multi-loader, but one which takes into account the fact
+        that the loaders are already instantiated, and thus works around those
+        already-provided parameters, rather than starting from scratch. 
+        """
+        obj = AgMLMultiDatasetLoader.__new__(AgMLMultiDatasetLoader)
+        
+        # Create the custom dataset metadata wrapper.
+        obj._info = MultiDatasetMetadata._from_collection([
+            loader.info for loader in loaders])
+        
+        # Add the loaders and adapt classes.
+        obj._loaders = CollectionWrapper(
+            loaders, keys = [loader.info.name for loader in loaders])
+        obj._adapt_classes()
+        
+        # The remaining contents here are directly copied from the above
+        # `__init__` method, without comments (see above for information):
+        # Construct the accessor array.
+        obj._loader_accessors = np.arange(
+            sum(v for v in obj._info.num_images.values()))
+        sets = obj._info.num_images.keys()
+        bounds = np.cumsum(list(obj._info.num_images.values())).tolist()
+        bounds = (0, ) + (*bounds, )
+        obj._set_to_keys = {}
+        obj._bounds = {s: b for s, b in zip(sets, bounds)}
+        for i, set_ in enumerate(sets):
+            value = 0 if i == 0 else 1
+            obj._set_to_keys.update(dict.fromkeys(
+                np.arange(bounds[i] - value,
+                          bounds[i + 1] + 1), set_))
+            
+        # Set the batch size and shuffling.
+        obj._batch_size = None
+        obj._make_batch = obj._loaders[0]._manager._train_manager.make_batch
+        obj._shuffle_data = loaders[0].shuffle_data
+        if obj._shuffle_data:
+            obj.shuffle(obj._shuffle_data)
+            
+        # Transform annotations and resizing.
+        obj._loaders.apply(
+            lambda x: x._manager._train_manager._set_multi_hook(
+                AnnotationRemap(
+                    obj.class_to_num, obj._info.num_to_class, obj.task)))
+        obj._loaders.apply(
+            lambda x: x._manager._resize_manager.disable_auto())
+        
+        # Finalize parameters.
+        obj._is_split = False
+        obj._train_data = None
+        obj._val_data = None
+        obj._test_data = None
+        obj._data_distributions = obj._info.num_images
+        obj._num_images = sum(obj._info.num_images.values())
+
+        # Return the object.
+        return obj
 
     def __len__(self):
         # Return the length of the data, subject to batching.

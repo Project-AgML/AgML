@@ -14,6 +14,7 @@
 
 from agml.backend.tftorch import torch, tf, get_backend
 
+
 def set_seed(seed = None):
     """Sets a new random seed. If None, uses a random seed."""
     import random

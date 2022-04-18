@@ -31,4 +31,4 @@ from .config import (
     downloaded_datasets
 )
 from .tftorch import get_backend, set_backend
-from .learn import set_seed
+from .random import set_seed

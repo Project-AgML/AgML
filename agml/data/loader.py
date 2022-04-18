@@ -263,6 +263,48 @@ class AgMLDataLoader(AgMLSerializable, metaclass = AgMLDataLoaderMeta):
         return cls(name, dataset_path = dataset_path,
                    meta = {'task': task, 'classes': classes, **kwargs})
 
+    @staticmethod
+    def merge(*loaders):
+        """Merges a set of `AgMLDataLoader`s into a single loader.
+
+        Given a set of input `AgMLDataLoader`s, this method will return a single
+        `AgMLDataLoader` which is capable of returning data from any and every one
+        of the input loaders. The resultant loader is functionally equivalent to
+        the `AgMLDataLoader` returned by instantiating an `AgMLDataLoader` from a
+        sequence of AgML public data sources, except that in this case, the input
+        loaders may be subject to a number of input modifications before merging.
+
+        This also allows the usage of both an AgML public data source and a custom
+        dataset together in a single multi-dataset loader. As such, this method
+        should be used with caution, as since input loaders may be allowed to have
+        any modification, certain methods may not function as expected. For instance,
+        if one of the passed loaders has already been split, then the overall new
+        multi-loader cannot be split as a whole. Similarly, if also using a custom
+        dataset, then any properties of the `info` parameter which are not passed
+        to the dataset cannot be used, even if the other datasets have them.
+
+        Parameters
+        ----------
+        loaders : Tuple[AgMLDataLoader]
+            A collection of `AgMLDataLoader`s (but not any `AgMLDataLoader`s
+            which are already holding a collection of datasets).
+
+        Returns
+        -------
+        A new `AgMLDataLoader` wrapping the input datasets.
+        """
+        # Validate the input loaders.
+        from agml.data.multi_loader import AgMLMultiDatasetLoader
+        if len(loaders) == 1:
+            raise ValueError("There should be at least two inputs to the `merge` method.")
+        for loader in loaders:
+            if isinstance(loader, AgMLMultiDatasetLoader):
+                raise TypeError("Cannot merge datasets which already hold a "
+                                "collection of multiple datasets.")
+
+        # Instantiate the `AgMLMultiDatasetLoader`.
+        return AgMLMultiDatasetLoader._instantiate_from_collection(*loaders)
+
     def __len__(self):
         return self._manager.data_length()
 
