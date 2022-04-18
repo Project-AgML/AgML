@@ -343,7 +343,7 @@ class CustomDatasetMetadata(DatasetMetadata):
         self._metadata = _MetadataDict(
             {'ml_task': meta['task'], 'ag_task': meta.get('ag_task', None),
              **meta}, dataset = name)
-        self._metadata['classes'] = {str(i): c for i, c in enumerate(meta['classes'])}
+        self._metadata['classes'] = {str(i + 1): c for i, c in enumerate(meta['classes'])}
 
         # There is no citation information necessary for custom datasets.
         self._citation_meta = None

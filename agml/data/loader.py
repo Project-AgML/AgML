@@ -265,7 +265,7 @@ class AgMLDataLoader(AgMLSerializable, metaclass = AgMLDataLoaderMeta):
                    meta = {'task': task, 'classes': classes, **kwargs})
 
     @staticmethod
-    def merge(*loaders):
+    def merge(*loaders, classes = None):
         """Merges a set of `AgMLDataLoader`s into a single loader.
 
         Given a set of input `AgMLDataLoader`s, this method will return a single
@@ -289,6 +289,9 @@ class AgMLDataLoader(AgMLSerializable, metaclass = AgMLDataLoaderMeta):
         loaders : Tuple[AgMLDataLoader]
             A collection of `AgMLDataLoader`s (but not any `AgMLDataLoader`s
             which are already holding a collection of datasets).
+        classes : list
+            A list of classes in the new loader. This argument can be used to
+            construct a custom ordering (non-alphabetical) of classes in the loader.
 
         Returns
         -------
@@ -304,7 +307,8 @@ class AgMLDataLoader(AgMLSerializable, metaclass = AgMLDataLoaderMeta):
                                 "collection of multiple datasets.")
 
         # Instantiate the `AgMLMultiDatasetLoader`.
-        return AgMLMultiDatasetLoader._instantiate_from_collection(*loaders)
+        return AgMLMultiDatasetLoader._instantiate_from_collection(
+            *loaders, classes = classes)
 
     def __len__(self):
         return self._manager.data_length()

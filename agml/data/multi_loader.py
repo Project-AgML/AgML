@@ -305,7 +305,7 @@ class AgMLMultiDatasetLoader(AgMLSerializable):
         self._num_images = sum(self._info.num_images.values())
         
     @classmethod
-    def _instantiate_from_collection(cls, *loaders):
+    def _instantiate_from_collection(cls, *loaders, classes):
         """Instantiates an `AgMLMultiDatasetLoader` directly from a collection.
         
         This method is, in essence, a wrapper around the actual `__init__`
@@ -322,7 +322,7 @@ class AgMLMultiDatasetLoader(AgMLSerializable):
         # Add the loaders and adapt classes.
         obj._loaders = CollectionWrapper(
             loaders, keys = [loader.info.name for loader in loaders])
-        obj._adapt_classes()
+        obj._adapt_classes(cls = classes)
         
         # The remaining contents here are directly copied from the above
         # `__init__` method, without comments (see above for information):
@@ -427,13 +427,23 @@ class AgMLMultiDatasetLoader(AgMLSerializable):
             AgMLDataLoader(dataset, **kwargs) for dataset in datasets],
             keys = datasets)
 
-    def _adapt_classes(self):
+    def _adapt_classes(self, cls = None):
         """Adapts the classes in the loader."""
         # Get all of the unique classes in the loader.
         classes = self._info.classes.values()
         class_values = [[o.lower() for o in c] for c in classes]
         class_values = [i for s in class_values for i in s]
         unique_classes = np.unique(class_values).tolist()
+
+        # Check that they match the given classes, if such a list is passed.
+        if cls is not None:
+            if not set(cls) == set(unique_classes):
+                raise ValueError(
+                    f"Given list of classes {unique_classes} to "
+                    f"`AgMLDataLoader.merge`, but calculated classes "
+                    f"{cls}. Check that the given classes match the "
+                    f"actual classes in the given datasets.")
+            unique_classes = cls
 
         # Create a class metadata storing all of the unique
         # classes belonging to this loader and their mappings.
