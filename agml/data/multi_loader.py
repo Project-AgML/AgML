@@ -778,6 +778,27 @@ class AgMLMultiDatasetLoader(AgMLSerializable):
                 np.random.shuffle(self._loader_accessors)
         return self
 
+    def take_dataset(self, name) -> "AgMLDataLoader":
+        """Takes one of the datasets in the multi-dataset collection.
+
+        This method selects one of the datasets (as denoted by `name`)
+        in this multi-dataset collection and returns an `AgMLDataLoader`
+        with its contents. These contents will be subject to any transforms
+        and modifications as applied by the main loader, but the returned
+        loader will be a copy, such that any new changes made to the main
+        multi-dataset loader will not affect the new loader.
+
+        Parameters
+        ----------
+        name : str
+            The name of one of the sub-datasets of the loader.
+
+        Returns
+        -------
+        An `AgMLDataLoader`.
+        """
+        return self._loaders[name].copy()
+
     @inject_random_state
     def take_random(self, k) -> "AgMLMultiDatasetLoader":
         """Takes a random set of contents from the loader.

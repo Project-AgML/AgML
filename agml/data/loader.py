@@ -683,6 +683,30 @@ class AgMLDataLoader(AgMLSerializable, metaclass = AgMLDataLoaderMeta):
         self._manager.shuffle(seed = seed)
         return self
 
+    def take_dataset(self, name) -> "AgMLDataLoader":
+        """Takes one of the datasets in a multi-dataset loader.
+
+        This method selects one of the datasets (as denoted by `name`)
+        in this multi-dataset collection and returns an `AgMLDataLoader`
+        with its contents. These contents will be subject to any transforms
+        and modifications as applied by the main loader, but the returned
+        loader will be a copy, such that any new changes made to the main
+        multi-dataset loader will not affect the new loader.
+
+        Note that this method only works for multi-dataset collections.
+
+        Parameters
+        ----------
+        name : str
+            The name of one of the sub-datasets of the loader.
+
+        Returns
+        -------
+        An `AgMLDataLoader`.
+        """
+        raise ValueError(
+            "The `loader.take_dataset` method only works for multi-dataset loaders.")
+
     def take_class(self, classes, reindex = True) -> "AgMLDataLoader":
         """Reduces the dataset to a subset of class labels.
 
