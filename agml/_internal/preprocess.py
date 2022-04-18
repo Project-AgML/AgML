@@ -174,12 +174,45 @@ class PublicDataPreprocessor(object):
             anno_data_all, label2id, output_json_file,
             output_img_path, general_info)
 
-    def apple_detection_usa(self, dataset_name):
+    def apple_detection_usa(self, dataset_name, fix = False):
+        # Just a quick fix to clip over-sized bounding boxes.
+        if fix:
+            # Load in the annotations.
+            dataset_dir = os.path.join(self.data_original_dir, dataset_name)
+            with open(os.path.join(dataset_dir, 'annotations.json'), 'r') as f:
+                annotations = json.load(f)
+
+            # Get the images and all of their heights/widths.
+            images = annotations['images']
+            image_id_content_map = {}
+            for image in images:
+                image_id_content_map[image['id']] = (image['height'], image['width'])
+
+            # Load all of the annotations.
+            new_annotations = []
+            for a in annotations['annotations']:
+                new_a = a.copy()
+                height, width = image_id_content_map[a['image_id']]
+                (x, y, w, h) = a['bbox']
+                x1, y1, x2, y2 = x, y, x + w, y + h
+                x1 = np.clip(x1, 0, width)
+                x2 = np.clip(x2, 0, width)
+                y1 = np.clip(y1, 0, height)
+                y2 = np.clip(y2, 0, height)
+                new_a['bbox'] = [int(i) for i in [x1, y1, x2 - x1, y2 - y1]]
+                new_annotations.append(new_a)
+
+            # Save the annotations.
+            annotations['annotations'] = new_annotations
+            with open(os.path.join(dataset_dir, 'annotations.json'), 'w') as f:
+                json.dump(annotations, f)
+            return
+
         # resize the dataset
         resize = 1.0
 
         # Read public_datasources.json to get class information
-        category_info = self.data_sources[dataset_name]['crop_types']
+        category_info = self.data_sources[dataset_name]['classes']
         labels_str = []
         labels_ids = []
         for info in category_info:
@@ -197,8 +230,6 @@ class PublicDataPreprocessor(object):
 
         # do tasks along folders
         anno_data_all = []
-        img_ids = []
-        bbox_ids = []
         for folder in plant_folders:
             # Get image file and xml file
             full_path = os.path.join(obj_Detection_data,folder)
@@ -206,9 +237,9 @@ class PublicDataPreprocessor(object):
             anno_files = [x for x in all_files if "txt" in x]
             for anno_file in anno_files:
                 anno_line = []
-                anno_path = os.path.join(full_path,anno_file)
+                anno_path = os.path.join(full_path, anno_file)
                 # Opening annotation file
-                anno_data = read_txt_file(anno_path,delimiter=',')
+                anno_data = read_txt_file(anno_path, delimiter=',')[0]
                 
                 for i, anno in enumerate(anno_data):
                     new_anno = [os.path.join(dataset_dir, anno_data[i][0])]
@@ -510,7 +541,24 @@ class PublicDataPreprocessor(object):
             annotation_preprocess_fn = _annotation_preprocess_fn
         )
 
-    def rice_seedling_segmentation(self, dataset_name):
+    def rice_seedling_segmentation(self, dataset_name, fix = False):
+        # Re-mapping labels to remove the `Background` class.
+        if fix:
+            data_dir = os.path.join(self.data_original_dir, dataset_name)
+            annotations = sorted([
+                os.path.join(data_dir, 'annotations', i)
+                for i in os.listdir(os.path.join(data_dir, 'annotations'))])
+            os.makedirs(os.path.join(data_dir, 'new_annotations'))
+
+            # Create the remap.
+            for annotation in tqdm(annotations):
+                a = cv2.imread(annotation)
+                a[a == 2] = 0
+                a[a == 3] = 2
+                cv2.imwrite(os.path.join(
+                    data_dir, 'new_annotations', os.path.basename(annotation)), a)
+            return
+
         # Get all of the relevant data.
         data_dir = os.path.join(self.data_original_dir, dataset_name)
         images = sorted(glob.glob(os.path.join(data_dir, 'image_*.jpg')))

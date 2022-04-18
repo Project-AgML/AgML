@@ -307,13 +307,13 @@
             ]
         },
         "classes": {
-            "0": "avocado",
-            "1": "rockmelon",
-            "2": "apple",
-            "3": "orange",
-            "4": "strawberry",
-            "5": "mango",
-            "6": "capsicum"
+            "1": "avocado",
+            "2": "rockmelon",
+            "3": "apple",
+            "4": "orange",
+            "5": "strawberry",
+            "6": "mango",
+            "7": "capsicum"
         },
         "external_image_sources": []
     },
@@ -502,8 +502,7 @@
         },
         "classes": {
             "0": "Rice",
-            "1": "Background",
-            "2": "Weed"
+            "1": "Weed"
         },
         "external_image_sources": []
     },
