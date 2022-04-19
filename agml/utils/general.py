@@ -175,9 +175,11 @@ def PlotAllViews(path, Pos):
     for i in range(len(Pos)):
         if i<10:
             img = cv2.imread(path + 'view0000' + str(i) + '/RGB_rendering.jpeg')
+            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
             axs[i].imshow(img)
         if i>10:
             img = cv2.imread(path + 'view000' + str(i) + '/RGB_rendering.jpeg')
+            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
             axs[i].imshow(img)
         axs[i].set_title('Camera view: #' + str(i),fontsize=50)
 
@@ -240,6 +242,7 @@ def PlotInstanceSegmentation(path, view, Label):
     axs = plt.axes()
     
     img = cv2.imread(path + 'view0000' + str(view) + '/RGB_rendering.jpeg')
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     
     for j in range(0,View_size):                                             
         data = txt2image2(Path_elements[j])
@@ -263,6 +266,7 @@ def PlotInstanceSegmentation(path, view, Label):
 
         imgray = data[1:,1:]
         img2 = cv2.merge((imgray,imgray,imgray))
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     
         A[Y_min:Y_min+H,data2[0]:data2[1],:] = img2
     
@@ -290,11 +294,13 @@ def PlotObjectDetection(path, view, Label):
 
     if view<10:
         img = cv2.imread(path + 'view0000' + str(view) + '/RGB_rendering.jpeg')
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         axs.imshow(img)
         data = np.loadtxt(path + 'view0000' + str(view) + '/rectangular_labels_' + str(L) + '.txt')
 
     if view>10:
         img = cv2.imread(path + 'view000' + str(view) + '/RGB_rendering.jpeg')
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         axs.imshow(img)
         data = np.loadtxt(path + 'view000' + str(view) + '/rectangular_labels_' + str(L) + '.txt')
         
