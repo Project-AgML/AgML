@@ -204,8 +204,8 @@ class AgMLDataLoader(AgMLSerializable, metaclass = AgMLDataLoaderMeta):
             A custom path to load the dataset from. If this is not passed,
             we will assume that the dataset is at the traditional path:
             `~/.agml/datasets/<name>` (or the changed default data path).
-            Otherwise, we assume that the passed directory is the root
-            of the dataset (not that `<name>` is a directory within the path).
+            Otherwise, the dataset can be passed as a path such as `/root/name`,
+            or `/root`; in the latter case the method will check for `/root/name`.
         classes : list, tuple
             A list of string-labels for the classes of the dataset, in order.
             This is not required for image classification/object detection.
@@ -233,9 +233,11 @@ class AgMLDataLoader(AgMLSerializable, metaclass = AgMLDataLoaderMeta):
         else:
             dataset_path = os.path.abspath(os.path.expanduser(dataset_path))
             if not os.path.exists(dataset_path):
-                raise NotADirectoryError(
-                    f"Could not find a directory for dataset '{name}' at the "
-                    f"provided dataset path: {dataset_path}.")
+                dataset_path = os.path.join(dataset_path, name)
+                if not os.path.exists(dataset_path):
+                    raise NotADirectoryError(
+                        f"Could not find a directory for dataset '{name}' at the "
+                        f"provided dataset path: {dataset_path}.")
 
         # Infer the task based on the provided dataset path.
         if os.path.exists(os.path.join(dataset_path, 'annotations.json')):
