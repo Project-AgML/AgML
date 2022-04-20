@@ -665,7 +665,7 @@ if __name__ == '__main__':
         help = "The path to a set of pretrained weights for the model.")
     ap.add_argument(
         '--pretrained-num-classes', type = str, default = None,
-        help = "The number of classes in the pretrained model..")
+        help = "The number of classes in the pretrained model.")
     args = ap.parse_args()
 
     # Train the model.
