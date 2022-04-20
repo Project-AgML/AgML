@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import os
+import glob
 import argparse
 
 import numpy as np
@@ -55,13 +56,16 @@ def run_evaluation(model, name):
     return map_values, np.mean(map_values)
 
 
-def make_checkpoint(name):
+def make_checkpoint(name, path = None, num_classes = None):
     """Gets a checkpoint for the model name."""
-    ckpt_path = os.path.join(
-        "/data2/amnjoshi/final/detection_checkpoints/grape_detection_californiaday", "final_model.pth")
+    if path is None:
+        ckpt_path = os.path.join(
+            "/data2/amnjoshi/final/detection_checkpoints/grape_detection_californiaday", "final_model.pth")
+    else:
+        ckpt_path = path
     state = torch.load(ckpt_path, map_location = 'cpu')
     model = EfficientDetModel(
-        num_classes = agml.data.source(name).num_classes,
+        num_classes = agml.data.source(name).num_classes if num_classes is None else num_classes,
         architecture = 'tf_efficientdet_d4')
     model.load_state_dict(state)
     model.eval().cuda()
@@ -85,6 +89,34 @@ def evaluate(names, log_file = None):
         if hasattr(name, 'name'):
             name = name.name
         log_contents[name] = run_evaluation(ckpt, name)
+
+    # Save the results.
+    df = pd.DataFrame(columns = ('name', *[f'map@{round(float(th), 2)}' for th in np.linspace(
+        0.5, 0.95, int(np.round((0.95 - .5) / .05) + 1))], 'map@[0.5,0.95]'))
+    for name, values in log_contents.items():
+        df.loc[len(df.index)] = [name, *values[0], values[1]]
+    df.to_csv(log_file)
+
+
+def evaluate_different_benchmarks(paths, name, log_file = None):
+    """Runs the evaluation for different pretrained weights."""
+    print(f"Running mAP evaluation for {paths}.")
+
+    # Create the log file.
+    if log_file is None:
+        log_file = os.path.join(os.getcwd(), 'map_evaluation.csv')
+
+    # Run the evaluation.
+    log_contents = {}
+    bar = tqdm(paths)
+    ncs = [2, 2, 3, 4, 2, 1]
+    for nc, path in zip(ncs, bar):
+        ckpt = make_checkpoint(name, path = path, num_classes = nc)
+        bar.set_description(f"Evaluating {name} @ {path} @ nc = {nc}")
+        if hasattr(name, 'name'):
+            name = name.name
+        log_contents[os.path.basename(os.path.dirname(os.path.dirname(path)))] \
+            = run_evaluation(ckpt, name)
 
     # Save the results.
     df = pd.DataFrame(columns = ('name', *[f'map@{round(float(th), 2)}' for th in np.linspace(
@@ -118,7 +150,9 @@ if __name__ == '__main__':
                 if dataset.name not in exclude_datasets]
         else:
             datasets = args.dataset
-    evaluate(datasets, args.log_file)
+    # evaluate(datasets, args.log_file)
+    evaluate_different_benchmarks(
+        glob.glob('/data2/amnjoshi/flood/**/*.pth', recursive = True), datasets[0], args.log_file)
 
 
 

@@ -32,16 +32,10 @@ from tools import gpus, checkpoint_dir
 from tqdm import tqdm
 
 
-<<<<<<< Updated upstream
-FINETUNE_EPOCHS = [1, 2, 3, 4, 5, 7, 10]
-EVAL_CLASSES = ['orange', 'avocado', 'capsicum', 'mango']
-EVAL_QUANTITIES = [6, 12, 18, 24, 30, 36]
-=======
 FINETUNE_EPOCHS = 5
 EVAL_CLASSES = ['orange', 'apple', 'mango', 'capsicum']
 EVAL_QUANTITIES = [6, 12, 14, 15, 16, 18, 20, 21, 23, 24, 30, 36, 42]
 print("Eval splits:", EVAL_QUANTITIES)
->>>>>>> Stashed changes
 PRETRAINED_PATH = '/data2/amnjoshi/amg/checkpoints/model_state.pth'
 BASE = '/data2/amnjoshi/finetune'
 
@@ -108,11 +102,7 @@ def train(cls, loader, save_dir, epochs, overwrite = False):
     msg = f"Finetuning class {cls} of size {len(loader.train_data)} for {epochs} epochs!"
     print("\n" + "=" * len(msg) + "\n" + msg + "\n" + "=" * len(msg) + "\n")
     trainer = pl.Trainer(
-<<<<<<< Updated upstream
-        max_epochs = epochs, gpus = gpus(None), logger = loggers)
-=======
         max_epochs = FINETUNE_EPOCHS, gpus = gpus(None), logger = loggers)
->>>>>>> Stashed changes
     trainer.fit(model, dm)
 
     # Return the model state.
@@ -172,23 +162,6 @@ def train_all():
             loader.split(train = train_q, val = val_q)
 
             # Train the model.
-<<<<<<< Updated upstream
-            if quant not in results[cls].keys():
-                results[cls][quant] = {}
-            for epoch_quant in FINETUNE_EPOCHS:
-                try:
-                    model = train(cls, loader = loader,
-                                  save_dir = quant_path,
-                                  epochs = epoch_quant)
-                except KeyboardInterrupt:
-                    raise ValueError
-
-                # Evaluate the model.
-                model.eval()
-                eval_dict = run_evaluation(model, test_loader)
-                results[cls][quant][epoch_quant] = eval_dict
-                print("\n", eval_dict, "\n")
-=======
             try:
                 model = train(cls, loader = loader, save_dir = quant_path)
             except KeyboardInterrupt:
@@ -200,7 +173,6 @@ def train_all():
             results[cls][train_q] = eval_dict
             nice_print_results[cls][train_q] = eval_dict['map@[0.5,0.95]']
             print("\n", eval_dict, "\n")
->>>>>>> Stashed changes
 
     # Save all of the results.
     from pprint import pprint
