@@ -310,6 +310,11 @@ class AgMLDataLoader(AgMLSerializable, metaclass = AgMLDataLoaderMeta):
         return AgMLMultiDatasetLoader._instantiate_from_collection(
             *loaders, classes = classes)
 
+    def __add__(self, other):
+        if not isinstance(other, AgMLDataLoader):
+            return NotImplemented
+        return AgMLDataLoader.merge(self, other)
+
     def __len__(self):
         return self._manager.data_length()
 
