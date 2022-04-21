@@ -117,7 +117,7 @@ def convert_bbox_format(annotations_or_bboxes, fmt):
         if isinstance(annotations[0], (int, float)):
             annotations = [annotations]
     if isinstance(fmt, str):
-        if fmt == 'pascal_voc':
+        if 'voc' in fmt or 'pascal' in fmt:
             fmt = 'x_min y_min x_max y_max'
         if ',' in fmt:
             fmt = fmt.split(',')
