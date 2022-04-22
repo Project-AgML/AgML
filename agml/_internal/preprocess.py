@@ -908,3 +908,39 @@ class PublicDataPreprocessor(object):
         convert_bbox_to_coco(
             annotations, label2id, output_json_file,
             output_img_path, general_info, resize=512/1024)
+
+    def peachpear_flower_segmentation(self, dataset_name):
+      # Create processed directories 
+      processed_dir = os.path.join(self.data_processed_dir, dataset_name)
+      os.makedirs(processed_dir, exist_ok = True)
+      processed_image_dir = os.path.join(processed_dir, 'images')
+      os.makedirs(processed_image_dir, exist_ok = True)
+      processed_annotation_dir = os.path.join(processed_dir, 'annotations')
+      os.makedirs(processed_annotation_dir, exist_ok = True)
+
+      dataset_dir = os.path.join(self.data_original_dir, dataset_name)
+
+      # Get image files
+      img_dirs = ["Peach", "Pear"]
+      img_paths = []
+      for img_dir in img_dirs:
+        img_paths += [os.path.join(dataset_dir, img_dir, file_name) for file_name in get_file_list(os.path.join(dataset_dir, img_dir))]
+
+      # Save all images as jpg in processed directory
+      for img_path in img_paths:
+        processed_path = os.path.join(processed_image_dir, img_path.split('/')[-1].replace('.bmp', '.jpg'))
+        img = cv2.imread(img_path)
+        cv2.imwrite(processed_path, img)
+
+      # Get annotation files
+      anno_dirs = ["PeachLabels", "PearLabels"]
+      anno_paths = []
+      for anno_dir in anno_dirs:
+        anno_paths += [os.path.join(dataset_dir, anno_dir, file_name) for file_name in get_file_list(os.path.join(dataset_dir, anno_dir))]
+
+      # Transform mask and save to processed directory
+      for anno_path in anno_paths:
+        img = cv2.imread(anno_path, cv2.IMREAD_GRAYSCALE)
+        img = np.where(img[:] == 255, 1, 0)
+        processed_path = os.path.join(processed_annotation_dir, anno_path.split('/')[-1])
+        cv2.imwrite(processed_path, img)
