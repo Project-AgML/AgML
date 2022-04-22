@@ -109,8 +109,10 @@ def evaluate_different_benchmarks(paths, name, log_file = None):
     # Run the evaluation.
     log_contents = {}
     bar = tqdm(paths)
-    ncs = [2, 2, 3, 4, 2, 1]
-    for nc, path in zip(ncs, bar):
+    from collections import defaultdict
+    ncs = defaultdict(lambda: 1)
+    for path in bar:
+        nc = ncs[os.path.basename(path).split('-')[0]]
         ckpt = make_checkpoint(name, path = path, num_classes = nc)
         bar.set_description(f"Evaluating {name} @ {path} @ nc = {nc}")
         if hasattr(name, 'name'):

@@ -338,7 +338,7 @@ class EfficientDetModel(pl.LightningModule):
                     dict(boxes = torch.tensor(truth_boxes, dtype = torch.float32),
                          labels = torch.tensor(truth_cls, dtype = torch.int32))
                 self.map.update(*metric_update_values)
-            self.log("map", self.map.compute(), on_step = True, on_epoch = True,
+            self.log("map", self.map.compute(), on_epoch = True,
                      prog_bar = True, logger = True, sync_dist = True)
 
         batch_predictions = {
@@ -352,8 +352,9 @@ class EfficientDetModel(pl.LightningModule):
             "box_loss": outputs["box_loss"].detach(),
         }
 
-        self.log("valid_loss", outputs["loss"], on_step = True, on_epoch = True,
-                 prog_bar = True, logger = True, sync_dist = True)
+        self.log("valid_loss", outputs["loss"],
+                 on_step = True, on_epoch = True,
+                 logger = True, sync_dist = True)
         self.log("valid_class_loss", logging_losses["class_loss"],
                  on_step = True, on_epoch = True,
                  logger = True, sync_dist = True)
@@ -520,20 +521,20 @@ def get_data(combo_type, dataset):
     base = agml.data.AgMLDataLoader(dataset)
     if combo_type == 'onecombo': # noqa
         loader = base.copy()
-        nc = 1
+    elif combo_type == 'mango2random': # noqa
+        loader = agml.data.AgMLDataLoader.merge(
+            base, agml.data.AgMLDataLoader.from_custom_data(
+                'mango2random', dataset_path = '/data2/amnjoshi'))
     elif combo_type == 'twocombo': # noqa
         loader = agml.data.AgMLDataLoader.merge(
             base, agml.data.AgMLDataLoader.from_custom_data(
                 'fruit2ball_worldwide', dataset_path = '/data2/amnjoshi'))
-        nc = 2
     elif combo_type == 'threecombo': # noqa
         loader = agml.data.AgMLDataLoader.merge(
             base, agml.data.AgMLDataLoader.from_custom_data(
                 'fruit2ball_worldwide', dataset_path = '/data2/amnjoshi'),
             agml.data.AgMLDataLoader.from_custom_data(
                 'fruit2baseball_worldwide', dataset_path = '/data2/amnjoshi'))
-        loader.transform(target_transform = target)
-        nc = 2
     elif combo_type == 'fourcombo': # noqa
         loader = agml.data.AgMLDataLoader.merge(
             base, agml.data.AgMLDataLoader.from_custom_data(
@@ -542,20 +543,23 @@ def get_data(combo_type, dataset):
                 'fruit2baseball_worldwide', dataset_path = '/data2/amnjoshi'),
             agml.data.AgMLDataLoader.from_custom_data(
                 'fruit2clock_worldwide', dataset_path = '/data2/amnjoshi'))
-        loader.transform(target_transform = target)
-        nc = 2
     else:
         raise ValueError(f"Invalid combo type '{combo_type}'")
 
     # Create the data module.
     loader.shuffle()
+    try:
+        loader.generalize_class_detections()
+    except:
+        pass
     loader.split(train = 0.8, val = 0.1, test = 0.1)
     dm = EfficientDetDataModule(
         train_dataset_adaptor = AgMLDatasetAdaptor(loader.train_data),
         validation_dataset_adaptor = AgMLDatasetAdaptor(
-            loader.val_data.take_dataset(dataset)),
+            loader.val_data.take_dataset(dataset)
+            if combo_type != 'onecombo' else loader.val_data), # noqa
         num_workers = 12, batch_size = 4)
-    return dm, nc, loader
+    return dm, loader
 
 
 def train(dataset, epochs, save_dir = None, combo_type = None,
@@ -578,11 +582,11 @@ def train(dataset, epochs, save_dir = None, combo_type = None,
     ]
 
     # Construct the data.
-    dm, num_classes, loader = get_data(combo_type, dataset)
+    dm, loader = get_data(combo_type, dataset)
 
     # Construct the model.
     model = EfficientDetModel(
-        num_classes = num_classes,
+        num_classes = 1,
         architecture = 'tf_efficientdet_d4',
         pretrained = pretrained_path,
         validation_dataset_adaptor = loader.val_data)
