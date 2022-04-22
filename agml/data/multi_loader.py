@@ -76,9 +76,13 @@ class CollectionWrapper(AgMLSerializable):
                     for c, arg in zip(self._collection, args)]
         return [getattr(c, method)(*args, **kwargs) for c in self._collection]
 
-    def apply(self, method):
-        for c in self._collection:
-            method(c)
+    def apply(self, method, args = None):
+        if args is None:
+            for c in self._collection:
+                method(c)
+        else:
+            for c, arg in zip(self._collection, args):
+                method(c, arg)
 
 
 class MultiDatasetMetadata(AgMLSerializable):
@@ -1168,8 +1172,15 @@ class AgMLMultiDatasetLoader(AgMLSerializable):
         else:
             normalization_params = None
 
-        self.transform(
-            transform = ('normalize', normalization_params)
+        # Normalization parameters may be specific to each dataset in
+        # the loader, so we need to make sure we account for this.
+        self._loaders.apply(
+            lambda x, transform: x._manager.push_transforms(
+                transform = transform,
+                target_transform = NoArgument,
+                dual_transform = NoArgument),
+            args = [('normalize', normalization_params[key])
+                    for key in self._loaders.keys]
         )
 
     def labels_to_one_hot(self):
