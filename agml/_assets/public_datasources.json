@@ -967,6 +967,18 @@
         "annotation_format": "image",
         "n_images": "42",
         "docs_url": "https://data.nal.usda.gov/dataset/data-multi-species-fruit-flower-detection-using-refined-semantic-segmentation-network",
-        "external_image_sources": []
+        "external_image_sources": [],
+        "stats": {
+            "mean": [
+                0.4377596378326416,
+                0.4347001910209656,
+                0.4147627353668213
+            ],
+            "std": [
+                0.20811232924461365,
+                0.2141699343919754,
+                0.2441396266222
+            ]
+        }
     }
 }
