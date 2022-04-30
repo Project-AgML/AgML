@@ -439,10 +439,9 @@ class AgMLMultiDatasetLoader(AgMLSerializable):
         if cls is not None:
             if not set(cls) == set(unique_classes):
                 raise ValueError(
-                    f"Given list of classes {unique_classes} to "
-                    f"`AgMLDataLoader.merge`, but calculated classes "
-                    f"{cls}. Check that the given classes match the "
-                    f"actual classes in the given datasets.")
+                    f"Given list of classes {cls} to `AgMLDataLoader.merge`, "
+                    f"but calculated classes {unique_classes}. Check that the "
+                    f"given classes match the actual classes in the given datasets.")
             unique_classes = cls
 
         # Create a class metadata storing all of the unique

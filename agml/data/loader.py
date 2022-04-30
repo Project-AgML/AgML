@@ -100,7 +100,7 @@ class AgMLDataLoader(AgMLSerializable, metaclass = AgMLDataLoaderMeta):
     """
     serializable = frozenset((
         'info', 'builder', 'manager', 'train_data',
-        'val_data', 'test_data', 'meta_properties'))
+        'val_data', 'test_data', 'is_split', 'meta_properties'))
 
     def __new__(cls, dataset, **kwargs):
         # If a single dataset is passed, then we use the base `AgMLDataLoader`.
@@ -233,6 +233,11 @@ class AgMLDataLoader(AgMLSerializable, metaclass = AgMLDataLoaderMeta):
         else:
             dataset_path = os.path.abspath(os.path.expanduser(dataset_path))
             if not os.path.exists(dataset_path):
+                if not os.path.exists(dataset_path):
+                    raise NotADirectoryError(
+                        f"Could not find a directory for dataset '{name}' at the "
+                        f"provided dataset path: {dataset_path}.")
+            if not dataset_path.endswith(name):
                 dataset_path = os.path.join(dataset_path, name)
                 if not os.path.exists(dataset_path):
                     raise NotADirectoryError(
