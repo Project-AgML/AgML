@@ -601,6 +601,64 @@ def train(dataset, epochs, save_dir = None, combo_type = None,
     torch.save(model.state_dict(), os.path.join(save_dir, f'{combo_type}-model.pth'))
 
 
+def train_flood(dataset, epochs, save_dir = None,
+                combo_type = None, overwrite = None):
+    save_dir = save_dir.replace(
+        'dataset', combo_type.split('2')[1].split('_')[0] if combo_type.startswith('fruit') else combo_type)
+    save_dir = checkpoint_dir(save_dir, dataset)
+    log_dir = save_dir.replace('checkpoints', 'logs')
+
+    # Check if the dataset already has benchmarks.
+    if os.path.exists(save_dir) and os.path.isdir(save_dir):
+        if not overwrite and len(os.listdir(save_dir)) >= 4:
+            print(f"Checkpoints already exist for {dataset} "
+                  f"at {save_dir}, skipping generation.")
+            return
+
+    # Create the loggers.
+    loggers = [
+        TensorBoardLogger(log_dir)
+    ]
+
+    # Construct the data.
+    pl.seed_everything(2499751)
+    if combo_type != 'base':
+        new = agml.data.AgMLDataLoader.from_custom_data(
+                combo_type, dataset_path = '/data2/amnjoshi/datasets')
+        loader = agml.data.AgMLDataLoader.merge(
+            agml.data.AgMLDataLoader('grape_detection_californiaday'),
+            new, classes = ['grape', *new.classes])
+        loader.shuffle()
+        nc = 2
+    else:
+        loader = agml.data.AgMLDataLoader.merge(
+            agml.data.AgMLDataLoader('grape_detection_californiaday'),
+            agml.data.AgMLDataLoader('grape_detection_californianight'))
+        loader.shuffle()
+        nc = 1
+    loader.split(train = 0.8, val = 0.1, test = 0.1)
+    dm = EfficientDetDataModule(
+        train_dataset_adaptor = AgMLDatasetAdaptor(loader.train_data),
+        validation_dataset_adaptor = AgMLDatasetAdaptor(
+            loader.val_data.take_dataset(dataset)
+            if combo_type != 'base' else loader.val_data), # noqa
+        num_workers = 12, batch_size = 4)
+
+    # Construct the model.
+    model = EfficientDetModel(
+        num_classes = nc,
+        architecture = 'tf_efficientdet_d4',
+        validation_dataset_adaptor = loader.val_data)
+
+    # Create the trainer and train the model.
+    msg = f"Training combo ({combo_type}), saving to ({save_dir})!"
+    print("\n" + "=" * len(msg) + "\n" + msg + "\n" + "=" * len(msg) + "\n")
+    trainer = pl.Trainer(max_epochs = epochs, gpus = gpus(None), logger = loggers)
+    trainer.fit(model, dm)
+
+    # Save the final state.
+    torch.save(model.state_dict(), os.path.join(save_dir, f'{combo_type}-model.pth'))
+
 if __name__ == '__main__':
     # Parse input arguments.
     ap = argparse.ArgumentParser()
@@ -625,6 +683,19 @@ if __name__ == '__main__':
         '--combo-type', type = str, default = None,
         help = "The type of combo to train for.")
     args = ap.parse_args()
+
+
+    datasets = os.listdir('/data2/amnjoshi/datasets')
+    train_flood(args.dataset[0],
+                epochs = args.epochs,
+                save_dir = args.checkpoint_dir,
+                combo_type = 'base')
+    for ds in datasets:
+        train_flood(args.dataset[0],
+                    epochs = args.epochs,
+                    save_dir = args.checkpoint_dir,
+                    combo_type = ds)
+    exit()
 
     # Train the model.
     if args.dataset[0] in agml.data.public_data_sources(ml_task = 'object_detection') \

@@ -574,7 +574,6 @@ def train(dataset, epochs, save_dir = None,
 def train_per_class(dataset, epochs, save_dir = None, overwrite = None):
     """Constructs the training loop and trains a model."""
     save_dir = checkpoint_dir(save_dir, dataset)
-    log_dir = save_dir.replace('checkpoints', 'logs')
 
     # Check if the dataset already has benchmarks.
     if os.path.exists(save_dir) and os.path.isdir(save_dir):
@@ -602,41 +601,28 @@ def train_per_class(dataset, epochs, save_dir = None, overwrite = None):
             num_workers = 12, batch_size = 4)
 
         this_save_dir = os.path.join(
-            save_dir, f'{new_loader.num_to_class[cls]}-{cls}')
-        this_log_dir = this_save_dir.replace('checkpoints', 'logs')
-
-        # Set up the checkpoint saving callback.
-        callbacks = [
-            pl.callbacks.ModelCheckpoint(
-                dirpath = this_save_dir, mode = 'min',
-                filename = f"{dataset}" + "-epoch{epoch:02d}-valid_loss_{valid_loss:.2f}",
-                monitor = 'valid_loss',
-                save_top_k = 3,
-                auto_insert_metric_name = False
-            )
-        ]
+            save_dir, f'{loader.num_to_class[cls]}-{cls}')
 
         # Create the loggers.
         loggers = [
-            CSVLogger(this_log_dir),
-            TensorBoardLogger(this_log_dir)
+            TensorBoardLogger(this_save_dir)
         ]
 
         # Construct the model.
         model = EfficientDetModel(
             num_classes = 1,
             architecture = 'tf_efficientdet_d4',
-            pretrained = True)
+            pretrained = True,
+            validation_dataset_adaptor = new_loader.val_data)
         model.load_state_dict(
-            torch.load('/data2/amnjoshi/full_grape/checkpoints/final_model.pth',
+            torch.load('/data2/amnjoshi/detection-models/amg.pth',
                        map_location = 'cpu'))
 
         # Create the trainer and train the model.
         msg = f"Training dataset {dataset} for class {cls}: {loader.num_to_class[cls]}!"
         print("\n" + "=" * len(msg) + "\n" + msg + "\n" + "=" * len(msg) + "\n")
         trainer = pl.Trainer(
-            max_epochs = epochs, gpus = gpus(None),
-            callbacks = callbacks, logger = loggers)
+            max_epochs = epochs, gpus = gpus(None), logger = loggers)
         trainer.fit(model, dm)
 
         # Save the final state.
