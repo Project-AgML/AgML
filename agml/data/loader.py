@@ -462,7 +462,7 @@ class AgMLDataLoader(AgMLSerializable):
                     list(proportions.values()).index(
                         max(proportions.values()))]
                 proportions[largest_split] = proportions[largest_split] - diff
-                valid_args = proportions.copy()
+            valid_args = proportions.copy()
 
         # Create the actual data splits.
         if all(isinstance(i, int) for i in valid_args.values()):

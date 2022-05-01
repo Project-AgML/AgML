@@ -98,5 +98,17 @@
     "apple_detection_drone_brazil": {
         "license": "CC BY-SA 4.0",
         "citation": "@article{DBLP:journals/corr/abs-2110-12331,\n  author    = {Thiago T. Santos and\n               Luciano Gebler},\n  title     = {A methodology for detection and localization of fruits in apples orchards\n               from aerial images},\n  journal   = {CoRR},\n  volume    = {abs/2110.12331},\n  year      = {2021},\n  url       = {https://arxiv.org/abs/2110.12331},\n  eprinttype = {arXiv},\n  eprint    = {2110.12331},\n  timestamp = {Thu, 28 Oct 2021 15:25:31 +0200},\n  biburl    = {https://dblp.org/rec/journals/corr/abs-2110-12331.bib},\n  bibsource = {dblp computer science bibliography, https://dblp.org}\n}"
+    },
+    "plant_doc_detection": {
+        "license": "CC BY-SA 4.0",
+        "citation": "@inproceedings{10.1145/3371158.3371196,\n  author = {Singh, Davinder and Jain, Naman and Jain, Pranjali and Kayal, Pratik and Kumawat, Sudhakar and Batra, Nipun},\n  title = {PlantDoc: A Dataset for Visual Plant Disease Detection},\n  year = {2020},\n  isbn = {9781450377386},\n  publisher = {Association for Computing Machinery},\n  address = {New York, NY, USA},\n  url = {https://doi.org/10.1145/3371158.3371196},\n  doi = {10.1145/3371158.3371196},\n  booktitle = {Proceedings of the 7th ACM IKDD CoDS and 25th COMAD},\n  pages = {249–253},\n  numpages = {5},\n  keywords = {Deep Learning, Object Detection, Image Classification},\n  location = {Hyderabad, India},\n  series = {CoDS COMAD 2020}\n  }"
+    },
+    "wheat_head_counting": {
+        "license": "CC BY-SA 4.0",
+        "citation": "@article{david2020global,\n  title={Global Wheat Head Detection (GWHD) dataset: a large and diverse dataset of high-resolution RGB-labelled images to develop and benchmark wheat head detection methods},\n  author={David, Etienne and Madec, Simon and Sadeghi-Tehran, Pouria and Aasen, Helge and Zheng, Bangyou and Liu, Shouyang and Kirchgessner, Norbert and Ishikawa, Goro and Nagasawa, Koichi and Badhon, Minhajul A and others},\n  journal={Plant Phenomics},\n  volume={2020},\n  year={2020},\n  publisher={Science Partner Journal}\n  }"
+    },
+    "peachpear_flower_segmentation": {
+        "license": "US Public Domain",
+        "citation": "@ARTICLE{8392727,\n  author={Dias, Philipe A. and Tabb, Amy and Medeiros, Henry},\n  journal={IEEE Robotics and Automation Letters}, \n  title={Multispecies Fruit Flower Detection Using a Refined Semantic Segmentation Network}, \n  year={2018},\n  volume={3},\n  number={4},\n  pages={3003-3010},\n  doi={10.1109/LRA.2018.2849498}}"
     }
 }

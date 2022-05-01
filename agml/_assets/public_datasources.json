@@ -76,7 +76,7 @@
         "platform": "ground_fixed",
         "input_data_format": "png",
         "annotation_format": "directory_names",
-        "n_images": "5588",
+        "n_images": "5539",
         "docs_url": "https://vision.eng.au.dk/plant-seedlings-dataset/",
         "stats": {
             "mean": [
@@ -307,13 +307,13 @@
             ]
         },
         "classes": {
-            "0": "avocado",
-            "1": "rockmelon",
-            "2": "apple",
-            "3": "orange",
-            "4": "strawberry",
-            "5": "mango",
-            "6": "capsicum"
+            "1": "avocado",
+            "2": "rockmelon",
+            "3": "apple",
+            "4": "orange",
+            "5": "strawberry",
+            "6": "mango",
+            "7": "capsicum"
         },
         "external_image_sources": []
     },
@@ -378,38 +378,6 @@
         },
         "classes": {
             "0": "apple"
-        },
-        "external_image_sources": []
-    },
-    "cotton_seedling_counting": {
-        "ml_task": "object_detection",
-        "ag_task": "seedling_counting",
-        "location": {
-            "continent": "worldwide",
-            "country": "worldwide"
-        },
-        "sensor_modality": "rgb",
-        "real_synthetic": "real",
-        "platform": "ground",
-        "input_data_format": "png",
-        "annotation_format": "coco_json",
-        "n_images": "2290",
-        "docs_url": "https://github.com/UGA-BSAIL/deepseedling",
-        "stats": {
-            "mean": [
-                0.6695063710212708,
-                0.5673825144767761,
-                0.4538835883140564
-            ],
-            "std": [
-                0.07037307322025299,
-                0.07951230555772781,
-                0.07661264389753342
-            ]
-        },
-        "classes": {
-            "0": "Plant",
-            "1": "Weed"
         },
         "external_image_sources": []
     },
@@ -534,8 +502,7 @@
         },
         "classes": {
             "0": "Rice",
-            "1": "Background",
-            "2": "Weed"
+            "1": "Weed"
         },
         "external_image_sources": []
     },
@@ -605,64 +572,6 @@
             "36": "Tomato___Tomato_Yellow_Leaf_Curl_Virus",
             "37": "Tomato___Tomato_mosaic_virus",
             "38": "Tomato___healthy"
-        },
-        "external_image_sources": []
-    },
-    "plant_doc_classification": {
-        "ml_task": "image_classification",
-        "ag_task": "disease_classification",
-        "location": {
-            "continent": "worldwide",
-            "country": "worldwide"
-        },
-        "sensor_modality": "rgb",
-        "real_synthetic": "real",
-        "platform": "ground",
-        "input_data_format": "jpg",
-        "annotation_format": "directory_names",
-        "n_images": "2598",
-        "docs_url": "https://github.com/pratikkayal/PlantDoc-Dataset",
-        "stats": {
-            "mean": [
-                0.4769977033138275,
-                0.5441237688064575,
-                0.37798669934272766
-            ],
-            "std": [
-                0.2114635556936264,
-                0.20371955633163452,
-                0.2188636064529419
-            ]
-        },
-        "classes": {
-            "0": "Apple_Scab_Leaf",
-            "1": "Apple_leaf",
-            "2": "Apple_rust_leaf",
-            "3": "Bell_pepper_leaf_spot",
-            "4": "Bell_pepper_leaf",
-            "5": "Blueberry_leaf",
-            "6": "Cherry_leaf",
-            "7": "Corn_Gray_leaf_spot",
-            "8": "Corn_leaf_blight",
-            "9": "Corn_rust_leaf",
-            "10": "Peach_leaf",
-            "11": "Potato_leaf_early_blight",
-            "12": "Potato_leaf_late_blight",
-            "13": "Raspberry_leaf",
-            "14": "Soybean_leaf",
-            "15": "Squash_Powdery_mildew_leaf",
-            "16": "Strawberry_leaf",
-            "17": "Tomato_Early_blight_leaf",
-            "18": "Tomato_Septoria_leaf_spot",
-            "19": "Tomato_leaf_bacterial_spot",
-            "20": "Tomato_leaf_late_blight",
-            "21": "Tomato_leaf_mosaic_virus",
-            "22": "Tomato_leaf_yellow_virus",
-            "23": "Tomato_leaf",
-            "24": "Tomato_mold_leaf",
-            "25": "Tomato_two_spotted_spider_mites_leaf",
-            "26": "grape_leaf_black_rot",
-            "27": "grape_leaf"
         },
         "external_image_sources": []
     },
@@ -890,6 +799,185 @@
                 0.18435567617416382,
                 0.1873108297586441,
                 0.1734534204006195
+            ]
+        }
+    },
+    "plant_doc_classification": {
+        "classes": {
+            "1": "Corn leaf blight",
+            "2": "Tomato Early blight leaf",
+            "3": "Potato leaf early blight",
+            "4": "Potato leaf late blight",
+            "5": "Blueberry leaf",
+            "6": "grape leaf black rot",
+            "7": "Bell_pepper leaf spot",
+            "8": "Cherry leaf",
+            "9": "Peach leaf",
+            "10": "Soyabean leaf",
+            "11": "Strawberry leaf",
+            "12": "Apple Scab Leaf",
+            "13": "Corn rust leaf",
+            "14": "Apple leaf",
+            "15": "Corn Gray leaf spot",
+            "16": "Tomato leaf mosaic virus",
+            "17": "Tomato mold leaf",
+            "18": "Tomato leaf yellow virus",
+            "19": "Tomato leaf bacterial spot",
+            "20": "Tomato leaf late blight",
+            "21": "Squash Powdery mildew leaf",
+            "22": "Bell_pepper leaf",
+            "23": "grape leaf",
+            "24": "Apple rust leaf",
+            "25": "Tomato Septoria leaf spot",
+            "26": "Tomato leaf",
+            "27": "Raspberry leaf",
+            "28": "Tomato two spotted spider mites leaf"
+        },
+        "ml_task": "image_classification",
+        "ag_task": "disease_classification",
+        "location": {
+            "continent": "worldwide",
+            "country": "worldwide"
+        },
+        "sensor_modality": "rgb",
+        "real_synthetic": "real",
+        "platform": "ground",
+        "input_data_format": "jpg",
+        "annotation_format": "directory_names",
+        "n_images": "2598",
+        "docs_url": "https://github.com/pratikkayal/PlantDoc-Dataset",
+        "external_image_sources": [],
+        "stats": {
+            "mean": [
+                0.4822138547897339,
+                0.5498747229576111,
+                0.3833077549934387
+            ],
+            "std": [
+                0.2124069482088089,
+                0.20360232889652252,
+                0.2210727334022522
+            ]
+        }
+    },
+    "plant_doc_detection": {
+        "classes": {
+            "1": "Corn leaf blight",
+            "2": "Tomato Early blight leaf",
+            "3": "Potato leaf early blight",
+            "4": "Potato leaf late blight",
+            "5": "Blueberry leaf",
+            "6": "grape leaf black rot",
+            "7": "Bell_pepper leaf spot",
+            "8": "Cherry leaf",
+            "9": "Peach leaf",
+            "10": "Soyabean leaf",
+            "11": "Strawberry leaf",
+            "12": "Apple Scab Leaf",
+            "13": "Corn rust leaf",
+            "14": "Apple leaf",
+            "15": "Corn Gray leaf spot",
+            "16": "Tomato leaf mosaic virus",
+            "17": "Tomato mold leaf",
+            "18": "Tomato leaf yellow virus",
+            "19": "Tomato leaf bacterial spot",
+            "20": "Tomato leaf late blight",
+            "21": "Squash Powdery mildew leaf",
+            "22": "Bell_pepper leaf",
+            "23": "grape leaf",
+            "24": "Apple rust leaf",
+            "25": "Tomato Septoria leaf spot",
+            "26": "Tomato leaf",
+            "27": "Raspberry leaf",
+            "28": "Potato leaf",
+            "29": "Tomato two spotted spider mites leaf"
+        },
+        "ml_task": "object_detection",
+        "ag_task": "disease_classification",
+        "location": {
+            "continent": "worldwide",
+            "country": "worldwide"
+        },
+        "sensor_modality": "rgb",
+        "real_synthetic": "real",
+        "platform": "ground",
+        "input_data_format": "jpg",
+        "annotation_format": "coco_json",
+        "n_images": "2598",
+        "docs_url": "https://github.com/pratikkayal/PlantDoc-Object-Detection-Dataset",
+        "external_image_sources": [],
+        "stats": {
+            "mean": [
+                0.4819715917110443,
+                0.5496680736541748,
+                0.38318973779678345
+            ],
+            "std": [
+                0.21210965514183044,
+                0.20354853570461273,
+                0.22038120031356812
+            ]
+        }
+    },
+    "wheat_head_counting": {
+        "classes": {
+            "1": "Wheat Head"
+        },
+        "ml_task": "object_detection",
+        "ag_task": "wheat_head_counting",
+        "location": {
+            "continent": "worldwide",
+            "country": "worldwide"
+        },
+        "sensor_modality": "rgb",
+        "real_synthetic": "real",
+        "platform": "ground",
+        "input_data_format": "jpg",
+        "annotation_format": "coco_json",
+        "n_images": "6512",
+        "docs_url": "https://zenodo.org/record/5092309",
+        "external_image_sources": [],
+        "stats": {
+            "mean": [
+                0.371184766292572,
+                0.36074304580688477,
+                0.23014496266841888
+            ],
+            "std": [
+                0.2190379649400711,
+                0.21708978712558746,
+                0.17700935900211334
+            ]
+        }
+    },
+    "peachpear_flower_segmentation": {
+        "classes": {
+            "1": "Flower"
+        },
+        "ml_task": "semantic_segmentation",
+        "ag_task": "flower_segmentation",
+        "location": {
+            "continent": "worldwide",
+            "country": "worldwide"
+        },
+        "sensor_modality": "rgb",
+        "real_synthetic": "real",
+        "platform": "handheld/ground",
+        "input_data_format": "jpg",
+        "annotation_format": "image",
+        "n_images": "42",
+        "docs_url": "https://data.nal.usda.gov/dataset/data-multi-species-fruit-flower-detection-using-refined-semantic-segmentation-network",
+        "external_image_sources": [],
+        "stats": {
+            "mean": [
+                0.4377596378326416,
+                0.4347001910209656,
+                0.4147627353668213
+            ],
+            "std": [
+                0.20811232924461365,
+                0.2141699343919754,
+                0.2441396266222
             ]
         }
     }

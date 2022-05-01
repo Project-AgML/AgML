@@ -77,7 +77,7 @@ def get_image_info_from_annoline(annotation_root, idx, resize = 1.0, add_foldern
         img = cv2.imread(annotation_root[0])
 
         if resize != 1.0:
-            dsize = [int(img.shape[1] * resize), int(img.shape[0] * resize)]
+            dsize = (int(img.shape[1] * resize), int(img.shape[0] * resize))
             img = cv2.resize(img, dsize)
 
         size = img.shape

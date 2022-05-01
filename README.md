@@ -114,8 +114,9 @@ into a single training pipeline. To this end, we provide annotations in the foll
 
 ## Contributions
 
-We welcome contributions! If you would like to contribue a new feature, fix an issue that you've noticed, or even just mention
+We welcome contributions! If you would like to contribute a new feature, fix an issue that you've noticed, or even just mention
 a bug or feature that you would like to see implemented, please don't hesitate to use the *Issues* tab to bring it to our attention.
+See the [contributing guidelines](/CONTRIBUTING.md) for more information.
 
 ## Funding
-This project was partly funded by the [National AI Institute for Food Systems (AIFS)](https://aifs.ucdavis.edu).
+This project is partly funded by the [National AI Institute for Food Systems (AIFS)](https://aifs.ucdavis.edu).

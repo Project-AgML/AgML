@@ -27,6 +27,7 @@ import sys
 import json
 import glob
 import shutil
+import csv
 
 import cv2
 import numpy as np
@@ -173,12 +174,45 @@ class PublicDataPreprocessor(object):
             anno_data_all, label2id, output_json_file,
             output_img_path, general_info)
 
-    def apple_detection_usa(self, dataset_name):
+    def apple_detection_usa(self, dataset_name, fix = False):
+        # Just a quick fix to clip over-sized bounding boxes.
+        if fix:
+            # Load in the annotations.
+            dataset_dir = os.path.join(self.data_original_dir, dataset_name)
+            with open(os.path.join(dataset_dir, 'annotations.json'), 'r') as f:
+                annotations = json.load(f)
+
+            # Get the images and all of their heights/widths.
+            images = annotations['images']
+            image_id_content_map = {}
+            for image in images:
+                image_id_content_map[image['id']] = (image['height'], image['width'])
+
+            # Load all of the annotations.
+            new_annotations = []
+            for a in annotations['annotations']:
+                new_a = a.copy()
+                height, width = image_id_content_map[a['image_id']]
+                (x, y, w, h) = a['bbox']
+                x1, y1, x2, y2 = x, y, x + w, y + h
+                x1 = np.clip(x1, 0, width)
+                x2 = np.clip(x2, 0, width)
+                y1 = np.clip(y1, 0, height)
+                y2 = np.clip(y2, 0, height)
+                new_a['bbox'] = [int(i) for i in [x1, y1, x2 - x1, y2 - y1]]
+                new_annotations.append(new_a)
+
+            # Save the annotations.
+            annotations['annotations'] = new_annotations
+            with open(os.path.join(dataset_dir, 'annotations.json'), 'w') as f:
+                json.dump(annotations, f)
+            return
+
         # resize the dataset
         resize = 1.0
 
         # Read public_datasources.json to get class information
-        category_info = self.data_sources[dataset_name]['crop_types']
+        category_info = self.data_sources[dataset_name]['classes']
         labels_str = []
         labels_ids = []
         for info in category_info:
@@ -196,8 +230,6 @@ class PublicDataPreprocessor(object):
 
         # do tasks along folders
         anno_data_all = []
-        img_ids = []
-        bbox_ids = []
         for folder in plant_folders:
             # Get image file and xml file
             full_path = os.path.join(obj_Detection_data,folder)
@@ -205,9 +237,9 @@ class PublicDataPreprocessor(object):
             anno_files = [x for x in all_files if "txt" in x]
             for anno_file in anno_files:
                 anno_line = []
-                anno_path = os.path.join(full_path,anno_file)
+                anno_path = os.path.join(full_path, anno_file)
                 # Opening annotation file
-                anno_data = read_txt_file(anno_path,delimiter=',')
+                anno_data = read_txt_file(anno_path, delimiter=',')[0]
                 
                 for i, anno in enumerate(anno_data):
                     new_anno = [os.path.join(dataset_dir, anno_data[i][0])]
@@ -509,7 +541,24 @@ class PublicDataPreprocessor(object):
             annotation_preprocess_fn = _annotation_preprocess_fn
         )
 
-    def rice_seedling_segmentation(self, dataset_name):
+    def rice_seedling_segmentation(self, dataset_name, fix = False):
+        # Re-mapping labels to remove the `Background` class.
+        if fix:
+            data_dir = os.path.join(self.data_original_dir, dataset_name)
+            annotations = sorted([
+                os.path.join(data_dir, 'annotations', i)
+                for i in os.listdir(os.path.join(data_dir, 'annotations'))])
+            os.makedirs(os.path.join(data_dir, 'new_annotations'))
+
+            # Create the remap.
+            for annotation in tqdm(annotations):
+                a = cv2.imread(annotation)
+                a[a == 2] = 0
+                a[a == 3] = 2
+                cv2.imwrite(os.path.join(
+                    data_dir, 'new_annotations', os.path.basename(annotation)), a)
+            return
+
         # Get all of the relevant data.
         data_dir = os.path.join(self.data_original_dir, dataset_name)
         images = sorted(glob.glob(os.path.join(data_dir, 'image_*.jpg')))
@@ -530,9 +579,6 @@ class PublicDataPreprocessor(object):
         pass
 
     def plant_village_classification(self, dataset_name):
-        pass
-
-    def plant_doc_classification(self, dataset_name):
         pass
 
     def autonomous_greenhouse_regression(self, dataset_name):
@@ -722,10 +768,179 @@ class PublicDataPreprocessor(object):
                 processed_img_dir, os.path.basename(path)))
         with open(os.path.join(processed_dir, 'annotations.json'), 'w') as f:
             json.dump(all_annotation_data, f)
+    
+    def plant_doc_classification(self, dataset_name):
+        category_info = self.data_sources[dataset_name]['classes']
 
+        # paths to original files
+        dataset_dir = os.path.join(self.data_original_dir, dataset_name)
+        train_dir = os.path.join(dataset_dir, "train")
+        test_dir = os.path.join(dataset_dir, "test")
 
+        # make output dir
+        output = os.path.join(self.data_processed_dir, dataset_name)
+        os.makedirs(output)
 
+        for key in category_info:
+          category = category_info[key]
+          
+          # make output dir for each crop type
+          output_catg_dir = os.path.join(output, category)
+          os.makedirs(output_catg_dir)
 
+          # put train and test images of same category into same folder
+          train_catg_dir = os.path.join(train_dir, category)
+          test_catg_dir = os.path.join(test_dir, category)
 
+          for img_name in get_file_list(train_catg_dir):
+            img = os.path.join(train_catg_dir, img_name)
+            shutil.copyfile(img, os.path.join(output_catg_dir, img_name))
 
+          if os.path.exists(test_catg_dir):
+            for img_name in get_file_list(test_catg_dir):
+              img = os.path.join(test_catg_dir, img_name)
+              shutil.copyfile(img, os.path.join(output_catg_dir, img_name))
 
+    def plant_doc_detection(self, dataset_name):
+        # Read public_datasources.json to get class information
+        category_info = self.data_sources[dataset_name]['classes']
+        labels_str = []
+        labels_ids = []
+        for info in category_info:
+            labels_str.append(category_info[info])
+            labels_ids.append(int(info))
+
+        label2id = dict(zip(labels_str, labels_ids))
+
+         # Get paths to xml(annotation) files
+        dataset_dir = os.path.join(self.data_original_dir, dataset_name)
+        train_dir = os.path.join(dataset_dir, "TRAIN")
+        test_dir = os.path.join(dataset_dir, "TEST")
+
+        train_files = get_file_list(train_dir)
+        test_files = get_file_list(test_dir)
+        
+        anno_files = [os.path.join(train_dir, ann_file) for ann_file in train_files if "xml" in ann_file]
+        anno_files += [os.path.join(test_dir, ann_file) for ann_file in test_files if "xml" in ann_file]
+        
+        # Get paths to image files
+        img_files = [os.path.join(train_dir, img) for img in train_files if "xml" not in img]
+        img_files += [os.path.join(test_dir, img) for img in test_files if "xml" not in img]
+
+        # Remove all images without annotations and make a list only containing annotations with images
+        valid_image_files = [] 
+        valid_anno_files = [] 
+        for img_file in img_files:
+          anno_file = img_file.rsplit(".", 1)[0] + ".xml" #replace extension with xml to get image's annotation file
+          if anno_file in anno_files:
+            valid_image_files.append(img_file) # add all images that have a corresponding annotation file
+            valid_anno_files.append(anno_file) # add all annotation files that are referenced by an image
+        
+        # Define path to processed annotation files
+        output_json_file = os.path.join(
+            self.data_processed_dir, dataset_name, 'annotations.json')
+
+        # Create directory for processed image files
+        output_img_path = os.path.join(
+            self.data_processed_dir, dataset_name, 'images')
+        create_dir(output_img_path)
+
+        general_info = {
+            "description": "Plant Doc Object Detection Dataset",
+            "url": "https://github.com/pratikkayal/PlantDoc-Object-Detection-Dataset",
+            "version": "1.0",
+            "year": 2019,
+            "contributor": "Davinder Singh, Naman Jain, Pranjali Jain, Pratik Kayal, Sudhakar Kumawat, Nipun Batra",
+            "date_created": "2019/10/15"
+        }
+
+        convert_xmls_to_cocojson(
+            general_info,
+            annotation_paths=valid_anno_files,
+            img_paths=valid_image_files,
+            label2id=label2id,
+            name_converter = None,
+            output_jsonpath=output_json_file,
+            output_imgpath = output_img_path,
+            extract_num_from_imgid=False
+        )
+
+    def wheat_head_counting(self, dataset_name):
+        label2id = {"Wheat Head": 1}
+
+        dataset_dir = os.path.join(self.data_original_dir, dataset_name)
+        anno_files = [os.path.join(dataset_dir, 'competition_train.csv'), os.path.join(dataset_dir, 'competition_test.csv'), os.path.join(dataset_dir, 'competition_val.csv')]
+        
+        annotations = []
+        for anno_file in anno_files:
+          with open(anno_file, 'r') as file:
+              reader = csv.reader(file)
+              for row in reader:
+                  img_path = os.path.join(dataset_dir, "images", row[0])
+                  anno = [img_path]
+                  bboxs = row[1].split(";")
+                  anno.append(len(bboxs))
+                  for bbox in bboxs:
+                      if bbox != "no_box":
+                        bbox = bbox.split(" ")
+                        bbox.append("1")
+                        anno.append(bbox)
+                  annotations.append(anno)
+
+        # Define path to processed annotation files
+        output_json_file = os.path.join(
+            self.data_processed_dir, dataset_name, 'annotations.json')
+
+        # Create directory for processed image files
+        output_img_path = os.path.join(
+            self.data_processed_dir, dataset_name, 'images')
+        create_dir(output_img_path) 
+
+        general_info = {
+            "description": "Global Wheat Head Detection (GWHD) dataset",
+            "url": "http://www.global-wheat.com/",
+            "version": "1.0",
+            "year": 2021,
+            "contributor": "David, Etienne and Madec, Simon and Sadeghi-Tehran, Pouria and Aasen, Helge and Zheng, Bangyou and Liu, Shouyang and Kirchgessner, Norbert and Ishikawa, Goro and Nagasawa, Koichi and Badhon, Minhajul A and others",
+            "date_created": "2021/7/12"
+        }
+
+        convert_bbox_to_coco(
+            annotations, label2id, output_json_file,
+            output_img_path, general_info, resize=512/1024)
+
+    def peachpear_flower_segmentation(self, dataset_name):
+      # Create processed directories 
+      processed_dir = os.path.join(self.data_processed_dir, dataset_name)
+      os.makedirs(processed_dir, exist_ok = True)
+      processed_image_dir = os.path.join(processed_dir, 'images')
+      os.makedirs(processed_image_dir, exist_ok = True)
+      processed_annotation_dir = os.path.join(processed_dir, 'annotations')
+      os.makedirs(processed_annotation_dir, exist_ok = True)
+
+      dataset_dir = os.path.join(self.data_original_dir, dataset_name)
+
+      # Get image files
+      img_dirs = ["Peach", "Pear"]
+      img_paths = []
+      for img_dir in img_dirs:
+        img_paths += [os.path.join(dataset_dir, img_dir, file_name) for file_name in get_file_list(os.path.join(dataset_dir, img_dir))]
+
+      # Save all images as jpg in processed directory
+      for img_path in img_paths:
+        processed_path = os.path.join(processed_image_dir, img_path.split('/')[-1].replace('.bmp', '.jpg'))
+        img = cv2.imread(img_path)
+        cv2.imwrite(processed_path, img)
+
+      # Get annotation files
+      anno_dirs = ["PeachLabels", "PearLabels"]
+      anno_paths = []
+      for anno_dir in anno_dirs:
+        anno_paths += [os.path.join(dataset_dir, anno_dir, file_name) for file_name in get_file_list(os.path.join(dataset_dir, anno_dir))]
+
+      # Transform mask and save to processed directory
+      for anno_path in anno_paths:
+        img = cv2.imread(anno_path, cv2.IMREAD_GRAYSCALE)
+        img = np.where(img[:] == 255, 1, 0)
+        processed_path = os.path.join(processed_annotation_dir, anno_path.split('/')[-1])
+        cv2.imwrite(processed_path, img)
