@@ -332,6 +332,8 @@ class DetectionModel(AgMLModelBase):
         """
         image = self._expand_input_images(image)[0]
         bboxes, labels, _ = self.predict(image)
+        if isinstance(labels, int):
+            bboxes, labels = [bboxes], [labels]
         return visualize_image_and_boxes(image, bboxes, labels)
 
 

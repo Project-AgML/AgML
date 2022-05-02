@@ -81,6 +81,8 @@ def annotate_bboxes_on_image(
             bboxes = _resolve_coco_annotations(bboxes)['bboxes']
         except KeyError:
             bboxes = _resolve_coco_annotations(bboxes)['bbox']
+    if len(bboxes) == 0:
+        return image
     image = np.asarray(format_image(image))
     if labels is None:
         labels = [1] * len(bboxes)
@@ -144,10 +146,11 @@ def visualize_image_and_boxes(
 @auto_resolve_image
 def visualize_real_and_predicted_bboxes(
         image, truth_boxes = None, predicted_boxes = None):
-    """Visualizes an image with annotated bounding boxes.
+    """Visualizes an image with annotated truth/predicted bounding boxes.
 
     This method performs the same actions as `annotate_bboxes_on_image`,
-    but simply displays the image once it has been formatted.
+    but simply displays the image once it has been formatted. It displays
+    the input predicted and ground truth boxes side-by-side.
 
     Parameters
     ----------
@@ -178,6 +181,43 @@ def visualize_real_and_predicted_bboxes(
         ax.imshow(img)
         ax.set_axis_off()
         ax.set_title(label, fontsize = 15)
+        ax.set_aspect('equal')
+    fig.tight_layout()
+    return fig
+
+
+@show_when_allowed
+@auto_resolve_image
+def visualize_image_and_many_boxes(image, *boxes, titles = None):
+    """Visualizes an image with an arbitrary number of bounding boxes.
+
+    This method performs the same actions as `annotate_bboxes_on_image`,
+    but simply displays the image once it has been formatted.
+
+    Parameters
+    ----------
+    image : Any
+        Either the image, or a tuple consisting of the image,
+        bounding boxes, and (optional) labels.
+    boxes : Any
+        An arbitrary number of bounding boxes.
+    titles : Any
+        The titles for the axes.
+
+    Returns
+    -------
+    The matplotlib figure with the image.
+    """
+    images = [annotate_bboxes_on_image(image.copy(), box) for box in boxes]
+    titles = titles if titles is not None else [None] * len(images)
+
+    # Create two side-by-side figures with the images.
+    fig, axes = plt.subplots(1, len(images), figsize = (len(images) * 8, 8))
+    for ax, img, title in zip(axes, images, titles):
+        ax.imshow(img)
+        ax.set_axis_off()
+        if title is not None:
+            ax.set_title(title, fontsize = 15)
         ax.set_aspect('equal')
     fig.tight_layout()
     return fig

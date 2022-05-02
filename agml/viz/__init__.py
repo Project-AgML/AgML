@@ -27,7 +27,8 @@ from .masks import (
 from .boxes import (
     annotate_bboxes_on_image,
     visualize_image_and_boxes,
-    visualize_real_and_predicted_bboxes
+    visualize_real_and_predicted_bboxes,
+    visualize_image_and_many_boxes
 )
 from .labels import (
     visualize_images_with_labels
