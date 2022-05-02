@@ -154,7 +154,7 @@ if __name__ == '__main__':
             datasets = args.dataset
     # evaluate(datasets, args.log_file)
     evaluate_different_benchmarks(
-        glob.glob('/data2/amnjoshi/flood/**/*.pth', recursive = True), datasets[0], args.log_file)
+        glob.glob('/data2/amnjoshi/flood/ejb-cc/**/*.pth', recursive = True), datasets[0], args.log_file)
 
 
 
