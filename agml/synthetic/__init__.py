@@ -12,6 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
+# Run the configuration check.
+from .config import _check_helios_installation
+_check_helios_installation()
+del _check_helios_installation
+
 from .tools import (
     generate_environment_map,
     generate_camera_positions
