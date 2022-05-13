@@ -128,42 +128,6 @@ def txt2image2(path):
     data = np.where(data > 1000, 1001, data) # Change background numbers to zero
     return data
 
-def genEnvironmentMap(Origin, Spacing_plants, Spacing_rows, TreesXrow, rows = 1, plant_height = 1):
-    """Generate Map in the same way as Helios plant simulator"""
-    if TreesXrow ==1 and rows ==1:
-        return [[np.concatenate([np.array([Origin[0]]), np.array([Origin[1]]), plant_height/2 + np.array([Origin[2]])])]]
-        
-    if TreesXrow % 2 != 0 and TreesXrow>1: #odd number
-        Pos_x = np.concatenate([np.array([Origin[0]]), np.linspace(Origin[0]+Spacing_plants, TreesXrow/2*Spacing_plants-(Spacing_plants)/2, int(TreesXrow/2))])
-        Pos_x = np.concatenate([np.sort(-Pos_x[1:]) ,Pos_x])
-    else:
-        Pos_x = np.linspace(Origin[0]+(Spacing_plants/2), TreesXrow/2*Spacing_plants-(Spacing_plants)/2, int(TreesXrow/2))
-        Pos_x = np.concatenate([np.sort(-Pos_x[:]) ,Pos_x])
-
-        
-    if rows % 2 != 0: #odd number
-        Pos_y = np.concatenate([np.array([Origin[0]]), np.linspace(Origin[1]+Spacing_rows, rows/2*Spacing_rows-(Spacing_rows)/2, int(rows/2))])
-        Pos_y = np.concatenate([np.sort(-Pos_y[1:]) ,Pos_y])
-    else:
-        Pos_y =np.linspace(Origin[1]+(Spacing_rows/2), rows/2*Spacing_rows-(Spacing_rows)/2, int(rows/2))
-        Pos_y = np.concatenate([np.sort(-Pos_y[:]) ,Pos_y])
-        
-    return [[[Pos_x[x], Pos_y[y], plant_height/2 + Origin[2]] for x in range(len(Pos_x))] for y in range(len(Pos_y))]
-
-
-def genCameraPositions(type, Origin, Spacing_camera, views, d=4, height=1):
-    """Camera position and Lookat values generation"""
-    if type == 'circular':
-        r=d
-        return [[[math.cos(2*pi/views*x)*r,math.sin(2*pi/views*x)*r, height] for x in range(0,views)], [[0,0,1] for x in range(0,views)]]
-    elif type == 'linear':
-        Pos_camera = np.arange(Origin[0], Spacing_camera*views + Origin[0], Spacing_camera)
-        return [[[Pos_camera[x], d + Origin[1], height] for x in range(len(Pos_camera))], [[Pos_camera[x], Origin[1], height] for x in range(len(Pos_camera))]]
-    elif type == 'aerial':
-        t = Spacing_camera*np.linspace(0, 1, views)
-        triangle = Spacing_camera*signal.sawtooth(1 * np.pi * 5 * t, 0.5)
-        return [[[t[x] + Origin[0], triangle[x] + Origin[1], d + Origin[2]] for x in range(len(triangle))], [[t[x] + Origin[0], triangle[x] + Origin[1] +1, height + Origin[2]] for x in range(len(triangle))]]
-
 
 def PlotAllViews(path, Pos):
     """Plot all the RGB images"""
