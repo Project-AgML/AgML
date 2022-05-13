@@ -30,3 +30,6 @@ from .boxes import (
 from .labels import (
     visualize_images_with_labels
 )
+from .inspection import (
+    plot_synthetic_camera_positions
+)
