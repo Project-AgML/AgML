@@ -18,6 +18,7 @@ import sys
 import math
 import copy
 import json
+import functools
 import subprocess as sp
 from datetime import datetime as dt
 
@@ -33,6 +34,13 @@ LIDAR_SOURCE = os.path.join(HELIOS_PATH, 'plugins/lidar/src/LiDAR.cpp')
 
 # Path to the stored Helios configuration JSON file in root dir.
 HELIOS_CONFIG_FILE = os.path.expanduser('~/.agml/helios_config.json')
+
+
+@functools.lru_cache(maxsize = None)
+def load_default_helios_configuration():
+    """Loads the default Helios parameter configuration."""
+    with open(HELIOS_CONFIG_FILE, 'r') as f:
+        return json.load(f)
 
 
 # Run the Helios configuration check.
@@ -160,62 +168,50 @@ def _get_canopy_params():
                 value = re.sub('(\\.|\\d)f', r'\g<1>0', value)
 
                 # A specific case to replace values using pi.
+                value = value.strip()
                 if 'M_PI' in value:
-                    value = str(round(float(value.split('*')[0].strip()) * math.pi, 6))
+                    value = round(float(value.split('*')[0].strip()) * math.pi, 6)
+
+                # Convert numerical values to numbers/lists, as necessary.
+                elif value.isnumeric() or value.replace('.', '').isdigit():
+                    value = float(value)
+                elif ' ' in value:
+                    value_items = value.split(' ')
+                    if value_items[0].isdigit():
+                        value = [float(v) for v in value_items]
+                    elif value_items[0].replace('.', '').isdigit():
+                        value = [float(v) for v in value_items]
 
                 # Update the parameter dictionary.
                 canopy_parameters[name][n] = value
 
-    # Generate the initial canopy parameter ranges.
-    canopy_parameter_ranges = copy.deepcopy(canopy_parameters)
-    for c in canopy_parameter_ranges.keys():
-        for key in list(canopy_parameter_ranges[c]):
-            val = canopy_parameter_ranges[c][key]
-            if val.isalpha() or '/' in val or ':' in val:
-                canopy_parameter_ranges[c].pop(key)
-            else:
-                canopy_parameter_ranges[c][key] = [
-                    [float(val.split(' ')[j]),
-                     float(val.split(' ')[j])] for j
-                    in range(len(val.split()))]
-
-    # Return the three dictionaries.
-    return {'types': canopy_types, 'parameters': canopy_parameters,
-            'ranges': canopy_parameter_ranges}
+    # Return the two dictionaries.
+    return {'types': canopy_types, 'parameters': canopy_parameters}
 
 
 def _get_camera_params():
     """Updates the default camera parameters for Helios."""
     # No files are read here, the parameters are hard-coded.
     camera_params = {
-        'image_resolution': '600 400',
-        'camera_lookat': '0 0 1',
-        'camera_position': '0 -2 1'}
-    camera_param_ranges = {
-        i: [float(camera_params[i].split(' ')[j])
-            for j in range(len(camera_params[i].split()))]
-        for i in camera_params.keys()}
-    return {'parameters': camera_params, 'ranges': camera_param_ranges}
+        'image_resolution': [600.0, 400.0],
+        'camera_lookat': [0.0, 0.0, 1.0],
+        'camera_position': [0.0, -2.0, 1.0]}
+    return {'parameters': camera_params}
 
 
 def _get_lidar_params():
     """Updates the default LiDAR parameters for Helios."""
     # No files are read here, the parameters are hard-coded.
     lidar_params = {
-        "origin": "0 0 0",
-        "size": "250 450",
-        "thetaMin": "0",
-        "thetaMax": "180",
-        "phiMin": "0",
-        "phiMax": "360",
-        "exitDiameter": "0",
-        "beamDivergence": "0",
+        "origin": [0.0, 0.0, 0.0],
+        "size": [250.0, 450.0],
+        "thetaMin": 0.0,
+        "thetaMax": 180.0,
+        "phiMin": 0.0,
+        "phiMax": 360.0,
+        "exitDiameter": 0.0,
+        "beamDivergence": 0.0,
         "ASCII_format": "x y z"}
-    lidar_param_ranges = {
-        i: [float(item.split(' ')[j].replace('f', '0')) if i != 'ASCII_format' else
-            (item.split(' ')[j].replace('f', '0')) for j in range(len(item.split()))]
-        for i, item in lidar_params.items()}
-    return {'params': lidar_params, 'ranges': lidar_param_ranges}
-
+    return {'parameters': lidar_params}
 
 
