@@ -16,7 +16,6 @@ import os
 import re
 import sys
 import math
-import copy
 import json
 import functools
 import subprocess as sp
@@ -136,7 +135,15 @@ def _get_canopy_params():
     # Generate the canopy parameters.
     with open(CANOPY_SOURCE) as f:
         canopy_source_lines = f.read().replace('\n', '')
-    canopy_parameters = {}
+
+    # Add the default parameters for ground annotations.
+    canopy_parameters = {'Ground': {
+        'origin': [0.0, 0.0, 0.0],
+        'extent': [10.0, 10.0],
+        'texture_subtiles': [10.0, 10.0],
+        'texture_subpatches': [1.0, 1.0],
+        'ground_texture_file': 'plugins/canopygenerator/textures/dirt.jpg',
+        'rotation': 0.0}}
 
     # This regex is adapted from the following source:
     # https://stackoverflow.com/questions/943391/how-to-get-the-function-declaration-or-definitions-using-regex
