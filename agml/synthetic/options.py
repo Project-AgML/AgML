@@ -23,6 +23,7 @@ from agml.framework import AgMLSerializable
 from agml.synthetic.config import load_default_helios_configuration
 
 
+@dataclass
 class Parameters:
     """Base class for parameters, to enable runtime type checks."""
     def __post_init__(self):
@@ -49,45 +50,86 @@ class Parameters:
 @dataclass
 class CanopyParameters(Parameters):
     """Stores canopy-specific parameters for Helios."""
-    leaf_length: Number
-    leaf_subdivisions: List[Number]
-    leaf_texture_file: str
-    stem_color: List[Number]
-    stem_subdivisions: Number
-    stems_per_plant: Number
-    stem_radius: Number
-    plant_height: Number
-    fruit_radius: Number
-    fruit_texture_file: str
-    fruit_subdivisions: Number
-    clusters_per_stem: Number
-    plant_spacing: Number
-    row_spacing: Number
-    plant_count: List[Number]
-    canopy_origin: List[Number]
-    canopy_rotation: Number
+    leaf_length: Number                = None
+    leaf_width: Number                 = None
+    leaf_size: Number                  = None
+    leaf_subdivisions: List[Number]    = None
+    leaf_texture_file: str             = None
+    leaf_color: str                    = None
+    leaf_angle_distribution: str       = None
+    leaf_area_index: Number            = None
+    leaf_area_density: Number          = None
+    leaf_spacing_fraction: Number      = None
+    stem_color: List[Number]           = None
+    stem_subdivisions: Number          = None
+    stems_per_plant: Number            = None
+    stem_radius: Number                = None
+    plant_height: Number               = None
+    grape_radius: Number               = None
+    grape_color: List[Number]          = None
+    grape_subdivisions: Number         = None
+    fruit_color: List[Number]          = None
+    fruit_radius: Number               = None
+    fruit_subdivisions: Number         = None
+    fruit_texture_file: os.PathLike    = None
+    wood_texture_file: os.PathLike     = None
+    wood_subdivisions: Number          = None
+    clusters_per_stem: Number          = None
+    plant_spacing: Number              = None
+    row_spacing: Number                = None
+    level_spacing: Number              = None
+    plant_count: List[Number]          = None
+    canopy_origin: List[Number]        = None
+    canopy_rotation: Number            = None
+    canopy_height: Number              = None
+    canopy_extent: List[Number]        = None
+    canopy_configuration: str          = None
+    base_height: Number                = None
+    crown_radius: Number               = None
+    cluster_radius: Number             = None
+    cluster_height_max: Number         = None
+    trunk_height: Number               = None
+    trunk_radius: Number               = None
+    cordon_height: Number              = None
+    cordon_radius: Number              = None
+    cordon_spacing: Number             = None
+    shoot_length: Number               = None
+    shoot_radius: Number               = None
+    shoots_per_cordon: Number          = None
+    shoot_angle: Number                = None
+    shoot_angle_tip: Number            = None
+    shoot_angle_base: Number           = None
+    shoot_color: List[Number]          = None
+    shoot_subdivisions: List[Number]   = None
+    needle_width: Number               = None
+    needle_length: Number              = None
+    needle_color: List[Number]         = None
+    needle_subdivisions: List[Number]  = None
+    branch_length: Number              = None
+    branches_per_level: Number         = None
+    buffer: str                        = None
 
 
 @dataclass
 class CameraParameters(Parameters):
     """Stores camera parameters for Helios."""
-    image_resolution: List[Number]
-    camera_position: List[Number]
-    camera_lookat: List[Number]
+    image_resolution: List[Number]  = None
+    camera_position: List[Number]   = None
+    camera_lookat: List[Number]     = None
 
 
 @dataclass
 class LiDARParameters(Parameters):
     """Stores LiDAR parameters for Helios."""
-    origin: List[Number]
-    size: List[Number]
-    thetaMin: Number
-    thetaMax: Number
-    phiMin: Number
-    phiMax: Number
-    exitDiameter: Number
-    beamDivergence: Number
-    ASCII_format: str
+    origin: List[Number]    = None
+    size: List[Number]      = None
+    thetaMin: Number        = None
+    thetaMax: Number        = None
+    phiMin: Number          = None
+    phiMax: Number          = None
+    exitDiameter: Number    = None
+    beamDivergence: Number  = None
+    ASCII_format: str       = None
 
 
 class HeliosOptions(AgMLSerializable):
@@ -101,7 +143,7 @@ class HeliosOptions(AgMLSerializable):
     The `HeliosOptions` is instantiated with the name of the canopy type that you
     want to generate; from there, the parameters and ranges can be accessed through
     properties, which are set to their default values as loaded from the Helios
-    configuration upon instantiating the class,
+    configuration upon instantiating the class.
 
     This `HeliosOptions` object, once configured, can then be passed directly to
     a `HeliosDataGenerator` upon instantiation, and be used to generate synthetic
@@ -113,6 +155,8 @@ class HeliosOptions(AgMLSerializable):
     canopy : str
         The type of plant canopy to be used in generation.
     """
+    serializable = frozenset(('canopy', 'canopy_parameters',
+                              'camera_parameters', 'lidar_parameters'))
 
     # The default configuration parameters are loaded directly from
     # the `helios_config.json` file which is constructed each time
@@ -129,8 +173,10 @@ class HeliosOptions(AgMLSerializable):
             raise ValueError(
                 f"Received invalid canopy type '{canopy}', expected "
                 f"one of: {self._default_config['canopy']['types']}.")
+        self._canopy = canopy
 
         # Get the parameters and ranges corresponding to the canopy type.
+        print(self._default_config['canopy']['parameters'][canopy])
         self._canopy_parameters = \
             CanopyParameters(**self._default_config['canopy']['parameters'][canopy])
         self._camera_parameters = \
@@ -149,4 +195,9 @@ class HeliosOptions(AgMLSerializable):
     @property
     def lidar(self) -> LiDARParameters:
         return self._lidar_parameters
+
+    def reset(self):
+        """Resets the parameters to the default for the canopy."""
+        self._initialize_canopy(self._canopy)
+
 
