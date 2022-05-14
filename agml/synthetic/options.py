@@ -15,7 +15,7 @@
 import os
 from typing import List
 from numbers import Number
-from dataclasses import dataclass
+from dataclasses import dataclass, fields
 
 import numpy as np
 
@@ -23,11 +23,26 @@ from agml.framework import AgMLSerializable
 from agml.synthetic.config import load_default_helios_configuration
 
 
-@dataclass
+@dataclass(repr = False)
 class Parameters:
     """Base class for parameters, to enable runtime type checks."""
     def __post_init__(self):
+        # Remove all parameters which don't belong to this class. We know
+        # they don't belong if they are still `None` after initialization.
+        self_dict = self.__dict__.copy()
+        for attr in self_dict:
+            if self.__dict__[attr] is None:
+                delattr(self, attr)
         self._block_new_attributes = True
+
+    def __repr__(self):
+        # This is custom-defined to exclude optional unused attributes.
+        defined_values = (
+            (f.name, getattr(self, f.name))
+            for f in fields(self)
+            if getattr(self, f.name) != f.default)
+        value_repr = ", ".join(f"{name}={value}" for name, value in defined_values)
+        return f"{self.__class__.__qualname__}({value_repr})"
 
     def __setattr__(self, key, value):
         # Don't allow the assignment of new attributes.
@@ -47,7 +62,7 @@ class Parameters:
         super().__setattr__(key, value)
 
 
-@dataclass
+@dataclass(repr = False)
 class CanopyParameters(Parameters):
     """Stores canopy-specific parameters for Helios."""
     leaf_length: Number                = None
@@ -110,7 +125,7 @@ class CanopyParameters(Parameters):
     buffer: str                        = None
 
 
-@dataclass
+@dataclass(repr = False)
 class CameraParameters(Parameters):
     """Stores camera parameters for Helios."""
     image_resolution: List[Number]  = None
@@ -118,7 +133,7 @@ class CameraParameters(Parameters):
     camera_lookat: List[Number]     = None
 
 
-@dataclass
+@dataclass(repr = False)
 class LiDARParameters(Parameters):
     """Stores LiDAR parameters for Helios."""
     origin: List[Number]    = None
@@ -176,7 +191,6 @@ class HeliosOptions(AgMLSerializable):
         self._canopy = canopy
 
         # Get the parameters and ranges corresponding to the canopy type.
-        print(self._default_config['canopy']['parameters'][canopy])
         self._canopy_parameters = \
             CanopyParameters(**self._default_config['canopy']['parameters'][canopy])
         self._camera_parameters = \
