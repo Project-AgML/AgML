@@ -15,7 +15,7 @@
 import os
 from typing import List
 from numbers import Number
-from dataclasses import dataclass, fields
+from dataclasses import dataclass, fields, asdict
 
 import numpy as np
 
@@ -213,5 +213,17 @@ class HeliosOptions(AgMLSerializable):
     def reset(self):
         """Resets the parameters to the default for the canopy."""
         self._initialize_canopy(self._canopy)
+
+    @staticmethod
+    def _asdict(obj):
+        return {k: v for k, v in asdict(obj).items() if v is not None}
+
+    def _to_dict(self):
+        """Returns the options in dictionary format."""
+        return {
+            'canopy': self._asdict(self._canopy_parameters),
+            'camera': self._asdict(self._camera_parameters),
+            'lidar': self._asdict(self._lidar_parameters)
+        }
 
 
