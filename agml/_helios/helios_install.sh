@@ -14,10 +14,13 @@ INSTALL_PATH="$(dirname "$(dirname "$PATH_TO_ME")")/_helios/Helios"
 # this shell script has slightly more complex logic (for figuring out
 # version Helios is on, and in turn, whether it needs an update or not),
 # this simply installs/updates based on the existence of the directory.
-if [ ! -d "$INSTALL_PATH"/agml/_helios/Helios ]; then
+if [ ! -d "$INSTALL_PATH" ]; then
   git clone -b master https://github.com/PlantSimulationLab/Helios_autolabeldev.git "$INSTALL_PATH"
 else
-  git -C "$INSTALL_PATH" pull https://github.com/PlantSimulationLab/Helios_autolabeldev.git master
+  ORIGINAL_DIR="$PWD"
+  cd "$INSTALL_PATH" || echo "Issue when trying to update Helios. Please report this to the AgML team."; exit
+  git pull https://github.com/PlantSimulationLab/Helios_autolabeldev.git master
+  cd "$ORIGINAL_DIR" || echo "Issue when trying to update Helios. Please report this to the AgML team."; exit
 fi
 
 

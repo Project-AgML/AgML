@@ -23,6 +23,10 @@ from datetime import datetime as dt
 
 from agml.utils.io import recursive_dirname
 
+
+# If this file is imported multiple times, only run the check once.
+_HELIOS_CHECK_DONE_IN_SESSION = False
+
 # Paths to the Helios module and the relevant C++ files.
 HELIOS_PATH = os.path.join(recursive_dirname(__file__, 2), '_helios/Helios')
 CANOPY_SOURCE = os.path.join(
@@ -54,6 +58,10 @@ def _check_helios_installation():
     the check is only run if it has not been run in the last 48 hours). This
     is to prevent constant resource-consuming checks for Git updates.
     """
+    # Update the global Helios check.
+    global _HELIOS_CHECK_DONE_IN_SESSION
+    _HELIOS_CHECK_DONE_IN_SESSION = True
+
     # Get the path to the Helios installation file.
     helios_file = os.path.join(
         os.path.dirname(os.path.dirname(__file__)),
@@ -85,13 +93,13 @@ def _check_helios_installation():
 
         # If the last check has been run less than 48 hours ago, then
         # return without having updated Helios.
-        if (dt.now() - last_check).days == 0:
+        if (dt.now() - last_check).days < 2:
             return
 
         # Check if there is a new version available.
         sys.stderr.write(
             f"Last check for Helios update: over {(dt.now() - last_check).days} "
-            f"day(s) ago. Checking for update.")
+            f"day(s) ago. Checking for update.\n")
 
     # Execute the installation/update script.
     process = sp.Popen(['bash', helios_file],
@@ -103,6 +111,17 @@ def _check_helios_installation():
     # Update the Helios parameters.
     sys.stderr.write("Updating Helios parameter configuration.")
     _update_helios_parameters()
+
+    # Update the latest check.
+    with open(os.path.expanduser('~/.agml/config.json')) as f:
+        contents = json.load(f)
+    with open(os.path.expanduser('~/.agml/config.json'), 'w') as f:
+        contents['last_helios_check'] = dt.now().strftime("%B %d %Y %H:%M:%S")
+        json.dump(contents, f, indent = 4)
+
+    # Clear the outputs.
+    sys.stdout.write('\n')
+    sys.stderr.write('\n')
 
 
 def _update_helios_parameters():
@@ -180,13 +199,15 @@ def _get_canopy_params():
                     value = round(float(value.split('*')[0].strip()) * math.pi, 6)
 
                 # Convert numerical values to numbers/lists, as necessary.
-                elif value.isnumeric() or value.replace('.', '').isdigit():
+                elif value.isnumeric():
+                    value = int(value)
+                elif value.replace('.', '').isdigit():
                     value = float(value)
                 elif ' ' in value:
                     value_items = value.split(' ')
-                    if value_items[0].isdigit():
-                        value = [float(v) for v in value_items]
-                    elif value_items[0].replace('.', '').isdigit():
+                    if all(i.isdigit() for i in value_items):
+                        value = [int(v) for v in value_items]
+                    else:
                         value = [float(v) for v in value_items]
 
                 # Update the parameter dictionary.
@@ -200,7 +221,7 @@ def _get_camera_params():
     """Updates the default camera parameters for Helios."""
     # No files are read here, the parameters are hard-coded.
     camera_params = {
-        'image_resolution': [600.0, 400.0],
+        'image_resolution': [600, 400],
         'camera_lookat': [0.0, 0.0, 1.0],
         'camera_position': [0.0, -2.0, 1.0]}
     return {'parameters': camera_params}
@@ -212,10 +233,10 @@ def _get_lidar_params():
     lidar_params = {
         "origin": [0.0, 0.0, 0.0],
         "size": [250.0, 450.0],
-        "thetaMin": 0.0,
-        "thetaMax": 180.0,
-        "phiMin": 0.0,
-        "phiMax": 360.0,
+        "thetaMin": 0,
+        "thetaMax": 180,
+        "phiMin": 0,
+        "phiMax": 360,
         "exitDiameter": 0.0,
         "beamDivergence": 0.0,
         "ASCII_format": "x y z"}
