@@ -112,6 +112,10 @@ def _check_helios_installation():
     sys.stderr.write("Updating Helios parameter configuration.")
     _update_helios_parameters()
 
+    # Recompile Helios.
+    from agml.synthetic.compilation import _compile_helios_default
+    _compile_helios_default()
+
     # Update the latest check.
     with open(os.path.expanduser('~/.agml/config.json')) as f:
         contents = json.load(f)
