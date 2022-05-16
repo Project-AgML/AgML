@@ -13,12 +13,14 @@
 # limitations under the License.
 
 import os
+import io
 import sys
 import datetime
 import subprocess as sp
 from dataclasses import dataclass
-from collections.abc import Iterable
-from typing import List, Union, Literal, get_args
+import xml.etree.ElementTree as ET
+from collections.abc import Sequence
+from typing import List, Union, Literal
 
 from dict2xml import dict2xml
 
@@ -32,12 +34,16 @@ from agml.synthetic.compilation import HELIOS_EXECUTABLE, XML_PATH, PROJECT_PATH
 
 @dataclass
 class GenerationInstanceOptions:
+    num_images: int
     annotation_type: Union[AnnotationType, str]
     simulation_type: Union[SimulationType, str]
     labels: List[Literal['trunk', 'leaves', 'fruits', 'branches']]
     output_dir: str
 
     def __post_init__(self):
+        if self.num_images < 1:
+            raise ValueError("The number of images cannot be negative.")
+
         try:
             self.annotation_type = AnnotationType(self.annotation_type)
         except ValueError:
@@ -123,12 +129,32 @@ class HeliosDataGenerator(AgMLSerializable):
     def _convert_options_to_xml(self):
         """Converts the `HeliosOptions` parameters to XML format."""
         # Convert all of the parameters to XML format.
-        return dict2xml(
-            {'helios': self._prepare_parameters_for_generation()})
+        tree = ET.parse(io.StringIO(dict2xml(
+            {'helios': self._prepare_parameters_for_generation()})))
+
+        # Update the camera tags.
+        root = tree.getroot()
+        for child in root:
+            if child.tag == 'camera_position':
+                child.tag = 'globaldata_vec3'
+                child.set('label', 'camera_position')
+            if child.tag == 'camera_lookat':
+                child.tag = 'globaldata_vec3'
+                child.set('label', 'camera_lookat')
+            if child.tag == 'image_resolution':
+                child.tag = 'globaldata_int2'
+                child.set('label', 'image_resolution')
+
+        # Return the modified tree.
+        return tree
 
     def _prepare_parameters_for_generation(self):
         """Prepares the provided Helios parameter options for generation."""
         parameters = self._options._to_dict()
+
+        # Generate the ground parameters.
+        ground_params = self._load_ground_parameters()
+        parameters['Ground'] = ground_params
 
         # Convert the canopy parameters to the Helios string format.
         self._convert_dict_params_to_string(parameters)
@@ -136,7 +162,7 @@ class HeliosDataGenerator(AgMLSerializable):
         # Create a fresh dictionary and put all of the parameters in it.
         canopy_parameters = {
             self._canopy + "Parameters": parameters['canopy'],
-            'Ground': self._load_ground_parameters()}
+            'Ground': parameters['Ground']}
         xml_params = {'canopygenerator': canopy_parameters}
         if self._generation_options.simulation_type == 'lidar':
             xml_params['scan'] = parameters['lidar']
@@ -151,10 +177,16 @@ class HeliosDataGenerator(AgMLSerializable):
         """Converts dictionary int/float parameters to strings."""
         for key, value in d.items():
             for param, param_value in value.items():
-                if isinstance(param_value, Iterable) \
+                if isinstance(param_value, Sequence) \
                         and not isinstance(param_value, str):
-                    value[param] = \
-                        f' {" ".join([str(a) for a in param_value])} '
+                    if isinstance(param_value[0], Sequence):
+                        param_value = [str(a).replace(",", "").replace(
+                            "[", " ").replace("]", "") for a in param_value]
+                        value[param] = \
+                            f' {" ".join(param_value)} '
+                    else:
+                        value[param] = \
+                            f' {" ".join([str(a) for a in param_value])} '
                 else:
                     value[param] = f' {str(param_value)} '
 
@@ -180,7 +212,8 @@ class HeliosDataGenerator(AgMLSerializable):
         """Writes the config file that Helios loads from."""
         # Construct the string with the output.
         xml_file = os.path.realpath(xml_file)
-        cfg = f"{self._generation_options.annotation_type.value}\n" \
+        cfg = f"{self._generation_options.num_images}\n" \
+              f"{self._generation_options.annotation_type.value}\n" \
               f"{self._generation_options.simulation_type.value}\n" \
               f"{' '.join(self._generation_options.labels)}\n" \
               f"{xml_file}\n{self._generation_options.output_dir}"
@@ -209,11 +242,29 @@ class HeliosDataGenerator(AgMLSerializable):
         name is provided, then the generator defaults to using today's date and time
         (e.g., a run at 12:15 PM on January 12, 2024 would be 'helios-01122024-1215').
 
-        After the dataset is generated, the annotations will be converted from the
-        Helios format to the relevant format within AgML. For example, annotation
-        text files will be converted to COCO JSON, and the directory structure of the
-        dataset will also be changed accordingly. If you want to maintain the integrity
-        of the generated data for Helios, then you can provide the optional parameter
+        If multiple camera views are provided as part of the `HeliosOptions`, then the
+        number of images will actually end up being `num_images` times the number of
+        camera views, e.g., if there are 5 camera views and 50 images to be generated,
+        then there will be 250 total images in the resulting dataset. The final output
+        directory structure ends up being something like this:
+
+        generated_images
+            image0
+                view00000
+                view00001
+                ...
+            image1
+                view00000
+                view00001
+                ...
+            ...
+
+        NOte that this is only the post-Helios output structure. By default, after
+        the dataset is generated, the annotations will be converted from the Helios
+        format to the relevant format within AgML. For example, annotation text files
+        will be converted to COCO JSON, and the directory structure of the dataset
+        will also be changed accordingly. If you want to maintain the integrity of
+        the generated data for Helios, then you can provide the optional parameter
         `convert_data = False`, which will leave data as generated by Helios.
 
         Regardless of whether annotations are converted to the AgML format from the
@@ -273,6 +324,7 @@ class HeliosDataGenerator(AgMLSerializable):
         # Construct the `GenerationInstanceOptions` class from the `HeliosOptions`
         # parameters and the newly passed input parameters.
         self._generation_options = GenerationInstanceOptions(
+            num_images = num_images,
             annotation_type = self._options.annotation_type,
             simulation_type = self._options.simulation_type,
             labels = self._options.labels,
@@ -285,10 +337,8 @@ class HeliosDataGenerator(AgMLSerializable):
         # Construct the XML parameter style file.
         xml_options = self._convert_options_to_xml()
         xml_file_base = f"style_{name}.xml"
-        with open(os.path.join(XML_PATH, xml_file_base), 'w') as f:
-            f.write(xml_options)
-        with open(os.path.join(metadata_dir, xml_file_base), 'w') as f:
-            f.write(xml_options)
+        xml_options.write(os.path.join(XML_PATH, xml_file_base))
+        xml_options.write(os.path.join(metadata_dir, xml_file_base))
 
         # Write the actual configuration file.
         cfg_file = os.path.join(PROJECT_PATH, f'config_{name}.txt')
@@ -299,7 +349,7 @@ class HeliosDataGenerator(AgMLSerializable):
             xml_file = os.path.join(metadata_dir, xml_file_base))
 
         # Run the actual data generation with the executable.
-        process = sp.Popen([HELIOS_EXECUTABLE, cfg_file, output_dir], stdout = sp.PIPE,
+        process = sp.Popen([HELIOS_EXECUTABLE, cfg_file], stdout = sp.PIPE,
                            stderr = sp.STDOUT, universal_newlines = True)
         for line in iter(process.stdout.readline, ""):
             sys.stdout.write(line)
@@ -309,6 +359,4 @@ class HeliosDataGenerator(AgMLSerializable):
         # Remove the configuration and style files.
         os.remove(cfg_file)
         os.remove(os.path.join(XML_PATH, xml_file_base))
-
-
 

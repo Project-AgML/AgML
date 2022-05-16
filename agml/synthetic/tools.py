@@ -93,8 +93,8 @@ def generate_environment_map(
 def generate_camera_positions(
         camera_type: str,
         num_views: int,
-        origin: List[Union[int, float]],
-        camera_spacing: int,
+        origin: List[Union[int, float]] = None,
+        camera_spacing: int = 2,
         crop_distance: int = 4,
         height: int = 1) -> Tuple:
     """Generates camera placement and lookat positions in the Helios format.
@@ -124,6 +124,9 @@ def generate_camera_positions(
     -------
     A tuple of two values: the camera positions and the lookat vectors.
     """
+    if origin is None:
+        origin = [0, 0, 0]
+
     if camera_type == 'circular':
         return [[math.cos(2 * math.pi / num_views * x) * crop_distance, 
                   math.sin(2 * math.pi / num_views * x) * crop_distance, height] 

@@ -15,11 +15,12 @@
 import os
 from enum import Enum
 from numbers import Number
-from typing import List, Union, Sequence
 from dataclasses import dataclass, fields, asdict
+from typing import List, Union, Sequence, get_args
 
 from agml.framework import AgMLSerializable
 from agml.synthetic.config import load_default_helios_configuration
+from agml.synthetic.tools import generate_camera_positions
 
 
 class AnnotationType(Enum):
@@ -66,7 +67,11 @@ class Parameters:
                                  f"to class {self.__class__.__name__}.")
 
         # Check if the type of the value matches that of the key.
-        annotation = self.__annotations__[key]
+        try:
+            annotation = self.__annotations__[key].__origin__
+        except AttributeError:
+            # enables type checks for subscripted generics
+            annotation = (int, float)
         if not isinstance(value, annotation):
             raise TypeError(
                 f"Expected a value of type ({annotation}) for attribute "
@@ -143,6 +148,19 @@ class CameraParameters(Parameters):
     image_resolution: List[Number]  = None
     camera_position: List[Number]   = None
     camera_lookat: List[Number]     = None
+
+    def generate_positions(self,
+                           camera_type: str,
+                           num_views: int,
+                           origin: List[Union[int, float]] = None,
+                           camera_spacing: int = 2,
+                           crop_distance: int = 4,
+                           height: int = 1):
+        """Generates camera positions from the input environment parameters."""
+        self.camera_position, self.camera_lookat = generate_camera_positions(
+            camera_type = camera_type, num_views = num_views,
+            origin = origin, camera_spacing = camera_spacing,
+            crop_distance = crop_distance, height = height)
 
 
 @dataclass(repr = False)
