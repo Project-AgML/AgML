@@ -261,6 +261,8 @@ class HeliosDataGenerator(object):
             canopy_params_filtered[''] = self.camera_params
 
         canopy_params_filtered = {'helios': canopy_params_filtered}
+        from pprint import pprint
+        # print(canopy_params_filtered)
 
         if not os.path.exists(os.path.join(os.path.dirname(os.path.dirname(__file__)), '_helios/Helios/projects/SyntheticImageAnnotation/xml')):
             os.makedirs(os.path.join(os.path.dirname(os.path.dirname(__file__)), '_helios/Helios/projects/SyntheticImageAnnotation/xml'))
@@ -292,7 +294,6 @@ class HeliosDataGenerator(object):
         Labels = label_elements.replace(' ', '').split(',')
 
         for j in range(len(Labels)):
-            print(j)
             assert Labels[j] in ['trunk', 'leaves', 'fruits', 'branches', 'ground', 'none'], 'Label type unavailable'
 
 
@@ -337,16 +338,20 @@ class HeliosDataGenerator(object):
 
             # Context parameters
             for key in param_ranges:
+                print(param_ranges[key])
                 arr = [np.random.uniform(param_ranges[key][i][0], param_ranges[key][i][1]) for i in
                        range(len(param_ranges[key]))]
                 string_arr = [str(a) for a in arr]
                 params[key] = ' '.join(string_arr)
             self.canopy_params[canopy_type] = params
+            print(self.canopy_params[canopy_type])
 
             self.generate_one_datapair(canopy_type, simulation_type)
 
             # Re-write tags of XML to have the expected Helios input
-            tree = ET.parse(os.path.join(os.path.dirname(os.path.dirname(__file__)), '_helios/Helios/projects/SyntheticImageAnnotation/xml', 'tmp_canopy_params_image.xml'))
+            tree = ET.parse(os.path.join(os.path.dirname(os.path.dirname(__file__)),
+                                         '_helios/Helios/projects/SyntheticImageAnnotation/xml',
+                                         'tmp_canopy_params_image.xml'))
             root = tree.getroot()
             for child in root:
                 if child.tag == 'camera_position':
@@ -360,7 +365,8 @@ class HeliosDataGenerator(object):
                     child.set('label', 'image_resolution')
 
 
-            tree.write(os.path.join(os.path.dirname(os.path.dirname(__file__)), '_helios/Helios/projects/SyntheticImageAnnotation/xml', 'tmp_canopy_params_image.xml'))
+            tree.write(os.path.join(os.path.dirname(os.path.dirname(__file__)),
+                                    '_helios/Helios/projects/SyntheticImageAnnotation/xml', 'tmp_canopy_params_image.xml'))
 
             # Modify cmake file for rgb versus lidar simulation
             with open(self.path_cmakelists) as f:
@@ -378,8 +384,8 @@ class HeliosDataGenerator(object):
                 f.writelines(cmakelists_txt)
 
             # Modify maincpp file for rgb versus lidar simulation
-            with open(self.path_main_cpp) as f:
-                main_cpp = f.readlines()
+            # with open(self.path_main_cpp) as f:
+            #     main_cpp = f.readlines()
 
             # Define paths for CMAKE compilation and output files
             current_directory = os.getcwd()
@@ -409,6 +415,7 @@ class HeliosDataGenerator(object):
             exe = os.path.join(build_dir, 'SyntheticImageAnnotation')
 
             # Modify main.cpp file for compilation in LIDAR and RGB case
+            """
             print('Generation synthetic data: #' + str(n))
             for i, string in enumerate(main_cpp):
                 
@@ -505,6 +512,17 @@ class HeliosDataGenerator(object):
             # and write everything back
             with open(self.path_main_cpp, 'w') as f:
                 f.writelines(main_cpp)
+            """
+
+            default_xml_path = os.path.join(
+                os.path.dirname(os.path.dirname(__file__)),
+                '_helios/Helios/projects/SyntheticImageAnnotation/xml',
+                'tmp_canopy_params_image.xml')
+            str_to_write = f"{annotation_type}\n{simulation_type}\n{' '.join(Labels)}\n{default_xml_path}\n{images_dir}"
+            with open(os.path.join(os.path.dirname(os.path.dirname(__file__)),
+                                   '_helios/Helios/projects/SyntheticImageAnnotation/config.txt'), 'w') as f:
+                f.write(str_to_write)
+
 
             # System call to helios @DARIO
             # current_directory = os.getcwd()
@@ -553,7 +571,8 @@ class HeliosDataGenerator(object):
                 subprocess.run(['cmake', ".."] + cmake_args, cwd = build_dir, check = True)
             subprocess.run(['cmake', '--build', '.'], cwd = build_dir, check = True)
 
-            subprocess.run([exe], cwd = build_dir)
+            subprocess.run([exe, '/Users/amoghjoshi/Documents/Amogh/Programs/Python/AgML/agml/_helios/Helios/projects/SyntheticImageAnnotation/config.txt',
+                            output_dir], cwd = build_dir)
 
         # self.convert_data() # Conversion to standard formats @PRANAV
 
