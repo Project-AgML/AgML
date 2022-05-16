@@ -86,9 +86,8 @@ def _compile_helios_default():
     # Compile the CMake files.
     cmake_log = ""
     sys.stderr.write("Compiling Helios with CMake.\n\n")
-    cmake_process = sp.Popen(cmake_args, stdout = sp.PIPE,
-                             cwd = HELIOS_BUILD, stderr = sp.PIPE,
-                             universal_newlines = True)
+    cmake_process = sp.Popen(cmake_args, stdout = sp.PIPE, cwd = HELIOS_BUILD,
+                             stderr = sp.STDOUT, universal_newlines = True)
     for line in iter(cmake_process.stdout.readline, ""):
         cmake_log += line
         sys.stderr.write(line)
@@ -109,9 +108,8 @@ def _compile_helios_default():
     # Generate the main executable.
     cmake_log = "\n"
     sys.stderr.write("Building Helios executable with CMake.\n\n")
-    make_process = sp.Popen(make_args, stdout = sp.PIPE,
-                            cwd = HELIOS_BUILD, stderr = sp.PIPE,
-                            universal_newlines = True)
+    make_process = sp.Popen(make_args, stdout = sp.PIPE, cwd = HELIOS_BUILD,
+                            stderr = sp.STDOUT, universal_newlines = True)
     for line in iter(make_process.stdout.readline, ""):
         cmake_log += line
         sys.stderr.write(line)
