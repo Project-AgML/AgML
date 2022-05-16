@@ -88,7 +88,8 @@ def _check_helios_installation():
         # Check if the Git update check has been run in the last 48 hours.
         with open(os.path.expanduser('~/.agml/config.json')) as f:
             contents = json.load(f)
-        last_check = contents.get('last_helios_check', dt(1970, 1, 1))
+        last_check = contents.get(
+            'last_helios_check', dt(1970, 1, 1).strftime("%B %d %Y %H:%M:%S"))
         last_check = dt.strptime(last_check, "%B %d %Y %H:%M:%S")
 
         # If the last check has been run less than 48 hours ago, then
@@ -213,6 +214,11 @@ def _get_canopy_params():
                         value = [int(v) for v in value_items]
                     else:
                         value = [float(v) for v in value_items]
+
+                # If the value is a path, then make it absolute.
+                else:
+                    if value.endswith('.jpg') or value.endswith('.png'):
+                        value = os.path.join(HELIOS_PATH, value)
 
                 # Update the parameter dictionary.
                 canopy_parameters[name][n] = value
