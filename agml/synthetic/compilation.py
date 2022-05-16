@@ -132,12 +132,23 @@ def _compile_helios_default():
     sys.stderr.write('\nHelios compilation successful!')
 
 
+def recompile_helios():
+    """Recompiles the Helios library with the set parameters.
+
+    This method can be used by the user in order to recompile Helios, if, for
+    instance, an error was encountered during prior compilation, or a local edit
+    is made, without having to wait for the default recompilation every 48 hours.
+    """
+    _compile_helios_default()
+
+
 def _compilation_failed(helios_temp_dir, temp_dir):
     """Cleanup after a failed Helios compilation."""
     shutil.rmtree(HELIOS_BUILD)
     shutil.move(helios_temp_dir, HELIOS_BUILD)
     temp_dir.cleanup()
     sys.exit(1)
+
 
 
 

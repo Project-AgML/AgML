@@ -30,3 +30,6 @@ from .tools import (
     generate_environment_map,
     generate_camera_positions
 )
+from .compilation import (
+    recompile_helios
+)
