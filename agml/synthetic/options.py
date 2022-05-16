@@ -197,7 +197,7 @@ class HeliosOptions(AgMLSerializable):
         # Initialize the default data generation parameters.
         self._annotation_type = AnnotationType.object_detection
         self._simulation_type = SimulationType.RGB
-        self._labels = []
+        self._labels = ['fruits']
 
     def _initialize_canopy(self, canopy):
         """Initializes Helios options from the provided canopy."""
@@ -249,6 +249,9 @@ class HeliosOptions(AgMLSerializable):
 
     @labels.setter
     def labels(self, value: Sequence):
+        if len(value) == 0:
+            raise ValueError("You cannot have no labels, choose a combination "
+                             "of `trunks`, `fruits`, `branches`, and `leaves`.")
         self._labels = value
 
     def reset(self):

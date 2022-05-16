@@ -18,6 +18,14 @@ from .config import _check_helios_installation
 _check_helios_installation()
 del _check_helios_installation
 
+from .options import (
+    HeliosOptions,
+    AnnotationType,
+    SimulationType
+)
+from .generator import (
+    HeliosDataGenerator
+)
 from .tools import (
     generate_environment_map,
     generate_camera_positions

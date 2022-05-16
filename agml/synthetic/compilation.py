@@ -32,6 +32,9 @@ HELIOS_BUILD = os.path.join(
 HELIOS_EXECUTABLE = os.path.join(
     PROJECT_PATH, 'build', 'SyntheticImageAnnotation')
 
+# Helios parameter paths.
+XML_PATH = os.path.join(PROJECT_PATH, 'xml')
+
 
 def _compile_helios_default():
     """Compiles the default Helios library upon installation and update."""
