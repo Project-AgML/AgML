@@ -13,14 +13,26 @@
 # limitations under the License.
 
 import os
-from typing import List
+from enum import Enum
 from numbers import Number
+from typing import List, Union, Sequence
 from dataclasses import dataclass, fields, asdict
-
-import numpy as np
 
 from agml.framework import AgMLSerializable
 from agml.synthetic.config import load_default_helios_configuration
+
+
+class AnnotationType(Enum):
+    """The type of annotation to use in generation."""
+    object_detection: str = "object_detection"
+    semantic_segmentation: str = "semantic_segmentation"
+    instance_segmentation: str = "instance_segmentation"
+
+
+class SimulationType(Enum):
+    """The simulation render (RGB vs. LiDAR) that is generated."""
+    RGB: str = "rgb"
+    LiDAR: str = "lidar"
 
 
 @dataclass(repr = False)
@@ -152,8 +164,7 @@ class HeliosOptions(AgMLSerializable):
 
     The primary exposed options are the `canopy_parameters` (as well as similar
     options for camera position and LiDAR, `camera/lidar_parameters' specifically),
-    as well as the `canopy_parameter_ranges` (as well as a similar set of options
-    for camera and LiDAR, once again).
+    and the actual data generation parameters, such as the `annotation_format`.
 
     The `HeliosOptions` is instantiated with the name of the canopy type that you
     want to generate; from there, the parameters and ranges can be accessed through
@@ -171,7 +182,8 @@ class HeliosOptions(AgMLSerializable):
         The type of plant canopy to be used in generation.
     """
     serializable = frozenset(('canopy', 'canopy_parameters',
-                              'camera_parameters', 'lidar_parameters'))
+                              'camera_parameters', 'lidar_parameters',
+                              'annotation_type', 'simulation_type', 'labels'))
 
     # The default configuration parameters are loaded directly from
     # the `helios_config.json` file which is constructed each time
@@ -181,6 +193,11 @@ class HeliosOptions(AgMLSerializable):
     def __init__(self, canopy = None):
         # Check that the provided canopy is valid.
         self._initialize_canopy(canopy)
+
+        # Initialize the default data generation parameters.
+        self._annotation_type = AnnotationType.object_detection
+        self._simulation_type = SimulationType.RGB
+        self._labels = []
 
     def _initialize_canopy(self, canopy):
         """Initializes Helios options from the provided canopy."""
@@ -209,6 +226,30 @@ class HeliosOptions(AgMLSerializable):
     @property
     def lidar(self) -> LiDARParameters:
         return self._lidar_parameters
+    
+    @property
+    def annotation_type(self) -> str:
+        return self._annotation_type
+    
+    @annotation_type.setter
+    def annotation_type(self, value: Union[AnnotationType, str]):
+        self._annotation_type = AnnotationType(value)
+
+    @property
+    def simulation_type(self) -> str:
+        return self._simulation_type
+
+    @simulation_type.setter
+    def simulation_type(self, value: Union[SimulationType, str]):
+        self._simulation_type = SimulationType(value)
+
+    @property
+    def labels(self) -> list:
+        return self._labels
+
+    @labels.setter
+    def labels(self, value: Sequence):
+        self._labels = value
 
     def reset(self):
         """Resets the parameters to the default for the canopy."""
