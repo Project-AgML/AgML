@@ -185,7 +185,7 @@ class HeliosDataFormatConverter(object):
             # Convert the bounding boxes to COCO JSON format.
             x_c, y_c, w, h = np.rollaxis(annotations, 1)
             x_min = (x_c - w / 2) * width
-            y_min = (y_c - h / 2) * height
+            y_min = height - ((y_c - h / 2) * height)
             w = w * width
             h = h * height
             coords = np.dstack([x_min, y_min, w, h])[0].astype(np.int32)
