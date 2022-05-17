@@ -153,7 +153,7 @@ class HeliosDataFormatConverter(object):
         with open(os.path.join(self._meta.path, 'annotations.json'), 'w') as f:
             json.dump({
                 'images': image_coco, 'annotations': annotation_coco,
-                'category': category_coco, 'info': info_coco}, f, indent = 4)
+                'categories': category_coco, 'info': info_coco}, f, indent = 4)
 
     def _convert_text_files_to_object_annotations(self, image_dir):
         """Converts text file annotations to COCO JSON object annotations."""
@@ -232,5 +232,5 @@ class HeliosDataFormatConverter(object):
 
 
 
-HeliosDataFormatConverter(dataset = 'grapevine').convert()
+
 
