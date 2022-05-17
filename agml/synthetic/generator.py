@@ -15,6 +15,7 @@
 import os
 import io
 import sys
+import json
 import datetime
 import subprocess as sp
 from dataclasses import dataclass
@@ -151,6 +152,13 @@ class HeliosDataGenerator(AgMLSerializable):
     def _prepare_parameters_for_generation(self):
         """Prepares the provided Helios parameter options for generation."""
         parameters = self._options._to_dict()
+
+        # Divide the image resolution in half. For some reason, Helios
+        # appears to generate images with twice the provided resolution,
+        # so in order to fix this, we need to divide the resolution in
+        # two here so that it is correct during generation.
+        parameters['camera']['image_resolution'] = \
+            [i // 2 for i in parameters['camera']['image_resolution']]
 
         # Generate the ground parameters.
         ground_params = self._load_ground_parameters()
@@ -359,4 +367,16 @@ class HeliosDataGenerator(AgMLSerializable):
         # Remove the configuration and style files.
         os.remove(cfg_file)
         os.remove(os.path.join(XML_PATH, xml_file_base))
+
+        # Save the extra metadata.
+        with open(os.path.join(metadata_dir, 'meta.json'), 'w') as f:
+            json.dump({'labels': self._generation_options.labels,
+                       'image_size': self._options.camera.image_resolution,
+                       'generation_date': datetime.datetime.now().strftime(
+                           '%B %d, %Y %H:%M')}, f, indent = 4)
+
+        # Check that the process successfully completed.
+        if process.returncode != 0:
+            raise OSError(f"Encountered an error when generating synthetic "
+                          f"data. Process returned code {process.returncode}.")
 
