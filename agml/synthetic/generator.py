@@ -31,6 +31,7 @@ from agml.synthetic.options import HeliosOptions
 from agml.synthetic.options import AnnotationType, SimulationType
 from agml.synthetic.config import load_default_helios_configuration
 from agml.synthetic.compilation import HELIOS_EXECUTABLE, XML_PATH, PROJECT_PATH
+from agml.synthetic.converter import HeliosDataFormatConverter
 
 
 @dataclass
@@ -379,4 +380,9 @@ class HeliosDataGenerator(AgMLSerializable):
         if process.returncode != 0:
             raise OSError(f"Encountered an error when generating synthetic "
                           f"data. Process returned code {process.returncode}.")
+
+        # Convert the dataset format.
+        if convert_data:
+            cvt = HeliosDataFormatConverter(output_dir)
+            cvt.convert()
 

@@ -25,7 +25,6 @@ import numpy as np
 
 from agml.utils.io import recursive_dirname, get_dir_list
 from agml.utils.logging import tqdm
-# from agml.backend.config import synthetic_data_save_path
 
 
 @dataclass
@@ -44,8 +43,6 @@ class HeliosDataFormatConverter(object):
     def __init__(self, dataset):
         # Locate the dataset and parse its metadata.
         self._meta = self.parse_metadata(dataset)
-
-        #
 
     def parse_metadata(self, dataset):
         """Parse the metadata of the dataset for use in conversion."""
@@ -183,9 +180,10 @@ class HeliosDataFormatConverter(object):
                 annotations = annotations[:, 1:].astype(np.float32)
 
             # Convert the bounding boxes to COCO JSON format.
+            # (data[l][1])-0.5*data[l][3],  (img.shape[0] - data[l][2])- 0.5* data[l][4]), data[l][3], data[l][4]
             x_c, y_c, w, h = np.rollaxis(annotations, 1)
             x_min = (x_c - w / 2) * width
-            y_min = height - ((y_c - h / 2) * height)
+            y_min = ((1 - y_c) - h / 2) * height
             w = w * width
             h = h * height
             coords = np.dstack([x_min, y_min, w, h])[0].astype(np.int32)
