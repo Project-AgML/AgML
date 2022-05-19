@@ -30,7 +30,7 @@ from agml.utils.io import get_file_list, get_dir_list
 from agml.utils.data import load_public_sources
 from agml.utils.general import NoArgument, resolve_list_value
 from agml.utils.random import inject_random_state
-from agml.backend.config import data_save_path
+from agml.backend.config import data_save_path, synthetic_data_save_path
 from agml.backend.experimental import AgMLExperimentalFeatureWrapper
 from agml.backend.tftorch import (
     get_backend, set_backend,
@@ -163,7 +163,7 @@ class AgMLDataLoader(AgMLSerializable, metaclass = AgMLDataLoaderMeta):
             'data_distributions': {self.name: self._info.num_images}}
 
     @classmethod
-    def from_custom_data(cls, name, dataset_path = None, classes = None, **kwargs):
+    def custom(cls, name, dataset_path = None, classes = None, **kwargs):
         """Creates an `AgMLDataLoader` with a set of custom data.
 
         If you have a custom dataset that you want to use in an `AgMLDataLoader`,
@@ -270,6 +270,51 @@ class AgMLDataLoader(AgMLSerializable, metaclass = AgMLDataLoaderMeta):
         # Construct and return the `AgMLDataLoader`.
         return cls(name, dataset_path = dataset_path,
                    meta = {'task': task, 'classes': classes, **kwargs})
+
+    @classmethod
+    def helios(cls, name, dataset_path = None):
+        """Creates an `AgMLDataLoader` from a Helios-generated dataset.
+
+        Given the path to a Helios-generated (and converted) dataset, this method
+        will generate an `AgMLDataLoader` which is constructed using similar
+        semantics to the regular instantiation. This method is largely similar to
+        `AgMLDataLoader.custom()`, but also takes into account the extra
+        information which is provided in the `.metadata` directory of the Helios
+        generated dataset, allowing it to contain potentially even more info.
+        """
+        # Locate the path to the dataset, using synthetic semantics.
+        if dataset_path is None:
+            dataset_path = os.path.abspath(
+                os.path.join(synthetic_data_save_path(), name))
+            if not os.path.exists(dataset_path):
+                raise NotADirectoryError(
+                    f"Existing directory '{dataset_path}' for dataset of name "
+                    f"{name} not found, pass a custom path if you want to use "
+                    f"a custom dataset path for the dataset.")
+        else:
+            dataset_path = os.path.abspath(os.path.expanduser(dataset_path))
+            if not os.path.exists(dataset_path):
+                if not os.path.exists(dataset_path):
+                    raise NotADirectoryError(
+                        f"Could not find a directory for Helios dataset '{name}' "
+                        f"at the provided dataset path: {dataset_path}.")
+            if not dataset_path.endswith(name):
+                dataset_path = os.path.join(dataset_path, name)
+                if not os.path.exists(dataset_path):
+                    raise NotADirectoryError(
+                        f"Could not find a directory for Helios dataset '{name}' "
+                        f"at the provided dataset path: {dataset_path}.")
+
+        # Load the information file.
+        info_file = os.path.join(dataset_path, '.metadata', 'agml_info.json')
+        if not os.path.exists(info_file):
+            raise FileNotFoundError(f"The information file at '{info_file}' for the "
+                                    f"Helios dataset {name} could not be found.")
+        with open(info_file, 'r') as f:
+            meta = json.load(f)
+
+        # Construct the loader.
+        return cls.custom(name, dataset_path, **meta)
 
     @staticmethod
     def merge(*loaders, classes = None):
