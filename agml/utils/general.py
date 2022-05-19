@@ -129,28 +129,6 @@ def txt2image2(path):
     return data
 
 
-def PlotAllViews(path, Pos):
-    """Plot all the RGB images"""
-    plt.rcParams['figure.figsize'] = [50, 50]
-    fig, axs = plt.subplots(round(len(Pos)/2 + 0.1),2)
-    fig.subplots_adjust(hspace = .1, wspace=.001)
-    axs = axs.ravel()
-    
-    for i in range(len(Pos)):
-        if i<10:
-            img = cv2.imread(path + 'view0000' + str(i) + '/RGB_rendering.jpeg')
-            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-            axs[i].imshow(img)
-        if i>10:
-            img = cv2.imread(path + 'view000' + str(i) + '/RGB_rendering.jpeg')
-            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-            axs[i].imshow(img)
-        axs[i].set_title('Camera view: #' + str(i),fontsize=50)
-
-        plt.rcParams['figure.figsize'] = [50, 50]
-    if len(Pos) % 2 != 0:
-        fig.delaxes(axs[i+1])
-
 def PlotAllViewsSemantic(path, Pos):
     """Plot all the Semantic segmentation images"""
     fig, axs = plt.subplots(round(len(Pos)/2 + 0.1),2)

@@ -14,11 +14,15 @@
 
 """Tools for working with synthetic data in the Helios format."""
 
+import os
+
 import math
 from typing import List, Union, Tuple
 
 import numpy as np
 from scipy.signal import sawtooth
+
+from agml.utils.io import get_dir_list
 
 
 def generate_environment_map(
@@ -151,3 +155,8 @@ def generate_camera_positions(
         raise ValueError(f"Got `camera_type`: ({camera_type}), "
                          f"expected either `circular`, `linear`, or `aerial`.")
 
+
+def _is_agml_converted(dataset_path):
+    """Returns whether a Helios dataset has been converted to AgML format."""
+    return os.path.exists(os.path.join(dataset_path, '.metadata', 'agml_info.json')) \
+            or get_dir_list(dataset_path) == ['.metadata'] # dataset with no annotations
