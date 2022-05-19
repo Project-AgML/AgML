@@ -30,7 +30,8 @@ _setup(); del _setup # noqa
 
 
 # There are no top-level imported functions or classes, only the modules.
-from . import data, backend, viz
+from . import data, backend, synthetic, viz
+
 
 
 

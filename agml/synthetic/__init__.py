@@ -13,11 +13,6 @@
 # limitations under the License.
 
 
-# Run the configuration check.
-from .config import _check_helios_installation
-_check_helios_installation()
-del _check_helios_installation
-
 from .options import (
     HeliosOptions,
     AnnotationType,
