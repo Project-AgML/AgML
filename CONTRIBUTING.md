@@ -137,7 +137,7 @@ in the `agml/_assets` folder. You will need to update the `public_datasources.js
 
 ```json
     "my_new_dataset": {
-        "crop_types": {
+        "classes": {
             "1": "class_1",
             "2": "class_2",
             "3": "class_3"
