@@ -36,10 +36,11 @@ from agml.synthetic.converter import HeliosDataFormatConverter
 
 @dataclass
 class GenerationInstanceOptions:
+    canopy: str
     num_images: int
     annotation_type: Union[AnnotationType, str]
     simulation_type: Union[SimulationType, str]
-    labels: List[Literal['trunk', 'leaves', 'fruits', 'branches']]
+    labels: List[Literal['trunks', 'leaves', 'fruits', 'branches']]
     output_dir: str
 
     def __post_init__(self):
@@ -53,7 +54,8 @@ class GenerationInstanceOptions:
                 "Expected either an `AnnotationType` parameter "
                 "or corresponding string for 'annotation_type'. "
                 "Valid annotation types: `object_detection`, "
-                "`semantic_segmentation`, `instance_segmentation`.")
+                "`semantic_segmentation`, `instance_segmentation`, "
+                "or for no annotations at all, `none`.")
 
         try:
             self.simulation_type = SimulationType(self.simulation_type)
@@ -67,6 +69,9 @@ class GenerationInstanceOptions:
         if not all(i in valid_labels for i in self.labels):
             raise ValueError(f"Got one or more invalid labels: {self.labels}."
                              f"Valid labels: {[*valid_labels]}.")
+        if self.canopy in ['Tomato', 'Strawberry'] and 'trunks' in self.labels:
+            raise ValueError("Tomato and Strawberry canopies do not have any trunks, "
+                             "so trying to use the `trunks` label is impossible.")
 
     @classmethod
     def _empty(cls):
@@ -333,6 +338,7 @@ class HeliosDataGenerator(AgMLSerializable):
         # Construct the `GenerationInstanceOptions` class from the `HeliosOptions`
         # parameters and the newly passed input parameters.
         self._generation_options = GenerationInstanceOptions(
+            canopy = self._canopy,
             num_images = num_images,
             annotation_type = self._options.annotation_type,
             simulation_type = self._options.simulation_type,
@@ -378,8 +384,14 @@ class HeliosDataGenerator(AgMLSerializable):
 
         # Check that the process successfully completed.
         if process.returncode != 0:
-            raise OSError(f"Encountered an error when generating synthetic "
-                          f"data. Process returned code {process.returncode}.")
+            if process.returncode == -11:
+                raise OSError(f"Encountered an error when generating synthetic "
+                              f"data. Process returned code {process.returncode}, "
+                              f"suggesting that the program ran out of memory. Try "
+                              f"passing a smaller environment for generation.")
+            else:
+                raise OSError(f"Encountered an error when generating synthetic "
+                              f"data. Process returned code {process.returncode}.")
 
         # Convert the dataset format.
         if convert_data:

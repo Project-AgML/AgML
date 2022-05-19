@@ -21,9 +21,10 @@ from typing import List
 from dataclasses import dataclass
 from datetime import datetime as dt
 
+import cv2
 import numpy as np
 
-from agml.utils.io import recursive_dirname, get_dir_list
+from agml.utils.io import recursive_dirname, get_dir_list, get_file_list
 from agml.utils.logging import tqdm
 
 
@@ -38,7 +39,25 @@ class DataFormatConverterMetadata:
 
 
 class HeliosDataFormatConverter(object):
-    """Converts the annotation and organization of a Helios dataset."""
+    """Converts the annotation and organization of a Helios dataset.
+
+    This method can be used to convert a Helios-generated dataset into the
+    corresponding AgML format for the annotation type, thus allowing the dataset
+    to be used with an `AgMLDataLoader`. The conversion consists of replacing the
+    file structure in the directory location of the dataset with the new structure,
+    and adding a new file at `.metadata/agml_info.json` which contains as much info
+    about the dataset that can be gleaned in order to have loader compatibility.
+
+    Parameters
+    ----------
+    dataset : str
+        The name of the dataset to convert.
+
+    Notes
+    -----
+    This class shouldn't be instantiated on its own, instead use the helper method
+    `agml.synthetic.convert_helios_dataset_format()` with the dataset.
+    """
 
     def __init__(self, dataset):
         # Locate the dataset and parse its metadata.
@@ -87,6 +106,18 @@ class HeliosDataFormatConverter(object):
         newly organized dataset is written to its existing location, and if the
         conversion is successful, then the original organization is cleared out.
         """
+        # If there are no annotations, the conversion is as simple as moving files.
+        if self._meta.annotation_type == "none":
+            try:
+                self._convert_no_annotation_dataset()
+            except Exception as e:
+                raise e
+            else:
+                self._remove_existing_image_dirs()
+            return
+
+        # Otherwise, we need to reconstruct the entire structure and generate
+        # the proper annotation format from the input files at the location.
         if self._meta.annotation_type == 'object_detection':
             try:
                 self._convert_object_detection_dataset()
@@ -95,6 +126,21 @@ class HeliosDataFormatConverter(object):
                 raise e
             else:
                 self._remove_existing_image_dirs()
+        elif self._meta.annotation_type == 'semantic_segmentation':
+            try:
+                self._convert_semantic_segmentation_dataset()
+            except Exception as e:
+                self._cleanup_failed_semantic_segmentation_conversion()
+                raise e
+            else:
+                self._remove_existing_image_dirs()
+        self._make_agml_info_json()
+
+    def _convert_no_annotation_dataset(self):
+        """For datasets with no annotations, this just moves the images."""
+        jpeg_images = glob.glob(
+            os.path.join(self._meta.path, "image*/**/*.jpeg"), recursive = True)
+        self._map_and_move_images(jpeg_images, output_dir = self._meta.path)
 
     def _convert_object_detection_dataset(self):
         """Converts the format of an object detection dataset to COCO JSON."""
@@ -180,7 +226,6 @@ class HeliosDataFormatConverter(object):
                 annotations = annotations[:, 1:].astype(np.float32)
 
             # Convert the bounding boxes to COCO JSON format.
-            # (data[l][1])-0.5*data[l][3],  (img.shape[0] - data[l][2])- 0.5* data[l][4]), data[l][3], data[l][4]
             x_c, y_c, w, h = np.rollaxis(annotations, 1)
             x_min = (x_c - w / 2) * width
             y_min = ((1 - y_c) - h / 2) * height
@@ -200,11 +245,18 @@ class HeliosDataFormatConverter(object):
             data_dir = self._meta.path
             image_dir = os.path.join(data_dir, 'images')
             os.makedirs(image_dir, exist_ok = True)
+        elif self._meta.annotation_type == 'semantic_segmentation':
+            data_dir = self._meta.path
+            image_dir = os.path.join(data_dir, 'images')
+            os.makedirs(image_dir, exist_ok = True)
+            annotation_dir = os.path.join(data_dir, 'annotations')
+            os.makedirs(annotation_dir, exist_ok = True)
 
-    def _map_and_move_images(self, images):
+    def _map_and_move_images(self, images, output_dir = None):
         """Maps all of the images to a new ID and moves them."""
         image_new_map = {}
-        output_dir = os.path.join(self._meta.path, 'images')
+        if output_dir is None:
+            output_dir = os.path.join(self._meta.path, 'images')
         for image in tqdm(images, file = sys.stdout, desc = "Moving Images"):
             image_num = os.path.basename(recursive_dirname(image, 2))
             view_num = os.path.basename(recursive_dirname(image, 1))
@@ -220,6 +272,64 @@ class HeliosDataFormatConverter(object):
         if os.path.exists(os.path.join(self._meta.path, 'images')):
             shutil.rmtree(os.path.join(self._meta.path, 'images'))
 
+    def _convert_semantic_segmentation_dataset(self):
+        """Converts the format of a semantic segmentation dataset to AgML's format."""
+        # Get all of the images in the dataset.
+        jpeg_images = glob.glob(
+            os.path.join(self._meta.path, "image*/**/*.jpeg"), recursive = True)
+
+        # For each of the images, get their corresponding annotations.
+        num_to_label = None
+        image_annotation_map = {}
+        for image in jpeg_images:
+            if num_to_label is None:
+                num_to_label = self._get_number_to_label_map(
+                    os.path.join(os.path.dirname(image),
+                                 'semantic_segmentation_ID_mapping.txt'))
+            image_annotation_map[image] = \
+                self._convert_text_to_semantic_segmentation_array(
+                    os.path.join(os.path.dirname(image), 'semantic_segmentation.txt'))
+
+        # Create a virtual output directory structure and the new filenames.
+        self._create_output_directory_structure()
+        new_image_map = self._map_and_move_images(jpeg_images)
+
+        # Write all of the corresponding annotations.
+        annotation_dir = os.path.join(self._meta.path, 'annotations')
+        for image in jpeg_images:
+            new_file = os.path.join(
+                annotation_dir, os.path.basename(
+                    new_image_map[image].replace('.jpeg', '.png')))
+            cv2.imwrite(new_file, image_annotation_map[image])
+
+    @staticmethod
+    def _get_number_to_label_map(txt):
+        with open(txt, 'r') as f:
+            return [{int(float(v)): k for k, v in [
+                i.replace('\n', '').split(' ') for i in f.readlines()[1:]]}]
+
+    @staticmethod
+    def _convert_text_to_semantic_segmentation_array(file):
+        """Converts a text file to a semantic segmentation array."""
+        # Get all of the contents of the file, and convert them from strings to arrays.
+        with open(file, 'r') as f:
+            contents = [[i for i in line.replace('\n', '').split(' ') if i != '']
+                        for line in f.readlines() if line != '']
+            contents = np.array(contents).astype(np.int32)
+
+        # Replace all extra values with zeroes.
+        contents[contents == 16777215] = 0
+
+        # Return the array.
+        return contents
+
+    def _cleanup_failed_semantic_segmentation_conversion(self):
+        """Cleans up the remnants of a failed conversion for semantic segmentation."""
+        if os.path.exists(os.path.join(self._meta.path, 'images')):
+            shutil.rmtree(os.path.join(self._meta.path, 'images'))
+        if os.path.exists(os.path.join(self._meta.path, 'annotations')):
+            shutil.rmtree(os.path.join(self._meta.path, 'annotations'))
+
     def _remove_existing_image_dirs(self):
         """Removes the original image directories after a successful conversion."""
         image_dirs = [
@@ -227,8 +337,32 @@ class HeliosDataFormatConverter(object):
         for image_dir in image_dirs:
             shutil.rmtree(os.path.join(self._meta.path, image_dir))
 
+    @staticmethod
+    def _infer_ag_task(ml_task):
+        if ml_task == 'object_detection':
+            return 'fruit_detection'
+        elif ml_task == 'semantic_segmentation':
+            return 'fruit_segmentation'
 
+    def _make_agml_info_json(self):
+        """Constructs a JSON file with information for an AgMLDataLoader"""
+        info_json = {
+            'classes': self._meta.labels,
+            'ml_task': self._meta.annotation_type,
+            'ag_task': self._infer_ag_task(self._meta.annotation_type),
+            'location': 'synthetic',
+            'sensor_modality': 'rgb',
+            'real_synthetic': 'synthetic',
+            'n_images': len(get_file_list(os.path.join(self._meta.path, 'images'))),
+            'platform': 'ground',
+            'input_data_format': 'jpeg',
+            'annotation_format': 'coco_json'
+            if self._meta.annotation_type in ['object_detection'] else 'image'
+        }
 
+        # Save the info JSON to a file.
+        with open(os.path.join(self._meta.path, '.metadata', 'agml_info.json'), 'w') as f:
+            json.dump(info_json, f)
 
 
 

@@ -16,7 +16,7 @@ import os
 from enum import Enum
 from numbers import Number
 from dataclasses import dataclass, fields, asdict
-from typing import List, Union, Sequence, get_args
+from typing import List, Union, Sequence
 
 from agml.framework import AgMLSerializable
 from agml.synthetic.config import load_default_helios_configuration
@@ -28,6 +28,7 @@ class AnnotationType(Enum):
     object_detection: str = "object_detection"
     semantic_segmentation: str = "semantic_segmentation"
     instance_segmentation: str = "instance_segmentation"
+    none: str = "none"
 
 
 class SimulationType(Enum):
