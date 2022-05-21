@@ -205,6 +205,16 @@ class HeliosOptions(AgMLSerializable):
                               'annotation_type', 'simulation_type', 'labels'))
     
     def __new__(cls, *args, **kwargs):
+        # Run the configuration check. Notice that we run this here because
+        # users may not necessarily want to use Helios on first installing
+        # AgML, but the `synthetic` module is loaded into the main AgML
+        # module as in the top-level `__init__.py` file. By putting the check
+        # here, it ensures that Helios is only installed if and when data is
+        # actually being generated, and not just by a standard import.
+        from .config import _check_helios_installation
+        _check_helios_installation()
+        del _check_helios_installation
+
         # The default configuration parameters are loaded directly from
         # the `helios_config.json` file which is constructed each time
         # Helios is installed or updated.
