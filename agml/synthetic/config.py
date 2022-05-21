@@ -54,7 +54,7 @@ def reinstall_helios():
     this method does. Running this method manually also clears out the
     Helios directory, which is why extra confirmation is required.
     """
-    check = input("Are you sure you want to re-install Helios? [y|n]")
+    check = input("Are you sure you want to re-install Helios? [y|n] ")
     if check != 'y':
         print("Aborting re-installation")
     else:

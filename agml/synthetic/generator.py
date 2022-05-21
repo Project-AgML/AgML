@@ -29,7 +29,7 @@ from agml.framework import AgMLSerializable
 from agml.backend.config import synthetic_data_save_path
 from agml.synthetic.options import HeliosOptions
 from agml.synthetic.options import AnnotationType, SimulationType
-from agml.synthetic.config import load_default_helios_configuration
+from agml.synthetic.config import load_default_helios_configuration, HELIOS_PATH
 from agml.synthetic.compilation import HELIOS_EXECUTABLE, XML_PATH, PROJECT_PATH
 from agml.synthetic.converter import HeliosDataFormatConverter
 
@@ -379,7 +379,8 @@ class HeliosDataGenerator(AgMLSerializable):
 
         # Run the actual data generation with the executable.
         process = sp.Popen([HELIOS_EXECUTABLE, cfg_file], stdout = sp.PIPE,
-                           stderr = sp.STDOUT, universal_newlines = True)
+                           stderr = sp.STDOUT, universal_newlines = True,
+                           cwd = HELIOS_PATH)
         for line in iter(process.stdout.readline, ""):
             sys.stdout.write(line)
         process.stdout.close()
