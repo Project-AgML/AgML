@@ -59,7 +59,8 @@ def reinstall_helios():
         print("Aborting re-installation")
     else:
         print("Re-installing Helios.")
-    shutil.rmtree(HELIOS_PATH)
+    if os.path.exists(HELIOS_PATH):
+        shutil.rmtree(HELIOS_PATH)
     _check_helios_installation()
 
 

@@ -28,3 +28,6 @@ from .tools import (
 from .compilation import (
     recompile_helios
 )
+from .config import (
+    reinstall_helios
+)
