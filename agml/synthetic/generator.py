@@ -21,7 +21,7 @@ import subprocess as sp
 from dataclasses import dataclass
 import xml.etree.ElementTree as ET
 from collections.abc import Sequence
-from typing import List, Union, Literal
+from typing import List, Union
 
 from dict2xml import dict2xml
 
@@ -40,7 +40,7 @@ class GenerationInstanceOptions:
     num_images: int
     annotation_type: Union[AnnotationType, str]
     simulation_type: Union[SimulationType, str]
-    labels: List[Literal['trunks', 'leaves', 'fruits', 'branches']]
+    labels: List[str]
     output_dir: str
 
     def __post_init__(self):
