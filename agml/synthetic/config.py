@@ -58,6 +58,9 @@ def _check_helios_installation():
     the check is only run if it has not been run in the last 48 hours). This
     is to prevent constant resource-consuming checks for Git updates.
     """
+    # Temporarily get the personal access token.
+    from agml._internal.utils import get_personal_access_token
+
     # Update the global Helios check.
     global _HELIOS_CHECK_DONE_IN_SESSION
     _HELIOS_CHECK_DONE_IN_SESSION = True
@@ -103,7 +106,7 @@ def _check_helios_installation():
             f"day(s) ago. Checking for update.\n")
 
     # Execute the installation/update script.
-    process = sp.Popen(['bash', helios_file],
+    process = sp.Popen(['bash', helios_file, get_personal_access_token()],
                        stdout = sp.PIPE, universal_newlines = True)
     for line in iter(process.stdout.readline, ""):
         sys.stderr.write(line)
