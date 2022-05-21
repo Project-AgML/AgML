@@ -1460,8 +1460,8 @@ class AgMLMultiDatasetLoader(AgMLSerializable):
         # The `collate_fn` for object detection is different because
         # the COCO JSON dictionaries each have different formats. So,
         # we need to replace it with a custom function.
-        collate_fn = None
-        if obj.task == 'object_detection':
+        collate_fn = loader_kwargs.pop('collate_fn')
+        if obj.task == 'object_detection' and collate_fn is None:
             def collate_fn(batch):
                 images = torch.stack(
                     [i[0] for i in batch], dim = 0)
