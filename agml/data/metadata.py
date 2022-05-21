@@ -114,6 +114,8 @@ class DatasetMetadata(AgMLSerializable):
     def __eq__(self, other):
         if isinstance(other, DatasetMetadata):
             return self._name == other._name
+        if isinstance(other, str):
+            return self._name == other
         return False
 
     @property
