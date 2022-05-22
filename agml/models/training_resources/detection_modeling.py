@@ -105,7 +105,7 @@ class DetectionTrainingModel(DetectionModel):
             if len(bboxes) > 0:
                 # Re-scale the bounding box to the appropriate format.
                 scale_ratio = [h / 512, w / 512, h / 512, w / 512]
-                scaled = (np.array(bboxes) * scale_ratio).astype(np.int32)
+                scaled = (np.array(bboxes.detach().cpu()) * scale_ratio).astype(np.int32)
 
                 # Convert the Pascal-VOC (yxyx) format to COCO (xywh).
                 y, x = scaled[:, 0], scaled[:, 1]
@@ -150,12 +150,11 @@ class DetectionTrainingModel(DetectionModel):
             for pred_box, pred_label, pred_conf, true_box, true_label in zip(
                     boxes, labels, confidences, annotations['bbox'], annotations['cls']):
                 metric_update_values = \
-                    dict(boxes = torch.tensor(pred_box, dtype = torch.float32),
-                         labels = torch.tensor(pred_label, dtype = torch.int32),
-                         scores = torch.tensor(pred_conf)), \
-                    dict(boxes = torch.tensor(true_box, dtype = torch.float32),
-                         labels = torch.tensor(true_label, dtype = torch.int32))
-                print(metric_update_values)
+                    dict(boxes = self._to_out(torch.tensor(pred_box, dtype = torch.float32)),
+                         labels = self._to_out(torch.tensor(pred_label, dtype = torch.int32)),
+                         scores = self._to_out(torch.tensor(pred_conf))), \
+                    dict(boxes = self._to_out(torch.tensor(true_box, dtype = torch.float32)),
+                         labels = self._to_out(torch.tensor(true_label, dtype = torch.int32)))
                 self.map.update(*metric_update_values)
 
                 # Log the MAP values.

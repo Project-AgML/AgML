@@ -40,6 +40,7 @@ def _add_truth_scores_to_annotations(annotations):
     for idx in range(len(annotations)):
         prior, after = a[idx][:2], a[idx][2:]
         a[idx] = [*prior, 1.0, *after]
+    return a
 
 
 def intersection_over_union(boxes_preds, boxes_labels):
@@ -77,7 +78,7 @@ def mean_average_precision(
     # Add truth class scores to annotations if they're not present.
     if len(true_boxes[0]) == 6:
         my_new_boxes = true_boxes.copy()
-        _add_truth_scores_to_annotations(my_new_boxes)
+        my_new_boxes = _add_truth_scores_to_annotations(my_new_boxes)
         true_boxes = my_new_boxes
 
     # Add a progress bar if requested to.
@@ -126,7 +127,6 @@ def mean_average_precision(
 
         # Iterate over all of the detections.
         for detection_idx, detection in enumerate(detections):
-            print(detection, ground_truths)
             ground_truth_img = [
                 bbox for bbox in ground_truths if bbox[0] == detection[0]]
             best_iou, best_gt_idx = 0, 0
@@ -232,6 +232,10 @@ class MeanAveragePrecision(object):
             pred_boxes = np.expand_dims(pred_boxes, axis = 0)
         if gt_boxes.ndim == 1:
             gt_boxes = np.expand_dims(gt_boxes, axis = 0)
+        if pred_boxes.ndim == 3:
+            pred_boxes = np.squeeze(pred_boxes, 0)
+        if gt_boxes.ndim == 3:
+            gt_boxes = np.squeeze(gt_boxes, 0)
 
         # Create the data in the proper format.
         for bbox, label in zip(gt_boxes, gt_labels):

@@ -146,7 +146,6 @@ def build_loader(dataset: Union[List[str], str],
     pl.seed_everything(2499751)
     loader = agml.data.AgMLDataLoader(dataset)
     loader.shuffle()
-    loader = loader.take_random(10)
 
     # Apply the batch size.
     loader.batch(batch_size = batch_size)

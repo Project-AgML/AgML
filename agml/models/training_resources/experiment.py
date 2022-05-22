@@ -93,7 +93,7 @@ class DetectionExperiment(object):
             confidence_threshold = params.get('confidence_threshold', 0.3),
             learning_rate = params.get('learning_rate', 0.0002),
             wbf_iou_threshold = params.get('wbf_iou_threshold', 0.44))
-        self._model.load_state_dict(torch.load('/Users/amoghjoshi/paper/detection_checkpoints/grape_detection_californiaday/final_model.pth'))
+        self._model.load_state_dict(torch.load('/data2/amnjoshi/final/detection_checkpoints/grape_detection_californiaday/final_model.pth'))
 
         # Build the loggers.
         # loggers = [
@@ -124,7 +124,7 @@ if __name__ == '__main__':
         name = 'thingy',
         dataset = ['grape_detection_californiaday'],
         num_workers = 0,
-        batch_size = 1,
+        batch_size = 2,
     )
     DetectionExperiment(parameters).train()
 
