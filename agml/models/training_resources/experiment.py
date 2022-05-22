@@ -93,16 +93,15 @@ class DetectionExperiment(object):
             confidence_threshold = params.get('confidence_threshold', 0.3),
             learning_rate = params.get('learning_rate', 0.0002),
             wbf_iou_threshold = params.get('wbf_iou_threshold', 0.44))
-        self._model.load_state_dict(torch.load('/data2/amnjoshi/final/detection_checkpoints/grape_detection_californiaday/final_model.pth'))
 
         # Build the loggers.
-        # loggers = [
-        #     WandbLogger(name = experiment_name,
-        #                 save_dir = experiment_dir)
-        # ]
+        loggers = [
+            WandbLogger(name = experiment_name,
+                        save_dir = experiment_dir)
+        ]
 
         # Construct the `Trainer` with the model.
-        self._trainer = Trainer(gpus = gpus(None),
+        self._trainer = Trainer(logger = loggers, gpus = gpus(None),
                                 max_epochs = params.get('epochs', 25))
 
     def _parse_loader(self):
@@ -114,18 +113,13 @@ class DetectionExperiment(object):
         return TransformApplier(augmentations)
 
     def train(self):
+        """Train the model."""
         self._trainer.fit(self._model,
                           self._data_module)
 
+        torch.save(self._model.state_dict(),
+                   os.path.join(self._experiment_dir, 'final_model.pth'))
 
-if __name__ == '__main__':
-    parameters = dict(
-        epochs = 10,
-        name = 'thingy',
-        dataset = ['grape_detection_californiaday'],
-        num_workers = 0,
-        batch_size = 2,
-    )
-    DetectionExperiment(parameters).train()
+
 
 
