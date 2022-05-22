@@ -311,6 +311,8 @@ class TrainingManager(AgMLSerializable):
     @staticmethod
     def _torch_tensor_image_convert(image):
         """Converts potential multi-image input dicts to tensors."""
+        if isinstance(image, torch.Tensor):
+            return image
         if isinstance(image, np.ndarray):
             return _convert_image_to_torch(image)
         return {k: _convert_image_to_torch(i) for k, i in image.items()}
@@ -372,6 +374,8 @@ class TrainingManager(AgMLSerializable):
                 value = np.empty(0)
             if not isinstance(value, torch.Tensor):
                 coco_tensor[key] = torch.tensor(value)
+            else:
+                coco_tensor[key] = value
         return coco_tensor
 
 

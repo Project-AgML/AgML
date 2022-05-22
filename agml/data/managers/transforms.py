@@ -338,7 +338,7 @@ class TransformManager(AgMLSerializable):
             sig = inspect.signature(transform).parameters
             if not len(sig) == 1:
                 raise TypeError("Expected a single-image transform passed "
-                                "to `transform` to accept one input image,"
+                                "to `transform` to accept one input image, "
                                 f"instead got {len(sig)} parameters.")
             return transform
 

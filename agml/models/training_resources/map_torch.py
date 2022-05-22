@@ -126,6 +126,7 @@ def mean_average_precision(
 
         # Iterate over all of the detections.
         for detection_idx, detection in enumerate(detections):
+            print(detection, ground_truths)
             ground_truth_img = [
                 bbox for bbox in ground_truths if bbox[0] == detection[0]]
             best_iou, best_gt_idx = 0, 0

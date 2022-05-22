@@ -36,8 +36,8 @@ import agml
 import albumentations as A
 from albumentations.pytorch import ToTensorV2
 
-from agml.models.efficientdet.model import get_efficientdet_config, HeadNet, create_model_from_config
-from agml.models.efficientdet.bench import DetBenchTrain, DetBenchPredict
+from agml.models.training_resources.model import get_efficientdet_config, HeadNet, create_model_from_config
+from agml.models.training_resources.bench import DetBenchTrain, DetBenchPredict
 
 from ensemble_boxes import ensemble_boxes_wbf
 

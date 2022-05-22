@@ -58,12 +58,17 @@ class DetectionModel(AgMLModelBase):
     serializable = frozenset(("model", "confidence_threshold", "source"))
     state_override = frozenset(("model", ))
 
-    def __init__(self, dataset, conf_threshold = 0.3):
-        # Construct the network and load in pretrained weights.
+    def __init__(self, dataset = None, conf_threshold = 0.3, **kwargs):
+        # Initialize the base modules.
         super(DetectionModel, self).__init__()
-        self._confidence_threshold = conf_threshold
-        self._source = source(dataset)
-        self.model = self._construct_sub_net(dataset)
+
+        # If being initialized by a subclass, then don't do any of
+        # model construction logic (since that's already been done).
+        if not kwargs.get('model_initialized', False):
+            # Construct the network and load in pretrained weights.
+            self._confidence_threshold = conf_threshold
+            self._source = source(dataset)
+            self.model = self._construct_sub_net(dataset)
 
         # Filter out unnecessary warnings.
         warnings.filterwarnings(

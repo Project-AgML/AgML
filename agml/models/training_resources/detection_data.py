@@ -86,12 +86,17 @@ def _post_prepare_for_efficientdet(image, annotation):
     return image, target
 
 
-def _default_augmentation(image_size = 512):
-    """Default training and validation augmentations."""
-    # Default augmentation function.
-    def _augmentation(image, annotation):
-        nonlocal image_size
+class TransformApplier(object):
+    """Applies transforms to the data."""
+    def __init__(self,
+                 augmentations: Any,
+                 image_size: int = 512):
+        self._image_size = image_size
+        if augmentations is None:
+            augmentations = self._default_augmentation
+        self._augmentations = augmentations
 
+    def _default_augmentation(self, image, annotation):
         # Construct the sample.
         sample = {
             "image": np.array(image, dtype = np.float32),
@@ -100,7 +105,7 @@ def _default_augmentation(image_size = 512):
 
         # Augment the sample.
         sample = A.Compose(
-            [A.Resize(height = image_size, width = image_size, p = 1),
+            [A.Resize(height = self._image_size, width = self._image_size, p = 1),
              ToTensorV2(p = 1)], p = 1.0,
             bbox_params = A.BboxParams(
                 format = "pascal_voc", min_area = 0,
@@ -110,45 +115,23 @@ def _default_augmentation(image_size = 512):
         return sample['image'], {'bboxes': sample['bboxes'],
                                  'labels': sample['labels']}
 
-    # Return the default augmentation function.
-    return _augmentation
+    def _apply_train(self, image, annotation):
+        image, annotation = _pre_prepare_for_efficientdet(image, annotation)
+        image, annotation = self._augmentations['train'](image, annotation)
+        image, annotation = _post_prepare_for_efficientdet(image, annotation)
+        return image, annotation
 
+    def _apply_val(self, image, annotation):
+        image, annotation = _pre_prepare_for_efficientdet(image, annotation)
+        image, annotation = self._augmentations['val'](image, annotation)
+        image, annotation = _post_prepare_for_efficientdet(image, annotation)
+        return image, annotation
 
-def transformation(augmentation: Any = None,
-                   image_size: int = 512):
-    """Applies the full EfficientDet data transform to the loader."""
-    # Get the default augmentation if none is passed.
-    if augmentation is None:
-        augmentation = _default_augmentation(image_size = image_size)
-
-    # If a dictionary is passed, then make separate transforms
-    # for train and validation.
-    if isinstance(augmentation, dict):
-        def _apply_train(image, annotation):
-            nonlocal augmentation
-            image, annotation = _pre_prepare_for_efficientdet(image, annotation)
-            image, annotation = augmentation['train'](image, annotation)
-            image, annotation = _post_prepare_for_efficientdet(image, annotation)
-            return image, annotation
-
-        def _apply_val(image, annotation):
-            nonlocal augmentation
-            image, annotation = _pre_prepare_for_efficientdet(image, annotation)
-            image, annotation = augmentation['val'](image, annotation)
-            image, annotation = _post_prepare_for_efficientdet(image, annotation)
-            return image, annotation
-
-        return {'train': _apply_train, 'val': _apply_val}
-
-    # Otherwise, return a single universal transform.
-    else:
-        def _apply(image, annotation):
-            nonlocal augmentation
-            image, annotation = _pre_prepare_for_efficientdet(image, annotation)
-            image, annotation = augmentation(image, annotation)
-            image, annotation = _post_prepare_for_efficientdet(image, annotation)
-            return image, annotation
-        return _apply
+    def _apply(self, image, annotation):
+        image, annotation = _pre_prepare_for_efficientdet(image, annotation)
+        image, annotation = self._augmentations(image, annotation)
+        image, annotation = _post_prepare_for_efficientdet(image, annotation)
+        return image, annotation
 
 
 def build_loader(dataset: Union[List[str], str],
@@ -163,6 +146,7 @@ def build_loader(dataset: Union[List[str], str],
     pl.seed_everything(2499751)
     loader = agml.data.AgMLDataLoader(dataset)
     loader.shuffle()
+    loader = loader.take_random(10)
 
     # Apply the batch size.
     loader.batch(batch_size = batch_size)
@@ -186,13 +170,16 @@ class EfficientDetDataModule(pl.LightningDataModule):
         self._val_loader.as_torch_dataset()
 
         # Update the transforms.
-        if isinstance(augmentation, dict):
-            self._train_transform = augmentation['train']
-            self._val_transform = augmentation['val']
+        if isinstance(augmentation._augmentations, dict):
+            self._train_transform = augmentation._apply_train
+            self._val_transform = augmentation._apply_val
         else:
-            self._train_transform = self._val_transform = augmentation
-        self._train_loader.transform(self._train_transform)
-        self._val_transform.transform(self._val_transforms)
+            self._train_transform = self._val_transform = \
+                augmentation._apply
+        self._train_loader.transform(
+            dual_transform = self._train_transform)
+        self._val_loader.transform(
+            dual_transform = self._val_transform)
 
         # Initialize the base module.
         self._num_workers = num_workers
@@ -215,7 +202,6 @@ class EfficientDetDataModule(pl.LightningDataModule):
 
     def val_dataloader(self) -> DataLoader:
         return self.val_dataset().export_torch(
-            shuffle = True,
             pin_memory = True,
             drop_last = True,
             num_workers = self._num_workers,
@@ -231,8 +217,8 @@ class EfficientDetDataModule(pl.LightningDataModule):
 
         boxes = [target["bboxes"].float() for target in targets]
         labels = [target["labels"].float() for target in targets]
-        img_size = torch.tensor([target["img_size"] for target in targets]).float()
-        img_scale = torch.tensor([target["img_scale"] for target in targets]).float()
+        img_size = torch.stack([target["img_size"] for target in targets]).float()
+        img_scale = torch.stack([target["img_scale"] for target in targets]).float()
 
         annotations = {
             "bbox": boxes, "cls": labels,
