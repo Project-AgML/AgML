@@ -19,7 +19,7 @@ import torch
 import numpy as np
 import albumentations as A
 
-from agml.utils.general import is_array_like
+from agml.backend.tftorch import is_array_like
 
 
 def imagenet_style_process(image, size = None):

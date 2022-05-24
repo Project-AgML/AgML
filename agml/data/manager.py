@@ -23,6 +23,7 @@ from agml.data.managers.resize import ImageResizeManager
 from agml.data.managers.training import TrainingManager
 
 from agml.utils.general import NoArgument
+from agml.backend.tftorch import convert_to_batch, is_array_like
 from agml.utils.random import seed_context
 from agml.utils.image import consistent_shapes
 from agml.utils.logging import log
@@ -274,15 +275,8 @@ class DataManager(AgMLSerializable):
     def _batch_multi_image_inputs(self, images):
         """Converts either a list of images or multiple input types into a batch."""
         # If the input images are just a simple batch.
-        if isinstance(images[0], np.ndarray):
-            if not consistent_shapes(images):
-                images = np.array(images, dtype = object)
-                log("Created a batch of images with different "
-                    "shapes. If you want the shapes to be consistent, "
-                    "run `loader.resize_images('auto')`.")
-            else:
-                images = np.array(images)
-            return images
+        if is_array_like(images[0]):
+            return convert_to_batch(images)
 
         # Otherwise, convert all of them independently.
         keys = images[0].keys()

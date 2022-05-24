@@ -23,14 +23,15 @@ from agml.framework import AgMLSerializable
 from agml.data.metadata import DatasetMetadata
 from agml.data.loader import AgMLDataLoader
 from agml.utils.general import (
-    resolve_list_value, NoArgument, is_array_like
+    resolve_list_value, NoArgument
 )
 from agml.utils.random import seed_context, inject_random_state
 from agml.utils.image import consistent_shapes
 from agml.utils.logging import log
 from agml.backend.tftorch import (
     get_backend, set_backend,
-    user_changed_backend, StrictBackendError
+    user_changed_backend, StrictBackendError,
+    is_array_like, convert_to_batch
 )
 
 
@@ -1312,14 +1313,7 @@ class AgMLMultiDatasetLoader(AgMLSerializable):
         """Converts either a list of images or multiple input types into a batch."""
         # If the input images are just a simple batch.
         if is_array_like(images[0]):
-            if not consistent_shapes(images):
-                images = np.array(images, dtype = object)
-                log("Created a batch of images with different "
-                    "shapes. If you want the shapes to be consistent, "
-                    "run `loader.resize_images('default')`.")
-            else:
-                images = np.stack(images, axis = 0)
-            return images
+            return convert_to_batch(images)
 
         # Otherwise, convert all of them independently.
         keys = images[0].keys()

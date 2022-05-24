@@ -14,6 +14,7 @@
 
 import numpy as np
 
+from agml.backend.tftorch import is_array_like
 from agml.utils.general import resolve_list_value
 
 
@@ -25,6 +26,8 @@ def _resolve_coco_annotations(annotations):
     e.g. multiple bounding boxes and areas, or a list of multiple COCO
     dictionaries. This method resolves it into the former case.
     """
+    if is_array_like(annotations) and not isinstance(annotations, np.ndarray):
+        return annotations.numpy()
     if isinstance(annotations, np.ndarray):
         return annotations
     if isinstance(annotations, list):

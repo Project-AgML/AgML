@@ -32,7 +32,8 @@ def _pre_prepare_for_efficientdet(image, annotation):
 
     This preparation stage occurs *pre-transformation*.
     """
-    image = Image.fromarray(image)
+    # Convert the image type.
+    image = image.astype(np.uint8)
 
     # Clip the bounding boxes to the image shape to prevent errors.
     bboxes = np.array(annotation['bbox']).astype(np.int32)
@@ -40,10 +41,10 @@ def _pre_prepare_for_efficientdet(image, annotation):
     y_min = bboxes[:, 1]
     x_max = bboxes[:, 2] + x_min
     y_max = bboxes[:, 3] + y_min
-    x_min, y_min = np.clip(x_min, 0, image.width), \
-                   np.clip(y_min, 0, image.height)
-    x_max, y_max = np.clip(x_max, 0, image.width), \
-                   np.clip(y_max, 0, image.height)
+    x_min, y_min = np.clip(x_min, 0, image.shape[1]), \
+                   np.clip(y_min, 0, image.shape[0])
+    x_max, y_max = np.clip(x_max, 0, image.shape[1]), \
+                   np.clip(y_max, 0, image.shape[0])
 
     # Reconstruct the boxes and get the class labels.
     bboxes = np.dstack((x_min, y_min, x_max, y_max)).squeeze(axis = 0)
@@ -54,8 +55,7 @@ def _pre_prepare_for_efficientdet(image, annotation):
         class_labels = np.expand_dims(class_labels, axis = 0)
 
     # Construct and return the sample.
-    return np.array(image, dtype = np.float32), \
-           {'bboxes': bboxes, 'labels': class_labels}
+    return image, {'bboxes': bboxes, 'labels': class_labels}
 
 
 def _post_prepare_for_efficientdet(image, annotation):
@@ -115,21 +115,30 @@ class TransformApplier(object):
         return sample['image'], {'bboxes': sample['bboxes'],
                                  'labels': sample['labels']}
 
+    @staticmethod
+    def _unpack_result(result):
+        if isinstance(result, dict):
+            return result['image'], {'bboxes': result['bboxes'], 'labels': result['labels']}
+        return result
+
     def _apply_train(self, image, annotation):
         image, annotation = _pre_prepare_for_efficientdet(image, annotation)
-        image, annotation = self._augmentations['train'](image, annotation)
+        image, annotation = self._unpack_result(self._augmentations['train'](
+            image = image, bboxes = annotation['bboxes'], labels = annotation['labels']))
         image, annotation = _post_prepare_for_efficientdet(image, annotation)
         return image, annotation
 
     def _apply_val(self, image, annotation):
         image, annotation = _pre_prepare_for_efficientdet(image, annotation)
-        image, annotation = self._augmentations['val'](image, annotation)
+        image, annotation = self._unpack_result(self._augmentations['val'](
+            image = image, bboxes = annotation['bboxes'], labels = annotation['labels']))
         image, annotation = _post_prepare_for_efficientdet(image, annotation)
         return image, annotation
 
     def _apply(self, image, annotation):
         image, annotation = _pre_prepare_for_efficientdet(image, annotation)
-        image, annotation = self._augmentations(image, annotation)
+        image, annotation = self._unpack_result(self._augmentations(
+            image = image, bboxes = annotation['bboxes'], labels = annotation['labels'])) # noqa
         image, annotation = _post_prepare_for_efficientdet(image, annotation)
         return image, annotation
 
@@ -184,6 +193,10 @@ class EfficientDetDataModule(pl.LightningDataModule):
         self._num_workers = num_workers
         super(EfficientDetDataModule, self).__init__()
 
+    @property
+    def train_loader(self):
+        return self._train_loader
+
     def train_dataset(self) -> Dataset:
         return self._train_loader
 
@@ -195,6 +208,10 @@ class EfficientDetDataModule(pl.LightningDataModule):
             num_workers = self._num_workers,
             collate_fn = self.collate_fn,
         )
+
+    @property
+    def val_loader(self):
+        return self._val_loader
 
     def val_dataset(self) -> Dataset:
         return self._val_loader

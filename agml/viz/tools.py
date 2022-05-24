@@ -177,11 +177,14 @@ def format_image(img):
     if np.issubdtype(img.dtype, np.inexact):
         if not img.max() <= 1: # noqa
             img = img.astype(np.uint8)
+        else:
+            img = (img * 255).astype(np.uint8)
 
-    # Convert int64 to int32.
+    # Convert 64-bit integer to unsigned 8-bit.
     if img.dtype == np.int64:
         log("Converting image of dtype `np.int64` to `np.uint8` for display. "
             "This may cause a loss in precision/invalid result.")
         img = img.astype(np.uint8)
 
+    # Return the formatted image.
     return img

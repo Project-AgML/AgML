@@ -23,7 +23,10 @@ import logging
 import importlib
 import functools
 
+import numpy as np
+
 from agml.utils.logging import log
+from agml.utils.image import consistent_shapes
 
 
 # Suppress any irrelevant warnings which will pop up from either backend.
@@ -32,13 +35,7 @@ warnings.filterwarnings(
     'ignore', category = UserWarning, message = '.*Named tensors.*Triggered internally.*')
 
 
-# Custom errors.
-
-class BackendError(ValueError):
-    pass
-
-
-class StrictBackendError(BackendError):
+class StrictBackendError(ValueError):
     def __init__(self, message = None, change = None, obj = None):
         if message is None:
             message = f"Backend was manually set to " \
@@ -185,6 +182,78 @@ def _postprocess_torch_annotation(image):
     return image
 
 
+def as_scalar(inp):
+    """Converts an input value to a scalar."""
+    if isinstance(inp, (int, float)):
+        return inp
+    if np.isscalar(inp):
+        return inp.item()
+    if isinstance(inp, np.ndarray):
+        return inp.item()
+    if isinstance(inp, torch.Tensor):
+        return inp.item()
+    if isinstance(inp, tf.Tensor):
+        return inp.numpy()
+    raise TypeError(f"Unsupported variable type {type(inp)}.")
+
+
+def scalar_unpack(inp):
+    """Unpacks a 1-d array into a list of scalars."""
+    return [as_scalar(item) for item in inp]
+
+
+def is_array_like(inp):
+    """Determines if an input is a np.ndarray, torch.Tensor, or tf.Tensor."""
+    if isinstance(inp, np.ndarray):
+        return True
+    if isinstance(inp, torch.Tensor):
+        return True
+    if isinstance(inp, tf.Tensor):
+        return True
+    return False
+
+
+def convert_to_batch(images):
+    """Converts a set of images to a batch."""
+    # If `images` is already an array type, nothing to do.
+    if is_array_like(images):
+        return images
+
+    # NumPy Arrays.
+    if isinstance(images[0], np.ndarray):
+        if not consistent_shapes(images):
+            images = np.array(images, dtype = object)
+            log("Created a batch of images with different "
+                "shapes. If you want the shapes to be consistent, "
+                "run `loader.resize_images('auto')`.")
+        else:
+            images = np.array(images)
+        return images
+
+    # Torch Tensors.
+    if isinstance(images[0], torch.Tensor):
+        if not consistent_shapes(images):
+            images = [image.numpy() for image in images]
+            images = np.array(images, dtype = object)
+            log("Created a batch of images with different "
+                "shapes. If you want the shapes to be consistent, "
+                "run `loader.resize_images('auto')`.")
+        else:
+            images = torch.stack(images)
+        return images
+
+    # TensorFlow Tensors.
+    if isinstance(images[0], tf.Tensor):
+        if not consistent_shapes(images):
+            images = tf.ragged.stack(images)
+            log("Created a batch of images with different "
+                "shapes. If you want the shapes to be consistent, "
+                "run `loader.resize_images('auto')`.")
+        else:
+            images = tf.stack(images)
+        return images
+
+
 ######### AGMLDATALOADER METHODS #########
 
 class AgMLObject(object):
@@ -217,5 +286,4 @@ def _add_dataset_to_mro(inst, mode):
                 raise StrictBackendError(change = 'torch', obj = inst)
         if torch_data.Dataset not in inst.__class__.__bases__:
             inst.__class__.__bases__ += (torch_data.Dataset,)
-
 

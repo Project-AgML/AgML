@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import copy
+
 from enum import Enum
 
 import numpy as np
@@ -21,7 +21,7 @@ from agml.utils.image import needs_batch_dim
 from agml.backend.tftorch import (
     tf, torch, set_backend, get_backend,
     user_changed_backend, StrictBackendError,
-    _convert_image_to_torch # noqa
+    _convert_image_to_torch, is_array_like
 )
 
 
@@ -311,16 +311,14 @@ class TrainingManager(AgMLSerializable):
     @staticmethod
     def _torch_tensor_image_convert(image):
         """Converts potential multi-image input dicts to tensors."""
-        if isinstance(image, torch.Tensor):
-            return image
-        if isinstance(image, np.ndarray):
+        if is_array_like(batch):
             return _convert_image_to_torch(image)
         return {k: _convert_image_to_torch(i) for k, i in image.items()}
 
     @staticmethod
     def _torch_tensor_image_batch_convert(batch):
         """Converts potential multi-image input batch dicts to tensor dicts."""
-        if isinstance(batch, np.ndarray):
+        if is_array_like(batch):
             return torch.stack([
                 _convert_image_to_torch(image) for image in batch])
         return {k: TrainingManager.

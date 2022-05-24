@@ -16,7 +16,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from agml.viz.tools import auto_resolve_image, show_when_allowed, format_image
-from agml.utils.general import is_array_like, as_scalar
+from agml.backend.tftorch import as_scalar, is_array_like
 
 
 def _inference_best_shape(n_images):

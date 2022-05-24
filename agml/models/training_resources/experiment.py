@@ -13,8 +13,8 @@
 # limitations under the License.
 
 import os
-import torch.multiprocessing
 
+import torch
 from pytorch_lightning import Trainer
 from pytorch_lightning.loggers import WandbLogger
 
@@ -57,7 +57,8 @@ class DetectionExperiment(object):
 
         # Parse augmentations for an augmentations experiment.
         augmentations = self._parse_augmentations(
-            params.get('augmentations', None))
+            params.get('augmentations', None),
+            image_size = params.get('image_size', 512))
 
         # Construct the data module.
         self._data_module = EfficientDetDataModule(
@@ -108,9 +109,19 @@ class DetectionExperiment(object):
         """Can be overridden by a subclass for data experiments."""
         return self._loader
 
-    def _parse_augmentations(self, augmentations): # noqa
+    def _parse_augmentations(self, augmentations, **kwargs): # noqa
         """Can be overridden by a subclass to run an augmentation experiment."""
         return TransformApplier(augmentations)
+
+    @property
+    def train_loader(self):
+        """Returns the train `AgMLDataLoader` with the input data."""
+        return self._data_module.train_loader
+
+    @property
+    def val_loader(self):
+        """Returns the val `AgMLDataLoader` with the input data."""
+        return self._data_module.val_loader
 
     def train(self):
         """Train the model."""

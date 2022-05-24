@@ -16,7 +16,8 @@ import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 
-from agml.utils.general import resolve_tuple_values, as_scalar, scalar_unpack
+from agml.utils.general import resolve_tuple_values
+from agml.backend.tftorch import as_scalar, scalar_unpack, is_array_like
 from agml.data.tools import (
     _resolve_coco_annotations, convert_bbox_format # noqa
 )
@@ -83,22 +84,25 @@ def annotate_bboxes_on_image(
             bboxes = _resolve_coco_annotations(bboxes)['bbox']
     if len(bboxes) == 0:
         return image
-    image = np.asarray(format_image(image))
+
+    # This ensures that we don't get a resolution error with cv2.
+    image = np.ascontiguousarray(format_image(image))
     if labels is None:
         labels = [1] * len(bboxes)
     if bbox_format is not None:
         bboxes = convert_bbox_format(bboxes, bbox_format)
     if not isinstance(bboxes[0], (list, np.ndarray)):
-        bboxes = [bboxes]
+        if not is_array_like(bboxes[0]):
+            bboxes = [bboxes]
 
     for bbox, label in zip(bboxes, labels):
         bbox = scalar_unpack(bbox)
+        bbox = [int(i) for i in bbox]
         x1, y1, width, height = \
             _resolve_proportional_bboxes(bbox, image.shape)
         x2, y2 = x1 + width, y1 + height
-        image = cv2.rectangle(
-            image, (x1, y1), (x2, y2),
-            get_colormap()[as_scalar(label)], 2)
+        cv2.rectangle(image, (x1, y1), (x2, y2),
+                      get_colormap()[as_scalar(label)], 2)
     return image
 
 

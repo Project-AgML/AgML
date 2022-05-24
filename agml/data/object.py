@@ -21,7 +21,7 @@ import numpy as np
 
 from agml.framework import AgMLSerializable
 from agml.utils.image import imread_context
-from agml.utils.general import scalar_unpack
+from agml.backend.tftorch import scalar_unpack
 
 
 class DataObject(AgMLSerializable):

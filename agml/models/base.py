@@ -22,7 +22,7 @@ import torch
 from pytorch_lightning import LightningModule
 
 from agml.framework import AgMLSerializable
-from agml.utils.general import is_array_like
+from agml.backend.tftorch import is_array_like
 from agml.utils.image import imread_context
 
 
