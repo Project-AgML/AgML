@@ -47,7 +47,10 @@ def resolve_tuple_values(*inputs, custom_error = None):
         if len(inputs[0]) != len(inputs):
             # special case for COCO JSON
             if len(inputs) == 3 and len(inputs[0]) == 2 and isinstance(inputs[0][1], dict):
-                return inputs[0][0], inputs[0][1]['bbox'], inputs[0][1]['category_id']
+                try:
+                    return inputs[0][0], inputs[0][1]['bbox'], inputs[0][1]['category_id']
+                except KeyError:
+                    return inputs[0][0], inputs[0][1]['bboxes'], inputs[0][1]['labels']
             if custom_error is not None:
                 raise ValueError(custom_error)
             else:

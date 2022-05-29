@@ -997,6 +997,9 @@ class AgMLMultiDatasetLoader(AgMLSerializable):
         self._loader_accessors = np.array(batches, dtype = object)
         self._batch_size = batch_size
 
+        # Update the batch creation method.
+        self._make_batch = self._loaders[0]._manager._train_manager.make_batch
+
     def resize_images(self, image_size = None, method = 'bilinear'):
         """Resizes images within the loader to a specified size.
 
