@@ -13,6 +13,16 @@
 # limitations under the License.
 
 import re
+import numpy as np
+import cv2
+import glob
+import math
+import matplotlib.pyplot as plt
+import matplotlib.patches as patches
+import numpy as np
+
+from math import pi, floor
+from scipy import signal
 
 import numpy as np
 
@@ -105,6 +115,151 @@ def is_array_like(inp):
         return True
     return False
 
+def txt2image(path):
+    """Converts txt to numpy array"""
+    data = np.loadtxt(path)
+    data = np.where(data > 20, 0, data) # Change background numbers to zero
+    return data
+
+
+def txt2image2(path):
+    """Converts txt to numpy array, not consider first row"""
+    data = np.loadtxt(path,skiprows=1)
+    data = np.where(data > 1000, 1001, data) # Change background numbers to zero
+    return data
+
+
+def PlotAllViewsSemantic(path, Pos):
+    """Plot all the Semantic segmentation images"""
+    fig, axs = plt.subplots(round(len(Pos)/2 + 0.1),2)
+    fig.subplots_adjust(hspace = .5, wspace=.001)
+    axs = axs.ravel()
+
+    for i in range(len(Pos)):
+        # print(i)
+        if i<10:
+            data = txt2image(path + 'view0000' + str(i) + '/semantic_segmentation.txt')
+            img = data
+            axs[i].imshow(img)
+            im = axs[i].pcolormesh(data, cmap='gist_rainbow')
+
+        if i>10:
+            data = txt2image(path + 'view000' + str(i) + '/semantic_segmentation.txt')
+            img = data
+            axs[i].imshow(img,'gray')
+            axs[i].pcolormesh(data, cmap='gist_rainbow')
+            axs[i].colorbar()
+            axs[i].show()
+    if len(Pos) % 2 != 0:
+        fig.delaxes(axs[i+1])
+    fig.subplots_adjust(right=0.8)
+    cbar_ax = fig.add_axes([0.85, 0.15, 0.05, 0.7])
+    fig.colorbar(im, cax=cbar_ax)
+
+    plt.show()
+
+def generate_specific_rows(filePath, userows=[]):
+    """Read specific line from txt file"""
+    with open(filePath) as f:
+        for i, line in enumerate(f):
+            if i == userows:
+                return line
+
+def PlotInstanceSegmentation(path, view, Label):
+    """Plot specific instance segmentaation images"""
+    L = Label
+
+    i = view
+    
+    
+    if i<10:
+        data1 = path + 'view0000' + str(i) 
+    elif i>=10:
+        data1 = path + 'view000' + str(i)
+    
+    Path_elements = glob.glob(data1 + '/instance_segmentation_' + str(L) + '_*')
+    View_size = len(Path_elements)
+    print('Number of ' + str(L) +':' + str(View_size))
+        
+    axs = plt.axes()
+    
+    img = cv2.imread(path + 'view0000' + str(view) + '/RGB_rendering.jpeg')
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    
+    for j in range(0,View_size):                                             
+        data = txt2image2(Path_elements[j])
+        rectangular_label = generate_specific_rows(Path_elements[j], userows=0)
+        rectangular_label = rectangular_label.replace("\n", "").split(" ")
+        data2 = rectangular_label
+        data2[0] = int(data2[0])
+        data2[1] = int(data2[1])
+        data2[2] = int(data2[2]) 
+        data2[3] = int(data2[3]) 
+        X_min = data2[0]
+        Y_min = img.shape[0] - data2[2] - (data2[3] - data2[2])
+        W = data2[1] - data2[0]
+        H = data2[3] - data2[2]
+        rect = patches.Rectangle((X_min, Y_min ), W , H , linewidth=1, edgecolor='r', facecolor='none')
+        # Add the patch to the Axes
+        axs.add_patch(rect)
+        
+        #Add instance segmentation
+        A = np.zeros(img.shape) + 1001
+
+        imgray = data[1:,1:]
+        img2 = cv2.merge((imgray,imgray,imgray))
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    
+        A[Y_min:Y_min+H,data2[0]:data2[1],:] = img2
+    
+        for x in range(0,img.shape[0]):
+            for y in range(0,img.shape[1]):
+                if x > Y_min and x < Y_min+H and y > data2[0] and y < data2[1]:
+                    if A[x,y,0]<1000: 
+                        img[x,y,0] = 50*A[x,y,0]
+                        img[x,y,1] = 20*A[x,y,0]
+                        img[x,y,2] = 40*A[x,y,0]
+        axs.imshow(img)
+        
+    plt.show()
+
+
+
+
+
+def PlotObjectDetection(path, view, Label):
+    """Plot object detection on one RGB image"""
+    plt.rcParams['figure.figsize'] = [15, 15]
+    axs = plt.axes()
+    
+    L = Label
+
+    if view<10:
+        img = cv2.imread(path + 'view0000' + str(view) + '/RGB_rendering.jpeg')
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        axs.imshow(img)
+        data = np.loadtxt(path + 'view0000' + str(view) + '/rectangular_labels_' + str(L) + '.txt')
+
+    if view>10:
+        img = cv2.imread(path + 'view000' + str(view) + '/RGB_rendering.jpeg')
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        axs.imshow(img)
+        data = np.loadtxt(path + 'view000' + str(view) + '/rectangular_labels_' + str(L) + '.txt')
+        
+    axs.set_title('Camera view: #' + str(view),fontsize=50)
+    # Create a Rectangle patch
+    img_shape = img.shape
+    for l in range(len(data)):
+        data[l][1] = data[l][1]*img.shape[1]
+        data[l][3] = data[l][3]*img.shape[1]
+        data[l][2] = data[l][2]*img.shape[0]
+        data[l][4] = data[l][4]*img.shape[0]
+        rect = patches.Rectangle(((data[l][1])-0.5*data[l][3],  (img.shape[0] - data[l][2])- 0.5* data[l][4]), data[l][3], data[l][4], linewidth=3, edgecolor='r', facecolor='none')
+        # Add the patch to the Axes
+        axs.add_patch(rect)
+
+    plt.show()
+
 
 class seed_context(object):
     """Creates a context with a custom random seed, then resets it.
@@ -129,6 +284,4 @@ class seed_context(object):
 
     def reset(self):
         np.random.seed(self._seed)
-
-
 
