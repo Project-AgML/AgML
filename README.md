@@ -2,10 +2,13 @@
 <img src="/figures/agml-logo.png" alt="agml framework" width="400" height="400">
 </p>
 
-### 👨🏿‍💻👩🏽‍💻🌈 Want to join the [AI Institute for Food Systems team](https://aifs.ucdavis.edu/) and help lead AgML development? We're looking to hire a postdoc with Python library development and ML experience. 🌈👩🏼‍💻👨🏻‍💻
+----
 
-Send your resume and GitHub profile link to [jmearles@ucdavis.edu](mailto:jmearles@ucdavis.edu)!
+### 👨🏿‍💻👩🏽‍💻🌈🪴 Want to join the [AI Institute for Food Systems team](https://aifs.ucdavis.edu/) and help lead AgML development? 🪴🌈👩🏼‍💻👨🏻‍💻
 
+We're looking to hire a postdoc with both Python library development and ML experience. Send your resume and GitHub profile link to [jmearles@ucdavis.edu](mailto:jmearles@ucdavis.edu)!
+
+----
 
 ## Overview
 AgML is a comprehensive library for agricultural machine learning. Currently, AgML provides
