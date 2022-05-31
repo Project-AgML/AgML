@@ -108,8 +108,9 @@ def show_when_allowed(f):
 
     @functools.wraps(f)
     def _cancel_display(*args, **kwargs):
+        show = kwargs.pop('show', True)
         res = f(*args, **kwargs)
-        if not _in_notebook:
+        if not _in_notebook and show:
             plt.show()
         return res
     return _cancel_display
