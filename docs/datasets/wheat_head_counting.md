@@ -22,4 +22,4 @@
 
 ## Examples
 
-![Example Images for wheat_head_counting](https://github.com/Project-AgML/AgML/docs/sample_images/wheat_head_counting_examples.png)
+![Example Images for wheat_head_counting](https://github.com/Project-AgML/AgML/blob/main/docs/sample_images/wheat_head_counting_examples.png)

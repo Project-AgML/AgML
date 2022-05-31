@@ -22,4 +22,4 @@
 
 ## Examples
 
-![Example Images for fruit_detection_worldwide](https://github.com/Project-AgML/AgML/docs/sample_images/fruit_detection_worldwide_examples.png)
+![Example Images for fruit_detection_worldwide](https://github.com/Project-AgML/AgML/blob/main/docs/sample_images/fruit_detection_worldwide_examples.png)

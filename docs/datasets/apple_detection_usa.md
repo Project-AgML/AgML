@@ -22,4 +22,4 @@
 
 ## Examples
 
-![Example Images for apple_detection_usa](https://github.com/Project-AgML/AgML/docs/sample_images/apple_detection_usa_examples.png)
+![Example Images for apple_detection_usa](https://github.com/Project-AgML/AgML/blob/main/docs/sample_images/apple_detection_usa_examples.png)

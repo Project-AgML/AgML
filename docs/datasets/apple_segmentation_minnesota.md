@@ -22,4 +22,4 @@
 
 ## Examples
 
-![Example Images for apple_segmentation_minnesota](https://github.com/Project-AgML/AgML/docs/sample_images/apple_segmentation_minnesota_examples.png)
+![Example Images for apple_segmentation_minnesota](https://github.com/Project-AgML/AgML/blob/main/docs/sample_images/apple_segmentation_minnesota_examples.png)

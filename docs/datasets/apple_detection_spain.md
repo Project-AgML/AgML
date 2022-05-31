@@ -21,4 +21,4 @@
 
 ## Examples
 
-![Example Images for apple_detection_spain](https://github.com/Project-AgML/AgML/docs/sample_images/apple_detection_spain_examples.png)
+![Example Images for apple_detection_spain](https://github.com/Project-AgML/AgML/blob/main/docs/sample_images/apple_detection_spain_examples.png)

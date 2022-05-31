@@ -22,4 +22,4 @@
 
 ## Examples
 
-![Example Images for mango_detection_australia](https://github.com/Project-AgML/AgML/docs/sample_images/mango_detection_australia_examples.png)
+![Example Images for mango_detection_australia](https://github.com/Project-AgML/AgML/blob/main/docs/sample_images/mango_detection_australia_examples.png)

@@ -22,4 +22,4 @@
 
 ## Examples
 
-![Example Images for grape_detection_californiaday](https://github.com/Project-AgML/AgML/docs/sample_images/grape_detection_californiaday_examples.png)
+![Example Images for grape_detection_californiaday](https://github.com/Project-AgML/AgML/blob/main/docs/sample_images/grape_detection_californiaday_examples.png)

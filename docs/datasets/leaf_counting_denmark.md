@@ -19,4 +19,4 @@
 
 ## Examples
 
-![Example Images for leaf_counting_denmark](https://github.com/Project-AgML/AgML/docs/sample_images/leaf_counting_denmark_examples.png)
+![Example Images for leaf_counting_denmark](https://github.com/Project-AgML/AgML/blob/main/docs/sample_images/leaf_counting_denmark_examples.png)

@@ -22,4 +22,4 @@
 
 ## Examples
 
-![Example Images for carrot_weeds_germany](https://github.com/Project-AgML/AgML/docs/sample_images/carrot_weeds_germany_examples.png)
+![Example Images for carrot_weeds_germany](https://github.com/Project-AgML/AgML/blob/main/docs/sample_images/carrot_weeds_germany_examples.png)

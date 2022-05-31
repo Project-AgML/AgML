@@ -22,4 +22,4 @@
 
 ## Examples
 
-![Example Images for plant_doc_detection](https://github.com/Project-AgML/AgML/docs/sample_images/plant_doc_detection_examples.png)
+![Example Images for plant_doc_detection](https://github.com/Project-AgML/AgML/blob/main/docs/sample_images/plant_doc_detection_examples.png)

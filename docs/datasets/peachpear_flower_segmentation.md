@@ -17,4 +17,4 @@
 
 ## Examples
 
-![Example Images for peachpear_flower_segmentation](https://github.com/Project-AgML/AgML/docs/sample_images/peachpear_flower_segmentation_examples.png)
+![Example Images for peachpear_flower_segmentation](https://github.com/Project-AgML/AgML/blob/main/docs/sample_images/peachpear_flower_segmentation_examples.png)

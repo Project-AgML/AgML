@@ -31,7 +31,7 @@ class DefaultDict(dict):
 
 # Configuration Variables.
 NUM_EXAMPLES = 4
-AGML_REPO = "https://github.com/Project-AgML/AgML"
+AGML_REPO = "https://github.com/Project-AgML/AgML/blob/main"
 LOCAL_AGML_REPO = os.path.join(recursive_dirname(__file__, 2))
 
 
@@ -83,6 +83,7 @@ class TableFormat(object):
 
     @staticmethod
     def classes(value):
+        print(value)
         return "| **Classes** | {} |\n".format(', '.join(value.values()))
 
     @staticmethod
@@ -152,9 +153,12 @@ def generate_markdown(name):
 
 
 if __name__ == '__main__':
+    os.makedirs(os.path.join(LOCAL_AGML_REPO, 'docs/datasets'), exist_ok = True)
+    os.makedirs(os.path.join(LOCAL_AGML_REPO, 'docs/sample_images'), exist_ok = True)
     datasets = agml.data.public_data_sources()
     for ds in tqdm(datasets):
-        generate_markdown(ds.name)
+        if not os.path.exists(os.path.join(LOCAL_AGML_REPO, 'docs/datasets', f'{ds.name}.md')):
+            generate_markdown(ds.name)
 
 
 

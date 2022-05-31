@@ -22,4 +22,4 @@
 
 ## Examples
 
-![Example Images for sugarbeet_weed_segmentation](https://github.com/Project-AgML/AgML/docs/sample_images/sugarbeet_weed_segmentation_examples.png)
+![Example Images for sugarbeet_weed_segmentation](https://github.com/Project-AgML/AgML/blob/main/docs/sample_images/sugarbeet_weed_segmentation_examples.png)

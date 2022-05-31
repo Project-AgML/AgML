@@ -21,4 +21,4 @@
 
 ## Examples
 
-![Example Images for crop_weeds_greece](https://github.com/Project-AgML/AgML/docs/sample_images/crop_weeds_greece_examples.png)
+![Example Images for crop_weeds_greece](https://github.com/Project-AgML/AgML/blob/main/docs/sample_images/crop_weeds_greece_examples.png)

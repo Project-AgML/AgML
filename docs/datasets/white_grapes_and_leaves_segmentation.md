@@ -22,4 +22,4 @@
 
 ## Examples
 
-![Example Images for white_grapes_and_leaves_segmentation](https://github.com/Project-AgML/AgML/docs/sample_images/white_grapes_and_leaves_segmentation_examples.png)
+![Example Images for white_grapes_and_leaves_segmentation](https://github.com/Project-AgML/AgML/blob/main/docs/sample_images/white_grapes_and_leaves_segmentation_examples.png)

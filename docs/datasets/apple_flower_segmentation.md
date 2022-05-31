@@ -22,4 +22,4 @@
 
 ## Examples
 
-![Example Images for apple_flower_segmentation](https://github.com/Project-AgML/AgML/docs/sample_images/apple_flower_segmentation_examples.png)
+![Example Images for apple_flower_segmentation](https://github.com/Project-AgML/AgML/blob/main/docs/sample_images/apple_flower_segmentation_examples.png)

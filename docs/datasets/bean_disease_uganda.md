@@ -22,4 +22,4 @@
 
 ## Examples
 
-![Example Images for bean_disease_uganda](https://github.com/Project-AgML/AgML/docs/sample_images/bean_disease_uganda_examples.png)
+![Example Images for bean_disease_uganda](https://github.com/Project-AgML/AgML/blob/main/docs/sample_images/bean_disease_uganda_examples.png)

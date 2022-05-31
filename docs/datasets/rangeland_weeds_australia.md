@@ -22,4 +22,4 @@
 
 ## Examples
 
-![Example Images for rangeland_weeds_australia](https://github.com/Project-AgML/AgML/docs/sample_images/rangeland_weeds_australia_examples.png)
+![Example Images for rangeland_weeds_australia](https://github.com/Project-AgML/AgML/blob/main/docs/sample_images/rangeland_weeds_australia_examples.png)

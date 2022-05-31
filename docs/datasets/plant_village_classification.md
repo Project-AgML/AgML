@@ -22,4 +22,4 @@
 
 ## Examples
 
-![Example Images for plant_village_classification](https://github.com/Project-AgML/AgML/docs/sample_images/plant_village_classification_examples.png)
+![Example Images for plant_village_classification](https://github.com/Project-AgML/AgML/blob/main/docs/sample_images/plant_village_classification_examples.png)

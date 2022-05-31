@@ -21,4 +21,4 @@
 
 ## Examples
 
-![Example Images for guava_disease_pakistan](https://github.com/Project-AgML/AgML/docs/sample_images/guava_disease_pakistan_examples.png)
+![Example Images for guava_disease_pakistan](https://github.com/Project-AgML/AgML/blob/main/docs/sample_images/guava_disease_pakistan_examples.png)
