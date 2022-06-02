@@ -408,6 +408,11 @@ class AgMLMultiDatasetLoader(AgMLSerializable):
         """Returns a deep copy of the data loader's contents."""
         return self.__copy__()
 
+    def __copy__(self):
+        """Copies the loader and updates its state."""
+        cp = super(AgMLMultiDatasetLoader, self).__copy__()
+        cp.copy_state(self)
+        return cp
 
     def copy_state(self, loader):
         """Copies the state of another `AgMLDataLoader` into this loader.

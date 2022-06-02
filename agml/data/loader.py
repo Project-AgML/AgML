@@ -398,6 +398,12 @@ class AgMLDataLoader(AgMLSerializable, metaclass = AgMLDataLoaderMeta):
     def __str__(self):
         return repr(self)
 
+    def __copy__(self):
+        """Copies the loader and updates its state."""
+        cp = super(AgMLDataLoader, self).__copy__()
+        cp.copy_state(self)
+        return cp
+
     def copy(self):
         """Returns a deep copy of the data loader's contents."""
         return self.__copy__()
@@ -418,6 +424,10 @@ class AgMLDataLoader(AgMLSerializable, metaclass = AgMLDataLoaderMeta):
         -------
         This `AgMLDataLoader`.
         """
+        # Re-construct the training manager.
+        new_train_manager = loader._manager._train_manager.__copy__()
+        self._manager._train_manager = new_train_manager
+
         # Re-construct the transform manager.
         new_transform_manager = loader._manager._transform_manager.__copy__()
         self._manager._transform_manager = new_transform_manager
@@ -427,10 +437,6 @@ class AgMLDataLoader(AgMLSerializable, metaclass = AgMLDataLoaderMeta):
         new_resize_manager = loader._manager._resize_manager.__copy__()
         self._manager._resize_manager = new_resize_manager
         self._manager._train_manager._resize_manager = new_resize_manager
-
-        # Re-construct the training manager.
-        new_train_manager = loader._manager._train_manager.__copy__()
-        self._manager._train_manager = new_train_manager
 
     @property
     def name(self):
