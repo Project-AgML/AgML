@@ -408,6 +408,31 @@ class AgMLMultiDatasetLoader(AgMLSerializable):
         """Returns a deep copy of the data loader's contents."""
         return self.__copy__()
 
+
+    def copy_state(self, loader):
+        """Copies the state of another `AgMLDataLoader` into this loader.
+
+        This method copies the state of another `AgMLDataLoader` into this
+        loader, including its transforms, resizing, and training state. Other
+        general parameters such as batch size and shuffling are left intact.
+
+        Parameters
+        ----------
+        loader : AgMLDataLoader
+            The data loader from which the state should be copied.
+
+        Returns
+        -------
+        This `AgMLDataLoader`.
+        """
+        # Copy the state for all the sub-loaders. If the loader state is of
+        # a multi-loader, then only copy the state of its first loader.
+        if isinstance(loader, AgMLMultiDatasetLoader):
+            loader = loader._loaders[0]
+        self._loaders.apply(
+            lambda x: x.copy_state(loader)
+        )
+
     def _make_loaders(self, datasets, **kwargs):
         """Constructs the loaders for the datasets in the collection."""
         # Get and validate the `dataset_path` argument.
@@ -442,7 +467,7 @@ class AgMLMultiDatasetLoader(AgMLSerializable):
 
         # Check that they match the given classes, if such a list is passed.
         if cls is not None:
-            if not set(cls) == set(unique_classes):
+            if not set(cls) == set(unique_classes): # noqa
                 raise ValueError(
                     f"Given list of classes {cls} to `AgMLDataLoader.merge`, "
                     f"but calculated classes {unique_classes}. Check that the "

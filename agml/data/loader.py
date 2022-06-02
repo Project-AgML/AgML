@@ -402,6 +402,36 @@ class AgMLDataLoader(AgMLSerializable, metaclass = AgMLDataLoaderMeta):
         """Returns a deep copy of the data loader's contents."""
         return self.__copy__()
 
+    def copy_state(self, loader):
+        """Copies the state of another `AgMLDataLoader` into this loader.
+
+        This method copies the state of another `AgMLDataLoader` into this
+        loader, including its transforms, resizing, and training state. Other
+        general parameters such as batch size and shuffling are left intact.
+
+        Parameters
+        ----------
+        loader : AgMLDataLoader
+            The data loader from which the state should be copied.
+
+        Returns
+        -------
+        This `AgMLDataLoader`.
+        """
+        # Re-construct the transform manager.
+        new_transform_manager = loader._manager._transform_manager.__copy__()
+        self._manager._transform_manager = new_transform_manager
+        self._manager._train_manager._transform_manager = new_transform_manager
+
+        # Re-construct the resizing manager.
+        new_resize_manager = loader._manager._resize_manager.__copy__()
+        self._manager._resize_manager = new_resize_manager
+        self._manager._train_manager._resize_manager = new_resize_manager
+
+        # Re-construct the training manager.
+        new_train_manager = loader._manager._train_manager.__copy__()
+        self._manager._train_manager = new_train_manager
+
     @property
     def name(self):
         """Returns the name of the dataset in the loader."""
