@@ -285,7 +285,7 @@ class AgMLMultiDatasetLoader(AgMLSerializable):
         # extra helper method which in turn modifies the class annotation
         # before any other transforms are applied, and in any case.
         self._loaders.apply(
-            lambda x: x._manager._train_manager._set_multi_hook(
+            lambda x: x._manager._train_manager._set_annotation_remap_hook(
                 AnnotationRemap(
                     self.class_to_num, self._info.num_to_class, self.task)))
 
@@ -354,7 +354,7 @@ class AgMLMultiDatasetLoader(AgMLSerializable):
             
         # Transform annotations and resizing.
         obj._loaders.apply(
-            lambda x: x._manager._train_manager._set_multi_hook(
+            lambda x: x._manager._train_manager._set_annotation_remap_hook(
                 AnnotationRemap(
                     obj.class_to_num, obj._info.num_to_class, obj.task)))
         obj._loaders.apply(
@@ -1266,7 +1266,7 @@ class AgMLMultiDatasetLoader(AgMLSerializable):
                              "can only be used for object detection tasks.")
 
         self._loaders.apply(
-            lambda x: x._manager._train_manager._set_multi_hook(
+            lambda x: x._manager._train_manager._set_annotation_remap_hook(
                 AnnotationRemap(
                     self.class_to_num, self._info.num_to_class,
                     self.task, generalize_class_detections = True)))

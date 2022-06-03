@@ -936,7 +936,7 @@ class AgMLDataLoader(AgMLSerializable, metaclass = AgMLDataLoaderMeta):
                     return image, annotations
 
             # Maps the annotations.
-            obj._manager._train_manager._set_multi_hook(
+            obj._manager._train_manager._set_annotation_remap_hook(
                 AnnotationRemap(old_to_new)) # noqa
 
         # Return the loader.
