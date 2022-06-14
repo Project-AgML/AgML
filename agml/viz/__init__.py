@@ -28,6 +28,7 @@ from .boxes import (
     visualize_image_and_boxes
 )
 from .labels import (
+    visualize_images,
     visualize_images_with_labels
 )
 from .inspection import (
