@@ -196,6 +196,10 @@ class AgMLDataLoader(AgMLSerializable, metaclass = AgMLDataLoaderMeta):
         without even requiring any metadata, as most of it can be inferred directly
         by this method and thus streamlines the procedure for using custom data.
 
+        If you want to cache the metadata, rather than constantly putting them as
+        arguments, then create a file `.meta.json` at the path `/root/.meta.json`
+        with the parameters that you want.
+
         Parameters
         ----------
         name : str
@@ -256,6 +260,12 @@ class AgMLDataLoader(AgMLSerializable, metaclass = AgMLDataLoaderMeta):
         else:
             raise TypeError("Unrecognized dataset annotation format.")
 
+        # Check if there is a metadata file.
+        kwargs['classes'] = classes
+        if os.path.exists(os.path.join(dataset_path, '.meta.json')):
+            with open(os.path.join(dataset_path, '.meta.json'), 'r') as f:
+                kwargs.update(json.load(f))
+
         # Infer the classes for image classification/object detection.
         if classes is None:
             if task == 'semantic_segmentation':
@@ -270,7 +280,6 @@ class AgMLDataLoader(AgMLSerializable, metaclass = AgMLDataLoaderMeta):
         # Construct and return the `AgMLDataLoader`.
         return cls(name, dataset_path = dataset_path,
                    meta = {'task': task, 'classes': classes, **kwargs})
-
     @classmethod
     def helios(cls, name, dataset_path = None):
         """Creates an `AgMLDataLoader` from a Helios-generated dataset.
