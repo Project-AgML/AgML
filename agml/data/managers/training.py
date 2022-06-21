@@ -56,7 +56,7 @@ class TrainingManager(AgMLSerializable):
     """
     serializable = frozenset((
         'transform_manager', 'resize_manager',
-        'state', 'task', 'multi_hook', 'name'))
+        'state', 'task', 'remap_hook', 'name'))
 
     def __init__(self, transform_manager, resize_manager, task = None):
         # Update the general parameters for the loader.
@@ -82,7 +82,7 @@ class TrainingManager(AgMLSerializable):
         self._state: "TrainState" = TrainState.NONE
 
         # A hook for multi-dataset loaders.
-        self.remap_hook = False
+        self._remap_hook = False
 
     @property
     def state(self):
@@ -170,7 +170,7 @@ class TrainingManager(AgMLSerializable):
 
     def _set_annotation_remap_hook(self, hook):
         """Used to modify class annotations for multi-dataset loaders."""
-        self.remap_hook = hook
+        self._remap_hook = hook
 
     def apply(self, obj, batch_state):
         """Applies preprocessing and conversions to the data contents.
@@ -190,8 +190,8 @@ class TrainingManager(AgMLSerializable):
 
         # If there is a hook to apply (for multi-dataset loaders),
         # then apply the hook before doing anything else.
-        if self.remap_hook:
-            contents = self.remap_hook(contents, self._name) # noqa
+        if self._remap_hook:
+            contents = self._remap_hook(contents, self._name) # noqa
 
         # If the state is set to `False`, then just return the raw contents.
         if self._state is TrainState.FALSE:
