@@ -281,6 +281,7 @@ class AgMLDataLoader(AgMLSerializable, metaclass = AgMLDataLoaderMeta):
         # Construct and return the `AgMLDataLoader`.
         return cls(name, dataset_path = dataset_path,
                    meta = {'task': task, 'classes': classes, **kwargs})
+
     @classmethod
     def helios(cls, name, dataset_path = None):
         """Creates an `AgMLDataLoader` from a Helios-generated dataset.
