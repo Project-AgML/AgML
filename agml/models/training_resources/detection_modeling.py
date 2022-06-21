@@ -55,7 +55,7 @@ class DetectionTrainingModel(DetectionModel):
     @staticmethod
     def make_model(num_classes: int,
                    pretrained_weights: str,
-                   image_size: Union[int, tuple] = 512,
+                   image_size: Union[int, tuple] = 1024,
                    architecture: str = 'tf_efficientdet_d4'):
         """Constructs the `EfficientDet` model from the provided parameters."""
         # Parse the input arguments.

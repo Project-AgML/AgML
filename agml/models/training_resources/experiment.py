@@ -53,18 +53,7 @@ class DetectionExperiment(object):
             self._loader.generalize_class_detections()
 
         # Parse the loader for a loader experiment.
-        self._parse_loader()
-
-        # Parse augmentations for an augmentations experiment.
-        augmentations = self._parse_augmentations(
-            params.get('augmentations', None),
-            image_size = params.get('image_size', 512))
-
-        # Construct the data module.
-        self._data_module = EfficientDetDataModule(
-            loader = self._loader.copy(),
-            augmentation = augmentations,
-            num_workers = params.get('num_workers', 8))
+        self._parse_loader(params)
 
         # Construct the checkpoint and log directory.
         experiment_name = params.get('name', None)
@@ -96,17 +85,25 @@ class DetectionExperiment(object):
             wbf_iou_threshold = params.get('wbf_iou_threshold', 0.44))
 
         # Build the loggers.
-        loggers = [
-            WandbLogger(name = experiment_name,
-                        save_dir = experiment_dir)
-        ]
+        loggers = self._parse_logger(experiment_name = experiment_name,
+                                     experiment_dir = experiment_dir)
 
         # Construct the `Trainer` with the model.
         self._trainer = Trainer(logger = loggers, gpus = gpus(None),
                                 max_epochs = params.get('epochs', 25))
 
-    def _parse_loader(self):
+    def _parse_loader(self, params):
         """Can be overridden by a subclass for data experiments."""
+        # Parse augmentations for an augmentations experiment.
+        augmentations = self._parse_augmentations(
+            params.get('augmentations', None))
+
+        # Construct the data module.
+        self._data_module = EfficientDetDataModule(
+            loader = self._loader,
+            augmentation = augmentations,
+            num_workers = params.get('num_workers', 8))
+
         return self._loader
 
     def _parse_augmentations(self, augmentations, **kwargs): # noqa
@@ -122,6 +119,13 @@ class DetectionExperiment(object):
     def val_loader(self):
         """Returns the val `AgMLDataLoader` with the input data."""
         return self._data_module.val_loader
+
+    def _parse_logger(self, *args, **kwargs):
+        """Can be overridden by a subclass to return a configured logger."""
+        return [
+            WandbLogger(name = kwargs['experiment_name'],
+                        save_dir = kwargs['experiment_dir'])
+        ]
 
     def train(self):
         """Train the model."""

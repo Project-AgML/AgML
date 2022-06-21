@@ -81,13 +81,14 @@ def _post_prepare_for_efficientdet(image, annotation):
         "bboxes": torch.as_tensor(
             bboxes, dtype = torch.float32),
         "labels": torch.as_tensor(labels),
-        "img_size": (new_h, new_w),
+        "img_size": torch.tensor([new_h, new_w]),
         "img_scale": torch.tensor([1.0])}
     return image, target
 
 
 class TransformApplier(object):
     """Applies transforms to the data."""
+
     def __init__(self,
                  augmentations: Any,
                  image_size: int = 512):
@@ -96,12 +97,12 @@ class TransformApplier(object):
             augmentations = self._default_augmentation
         self._augmentations = augmentations
 
-    def _default_augmentation(self, image, annotation):
+    def _default_augmentation(self, image, bboxes, labels):
         # Construct the sample.
         sample = {
             "image": np.array(image, dtype = np.float32),
-            "bboxes": annotation['bboxes'],
-            "labels": annotation['labels']}
+            "bboxes": bboxes,
+            "labels": labels}
 
         # Augment the sample.
         sample = A.Compose(
@@ -138,7 +139,7 @@ class TransformApplier(object):
     def _apply(self, image, annotation):
         image, annotation = _pre_prepare_for_efficientdet(image, annotation)
         image, annotation = self._unpack_result(self._augmentations(
-            image = image, bboxes = annotation['bboxes'], labels = annotation['labels'])) # noqa
+            image = image, bboxes = annotation['bboxes'], labels = annotation['labels']))  # noqa
         image, annotation = _post_prepare_for_efficientdet(image, annotation)
         return image, annotation
 
@@ -167,10 +168,16 @@ def build_loader(dataset: Union[List[str], str],
 class EfficientDetDataModule(pl.LightningDataModule):
     """Wraps an `AgMLDataLoader` into a `LightningDataModule`."""
 
+    def __new__(cls, *args, **kwargs):
+        if kwargs.get('no_agml', False):
+            return EfficientDetDataModuleNoAgML(**kwargs)
+        return super(EfficientDetDataModule, self).__new__(cls, *args, **kwargs)
+
     def __init__(self,
                  loader: agml.data.AgMLDataLoader,
-                 augmentation: Any,
-                 num_workers: int = 8):
+                 augmentation: Any = None,
+                 num_workers: int = 8,
+                 **kwargs):
         # Get the training and validation `AgMLDataLoader`s.
         self._train_loader = loader.train_data
         self._train_loader.as_torch_dataset()
@@ -229,6 +236,64 @@ class EfficientDetDataModule(pl.LightningDataModule):
         """Collates items together into a batch."""
         images, targets = tuple(zip(*batch))
         images = torch.stack(images)
+        images = images.float()
+
+        boxes = [target["bboxes"].float() for target in targets]
+        labels = [target["labels"].float() for target in targets]
+        img_size = torch.stack([target["img_size"] for target in targets]).float()
+        img_scale = torch.stack([target["img_scale"] for target in targets]).float()
+
+        annotations = {
+            "bbox": boxes, "cls": labels,
+            "img_size": img_size, "img_scale": img_scale}
+        return images, annotations, targets
+
+
+class EfficientDetDataModuleNoAgML(pl.LightningDataModule):
+    """Wraps a non-AgMLDataLoader dataset."""
+
+    def __init__(self,
+                 **kwargs):
+        # A custom loader is passed.
+        self._train_ds = kwargs['train_loader']
+        self._val_ds = kwargs['val_loader']
+        self._num_workers = kwargs['num_workers']
+        super(EfficientDetDataModuleNoAgML, self).__init__()
+
+    def train_dataset(self) -> Dataset:
+        return self._train_ds
+
+    def train_dataloader(self) -> DataLoader:
+        return DataLoader(
+            self.train_dataset(),
+            batch_size = 2,
+            shuffle = True,
+            pin_memory = True,
+            drop_last = True,
+            num_workers = self._num_workers,
+            collate_fn = self.collate_fn,
+        )
+
+    def val_dataset(self) -> Dataset:
+        return self._val_ds
+
+    def val_dataloader(self) -> DataLoader:
+        return DataLoader(
+            self.val_dataset(),
+            batch_size = 2,
+            pin_memory = True,
+            drop_last = True,
+            num_workers = self._num_workers,
+            collate_fn = self.collate_fn,
+        )
+
+    @staticmethod
+    def collate_fn(batch):
+        """Collates items together into a batch."""
+        images, targets = tuple(zip(*batch))
+        images = [torch.tensor(image) if not isinstance(
+            image, torch.Tensor) else image for image in images]
+        images = torch.stack([image for image in images])
         images = images.float()
 
         boxes = [target["bboxes"].float() for target in targets]
