@@ -61,10 +61,14 @@ class SegmentationModel(AgMLModelBase):
     serializable = frozenset(("model", ))
     state_override = serializable
 
-    def __init__(self, dataset):
+    def __init__(self, dataset = None, **kwargs):
         # Construct the network and load in pretrained weights.
         super(SegmentationModel, self).__init__()
-        self.net = self._construct_sub_net(dataset)
+
+        # If being initialized by a subclass, then don't do any of
+        # model construction logic (since that's already been done).
+        if not kwargs.get('model_initialized', False):
+            self.net = self._construct_sub_net(dataset)
 
     @auto_move_data
     def forward(self, batch):
