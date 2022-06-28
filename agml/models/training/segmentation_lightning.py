@@ -18,11 +18,13 @@ import argparse
 import torch
 import torch.nn as nn
 import pytorch_lightning as pl
-from pytorch_lightning.loggers import CSVLogger, TensorBoardLogger
+from pytorch_lightning.loggers import WandbLogger
+from pytorch_lightning.callbacks import LearningRateMonitor
 from torchmetrics import IoU
 from torchvision.models.segmentation import deeplabv3_resnet50
 
 import agml
+import wandb
 import albumentations as A
 
 from tools import gpus, checkpoint_dir, MetricLogger
@@ -34,14 +36,14 @@ class DeepLabV3Transfer(nn.Module):
     This is the base benchmarking model for semantic segmentation,
     using the DeepLabV3 model with a ResNet50 backbone.
     """
-    def __init__(self, num_classes, pretrained = True, unfreeze_backbone = False):
+    def __init__(self, num_classes, pretrained = True, freeze_backbone = True):
         super(DeepLabV3Transfer, self).__init__()
         self.base = deeplabv3_resnet50(
             pretrained = pretrained,
             num_classes = num_classes
         )
 
-        if not unfreeze_backbone:
+        if freeze_backbone:
             for parameter in self.base.backbone.parameters():
                 parameter.requires_grad = False
 
@@ -74,7 +76,7 @@ def dice_metric(y_pred, y):
 class SegmentationBenchmark(pl.LightningModule):
     """Represents an image classification benchmark model."""
     def __init__(self, dataset, pretrained = False,
-                 save_dir = None, unfreeze_backbone = False):
+                 save_dir = None, freeze_backbone = False):
         # Initialize the module.
         super(SegmentationBenchmark, self).__init__()
 
@@ -84,7 +86,7 @@ class SegmentationBenchmark(pl.LightningModule):
         self.net = DeepLabV3Transfer(
             self._source.num_classes,
             self._pretrained,
-            unfreeze_backbone
+            freeze_backbone
         )
 
         # Construct the loss for training.
@@ -92,6 +94,7 @@ class SegmentationBenchmark(pl.LightningModule):
             self.loss = nn.BCEWithLogitsLoss()
         else:
             self.loss = dice_loss
+        self.num_classes = self._source.num_classes
 
         # Construct the IoU metric.
         self.iou = IoU(self._source.num_classes + 1)
@@ -116,7 +119,8 @@ class SegmentationBenchmark(pl.LightningModule):
         y_pred = self(x).float().squeeze()
         loss = self.calculate_loss(y_pred, y)
         iou = self.iou(y_pred, y.int())
-        self.log('iou', iou.item(), prog_bar = True)
+        self.log('loss', loss.item(), prog_bar = True, logger = True, on_step = True, on_epoch = True)
+        self.log('iou', iou.item(), prog_bar = True, logger = True, on_step = True, on_epoch = True)
         return {
             'loss': loss,
         }
@@ -125,21 +129,48 @@ class SegmentationBenchmark(pl.LightningModule):
         x, y = batch
         y_pred = self(x).float().squeeze()
         val_loss = self.calculate_loss(y_pred, y)
-        self.log('val_loss', val_loss.item(), prog_bar = True)
+        self.log('val_loss', val_loss.item(), prog_bar = True, logger = True, on_step = True, on_epoch = True)
         val_iou = self.iou(y_pred, y.int())
         if self._sanity_check_passed and hasattr(self, 'metric_logger'):
             self.metric_logger.update_metrics(y_pred, y.int())
-        self.log('val_iou', val_iou.item(), prog_bar = True)
+        self.log('val_iou', val_iou.item(), prog_bar = True, logger = True, on_step = True, on_epoch = True)
         return {
             'val_loss': val_loss,
+            'image_sample': x[0].cpu().detach(),
+            'segmentation_sample': y_pred[0].cpu().detach()
         }
+
+    # def validation_epoch_end(self, outputs):
+    #     image_sample = outputs[0]['image_sample']
+    #     segmentation_sample = outputs[0]['segmentation_sample']
+    #     out = torch.sigmoid(segmentation_sample)
+    #     print(out)
+    #     if self.num_classes == 1:
+    #         out[out >= 0.2] = 1
+    #         out[out != 1] = 0
+    #     else:
+    #         out = torch.argmax(out, 1)
+    #     result = agml.viz.overlay_segmentation_masks(image_sample, out)
+    #     wandb.log(wandb.Image(result), caption = 'Segmentation Result')
 
     @torch.no_grad()
     def predict(self, inp):
         return torch.sigmoid(self(inp))
 
     def configure_optimizers(self):
-        return torch.optim.AdamW(self.net.parameters(), lr = 0.0005)
+        opt = torch.optim.AdamW(self.net.parameters(), lr = 0.0005)
+        return {
+            'optimizer': opt,
+            'lr_scheduler': torch.optim.lr_scheduler.StepLR(opt, step_size = 5, gamma = 0.75)
+        }
+
+    def test_step(self, batch, *args, **kwargs):
+        x, y = batch
+        y_pred = self(x).float().squeeze()
+        loss = self.calculate_loss(y_pred, y)
+        self.log('test_loss', loss.item(), logger = True)
+        test_iou = self.iou(y_pred, y.int())
+        self.log('test_iou', test_iou.item(), logger = True)
 
     def get_progress_bar_dict(self):
         tqdm_dict = super(SegmentationBenchmark, self).get_progress_bar_dict()
@@ -170,24 +201,27 @@ def build_loaders(name):
     pl.seed_everything(2499751)
     loader = agml.data.AgMLDataLoader(name)
     loader.split(train = 0.8, val = 0.1, test = 0.1)
-    loader.batch(batch_size = 16)
+    loader.batch(batch_size = 8)
     loader.resize_images((512, 512))
     loader.normalize_images('imagenet')
     loader.mask_to_channel_basis()
     train_data = loader.train_data
     train_data.transform(transform = A.RandomRotate90())
     train_ds = train_data.copy().as_torch_dataset()
+    train_loader = train_ds.export_torch(num_workers = 12, collate_fn = None)
     val_ds = loader.val_data.as_torch_dataset()
     val_ds.shuffle_data = False
+    val_loader = val_ds.export_torch(num_workers = 12, collate_fn = None)
     test_ds = loader.test_data.as_torch_dataset()
-    return train_ds, val_ds, test_ds
+    test_ds.batch(batch_size = 2)
+    test_ds.eval()
+    return train_loader, val_loader, test_ds
 
 
 def train(dataset, pretrained, epochs, save_dir = None,
-          unfreeze_backbone = False, overwrite = None):
+          freeze_backbone = False, overwrite = None):
     """Constructs the training loop and trains a model."""
-    save_dir = checkpoint_dir(save_dir, dataset)
-    log_dir = save_dir.replace('checkpoints', 'logs')
+    save_dir = os.path.dirname(checkpoint_dir(save_dir, dataset))
 
     # Check if the dataset already has benchmarks.
     if os.path.exists(save_dir) and os.path.isdir(save_dir):
@@ -196,29 +230,18 @@ def train(dataset, pretrained, epochs, save_dir = None,
                   f"at {save_dir}, skipping generation.")
             return
 
-    # Set up the checkpoint saving callback.
-    callbacks = [
-        pl.callbacks.ModelCheckpoint(
-            dirpath = save_dir, mode = 'min',
-            filename = f"{dataset}" + "-epoch{epoch:02d}-val_loss_{val_loss:.2f}",
-            monitor = 'val_iou',
-            save_top_k = 3,
-            auto_insert_metric_name = False
-        )
-    ]
-
     # Construct the model.
     model = SegmentationBenchmark(
         dataset = dataset, pretrained = pretrained,
-        save_dir = save_dir, unfreeze_backbone = unfreeze_backbone)
+        save_dir = save_dir, freeze_backbone = freeze_backbone)
 
     # Construct the data loaders.
     train_ds, val_ds, test_ds = build_loaders(dataset)
 
     # Create the loggers.
     loggers = [
-        CSVLogger(log_dir),
-        TensorBoardLogger(log_dir)
+        WandbLogger(project = 'segmentation-benchmarking',
+                    name = dataset, save_dir = save_dir)
     ]
 
     # Create the trainer and train the model.
@@ -226,8 +249,8 @@ def train(dataset, pretrained, epochs, save_dir = None,
     print("\n" + "=" * len(msg) + "\n" + msg + "\n" + "=" * len(msg) + "\n")
     trainer = pl.Trainer(
         max_epochs = epochs, gpus = gpus(),
-        callbacks = callbacks, logger = loggers,
-        log_every_n_steps = 5)
+        logger = loggers, log_every_n_steps = 2,
+        callbacks = LearningRateMonitor('epoch'))
     trainer.fit(
         model = model,
         train_dataloaders = train_ds,
@@ -235,6 +258,9 @@ def train(dataset, pretrained, epochs, save_dir = None,
 
     # Save the final state.
     torch.save(model.state_dict(), os.path.join(save_dir, 'final_model.pth'))
+
+    # Run on the test set.
+    trainer.test(dataloaders = test_ds)
 
 
 if __name__ == '__main__':
@@ -255,17 +281,17 @@ if __name__ == '__main__':
         '--epochs', type = int, default = 20,
         help = "How many epochs to train for. Default is 20.")
     ap.add_argument(
-        '--unfreeze-backbone', action = 'store_true',
-        default = False, help = "Whether to not freeze backbone weights.")
+        '--freeze-backbone', action = 'store_true',
+        default = False, help = "Whether to freeze backbone weights.")
     args = ap.parse_args()
 
     # Train the model.
     if args.dataset[0] in agml.data.public_data_sources(ml_task = 'semantic_segmentation'):
-        train(args.dataset,
-              args.not_pretrained,
+        train(args.dataset[0],
+              args.pretrained,
               epochs = args.epochs,
               save_dir = args.checkpoint_dir,
-              unfreeze_backbone = args.unfreeze_backbone)
+              freeze_backbone = args.freeze_backbone)
     else:
         if args.dataset[0] == 'all':
             datasets = [ds for ds in agml.data.public_data_sources(
@@ -277,7 +303,7 @@ if __name__ == '__main__':
                   args.pretrained,
                   epochs = args.epochs,
                   save_dir = args.checkpoint_dir,
-                  unfreeze_backbone = args.unfreeze_backbone,
+                  freeze_backbone = args.freeze_backbone,
                   overwrite = args.regenerate_existing)
 
 

@@ -19,7 +19,7 @@ from collections import OrderedDict
 import torch
 import torch.nn as nn
 import pytorch_lightning as pl
-from pytorch_lightning.loggers import CSVLogger, TensorBoardLogger
+from pytorch_lightning.loggers import WandbLogger
 from torchmetrics import IoU
 from torchvision.models.segmentation import deeplabv3_resnet50
 
@@ -39,9 +39,10 @@ class DeepLabV3Transfer(nn.Module):
                  unfreeze_backbone = False):
         super(DeepLabV3Transfer, self).__init__()
         self.base = deeplabv3_resnet50(
-            pretrained = pretrained,
+            pretrained = False,
             num_classes = num_classes)
-        # self.base.load_state_dict(load_checkpoint(), strict = False)
+        if pretrained:
+            self.base.load_state_dict(load_checkpoint(), strict = False)
 
         if not unfreeze_backbone:
             for parameter in self.base.backbone.parameters():
@@ -130,7 +131,6 @@ class SegmentationBenchmark(pl.LightningModule):
         loss = self.calculate_loss(y_pred, y)
         iou = self.iou(y_pred, y.int())
         self.log('iou', iou.item(), prog_bar = True)
-        self.log('dice', dice_metric(y_pred, y).item(), prog_bar = True)
         return {
             'loss': loss,
         }
@@ -144,7 +144,6 @@ class SegmentationBenchmark(pl.LightningModule):
         if self._sanity_check_passed:
             self.metric_logger.update_metrics(y_pred, y.int())
         self.log('val_iou', val_iou.item(), prog_bar = True)
-        self.log('val_dice', dice_metric(y_pred, y).item(), prog_bar = True)
         return {
             'val_loss': val_loss,
         }
@@ -179,9 +178,9 @@ def build_loaders(name):
     pl.seed_everything(2499751)
     loader = agml.data.AgMLDataLoader(name)
     loader.split(train = 0.8, val = 0.1, test = 0.1)
-    loader.batch(batch_size = 16)
+    loader.batch(batch_size = 8)
     loader.resize_images('imagenet')
-    loader.normalize_images('imagenet')
+    # loader.normalize_images('imagenet')
     loader.mask_to_channel_basis()
     train_data = loader.train_data
     train_data.transform(transform = A.RandomRotate90())
@@ -192,7 +191,7 @@ def build_loaders(name):
     return train_ds, val_ds, test_ds
 
 
-def train(dataset, epochs, save_dir = None,
+def train(dataset, epochs, save_dir = None, pretrained = False,
           unfreeze_backbone = False, overwrite = None):
     """Constructs the training loop and trains a model."""
     save_dir = checkpoint_dir(save_dir, dataset)
@@ -219,6 +218,7 @@ def train(dataset, epochs, save_dir = None,
     # Construct the model.
     model = SegmentationBenchmark(
         dataset = dataset, save_dir = save_dir,
+        pretrained = pretrained,
         unfreeze_backbone = unfreeze_backbone)
 
     # Construct the data loaders.
@@ -226,8 +226,9 @@ def train(dataset, epochs, save_dir = None,
 
     # Create the loggers.
     loggers = [
-        CSVLogger(log_dir),
-        TensorBoardLogger(log_dir)
+        WandbLogger(save_dir = os.path.dirname(log_dir),
+                    name = f'{dataset}-pretrained',
+                    project = 'segmentation-experiments')
     ]
 
     # Create the trainer and train the model.
@@ -267,7 +268,7 @@ if __name__ == '__main__':
 
     # Train the model.
     if args.dataset[0] in agml.data.public_data_sources(ml_task = 'semantic_segmentation'):
-        train(dataset = args.dataset,
+        train(dataset = args.dataset[0],
               epochs = args.epochs,
               save_dir = args.checkpoint_dir,
               unfreeze_backbone = args.unfreeze_backbone)
@@ -280,6 +281,7 @@ if __name__ == '__main__':
         for ds in datasets:
             train(dataset = ds,
                   epochs = args.epochs,
+                  pretrained = args.pretrained,
                   save_dir = args.checkpoint_dir,
                   unfreeze_backbone = args.unfreeze_backbone,
                   overwrite = args.regenerate_existing)
