@@ -121,7 +121,7 @@ def show_when_allowed(f):
     return _cancel_display
 
 
-def format_image(img):
+def format_image(img, mask = False):
     """Formats an image to be used in a Matplotlib visualization.
 
     This method takes in one of a number of common image/array types
@@ -137,6 +137,8 @@ def format_image(img):
     ----------
     img : Any
         An np.ndarray, torch.Tensor, tf.Tensor, or PIL.Image.
+    mask : Any
+        Whether the image is a segmentation mask.
 
     Returns
     -------
@@ -174,17 +176,18 @@ def format_image(img):
 
     # If the image is in range 0-255 but a float image, then
     # we need to convert it to an integer type.
-    if np.issubdtype(img.dtype, np.inexact):
-        if not img.max() <= 1: # noqa
-            img = img.astype(np.uint8)
-        else:
-            img = (img * 255).astype(np.uint8)
+    if not mask:
+        if np.issubdtype(img.dtype, np.inexact):
+            if not img.max() <= 1: # noqa
+                img = img.astype(np.uint8)
+            else:
+                img = (img * 255).astype(np.uint8)
 
-    # Convert 64-bit integer to unsigned 8-bit.
-    if img.dtype == np.int64:
-        log("Converting image of dtype `np.int64` to `np.uint8` for display. "
-            "This may cause a loss in precision/invalid result.")
-        img = img.astype(np.uint8)
+        # Convert 64-bit integer to unsigned 8-bit.
+        if img.dtype == np.int64:
+            log("Converting image of dtype `np.int64` to `np.uint8` for display. "
+                "This may cause a loss in precision/invalid result.")
+            img = img.astype(np.uint8)
 
     # Return the formatted image.
     return img

@@ -50,6 +50,7 @@ def _preprocess_mask(mask):
 
 def _mask_2d_to_3d(mask):
     """Converts a mask from 2-dimensional to channel-by-channel."""
+    print(mask, mask.shape)
     if mask.ndim == 3:
         return mask
     mask = np.squeeze(mask)
@@ -117,7 +118,7 @@ def visualize_image_and_mask(image, mask = None):
         "If `image` is a tuple/list, it should contain "
         "two values: the image and its mask.")
     image = format_image(image)
-    mask = _preprocess_mask(format_image(mask))
+    mask = _preprocess_mask(format_image(mask, mask = True))
 
     fig, axes = plt.subplots(1, 2, figsize = (10, 5))
     axes[0].imshow(image)

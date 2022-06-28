@@ -311,7 +311,7 @@ class TrainingManager(AgMLSerializable):
     @staticmethod
     def _torch_tensor_image_convert(image):
         """Converts potential multi-image input dicts to tensors."""
-        if is_array_like(batch):
+        if is_array_like(image):
             return _convert_image_to_torch(image)
         return {k: _convert_image_to_torch(i) for k, i in image.items()}
 
