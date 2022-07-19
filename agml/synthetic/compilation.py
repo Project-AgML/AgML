@@ -130,14 +130,26 @@ def _compile_helios_default():
     sys.stderr.write('\nHelios compilation successful!')
 
 
-def recompile_helios():
+def _compile_helios_executable_only():
+    """Compiles only the Helios executable."""
+
+
+
+def recompile_helios(executable_only = False):
     """Recompiles the Helios library with the set parameters.
 
     This method can be used by the user in order to recompile Helios, if, for
     instance, an error was encountered during prior compilation, or a local edit
     is made, without having to wait for the default recompilation every 48 hours.
+
+    If just the `generate.cpp` file itself is edited, then you can pass the
+    parameter `executable_only` as `True`, which will result in a much quicker
+    compilation as just the generation file itself is edited.
     """
-    _compile_helios_default()
+    if executable_only:
+        _compile_helios_executable_only()
+    else:
+        _compile_helios_default()
 
 
 def _compilation_failed(helios_temp_dir, temp_dir):

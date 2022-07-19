@@ -76,9 +76,6 @@ def _check_helios_installation():
     the check is only run if it has not been run in the last 48 hours). This
     is to prevent constant resource-consuming checks for Git updates.
     """
-    # Temporarily get the personal access token.
-    from agml._internal.utils import get_personal_access_token
-
     # Update the global Helios check.
     global _HELIOS_CHECK_DONE_IN_SESSION
     _HELIOS_CHECK_DONE_IN_SESSION = True
@@ -124,7 +121,7 @@ def _check_helios_installation():
             f"day(s) ago. Checking for update.\n")
 
     # Execute the installation/update script.
-    process = sp.Popen(['bash', helios_file, get_personal_access_token()],
+    process = sp.Popen(['bash', helios_file],
                        stdout = sp.PIPE, universal_newlines = True)
     for line in iter(process.stdout.readline, ""):
         sys.stderr.write(line)
@@ -133,6 +130,12 @@ def _check_helios_installation():
     # Update the Helios parameters.
     sys.stderr.write("Updating Helios parameter configuration.")
     _update_helios_parameters()
+
+    # Copy the project files to the Helios directory.
+    project_dir = os.path.join(os.path.dirname(__file__), 'synthetic_data_generation')
+    output_dir = os.path.join(helios_dir, 'projects', 'SyntheticImageAnnotation')
+    shutil.copytree(project_dir, output_dir)
+    os.makedirs(os.path.join(output_dir, 'xml'), exist_ok = True)
 
     # Recompile Helios.
     from agml.synthetic.compilation import _compile_helios_default
@@ -206,6 +209,10 @@ def _get_canopy_params():
             definitions = [
                 s.replace(';', '') for s in re.split('[\\s]{2,}', source) if s != '']
             for d in definitions:
+                # Ignore comments.
+                if d.startswith('//'):
+                    continue
+
                 # Split the name and the value.
                 n, value = d.split(' = ')
 
@@ -220,7 +227,7 @@ def _get_canopy_params():
                 value = re.sub('(\\.|\\d)f', r'\g<1>0', value)
 
                 # A specific case to replace values using pi.
-                value = value.strip()
+                value = value.strip().replace('  ', ' ')
                 if 'M_PI' in value:
                     value = round(float(value.split('*')[0].strip()) * math.pi, 6)
 
@@ -272,5 +279,6 @@ def _get_lidar_params():
         "beamDivergence": 0.0,
         "ASCII_format": "x y z"}
     return {'parameters': lidar_params}
+
 
 
