@@ -110,6 +110,12 @@ class TransformManager(AgMLSerializable):
         # Determine if the transform is being reset or unchanged.
         if transform == 'reset':
             self._transforms.pop(kind, None)
+            new_time_transforms = []
+            for tfm in self._time_inserted_transforms:
+                if tfm[0] == kind:
+                    continue
+                new_time_transforms.append(tfm)
+            self._time_inserted_transforms = new_time_transforms.copy()
             return
         elif transform is None:
             return
