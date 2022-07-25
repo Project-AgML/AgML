@@ -90,13 +90,13 @@ class DetectionModel(AgMLModelBase):
             num_classes = source(dataset).num_classes)
         return DetBenchPredict(model)
 
-    def eval(self):
+    def set_evaluation_on(self):
         """Prepares the model for evaluation mode."""
         if not isinstance(self.model, DetBenchPredict):
             self.model = DetBenchPredict(self.model.model)
         super(DetectionModel, self).eval()
 
-    def train(self, mode = True):
+    def set_training_on(self, mode = True):
         """Prepares the model for training mode."""
         if not isinstance(self.model, DetBenchTrain):
             self.model = DetBenchTrain(self.model.model)
