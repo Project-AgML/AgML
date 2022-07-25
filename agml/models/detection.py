@@ -23,7 +23,8 @@ from ensemble_boxes.ensemble_boxes_wbf import weighted_boxes_fusion
 from effdet import (
     create_model_from_config,
     get_efficientdet_config,
-    DetBenchPredict
+    DetBenchPredict,
+    DetBenchTrain
 )
 
 from agml.models.base import AgMLModelBase
@@ -88,6 +89,18 @@ class DetectionModel(AgMLModelBase):
             cfg, pretrained = False,
             num_classes = source(dataset).num_classes)
         return DetBenchPredict(model)
+
+    def eval(self):
+        """Prepares the model for evaluation mode."""
+        if not isinstance(self.model, DetBenchPredict):
+            self.model = DetBenchPredict(self.model.model)
+        super(DetectionModel, self).eval()
+
+    def train(self, mode = True):
+        """Prepares the model for training mode."""
+        if not isinstance(self.model, DetBenchTrain):
+            self.model = DetBenchTrain(self.model.model)
+        super(DetectionModel, self).train(mode = mode)
 
     @property
     def original(self): # override for detection models.
