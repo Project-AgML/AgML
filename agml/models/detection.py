@@ -90,17 +90,19 @@ class DetectionModel(AgMLModelBase):
             num_classes = source(dataset).num_classes)
         return DetBenchPredict(model)
 
-    def set_evaluation_on(self):
+    def switch_predict(self):
         """Prepares the model for evaluation mode."""
+        state = self.model.state_dict()
         if not isinstance(self.model, DetBenchPredict):
             self.model = DetBenchPredict(self.model.model)
-        super(DetectionModel, self).eval()
+        self.model.load_state_dict(state)
 
-    def set_training_on(self, mode = True):
+    def switch_train(self):
         """Prepares the model for training mode."""
+        state = self.model.state_dict()
         if not isinstance(self.model, DetBenchTrain):
             self.model = DetBenchTrain(self.model.model)
-        super(DetectionModel, self).train(mode = mode)
+        self.model.load_state_dict(state)
 
     @property
     def original(self): # override for detection models.
