@@ -57,7 +57,7 @@ class DetectionModel(AgMLModelBase):
     `configure_optimizers`, etc. See PyTorch Lightning for more information.
     """
     serializable = frozenset(("model", "confidence_threshold", "source"))
-    state_override = frozenset(("model", ))
+    state_override = frozenset(("model",))
 
     def __init__(self, dataset = None, conf_threshold = 0.3, **kwargs):
         # Initialize the base modules.
@@ -75,7 +75,7 @@ class DetectionModel(AgMLModelBase):
         warnings.filterwarnings(
             'ignore', category = UserWarning, module = 'ensemble_boxes')
         warnings.filterwarnings(
-            'ignore', category = UserWarning, module = 'effdet.bench') # noqa
+            'ignore', category = UserWarning, module = 'effdet.bench')  # noqa
 
     @auto_move_data
     def forward(self, batch):
@@ -105,7 +105,7 @@ class DetectionModel(AgMLModelBase):
         self.model.load_state_dict(state)
 
     @property
-    def original(self): # override for detection models.
+    def original(self):  # override for detection models.
         return self.model.model
 
     @torch.jit.ignore()
@@ -215,7 +215,7 @@ class DetectionModel(AgMLModelBase):
         if return_shapes:
             return images, shapes
         return images
-    
+
     def _process_detections(self, detections):
         """Post-processes the output detections (boxes, labels) from the model."""
         predictions = []

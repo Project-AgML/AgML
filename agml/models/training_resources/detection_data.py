@@ -171,7 +171,7 @@ class EfficientDetDataModule(pl.LightningDataModule):
     def __new__(cls, *args, **kwargs):
         if kwargs.get('no_agml', False):
             return EfficientDetDataModuleNoAgML(**kwargs)
-        return super(EfficientDetDataModule, self).__new__(cls, *args, **kwargs)
+        return super(EfficientDetDataModule, cls).__new__(cls, *args, **kwargs)
 
     def __init__(self,
                  loader: agml.data.AgMLDataLoader,

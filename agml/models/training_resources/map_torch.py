@@ -46,14 +46,14 @@ def _add_truth_scores_to_annotations(annotations):
 def intersection_over_union(boxes_preds, boxes_labels):
     """Calculates the intersection-over-union between boxes."""
     # Extract the top-left and bottom-right coordinates.
-    box1_x1 = boxes_preds[..., 0:1] - boxes_preds[..., 2:3] / 2
-    box1_y1 = boxes_preds[..., 1:2] - boxes_preds[..., 3:4] / 2
-    box1_x2 = boxes_preds[..., 0:1] + boxes_preds[..., 2:3] / 2
-    box1_y2 = boxes_preds[..., 1:2] + boxes_preds[..., 3:4] / 2
-    box2_x1 = boxes_labels[..., 0:1] - boxes_labels[..., 2:3] / 2
-    box2_y1 = boxes_labels[..., 1:2] - boxes_labels[..., 3:4] / 2
-    box2_x2 = boxes_labels[..., 0:1] + boxes_labels[..., 2:3] / 2
-    box2_y2 = boxes_labels[..., 1:2] + boxes_labels[..., 3:4] / 2
+    box1_x1 = boxes_preds[..., 0:1] # - boxes_preds[..., 2:3] / 2
+    box1_y1 = boxes_preds[..., 1:2] # - boxes_preds[..., 3:4] / 2
+    box1_x2 = boxes_preds[..., 0:1] + boxes_preds[..., 2:3] # / 2
+    box1_y2 = boxes_preds[..., 1:2] + boxes_preds[..., 3:4] # / 2
+    box2_x1 = boxes_labels[..., 0:1] # - boxes_labels[..., 2:3] / 2
+    box2_y1 = boxes_labels[..., 1:2] # - boxes_labels[..., 3:4] / 2
+    box2_x2 = boxes_labels[..., 0:1] + boxes_labels[..., 2:3] # / 2
+    box2_y2 = boxes_labels[..., 1:2] + boxes_labels[..., 3:4] # / 2
     x1 = torch.max(box1_x1, box2_x1)
     y1 = torch.max(box1_y1, box2_y1)
     x2 = torch.min(box1_x2, box2_x2)
@@ -240,7 +240,7 @@ class MeanAveragePrecision(object):
         # Create the data in the proper format.
         for bbox, label in zip(gt_boxes, gt_labels):
             self._ground_truth_data.append(
-                [self._num_updates, int(label - 1), *bbox])
+                [self._num_updates, int(label - 1), 1.0, *bbox])
         if pred_boxes.ndim == 1:
             pred_boxes = np.expand_dims(pred_boxes, axis = 0)
         for bbox, label, score in zip(pred_boxes, pred_labels, pred_scores):
