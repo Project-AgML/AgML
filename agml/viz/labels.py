@@ -37,6 +37,61 @@ def _inference_best_shape(n_images):
 
 @show_when_allowed
 @auto_resolve_image
+def visualize_images(images, shape = None):
+    """Visualizes a set of images in the given shape.
+
+    Given a set of images, this method will generate a grid for the
+    images and display them as such. The shape of the grid will by
+    default be inferenced to be the two closest factors of the number
+    of images (to  be as close to square as possible).
+
+    Parameters
+    ----------
+    images : Any
+        Either a list of images, a tuple of images and labels, or a list
+        of image/label pairs (like you would get as the output of a dataset).
+    shape : Any
+        The shape of the display grid.
+
+    Returns
+    -------
+    The matplotlib figure with the plotted images.
+    """
+    # If a prime number is passed, e.g. 23, then the `_inference_best_shape`
+    # method will return the shape of (23, 1). Likely, the user is expecting
+    # a non-rectangular shape such as (6, 4), where the bottom right axis is
+    # empty. This method does not support such computations (yet).
+    if shape is None:
+        shape = _inference_best_shape(len(images))
+    if max(shape) > 20:
+        raise NotImplementedError(
+            "Length of maximum shape length is greater than 20. "
+            "This method does not support non-rectangular shapes.")
+
+    fig, axes = plt.subplots(
+        shape[0], shape[1], figsize = (shape[1] * 2, shape[0] * 2))
+    try:
+        iter_ax = axes.flat
+    except AttributeError: # If showing only a single image.
+        iter_ax = [axes]
+    for image, ax in zip(images, iter_ax):
+        ax.imshow(format_image(image))
+        ax.set_aspect(1)
+        ax.set_xticklabels([])
+        ax.set_yticklabels([])
+        ax.tick_params(
+            axis = 'both', which = 'both', bottom = False,
+            top = False, left = False, right = False
+        )
+        plt.setp(ax.spines.values(), visible = False)
+
+    fig.tight_layout()
+    return fig
+
+
+
+@show_when_allowed
+@auto_resolve_image
 def visualize_images_with_labels(images, labels = None, *, info = None, shape = None):
     """Visualizes a set of images with their classification labels.
 

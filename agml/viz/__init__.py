@@ -31,5 +31,6 @@ from .boxes import (
     visualize_image_and_many_boxes
 )
 from .labels import (
+    visualize_images,
     visualize_images_with_labels
 )

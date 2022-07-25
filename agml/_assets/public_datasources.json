@@ -964,11 +964,6 @@
             "continent": "worldwide",
             "country": "worldwide"
         },
-        "sensor_modality": "rgb",
-        "real_synthetic": "real",
-        "platform": "handheld/ground",
-        "input_data_format": "jpg",
-        "annotation_format": "image",
         "n_images": "42",
         "docs_url": "https://data.nal.usda.gov/dataset/data-multi-species-fruit-flower-detection-using-refined-semantic-segmentation-network",
         "external_image_sources": [],
@@ -982,6 +977,70 @@
                 0.20811232924461365,
                 0.2141699343919754,
                 0.2441396266222
+            ]
+        }
+    },
+    "red_grapes_and_leaves_segmentation": {
+        "classes": {
+            "1": "Leaf",
+            "2": "Grape"
+        },
+        "ml_task": "semantic_segmentation",
+        "ag_task": "vineyard_scene_segmentation",
+        "location": {
+            "continent": "europe",
+            "country": "greece"
+        },
+        "sensor_modality": "rgb",
+        "real_synthetic": "real",
+        "platform": "handheld/ground",
+        "input_data_format": "jpg",
+        "annotation_format": "image",
+        "n_images": "258",
+        "docs_url": "https://link.springer.com/chapter/10.1007/978-3-030-48791-1_22",
+        "external_image_sources": [],
+        "stats": {
+            "mean": [
+                0.392019122838974,
+                0.49319183826446533,
+                0.5254659056663513
+            ],
+            "std": [
+                0.2721235156059265,
+                0.2871488034725189,
+                0.2831265926361084
+            ]
+        }
+    },
+    "white_grapes_and_leaves_segmentation": {
+        "classes": {
+            "1": "Leaf",
+            "2": "Grape"
+        },
+        "ml_task": "semantic_segmentation",
+        "ag_task": "vineyard_scene_segmentation",
+        "location": {
+            "continent": "europe",
+            "country": "greece"
+        },
+        "sensor_modality": "rgb",
+        "real_synthetic": "real",
+        "platform": "handheld/ground",
+        "input_data_format": "jpg",
+        "annotation_format": "image",
+        "n_images": "273",
+        "docs_url": "https://link.springer.com/chapter/10.1007/978-3-030-48791-1_22",
+        "external_image_sources": [],
+        "stats": {
+            "mean": [
+                0.30906906723976135,
+                0.47296029329299927,
+                0.5238653421401978
+            ],
+            "std": [
+                0.23329640924930573,
+                0.24588093161582947,
+                0.25335168838500977
             ]
         }
     }
