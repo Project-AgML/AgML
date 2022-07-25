@@ -278,6 +278,12 @@ class DetectionModel(AgMLModelBase):
         return [squeeze(b, l, c)
                 for b, l, c in zip(boxes, labels, confidences)]
 
+    @staticmethod
+    def _to_out(tensor: "torch.Tensor") -> "torch.Tensor":
+        if isinstance(tensor, dict):
+            tensor = tensor['detections']
+        return super()._to_out(tensor)
+
     @torch.no_grad()
     def predict(self, images):
         """Runs `EfficientNetD4` inference on the input image(s).
