@@ -50,7 +50,6 @@ def _preprocess_mask(mask):
 
 def _mask_2d_to_3d(mask):
     """Converts a mask from 2-dimensional to channel-by-channel."""
-    print(mask, mask.shape)
     if mask.ndim == 3:
         return mask
     mask = np.squeeze(mask)
