@@ -529,7 +529,8 @@ class AgMLDataLoader(AgMLSerializable, metaclass = AgMLDataLoaderMeta):
         builder = DataBuilder.from_data(
             contents = [contents, kwargs.get('labels_for_image', None)],
             info = self.info,
-            root = self.dataset_root)
+            root = self.dataset_root,
+            builder = self._builder)
         current_manager = copy.deepcopy(self._manager.__getstate__())
         current_manager.pop('builder')
         current_manager['builder'] = builder
