@@ -30,7 +30,7 @@ class DataBuilder(AgMLSerializable):
     instead generates an internal representation of the data content
     of a dataset. This allows for all data to be loaded in a standard
     format and streamlined into the `DataManager`.
-    
+
     Primarily, this class attempts to locate the dataset and if unable
     to do so, it downloads the dataset from the public bucket. Then,
     it creates a mapping between the images and annotations which is
@@ -67,13 +67,40 @@ class DataBuilder(AgMLSerializable):
         obj._data_length = len(obj._data)
         obj._labels_for_image = contents[1]
         if hasattr(builder, '_default_coco_annotations'):
-            obj._default_coco_annotations = builder._default_coco_annotations
+            obj._default_coco_annotations = DataBuilder._regenerate_coco_annotations(
+                builder._default_coco_annotations, obj._data)
         return obj
+
+    @staticmethod
+    def _regenerate_coco_annotations(coco, data):
+        """Regenerates COCO annotations from a reduced set."""
+        image_coco = []
+        annotation_coco = []
+        image_id_tracker = 0
+
+        # Update the list of image paths.
+        for c in coco['images']:
+            if c['file_name'] in list(data.keys()):
+                c['image_id'] = image_id_tracker
+                image_coco.append(c)
+                image_id_tracker += 1
+
+        # Update the image IDs for the annotations
+        for image_id, (_, annotation) in enumerate(data.items()):
+            for a in annotation:
+                a['id'] = image_id
+            annotation_coco.append(annotation)
+
+        # Update the complete COCO dictionary.
+        ret_coco = coco.copy()
+        ret_coco['images'] = image_coco
+        ret_coco['annotations'] = annotation_coco
+        return ret_coco
 
     @property
     def dataset_root(self):
         return self._dataset_root
-        
+
     def _configure_dataset(self, **kwargs):
         """Finds and configures the dataset into the loader."""
         # Check if the user wants to overwrite the existing dataset,

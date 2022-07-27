@@ -121,6 +121,9 @@ class AgMLDataLoader(AgMLSerializable, metaclass = AgMLDataLoaderMeta):
             f"a list of dataset names/metadata when instantiating an "
             f"`AgMLDataLoader`. Got {dataset} of type {type(dataset)}.")
 
+    def __getnewargs__(self):
+        return self._info.name,
+
     def __init__(self, dataset, **kwargs):
         """Instantiates an `AgMLDataLoader` with the dataset."""
         # Set up the dataset and its associated metadata.
