@@ -83,6 +83,8 @@ class InternalAgMLS3API(object):
             warnings.warn(
                 f'Upload of {dataset_name} unsuccessful. You may not have permission '
                 f'to upload to the agdata-data s3 bucket.', category = UserWarning)
+        finally:
+            self.pg.close()
 
     def upload_model(self, model_name, model_dir):
         """Uploads model to agdata-data s3 file storage.
@@ -99,20 +101,22 @@ class InternalAgMLS3API(object):
 
         # Setup progress bar
         self.pg = tqdm(
-            total=os.stat(os.path.abspath(os.path.join(model_dir, model_name + '.zip'))).st_size,
+            total=os.stat(os.path.abspath(os.path.join(model_dir, model_name + '.pth'))).st_size,
             file = sys.stdout, desc = f"Uploading {model_name}")
 
         # Upload data to agdata-data bucket
         try:
-            with open(os.path.join(model_dir, model_name + '.zip'), 'rb') as data:
+            with open(os.path.join(model_dir, model_name + '.pth'), 'rb') as data:
                 self.s3.upload_fileobj(Fileobj=data, 
                                        Bucket='agdata-data',
-                                       Key='models/' + model_name + '.zip',
+                                       Key='models/' + model_name + '.pth',
                                        Callback=lambda x: self.pg.update(x))
         except:
             warnings.warn(
                 f'Upload of {model_name} unsuccessful. You may not have permission '
                 f'to upload to the agdata-data s3 bucket.', category = UserWarning)
+        finally:
+            self.pg.close()
 
     def download_dataset(self, dataset_name, dest_dir):
         """
