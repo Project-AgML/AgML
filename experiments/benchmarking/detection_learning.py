@@ -145,12 +145,15 @@ class EfficientDetDataModule(pl.LightningDataModule):
     def __init__(self,
                  train_dataset_adaptor,
                  validation_dataset_adaptor,
+                 test_dataset_adaptor = None,
                  train_transforms = None,
                  val_transforms = None,
                  num_workers = 4,
                  batch_size = 8):
         self.train_ds = train_dataset_adaptor
         self.valid_ds = validation_dataset_adaptor
+        if test_dataset_adaptor is not None:
+            self.test_ds = test_dataset_adaptor
         if train_transforms is None:
             train_transforms = get_transforms('train')
         self.train_tfms = train_transforms
@@ -193,6 +196,21 @@ class EfficientDetDataModule(pl.LightningDataModule):
             collate_fn = self.collate_fn,
         )
 
+    def test_dataset(self) -> EfficientDetDataset:
+        return EfficientDetDataset(
+            adaptor = self.test_ds,
+            transforms = self.val_tfms)
+
+    def test_dataloader(self) -> DataLoader:
+        return DataLoader(
+            self.test_dataset(),
+            batch_size = self.batch_size,
+            pin_memory = True,
+            drop_last = True,
+            num_workers = self.num_workers,
+            collate_fn = self.collate_fn,
+        )
+
     @staticmethod
     def collate_fn(batch):
         images, targets, image_ids = tuple(zip(*batch))
@@ -220,7 +238,8 @@ class EfficientDetModel(pl.LightningModule):
                  architecture = 'efficientdet_d4',
                  pretrained = False,
                  pretrained_path = None,
-                 validation_dataset_adaptor = None):
+                 validation_dataset_adaptor = None,
+                 test_dataset_adaptor = None):
         super().__init__()
         if pretrained_path is not None:
             self.model = create_model_from_pretrained(
@@ -244,6 +263,8 @@ class EfficientDetModel(pl.LightningModule):
             self.val_dataset_adaptor = AgMLDatasetAdaptor(
                 validation_dataset_adaptor)
             self.map = MAP()
+        self.test_dataset_adaptor = AgMLDatasetAdaptor(test_dataset_adaptor)
+        self.test_map = MAP()
         self._sanity_check_passed = False
 
     @auto_move_data
@@ -251,7 +272,8 @@ class EfficientDetModel(pl.LightningModule):
         return self.model(images, targets)
 
     def configure_optimizers(self):
-        return torch.optim.AdamW(self.model.parameters(), lr = self.lr)
+        opt = torch.optim.AdamW(self.model.parameters(), lr = self.lr)
+        return opt
 
     def training_step(self, batch, batch_idx):
         # Run a forward pass through the model.
@@ -312,6 +334,29 @@ class EfficientDetModel(pl.LightningModule):
                  logger = True, sync_dist = True)
 
         return {'loss': outputs["loss"], 'batch_predictions': batch_predictions}
+
+    def test_step(self, batch, batch_idx):
+        images, annotations, targets, image_ids = batch
+        outputs = self.model(images, annotations)
+        detections = outputs["detections"]
+
+        # Calculate the mean average precision.
+        if self._sanity_check_passed:
+            for idx in image_ids:
+                image, truth_boxes, truth_cls, _ = \
+                    self.test_dataset_adaptor.get_image_and_labels_by_idx(idx)
+                pred_box, pred_labels, pred_conf = self.predict([image])
+                if not isinstance(pred_labels[0], float):
+                    pred_box, pred_labels, pred_conf = pred_box[0], pred_labels[0], pred_conf[0]
+                if truth_cls.ndim == 0:
+                    truth_cls = np.expand_dims(truth_cls, 0)
+                metric_update_values = \
+                    dict(boxes = torch.tensor(pred_box, dtype = torch.float32),
+                         labels = torch.tensor(pred_labels, dtype = torch.int32),
+                         scores = torch.tensor(pred_conf)), \
+                    dict(boxes = torch.tensor(truth_boxes, dtype = torch.float32),
+                         labels = torch.tensor(truth_cls, dtype = torch.int32))
+                self.map.update(*metric_update_values)
 
     def predict(self, images: Union[torch.Tensor, List]):
         """Runs inference on a set of images.
@@ -432,6 +477,13 @@ class EfficientDetModel(pl.LightningModule):
             class_labels.append(labels.tolist())
 
         return bboxes, confidences, class_labels
+
+    def on_test_epoch_end(self):
+        map = self.test_map.compute().detach().cpu().numpy().item()
+        self.log("test-map", map, prog_bar = True,
+                 on_epoch = True,
+                 logger = True, sync_dist = True)
+        self.test_map.reset()
 
     def on_validation_epoch_end(self) -> None:
         if not self._sanity_check_passed:
