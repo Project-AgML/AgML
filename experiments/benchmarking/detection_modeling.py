@@ -21,7 +21,7 @@ import numpy as np
 from effdet import get_efficientdet_config, DetBenchTrain, create_model_from_config
 
 from agml.models.detection import DetectionModel
-from agml.models.training_resources.map_torch import MeanAveragePrecision
+from experiments.benchmarking.mean_average_precision_torch import MeanAveragePrecision
 
 
 class DetectionTrainingModel(DetectionModel):

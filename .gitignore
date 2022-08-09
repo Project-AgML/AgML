@@ -155,8 +155,8 @@ agml/_internal/*
 !agml/_internal/utils.py
 
 # Training
-agml/models/training_experiments/lightning_logs
-agml/models/training_experiments/logs
+experiments/benchmarking/lightning_logs
+experiments/benchmarking/logs
 agml/models/training/*.log
 agml/models/training/*.err
 agml/models/training/*.out

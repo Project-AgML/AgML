@@ -14,7 +14,7 @@
 
 import argparse
 
-from agml.models.training_resources.experiment import DetectionExperiment
+from experiments.benchmarking.experiment import DetectionExperiment
 
 
 if __name__ == '__main__':

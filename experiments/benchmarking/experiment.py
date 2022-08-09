@@ -19,10 +19,10 @@ from pytorch_lightning import Trainer
 from pytorch_lightning.loggers import WandbLogger
 
 import agml
-from agml.models.training_resources.detection_data import (
+from experiments.benchmarking.detection_data import (
     build_loader, TransformApplier, EfficientDetDataModule
 )
-from agml.models.training_resources.detection_modeling import (
+from experiments.benchmarking.detection_modeling import (
     DetectionTrainingModel
 )
 from agml.models.training_resources.tools import gpus
@@ -65,7 +65,7 @@ class DetectionExperiment(object):
                 experiment_dir = os.path.join(
                     '/data2/amnjoshi/experiments', experiment_name)
             else:
-                experiment_dir = os.path.join('.', experiment_name)
+                experiment_dir = os.path.join('../training_resources', experiment_name)
         else:
             experiment_dir = experiment_dir_default
         os.makedirs(experiment_dir, exist_ok = True)
