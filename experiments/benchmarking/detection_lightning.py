@@ -24,7 +24,8 @@ import argparse
 
 import torch
 import pytorch_lightning as pl
-from pytorch_lightning.loggers import CSVLogger, TensorBoardLogger
+from pytorch_lightning.loggers import WandbLogger
+from pytorch_lightning.callbacks import LearningRateMonitor
 
 import agml
 from tools import gpus, checkpoint_dir
@@ -36,8 +37,7 @@ from detection_learning import (
 def train(dataset, epochs, save_dir = None,
           overwrite = None, pretrained_path = None):
     """Constructs the training loop and trains a model."""
-    save_dir = checkpoint_dir(save_dir, dataset)
-    log_dir = save_dir.replace('checkpoints', 'logs')
+    save_dir = os.path.dirname(checkpoint_dir(save_dir, dataset))
 
     # Check if the dataset already has benchmarks.
     if os.path.exists(save_dir) and os.path.isdir(save_dir):
@@ -59,8 +59,8 @@ def train(dataset, epochs, save_dir = None,
 
     # Create the loggers.
     loggers = [
-        CSVLogger(log_dir),
-        TensorBoardLogger(log_dir)
+        WandbLogger(project = 'detection-experiments', name = args.name,
+                    save_dir = save_dir)
     ]
 
     # Construct the data.
@@ -85,7 +85,7 @@ def train(dataset, epochs, save_dir = None,
     print("\n" + "=" * len(msg) + "\n" + msg + "\n" + "=" * len(msg) + "\n")
     trainer = pl.Trainer(
         max_epochs = epochs, gpus = gpus(None),
-        callbacks = callbacks, logger = loggers)
+        logger = loggers)
     trainer.fit(model, dm)
 
     # Save the final state.
@@ -119,14 +119,19 @@ def train_per_class(dataset, epochs, save_dir = None, overwrite = None):
                 new_loader.train_data, adapt_class = True),
             validation_dataset_adaptor = AgMLDatasetAdaptor(
                 new_loader.val_data, adapt_class = True),
+            test_dataset_adaptor = AgMLDatasetAdaptor(
+                new_loader.test_data, adapt_class = True),
             num_workers = 12, batch_size = 4)
 
-        this_save_dir = os.path.join(
-            save_dir, f'{loader.num_to_class[cls]}-{cls}')
+        name = f'{loader.num_to_class[cls]}-{cls}' + f'-{args.name}'
+        this_save_dir = os.path.join(save_dir, name)
+        os.makedirs(this_save_dir, exist_ok = True)
 
         # Create the loggers.
         loggers = [
-            TensorBoardLogger(this_save_dir)
+            WandbLogger(project = 'detection-experiments',
+                        save_dir = this_save_dir,
+                        name = name)
         ]
 
         # Construct the model.
@@ -134,25 +139,32 @@ def train_per_class(dataset, epochs, save_dir = None, overwrite = None):
             num_classes = 1,
             architecture = 'tf_efficientdet_d4',
             pretrained = True,
-            validation_dataset_adaptor = new_loader.val_data)
-        model.load_state_dict(
-            torch.load('/data2/amnjoshi/detection-models/amg.pth',
-                       map_location = 'cpu'))
+            validation_dataset_adaptor = new_loader.val_data,
+            test_dataset_adaptor = new_loader.test_data)
+        # model.load_state_dict(
+        #     torch.load('/data2/amnjoshi/detection-models/amg.pth',
+        #                map_location = 'cpu'))
 
         # Create the trainer and train the model.
         msg = f"Training dataset {dataset} for class {cls}: {loader.num_to_class[cls]}!"
         print("\n" + "=" * len(msg) + "\n" + msg + "\n" + "=" * len(msg) + "\n")
         trainer = pl.Trainer(
-            max_epochs = epochs, gpus = gpus(None), logger = loggers)
+            max_epochs = epochs, gpus = gpus(None), logger = loggers,
+            callbacks = LearningRateMonitor('step'))
         trainer.fit(model, dm)
 
         # Save the final state.
         torch.save(model.state_dict(), os.path.join(this_save_dir, 'final_model.pth'))
 
+        # Test the loader.
+        trainer.test(datamodule = dm)
+
 
 if __name__ == '__main__':
     # Parse input arguments.
     ap = argparse.ArgumentParser()
+    ap.add_argument(
+        '--name', type = str, help = "The name of the run.", default = None)
     ap.add_argument(
         '--dataset', type = str, nargs = '+', help = "The name of the dataset.")
     ap.add_argument(
@@ -174,6 +186,8 @@ if __name__ == '__main__':
         '--pretrained-num-classes', type = str, default = None,
         help = "The number of classes in the pretrained model.")
     args = ap.parse_args()
+    if args.name is None:
+        args.name = args.dataset
 
     # Train the model.
     if args.per_class_for_dataset:
