@@ -50,7 +50,7 @@ def download_dataset(dataset_name, dest_dir, redownload = False):
             dataset_name = dataset_name.replace('-', '_')
 
     # Connect to S3 and generate unsigned URL for bucket object
-    url = f"https://agdata-data.s3.us-west-1.amazonaws.com/{dataset_name}.zip"
+    url = f"https://agdata-data.s3.us-west-1.amazonaws.com/datasets/{dataset_name}.zip"
 
     # Check if dataset already exists
     if dataset_name in dest_dir:
