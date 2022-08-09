@@ -40,21 +40,29 @@ DATASET_SAVE_DIR: str
 SYNTHETIC_SAVE_DIR: str
 
 
+# This is the path to any downloaded models. By default, this saves to
+# SUPER_BASE_DIR/models, but can be overridden. The value is set upon
+# instantiation of the module (see the below code).
+MODEL_SAVE_DIR: str
+
+
 # Loads the configuration info. We don't cache this since it may
 # change if the user decides to change the path. This method
 # also runs upon the first import of AgML to set it properly.
 def _load_config_info():
-    global DATASET_SAVE_DIR, SYNTHETIC_SAVE_DIR
+    global DATASET_SAVE_DIR, SYNTHETIC_SAVE_DIR, MODEL_SAVE_DIR
     try:
         with open(os.path.join(SUPER_BASE_DIR, 'config.json'), 'r') as f:
             contents = json.load(f)
             DATASET_SAVE_DIR = contents['data_path']
             SYNTHETIC_SAVE_DIR = contents['synthetic_data_path']
+            MODEL_SAVE_DIR = contents['model_path']
     except (OSError, KeyError):
         with open(os.path.join(SUPER_BASE_DIR, 'config.json'), 'w') as f:
             json.dump({'data_path': os.path.join(SUPER_BASE_DIR, 'datasets'),
                        'synthetic_data_path': os.path.join(
-                           SUPER_BASE_DIR, 'synthetic')}, f)
+                           SUPER_BASE_DIR, 'synthetic'),
+                       'model_path': os.path.join(SUPER_BASE_DIR, 'models')}, f)
         _load_config_info()
 _load_config_info()
 
@@ -132,6 +140,44 @@ def set_synthetic_save_path(location = None):
     with open(os.path.join(SUPER_BASE_DIR, 'config.json'), 'r') as f:
         contents = json.load(f)
     contents['synthetic_data_path'] = os.path.realpath(os.path.abspath(location))
+    with open(os.path.join(SUPER_BASE_DIR, 'config.json'), 'w') as f:
+        json.dump(contents, f)
+    return
+
+
+def model_save_path():
+    """Returns the default model save path for AgML."""
+    global MODEL_SAVE_DIR
+    return MODEL_SAVE_DIR
+
+
+def set_model_save_path(location = None):
+    """Sets the default model save path for AgML.
+
+    Changing the data save path using this method permanently changes
+    the data save path for all future sessions, until it is changed
+    or switched back to the original.
+
+    Parameters
+    ----------
+    location : str
+        The location to save the model to.
+
+    Returns
+    -------
+    The fully expanded location.
+    """
+    global SUPER_BASE_DIR
+    if location is None or location == 'reset':
+        location = os.path.join(SUPER_BASE_DIR, 'models')
+    location = os.path.expanduser(location)
+    if not os.path.exists(location) and not os.path.isdir(location):
+        raise NotADirectoryError(
+            f"The provided destination {location} does "
+            f"not exist, or is not a directory.")
+    with open(os.path.join(SUPER_BASE_DIR, 'config.json'), 'r') as f:
+        contents = json.load(f)
+    contents['model_path'] = os.path.realpath(os.path.abspath(location))
     with open(os.path.join(SUPER_BASE_DIR, 'config.json'), 'w') as f:
         json.dump(contents, f)
     return
