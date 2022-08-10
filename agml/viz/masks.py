@@ -54,6 +54,8 @@ def _mask_2d_to_3d(mask):
         return mask
     mask = np.squeeze(mask)
     channels = np.unique(mask)[1:]
+    if len(channels) == 0:
+        return np.zeros(shape = (*mask.shape[:2], 1))
     out = np.zeros(shape = (*mask.shape[:2], int(max(channels))))
     iter_idx = 1
     while True:

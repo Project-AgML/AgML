@@ -33,6 +33,12 @@ class BenchmarkMetadata(AgMLSerializable):
 
     def __init__(self, dataset):
         # Load the information for the given dataset.
+        if dataset is None:
+            self._dataset = None
+            self._meta = {'hyperparameters': {
+                'model_config': None, 'optimizer_config': None,
+                'metric': {None: None}, 'epochs_trained': None}}
+            return
         try:
             self._dataset = dataset
             self._meta = load_model_benchmarks()[dataset]

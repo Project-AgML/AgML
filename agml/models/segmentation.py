@@ -18,6 +18,7 @@ import torch.nn.functional as F
 from torchvision.models.segmentation import deeplabv3_resnet50
 
 from agml.models.base import AgMLModelBase
+from agml.models.benchmarks import BenchmarkMetadata
 from agml.models.tools import auto_move_data, imagenet_style_process
 from agml.data.public import source
 from agml.utils.general import resolve_list_value
@@ -58,25 +59,29 @@ class SegmentationModel(AgMLModelBase):
     parameter `net`, and you'll need to implement methods like `training_step`,
     `configure_optimizers`, etc. See PyTorch Lightning for more information.
     """
-    serializable = frozenset(("model", ))
+    serializable = frozenset(("model", "num_classes"))
     state_override = serializable
 
-    def __init__(self, dataset = None, **kwargs):
+    def __init__(self, num_classes = 1, **kwargs):
         # Construct the network and load in pretrained weights.
         super(SegmentationModel, self).__init__()
 
         # If being initialized by a subclass, then don't do any of
         # model construction logic (since that's already been done).
         if not kwargs.get('model_initialized', False):
-            self.net = self._construct_sub_net(dataset)
+            self._num_classes = num_classes
+            self.net = self._construct_sub_net(num_classes)
+
+        # By default, the model starts in inference mode.
+        self.eval()
 
     @auto_move_data
     def forward(self, batch):
         return self.net(batch)
 
     @staticmethod
-    def _construct_sub_net(dataset):
-        return DeepLabV3Transfer(source(dataset).num_classes)
+    def _construct_sub_net(num_classes):
+        return DeepLabV3Transfer(num_classes)
 
     @staticmethod
     def _preprocess_image(image):
@@ -214,6 +219,26 @@ class SegmentationModel(AgMLModelBase):
         image = self._expand_input_images(image)[0]
         mask = self.predict(image)
         return visualize_overlaid_masks(image, mask)
+
+    def load_benchmark(self, dataset):
+        """Loads a benchmark for the given semantic segmentation dataset.
+
+        This method is used to load pretrained weights for a specific AgML dataset.
+        In essence, it serves as a wrapper for `load_state_dict`, directly getting
+        the model from its save path in the AWS storage bucket. You can then use the
+        `benchmark` property to access the metric value of the benchmark, as well as
+        additional training parameters which you can use to train your own models.
+        """
+        # Number of classes must be the same for semantic segmentation.
+        if source(dataset).num_classes != self._num_classes:
+            raise ValueError(
+                f"You cannot load a benchmark for a dataset '{dataset}' "
+                f"with {source(dataset).num_classes} classes, while your "
+                f"model has {self._num_classes} classes.")
+
+        state = self._get_benchmark(dataset)
+        self.load_state_dict(state)
+        self._benchmark = BenchmarkMetadata(dataset)
 
 
 

@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
 import abc
 from typing import List, Union, overload
 
@@ -22,18 +23,24 @@ import torch
 from pytorch_lightning import LightningModule
 
 from agml.framework import AgMLSerializable
+from agml.backend.config import model_save_path
 from agml.backend.tftorch import is_array_like
 from agml.utils.image import imread_context
+from agml.utils.downloads import download_model
+from agml.models.benchmarks import BenchmarkMetadata
 
 
 class AgMLModelBase(AgMLSerializable, LightningModule):
     """Base class for all AgML pretrained models.
 
-    All pretrained model variants in AgML inherit from this
-    base class, which provides common methods which each use,
-    such as weight loading and image input preprocessing, as
-    well as other stubs for common methods (and typing).
+    All pretrained model variants in AgML inherit from this base class, which provides
+    common methods which each use, such as weight loading and image input preprocessing,
+    as well as other stubs for common methods (and typing).
     """
+
+    def __init__(self):
+        self._benchmark = BenchmarkMetadata(None)
+        super(AgMLModelBase, self).__init__()
 
     @property
     def original(self):
@@ -145,5 +152,31 @@ class AgMLModelBase(AgMLSerializable, LightningModule):
             else: # channels last
                 shapes.append(image.shape[:2])
         return shapes
+
+    @property
+    def benchmark(self):
+        """Information about the loaded benchmark."""
+        return self._benchmark
+
+    @benchmark.setter
+    def benchmark(self, value):
+        self._benchmark = value
+
+    @staticmethod
+    def _get_benchmark(name):
+        """Returns the `state_dict` for a pretrained model benchmark."""
+        # Check if the benchmark exists; if not, download it.
+        benchmark_path = os.path.join(model_save_path(), name + '.pth')
+        if not os.path.exists(benchmark_path):
+            download_model(name, os.path.dirname(benchmark_path))
+
+        # Load the benchmark.
+        return torch.load(benchmark_path, map_location = 'cpu')
+
+    @abc.abstractmethod
+    def load_benchmark(self, dataset: str):
+        """Loads a benchmark for the given AgML dataset."""
+        raise NotImplementedError
+
 
 
