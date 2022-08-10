@@ -33,9 +33,9 @@ from agml.models.benchmarks import BenchmarkMetadata
 class AgMLModelBase(AgMLSerializable, LightningModule):
     """Base class for all AgML pretrained models.
 
-    All pretrained model variants in AgML inherit from this base class, which provides
-    common methods which each use, such as weight loading and image input preprocessing,
-    as well as other stubs for common methods (and typing).
+    All pretrained model variants in AgML inherit from this base class,
+    which provides common methods which each use, such as weight loading
+    and image input preprocessing, as well as other stubs for common methods.
     """
 
     def __init__(self):

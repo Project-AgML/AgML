@@ -28,9 +28,11 @@ from effdet import (
 )
 
 from agml.models.base import AgMLModelBase
+from agml.models.benchmarks import BenchmarkMetadata
 from agml.models.tools import auto_move_data
 from agml.data.public import source
 from agml.backend.tftorch import is_array_like
+from agml.utils.image import resolve_image_size
 from agml.viz.boxes import visualize_image_and_boxes
 
 
@@ -51,15 +53,34 @@ class DetectionModel(AgMLModelBase):
     This will also return a one-hot label feature vector instead of integer
     labels, in the case that you want further customization of the outputs.
 
-    This model can be subclassed in order to run a full training job; the
-    actual transfer `EfficientDetD4` model can be accessed through the
-    parameter `model`, and you'll need to implement methods like `training_step`,
-    `configure_optimizers`, etc. See PyTorch Lightning for more information.
+    By default, when instantiating a `DetectionModel`, it is prepared in
+    inference mode. In order to use this model for training, you need to convert
+    it to training mode by using `DetectionModel.switch_train()`. To convert
+    back to inference mode, use `DetectionModel.switch_predict()`.
+
+    If you want to use your own custom model and/or training pipeline, without the
+    existing input restrictions, then you can subclass this model. In the `super`
+    call in the `__init__` method, pass the parameter `model_initialized = True`,
+    which will enable you to initialize the model in your own format.
+
+    Parameters
+    ----------
+    num_classes : int
+        The number of classes for the `EfficientDet` model.
+    image_size : int, tuple
+        The shape of image inputs to the model.
+    conf_threshold : float
+        Filters bounding boxes by their level of confidence based on this threshold.
     """
-    serializable = frozenset(("model", "confidence_threshold", "source"))
+    serializable = frozenset((
+        "model", "num_classes", "conf_thresh", "image_size"))
     state_override = frozenset(("model",))
 
-    def __init__(self, dataset = None, conf_threshold = 0.3, **kwargs):
+    def __init__(self,
+                 num_classes = 1,
+                 image_size = 512,
+                 conf_threshold = 0.3,
+                 **kwargs):
         # Initialize the base modules.
         super(DetectionModel, self).__init__()
 
@@ -67,9 +88,11 @@ class DetectionModel(AgMLModelBase):
         # model construction logic (since that's already been done).
         if not kwargs.get('model_initialized', False):
             # Construct the network and load in pretrained weights.
+            self._image_size = resolve_image_size(image_size)
             self._confidence_threshold = conf_threshold
-            self._source = source(dataset)
-            self.model = self._construct_sub_net(dataset)
+            self._num_classes = num_classes
+            self.model = self._construct_sub_net(
+                self._num_classes, self._image_size)
 
         # Filter out unnecessary warnings.
         warnings.filterwarnings(
@@ -79,15 +102,16 @@ class DetectionModel(AgMLModelBase):
 
     @auto_move_data
     def forward(self, batch):
+        """Ensures that the input is valid for the model."""
         return self.model(batch)
 
     @staticmethod
-    def _construct_sub_net(dataset):
+    def _construct_sub_net(num_classes, image_size):
         cfg = get_efficientdet_config('tf_efficientdet_d4')
-        cfg.update({"image_size": (512, 512)})
+        cfg.update({"image_size": image_size})
         model = create_model_from_config(
             cfg, pretrained = False,
-            num_classes = source(dataset).num_classes)
+            num_classes = num_classes)
         return DetBenchPredict(model)
 
     def switch_predict(self):
@@ -121,7 +145,7 @@ class DetectionModel(AgMLModelBase):
             self.model.model.reset_head(num_classes = num_classes)
 
     @staticmethod
-    def _preprocess_image(image):
+    def _preprocess_image(image, image_size):
         """Preprocesses a single input image to EfficientNet standards.
 
         The preprocessing steps are applied logically; if the images
@@ -152,7 +176,7 @@ class DetectionModel(AgMLModelBase):
             image = np.transpose(image, (1, 2, 0))
 
         # Resize the image to ImageNet standards.
-        h = w = 512
+        (w, h) = image_size
         rz = A.Resize(height = h, width = w)
         if image.shape[0] != h or image.shape[1] != w:
             image = rz(image = image)['image']
@@ -211,7 +235,7 @@ class DetectionModel(AgMLModelBase):
         shapes = self._get_shapes(images)
         images = torch.stack(
             [self._preprocess_image(
-                image) for image in images], dim = 0)
+                image, self._image_size) for image in images], dim = 0)
         if return_shapes:
             return images, shapes
         return images
@@ -293,8 +317,7 @@ class DetectionModel(AgMLModelBase):
         return [squeeze(b, l, c)
                 for b, l, c in zip(boxes, labels, confidences)]
 
-    @staticmethod
-    def _to_out(tensor: "torch.Tensor") -> "torch.Tensor":
+    def _to_out(self, tensor: "torch.Tensor") -> "torch.Tensor":
         if isinstance(tensor, dict):
             tensor = tensor['detections']
         return super()._to_out(tensor)
@@ -361,5 +384,55 @@ class DetectionModel(AgMLModelBase):
         if isinstance(labels, int):
             bboxes, labels = [bboxes], [labels]
         return visualize_image_and_boxes(image, bboxes, labels)
+
+    def load_benchmark(self, dataset, strict = False):
+        """Loads a benchmark for the given semantic segmentation dataset.
+
+        This method is used to load pretrained weights for a specific AgML dataset.
+        In essence, it serves as a wrapper for `load_state_dict`, directly getting
+        the model from its save path in the AWS storage bucket. You can then use the
+        `benchmark` property to access the metric value of the benchmark, as well as
+        additional training parameters which you can use to train your own models.
+
+        Parameters
+        ----------
+        dataset : str
+            The name of the object detection benchmark to load.
+        strict : bool
+            Whether to require the same number of classes.
+
+        Notes
+        -----
+        If the given benchmark has a different number of classes than this input model,
+        then the class network will be loaded with random weights, while the remaining
+        network weights (backbone, box network, etc.) will use the pretrained weights
+        for the benchmark. This can be disabled by setting `strict = True`.
+        """
+        if source(dataset).tasks.ml != 'object_detection':
+            raise ValueError(
+                f"You are trying to load a benchmark for a "
+                f"{source(dataset).tasks.ml} task ({dataset}) "
+                f"in an object detection model.")
+
+        # Check loading strictness.
+        cs = source(dataset).num_classes == self._num_classes
+        if strict:
+            if not cs:
+                raise ValueError(
+                    f"You cannot load a benchmark for a dataset '{dataset}' "
+                    f"with {source(dataset).num_classes} classes, while your "
+                    f"model has {self._num_classes} classes. If you want to, "
+                    f"then you need to set `strict = False`.")
+
+        # Load the benchmark.
+        state = self._get_benchmark(dataset)
+        if not strict and not cs:
+            self.reset_class_net(source(dataset).num_classes)
+        self.load_state_dict(state)
+        if not strict and not cs:
+            self.reset_class_net(self._num_classes)
+        self._benchmark = BenchmarkMetadata(dataset)
+
+
 
 

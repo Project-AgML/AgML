@@ -60,8 +60,9 @@ class SegmentationModel(AgMLModelBase):
     parameter `net`, and you'll need to implement methods like `training_step`,
     `configure_optimizers`, etc. See PyTorch Lightning for more information.
     """
-    serializable = frozenset(("model", "num_classes", "conf_thresh"))
-    state_override = serializable
+    serializable = frozenset((
+        "net", "num_classes", "conf_thresh", "image_size"))
+    state_override = frozenset(("net",))
 
     def __init__(self,
                  num_classes = 1,
@@ -77,7 +78,7 @@ class SegmentationModel(AgMLModelBase):
             self._image_size = resolve_image_size(image_size)
             self.net = self._construct_sub_net(num_classes)
             if self._num_classes == 1:
-                conf_threshold = kwargs.get('confidence_threshold', 0.2)
+                conf_threshold = kwargs.get('conf_threshold', 0.2)
                 if not 0 < conf_threshold < 1:
                     raise ValueError(
                         "The given confidence threshold "
@@ -240,7 +241,23 @@ class SegmentationModel(AgMLModelBase):
         the model from its save path in the AWS storage bucket. You can then use the
         `benchmark` property to access the metric value of the benchmark, as well as
         additional training parameters which you can use to train your own models.
+
+        Parameters
+        ----------
+        dataset : str
+            The name of the semantic segmentation benchmark to load.
+
+        Notes
+        -----
+        If the benchmark has a different number of classes than this input model, then
+        this method will raise an error. This issue may be adapted in the future.
         """
+        if source(dataset).tasks.ml != 'semantic_segmentation':
+            raise ValueError(
+                f"You are trying to load a benchmark for a "
+                f"{source(dataset).tasks.ml} task ({dataset}) "
+                f"in a semantic segmentation model.")
+
         # Number of classes must be the same for semantic segmentation.
         if source(dataset).num_classes != self._num_classes:
             raise ValueError(
@@ -248,6 +265,7 @@ class SegmentationModel(AgMLModelBase):
                 f"with {source(dataset).num_classes} classes, while your "
                 f"model has {self._num_classes} classes.")
 
+        # Load the benchmark.
         state = self._get_benchmark(dataset)
         self.load_state_dict(state)
         self._benchmark = BenchmarkMetadata(dataset)
