@@ -22,6 +22,7 @@ from agml.models.benchmarks import BenchmarkMetadata
 from agml.models.tools import auto_move_data, imagenet_style_process
 from agml.data.public import source
 from agml.utils.general import resolve_list_value
+from agml.utils.image import resolve_image_size
 from agml.viz.masks import visualize_overlaid_masks
 
 
@@ -59,10 +60,13 @@ class SegmentationModel(AgMLModelBase):
     parameter `net`, and you'll need to implement methods like `training_step`,
     `configure_optimizers`, etc. See PyTorch Lightning for more information.
     """
-    serializable = frozenset(("model", "num_classes"))
+    serializable = frozenset(("model", "num_classes", "conf_thresh"))
     state_override = serializable
 
-    def __init__(self, num_classes = 1, **kwargs):
+    def __init__(self,
+                 num_classes = 1,
+                 image_size = 512,
+                 **kwargs):
         # Construct the network and load in pretrained weights.
         super(SegmentationModel, self).__init__()
 
@@ -70,7 +74,15 @@ class SegmentationModel(AgMLModelBase):
         # model construction logic (since that's already been done).
         if not kwargs.get('model_initialized', False):
             self._num_classes = num_classes
+            self._image_size = resolve_image_size(image_size)
             self.net = self._construct_sub_net(num_classes)
+            if self._num_classes == 1:
+                conf_threshold = kwargs.get('confidence_threshold', 0.2)
+                if not 0 < conf_threshold < 1:
+                    raise ValueError(
+                        "The given confidence threshold "
+                        "must be between 0 and 1.")
+                self._conf_thresh = conf_threshold
 
         # By default, the model starts in inference mode.
         self.eval()
@@ -84,7 +96,7 @@ class SegmentationModel(AgMLModelBase):
         return DeepLabV3Transfer(num_classes)
 
     @staticmethod
-    def _preprocess_image(image):
+    def _preprocess_image(image, image_size):
         """Preprocesses a single input image to EfficientNet standards.
 
         The preprocessing steps are applied logically; if the images
@@ -101,7 +113,7 @@ class SegmentationModel(AgMLModelBase):
         as well as other intermediate steps such as adding a channel
         dimension for two-channel inputs, for example.
         """
-        return imagenet_style_process(image, size = (512, 512))
+        return imagenet_style_process(image, size = image_size)
 
     def preprocess_input(self, images, return_shapes = False):
         """Preprocesses the input image to the specification of the model.
@@ -146,7 +158,7 @@ class SegmentationModel(AgMLModelBase):
         shapes = self._get_shapes(images)
         images = torch.stack(
             [self._preprocess_image(
-                image) for image in images], dim = 0)
+                image, self._image_size) for image in images], dim = 0)
         if return_shapes:
             return images, shapes
         return images
@@ -183,7 +195,7 @@ class SegmentationModel(AgMLModelBase):
 
         # Post-process the output masks to a valid format.
         if out.shape[1] == 1: # binary class predictions
-            out[out >= 0.2] = 1
+            out[out >= self._conf_thresh] = 1
             out[out != 1] = 0
             out = torch.squeeze(out, dim = 1)
         else: # multi-class predictions to integer labels
