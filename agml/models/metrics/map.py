@@ -141,7 +141,14 @@ def mean_average_precision(
 
 
 class MeanAveragePrecision(nn.Module):
-    """"""
+    """A metric to calculate mean average precision for object detection tasks.
+
+    This class is used as a wrapper around mean average precision calculations,
+    which allows for accumulation of predictions over time. The `update` (and
+    `batch_update`) methods can be used to update data in the class, then `compute`
+    to get the calculated mean average precision, and finally `reset` to restore
+    the accumulators to an empty state, allowing from-scratch calculations.
+    """
 
     def __init__(self, num_classes = 1, iou_threshold = 0.5):
         # Set base parameters.
