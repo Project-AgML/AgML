@@ -18,6 +18,7 @@ import torch
 import numpy as np
 import albumentations as A
 
+from tqdm import tqdm
 from ensemble_boxes.ensemble_boxes_wbf import weighted_boxes_fusion
 
 from effdet import (
@@ -30,9 +31,11 @@ from effdet import (
 from agml.models.base import AgMLModelBase
 from agml.models.benchmarks import BenchmarkMetadata
 from agml.models.tools import auto_move_data
+from agml.models.metrics.map import MeanAveragePrecision
 from agml.data.public import source
 from agml.backend.tftorch import is_array_like
 from agml.utils.image import resolve_image_size
+from agml.utils.logging import log
 from agml.viz.boxes import visualize_image_and_boxes
 
 
@@ -141,7 +144,7 @@ class DetectionModel(AgMLModelBase):
         num_classes : int
             The number of classes to reconfigure the output net to use.
         """
-        if num_classes != self._source.num_classes:
+        if num_classes != self._num_classes:
             self.model.model.reset_head(num_classes = num_classes)
 
     @staticmethod
@@ -428,10 +431,75 @@ class DetectionModel(AgMLModelBase):
         state = self._get_benchmark(dataset)
         if not strict and not cs:
             self.reset_class_net(source(dataset).num_classes)
+            log(f"Loading a state dict for {dataset} with "
+                f"{source(dataset).num_classes}, while your "
+                f"model has {self._num_classes} classes. The "
+                f"class network will use random weights.")
         self.load_state_dict(state)
         if not strict and not cs:
             self.reset_class_net(self._num_classes)
         self._benchmark = BenchmarkMetadata(dataset)
+
+    def evaluate(self, loader, iou_threshold = 0.5, method = 'accumulate'):
+        """Runs a mean average precision evaluation on the given loader.
+
+        This method will loop over the provided `AgMLDataLoader` and compute
+        the mean average precision at the provided `iou_threshold`. This can
+        be done using two methods. Using the method `average` will compute
+        the mean average precision for each individual sample and then average
+        over all of the samples, while using the method `accumulate` will
+        compute the mean average precision over the entire dataset.
+
+        Parameters
+        ----------
+        loader : AgMLDataLoader
+            An object detection loader with the dataset you want to evaluate.
+        iou_threshold : float
+            The IoU threshold between a ground truth and predicted bounding
+            box at which point they are considered the same.
+        method : str
+            The method to use, as described above.
+
+        Returns
+        -------
+        The final calculated mean average precision.
+        """
+        if not 0 < iou_threshold < 1:
+            raise ValueError(
+                f"The `iou_threshold` must be between 0 and 1, got {iou_threshold}.")
+        if method not in ['accumulate', 'average']:
+            raise ValueError(
+                f"Method must be either `accumulate` or `average`, got {method}.")
+
+        # Construct the mean average precision accumulator and run the calculations.
+        mean_ap = MeanAveragePrecision(
+            num_classes = self._num_classes, iou_threshold = iou_threshold)
+        bar = tqdm(loader, desc = "Calculating Mean Average Precision")
+        if method == 'average':
+            cumulative_maps = []
+        for sample in bar:
+            image, truth = sample
+            true_box, true_label = truth['bbox'], truth['category_id']
+            bboxes, labels, conf = self.predict(image)
+            mean_ap.update(*(
+                dict(boxes = bboxes, labels = labels, scores = conf),
+                dict(boxes = true_box, labels = true_label)))
+
+            # If averaging, then calculate and reset the mAP, otherwise continue.
+            if method == 'average':
+                res = mean_ap.compute()
+                cumulative_maps.append(res) # noqa
+                bar.set_postfix({'map': float(res)})
+                mean_ap.reset()
+
+        # Compute the final mAP.
+        if method == 'average':
+            result = sum(cumulative_maps) / len(cumulative_maps)
+        else:
+            result = mean_ap.compute()
+        return result
+
+
 
 
 
