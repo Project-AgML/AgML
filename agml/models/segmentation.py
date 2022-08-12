@@ -12,9 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import numpy as np
+from tqdm import tqdm
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from torchmetrics import IoU
 from torchvision.models.segmentation import deeplabv3_resnet50
 
 from agml.models.base import AgMLModelBase
@@ -270,6 +274,34 @@ class SegmentationModel(AgMLModelBase):
         self.load_state_dict(state)
         self._benchmark = BenchmarkMetadata(dataset)
 
+    def evaluate(self, loader):
+        """Runs a mean intersection over union evaluation on the given loader.
 
+        This method will loop over the provided `AgMLDataLoader` and compute
+        the mean intersection over union (mIOU).
 
+        Parameters
+        ----------
+        loader : AgMLDataLoader
+            An object detection loader with the dataset you want to evaluate.
+
+        Returns
+        -------
+        The final calculated mIoU.
+        """
+        # Construct the metric and run the calculations.
+        iou = IoU(num_classes = self._num_classes + 1)
+        bar = tqdm(loader, desc = "Calculating Mean Intersection Over Union")
+        for sample in bar:
+            image, truth = sample
+            pred_mask = self.predict(image)
+            if pred_mask.ndim == 3:
+                pred_mask = np.transpose(pred_mask, (2, 0, 1))
+                truth = np.transpose(truth, (2, 0, 1))
+            iou(torch.from_numpy(pred_mask).int().unsqueeze(0),
+                torch.from_numpy(truth).unsqueeze(0))
+            bar.set_postfix({'miou': iou.compute().numpy().item()})
+
+        # Compute the final mAP.
+        return iou.compute().numpy().item()
 

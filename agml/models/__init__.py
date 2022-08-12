@@ -17,4 +17,10 @@ This module contains PyTorch pre-trained weights and benchmarks for
 commonly used deep learning models on agricultural datasets within AgML.
 """
 
+from .classification import ClassificationModel
+from .segmentation import SegmentationModel
+from .detection import DetectionModel
+from . import metrics
+from . import losses
+from . import preprocessing
 

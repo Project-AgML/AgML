@@ -27,8 +27,6 @@ AgML, specifically data loaded or generated from the data module.
 from .config import (
     data_save_path,
     set_data_save_path,
-    synthetic_data_save_path,
-    set_synthetic_save_path,
     model_save_path,
     set_model_save_path,
     clear_all_datasets,
