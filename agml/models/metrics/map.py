@@ -47,6 +47,7 @@ def bbox_iou(predicted_box, truth_box):
     return intersection / (union_area + 1e-6)
 
 
+@torch.no_grad()
 def mean_average_precision(
         predicted_boxes, truth_boxes, num_classes = 1, iou_thresh = 0.5):
     """Calculates the mean average precision for predicted and true boxes."""

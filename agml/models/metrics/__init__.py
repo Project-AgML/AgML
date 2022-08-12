@@ -16,4 +16,8 @@ from .map import (
     mean_average_precision,
     MeanAveragePrecision
 )
+from .accuracy import (
+    accuracy,
+    Accuracy
+)
 
