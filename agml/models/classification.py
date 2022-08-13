@@ -12,12 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from tqdm import tqdm
+
 import torch
 import torch.nn as nn
 from torchvision.models import efficientnet_b4
 
 from agml.models.base import AgMLModelBase
 from agml.models.tools import auto_move_data, imagenet_style_process
+from agml.models.metrics.accuracy import Accuracy
 from agml.data.public import source
 
 
@@ -166,6 +169,33 @@ class ClassificationModel(AgMLModelBase):
         """
         images = self.preprocess_input(images)
         return self._to_out(torch.squeeze(torch.argmax(self.forward(images), 1)))
+
+    def evaluate(self, loader, **kwargs):
+        """Runs an accuracy evaluation on the given loader.
+
+        This method will loop over the `AgMLDataLoader` and compute accuracy.
+
+        Parameters
+        ----------
+        loader : AgMLDataLoader
+            A semantic segmentation loader with the dataset you want to evaluate.
+
+        Returns
+        -------
+        The final calculated accuracy.
+        """
+        # Construct the metric and run the calculations.
+        acc = Accuracy()
+        bar = tqdm(loader, desc = "Calculating Accuracy")
+        for sample in bar:
+            image, truth = sample
+            pred_label = self.predict(image)
+            acc.update([pred_label], [truth])
+            bar.set_postfix({'accuracy': acc.compute().numpy().item()})
+
+        # Compute the final accuracy.
+        return acc.compute().numpy().item()
+
 
 
 

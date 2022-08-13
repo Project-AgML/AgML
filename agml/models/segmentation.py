@@ -274,7 +274,7 @@ class SegmentationModel(AgMLModelBase):
         self.load_state_dict(state)
         self._benchmark = BenchmarkMetadata(dataset)
 
-    def evaluate(self, loader):
+    def evaluate(self, loader, **kwargs):
         """Runs a mean intersection over union evaluation on the given loader.
 
         This method will loop over the provided `AgMLDataLoader` and compute
@@ -283,7 +283,7 @@ class SegmentationModel(AgMLModelBase):
         Parameters
         ----------
         loader : AgMLDataLoader
-            An object detection loader with the dataset you want to evaluate.
+            A semantic segmentation loader with the dataset you want to evaluate.
 
         Returns
         -------
@@ -302,6 +302,6 @@ class SegmentationModel(AgMLModelBase):
                 torch.from_numpy(truth).unsqueeze(0))
             bar.set_postfix({'miou': iou.compute().numpy().item()})
 
-        # Compute the final mAP.
+        # Compute the final mIoU.
         return iou.compute().numpy().item()
 

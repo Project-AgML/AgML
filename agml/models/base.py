@@ -178,5 +178,10 @@ class AgMLModelBase(AgMLSerializable, LightningModule):
         """Loads a benchmark for the given AgML dataset."""
         raise NotImplementedError
 
+    @abc.abstractmethod
+    def evaluate(self, loader, **kwargs):
+        """Evaluates the model on the given loader."""
+        raise NotImplementedError
+
 
 
