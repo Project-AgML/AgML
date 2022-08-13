@@ -328,7 +328,12 @@ class CustomDatasetMetadata(DatasetMetadata):
 
     def __init__(self, name, meta): # noqa
         if meta is None:
-            raise ValueError("Expected metadata when creating a custom loader, got None.")
+            msg = f"Received invalid public source: '{name}'."
+            out_msg = maybe_you_meant(name, msg)
+            if out_msg == msg:
+                raise ValueError("Expected metadata when creating a custom loader, got None.")
+            else:
+                raise ValueError(out_msg)
         self._load_info(name, meta)
 
     def _load_info(self, name, meta):

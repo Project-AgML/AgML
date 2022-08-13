@@ -16,7 +16,7 @@ import os
 import json
 import copy
 from typing import Union
-from collections import Sequence
+from collections.abc import Sequence
 from decimal import getcontext, Decimal
 
 import numpy as np
@@ -30,7 +30,7 @@ from agml.utils.io import get_file_list, get_dir_list
 from agml.utils.data import load_public_sources
 from agml.utils.general import NoArgument, resolve_list_value
 from agml.utils.random import inject_random_state
-from agml.backend.config import data_save_path, synthetic_data_save_path
+from agml.backend.config import data_save_path
 from agml.backend.experimental import AgMLExperimentalFeatureWrapper
 from agml.backend.tftorch import (
     get_backend, set_backend,
