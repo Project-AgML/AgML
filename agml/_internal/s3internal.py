@@ -70,7 +70,7 @@ class InternalAgMLS3API(object):
         # Setup progress bar
         self.pg = tqdm(
             total=os.stat(os.path.abspath(os.path.join(dataset_dir, dataset_name + '.zip'))).st_size,
-            file=sys.stdout, des =f"Uploading {dataset_name}")
+            file=sys.stdout, desc=f"Uploading {dataset_name}")
 
         # Upload data to agdata-data bucket
         try:
@@ -102,7 +102,7 @@ class InternalAgMLS3API(object):
         # Setup progress bar
         self.pg = tqdm(
             total=os.stat(os.path.abspath(os.path.join(model_dir, model_name + '.pth'))).st_size,
-            file = sys.stdout, desc = f"Uploading {model_name}")
+            file=sys.stdout, desc = f"Uploading {model_name}")
 
         # Upload data to agdata-data bucket
         try:
@@ -142,7 +142,7 @@ class InternalAgMLS3API(object):
             self.pg = tqdm(
                 total=float(self.s3_resource.ObjectSummary(
                     bucket_name='agdata-data', key=dataset_name + '.zip').size),
-                file = sys.stdout, desc = f"Downloading {dataset_name}")
+                file=sys.stdout, desc = f"Downloading {dataset_name}")
         except botocore.exceptions.ClientError as ce:
             if "Not Found" in str(ce):
                 raise ValueError(
