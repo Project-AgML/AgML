@@ -18,7 +18,7 @@ from tqdm import tqdm
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torchmetrics import IoU
+from torchmetrics import JaccardIndex as IoU
 from torchvision.models.segmentation import deeplabv3_resnet50
 
 from agml.models.base import AgMLModelBase
