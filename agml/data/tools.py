@@ -122,6 +122,8 @@ def convert_bbox_format(annotations_or_bboxes, fmt):
     if isinstance(fmt, str):
         if 'voc' in fmt or 'pascal' in fmt:
             fmt = 'x_min y_min x_max y_max'
+        elif 'efficientdet' in fmt or 'effdet' in fmt:
+            fmt = 'y_min x_min y_max x_max'
         if ',' in fmt:
             fmt = fmt.split(',')
         else:
