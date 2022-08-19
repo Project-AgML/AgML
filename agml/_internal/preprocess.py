@@ -14,10 +14,8 @@
 
 """
 Preprocessing code for AgML public data sources.
-
 This file stores the preprocessing code used to preprocess a public
 dataset when added to AgML's public data sources.
-
 If you want to use this preprocessing code, run `pip install agml[dev]`
 to install the necessary preprocessing packages.
 """
@@ -27,6 +25,7 @@ import sys
 import json
 import glob
 import shutil
+import argparse
 import csv
 
 import cv2
@@ -40,9 +39,8 @@ from agml.utils.io import create_dir, nested_dir_list, get_dir_list, get_file_li
 from agml.utils.data import load_public_sources
 from agml._internal.process_utils import (
     read_txt_file, get_image_info, get_label2id,
-    convert_bbox_to_coco, get_coco_annotation_from_obj, convert_xmls_to_cocojson,
-    mask_annotation_per_bbox, move_segmentation_dataset,
-    create_sub_masks, create_sub_mask_annotation_per_bbox
+    convert_bbox_to_coco, get_coco_annotation_from_obj,
+    convert_xmls_to_cocojson, move_segmentation_dataset,
 )
 
 
@@ -55,6 +53,7 @@ class PublicDataPreprocessor(object):
         The directory with a folder `original` and `processed` to hold
         the original and processed datasets, respectively.
     """
+
     def __init__(self, data_dir):
         self.data_dir = os.path.abspath(data_dir)
         self.data_original_dir = os.path.join(self.data_dir, 'original')
@@ -63,15 +62,14 @@ class PublicDataPreprocessor(object):
 
     def preprocess(self, dataset_name):
         """Preprocesses the provided dataset.
-
         Parameters
         ----------
         dataset_name : str
             name of dataset to preprocess
         """
         getattr(self, dataset_name)(dataset_name)
-        
-    def bean_disease_uganda(self, dataset_name):    
+
+    def bean_disease_uganda(self, dataset_name):
         # Get the dataset classes and paths
         base_path = os.path.join(self.data_original_dir, dataset_name)
         dirs = ['train', 'validation', 'test']
@@ -232,7 +230,7 @@ class PublicDataPreprocessor(object):
         anno_data_all = []
         for folder in plant_folders:
             # Get image file and xml file
-            full_path = os.path.join(obj_Detection_data,folder)
+            full_path = os.path.join(obj_Detection_data, folder)
             all_files = get_file_list(full_path)
             anno_files = [x for x in all_files if "txt" in x]
             for anno_file in anno_files:
@@ -240,7 +238,7 @@ class PublicDataPreprocessor(object):
                 anno_path = os.path.join(full_path, anno_file)
                 # Opening annotation file
                 anno_data = read_txt_file(anno_path, delimiter=',')[0]
-                
+
                 for i, anno in enumerate(anno_data):
                     new_anno = [os.path.join(dataset_dir, anno_data[i][0])]
                     # Add bbox count
@@ -249,16 +247,16 @@ class PublicDataPreprocessor(object):
                     new_anno.append(str(bbox_cnt))
                     for idx in range(bbox_cnt):
                         xmin = int(anno[1 + 4 * idx])
-                        ymin = int(anno[1 + 4 * idx+1])
-                        w = int(anno[1 + 4 * idx+2])
-                        h = int(anno[1 + 4 * idx+3])
+                        ymin = int(anno[1 + 4 * idx + 1])
+                        w = int(anno[1 + 4 * idx + 2])
+                        h = int(anno[1 + 4 * idx + 3])
 
                         new_anno.append(str(xmin))  # xmin
                         new_anno.append(str(ymin))  # ymin
                         new_anno.append(str(xmin + w))  # xmax
                         new_anno.append(str(ymin + h))  # ymax
-                        new_anno.append(str(1)) # label
-                    anno_data[i] = new_anno                      
+                        new_anno.append(str(1))  # label
+                    anno_data[i] = new_anno
                 anno_data_all += anno_data
 
         # Process annotation files
@@ -284,8 +282,8 @@ class PublicDataPreprocessor(object):
             output_json_file,
             output_img_path,
             general_info, None, None,
-            get_label_from_folder=False,
-            resize=resize, add_foldername=True)
+            get_label_from_folder = False,
+            resize = resize, add_foldername = True)
 
     def mango_detection_australia(self, dataset_name):
         # resize the dataset
@@ -303,7 +301,7 @@ class PublicDataPreprocessor(object):
                 labels_str.append(category_info[info])
                 labels_ids.append(int(info))
 
-            name_converter = dict(zip(["M"], ["mango"])) # src -> dst
+            name_converter = dict(zip(["M"], ["mango"]))  # src -> dst
             label2id = dict(zip(labels_str, labels_ids))
 
         dataset_dir = os.path.join(self.data_original_dir, dataset_name)
@@ -338,86 +336,86 @@ class PublicDataPreprocessor(object):
 
         convert_xmls_to_cocojson(
             general_info,
-            annotation_paths=anno_files,
-            img_paths=img_files,
-            label2id=label2id,
+            annotation_paths = anno_files,
+            img_paths = img_files,
+            label2id = label2id,
             name_converter = name_converter,
-            output_jsonpath=output_json_file,
+            output_jsonpath = output_json_file,
             output_imgpath = output_img_path,
-            extract_num_from_imgid=True
+            extract_num_from_imgid = True
         )
 
     def cotton_seedling_counting(self, dataset_name):
-       # Get all of the relevant data
-       dataset_dir = os.path.join(self.data_original_dir, dataset_name)
-       image_dir = os.path.join(dataset_dir, 'Images')
-       images = sorted([os.path.join(image_dir, i) for i in os.listdir(image_dir)])
-       with open(os.path.join(dataset_dir, 'Images.json'), 'r') as f:
-           annotations = json.load(f)
+        # Get all of the relevant data
+        dataset_dir = os.path.join(self.data_original_dir, dataset_name)
+        image_dir = os.path.join(dataset_dir, 'Images')
+        images = sorted([os.path.join(image_dir, i) for i in os.listdir(image_dir)])
+        with open(os.path.join(dataset_dir, 'Images.json'), 'r') as f:
+            annotations = json.load(f)
 
-       # Get all of the unique labels
-       labels = []
-       for label_set in annotations['frames'].values():
-           for individual_set in label_set:
-               labels.extend(individual_set['tags'])
-       labels = np.unique(labels).tolist()
-       label2id = get_label2id(labels) # noqa
+        # Get all of the unique labels
+        labels = []
+        for label_set in annotations['frames'].values():
+            for individual_set in label_set:
+                labels.extend(individual_set['tags'])
+        labels = np.unique(labels).tolist()
+        label2id = get_label2id(labels)  # noqa
 
-       # Extract all of the bounding boxes and images
-       image_data = []
-       annotation_data = []
-       valid_paths = [] # some paths are not in the annotations, track the ones which are
-       for indx, (img_path, annotation) in enumerate(
-               zip(tqdm(images, file = sys.stdout, desc = "Generating Data"),
-                   annotations['frames'].values())):
-           image_data.append(get_image_info(img_path, indx))
-           valid_paths.append(img_path)
-           for a_set in annotation:
-               formatted_set = [
-                   a_set['x1'], a_set['y1'], a_set['x2'], a_set['y2'],
-                   label2id[a_set['tags'][0]]]
-               base_annotation_data = get_coco_annotation_from_obj(formatted_set, a_set['name'])
-               base_annotation_data['image_id'] = indx + 1
-               annotation_data.append(base_annotation_data)
+        # Extract all of the bounding boxes and images
+        image_data = []
+        annotation_data = []
+        valid_paths = []  # some paths are not in the annotations, track the ones which are
+        for indx, (img_path, annotation) in enumerate(
+                zip(tqdm(images, file = sys.stdout, desc = "Generating Data"),
+                    annotations['frames'].values())):
+            image_data.append(get_image_info(img_path, indx))
+            valid_paths.append(img_path)
+            for a_set in annotation:
+                formatted_set = [
+                    a_set['x1'], a_set['y1'], a_set['x2'], a_set['y2'],
+                    label2id[a_set['tags'][0]]]
+                base_annotation_data = get_coco_annotation_from_obj(formatted_set, a_set['name'])
+                base_annotation_data['image_id'] = indx + 1
+                annotation_data.append(base_annotation_data)
 
-       # Set up the annotation dictionary
-       all_annotation_data = {
-           "images": [], "type": "instances",
-           "annotations": [], "categories": [],
-           "info": {
-               "description": "cotton seedling counting dataset",
-               "url": "https://figshare.com/s/616956f8633c17ceae9b",
-               "version": "1.0",
-               "year": 2019,
-               "contributor": "Yu Jiang",
-               "date_created": "2019/11/23"
-           }
-       }
+        # Set up the annotation dictionary
+        all_annotation_data = {
+            "images": [], "type": "instances",
+            "annotations": [], "categories": [],
+            "info": {
+                "description": "cotton seedling counting dataset",
+                "url": "https://figshare.com/s/616956f8633c17ceae9b",
+                "version": "1.0",
+                "year": 2019,
+                "contributor": "Yu Jiang",
+                "date_created": "2019/11/23"
+            }
+        }
 
-       # Populate the annotation dictionary
-       for label, label_id in label2id.items():
-           category_info = {'supercategory': 'none', 'id': label_id, 'name': label}
-           all_annotation_data['categories'].append(category_info)
-       all_annotation_data['images'] = image_data
-       all_annotation_data['annotations'] = annotation_data
+        # Populate the annotation dictionary
+        for label, label_id in label2id.items():
+            category_info = {'supercategory': 'none', 'id': label_id, 'name': label}
+            all_annotation_data['categories'].append(category_info)
+        all_annotation_data['images'] = image_data
+        all_annotation_data['annotations'] = annotation_data
 
-       # Recreate the dataset and zip it
-       processed_dir = os.path.join(self.data_processed_dir, dataset_name)
-       processed_img_dir = os.path.join(processed_dir, 'images')
-       if os.path.exists(processed_dir):
-           shutil.rmtree(processed_dir)
-       os.makedirs(processed_dir, exist_ok = True)
-       os.makedirs(processed_img_dir, exist_ok = True)
-       for path in images:
-           if path not in valid_paths:
-               continue
-           shutil.copyfile(path, os.path.join(processed_img_dir, os.path.basename(path)))
-       with open(os.path.join(processed_dir, 'annotations.json'), 'w') as f:
-           json.dump(all_annotation_data, f, indent = 4)
+        # Recreate the dataset and zip it
+        processed_dir = os.path.join(self.data_processed_dir, dataset_name)
+        processed_img_dir = os.path.join(processed_dir, 'images')
+        if os.path.exists(processed_dir):
+            shutil.rmtree(processed_dir)
+        os.makedirs(processed_dir, exist_ok = True)
+        os.makedirs(processed_img_dir, exist_ok = True)
+        for path in images:
+            if path not in valid_paths:
+                continue
+            shutil.copyfile(path, os.path.join(processed_img_dir, os.path.basename(path)))
+        with open(os.path.join(processed_dir, 'annotations.json'), 'w') as f:
+            json.dump(all_annotation_data, f, indent = 4)
 
-       # Zip the dataset
-       shutil.make_archive(
-           processed_dir, "zip", os.path.dirname(processed_dir))
+        # Zip the dataset
+        shutil.make_archive(
+            processed_dir, "zip", os.path.dirname(processed_dir))
 
     def apple_flower_segmentation(self, dataset_name):
         # Get all of the relevant data.
@@ -478,7 +476,7 @@ class PublicDataPreprocessor(object):
         dataset_dir = os.path.join(self.data_original_dir, dataset_name)
         train_dir = os.path.join(dataset_dir, 'train')
         train_images = sorted(get_file_list(train_dir))
-        annotation_dir = os.path.join(dataset_dir, 'trainannot') # noqa
+        annotation_dir = os.path.join(dataset_dir, 'trainannot')  # noqa
         annotation_images = sorted(get_file_list(annotation_dir))
 
         # Move the images to the new directory
@@ -506,6 +504,7 @@ class PublicDataPreprocessor(object):
             for indxs in weed_indices:
                 out_annotation[indxs[0]][indxs[1]] = 2
             return cv2.imwrite(out_path, out_annotation.astype(np.int8))
+
         move_segmentation_dataset(
             self.data_processed_dir, dataset_name, train_images,
             annotation_images, train_dir, annotation_dir,
@@ -535,6 +534,7 @@ class PublicDataPreprocessor(object):
                         mask = np.logical_or(mask, mask_)
             mask = mask.astype(np.int32)
             return cv2.imwrite(out_path, mask)
+
         move_segmentation_dataset(
             self.data_processed_dir, dataset_name, train_images,
             mask_images, train_dir, masks_dir,
@@ -619,7 +619,7 @@ class PublicDataPreprocessor(object):
         # Save the annotation file.
         with open(os.path.join(out_dir, 'annotations.json'), 'w') as f:
             json.dump(out, f)
-    
+
     def guava_disease_pakistan(self, dataset_name):
         # Get all of the images.
         dataset_dir = os.path.join(self.data_original_dir, dataset_name)
@@ -701,7 +701,7 @@ class PublicDataPreprocessor(object):
         dataset_dir = os.path.join(self.data_original_dir, dataset_name)
         if not os.path.exists(dataset_dir):
             fallback = os.path.join(self.data_original_dir,
-                                    'thsant-add256-68d2f88') # noqa
+                                    'thsant-add256-68d2f88')  # noqa
             if os.path.exists(fallback):
                 os.rename(fallback, dataset_dir)
 
@@ -768,7 +768,7 @@ class PublicDataPreprocessor(object):
                 processed_img_dir, os.path.basename(path)))
         with open(os.path.join(processed_dir, 'annotations.json'), 'w') as f:
             json.dump(all_annotation_data, f)
-    
+
     def plant_doc_classification(self, dataset_name):
         category_info = self.data_sources[dataset_name]['classes']
 
@@ -782,24 +782,24 @@ class PublicDataPreprocessor(object):
         os.makedirs(output)
 
         for key in category_info:
-          category = category_info[key]
-          
-          # make output dir for each crop type
-          output_catg_dir = os.path.join(output, category)
-          os.makedirs(output_catg_dir)
+            category = category_info[key]
 
-          # put train and test images of same category into same folder
-          train_catg_dir = os.path.join(train_dir, category)
-          test_catg_dir = os.path.join(test_dir, category)
+            # make output dir for each crop type
+            output_catg_dir = os.path.join(output, category)
+            os.makedirs(output_catg_dir)
 
-          for img_name in get_file_list(train_catg_dir):
-            img = os.path.join(train_catg_dir, img_name)
-            shutil.copyfile(img, os.path.join(output_catg_dir, img_name))
+            # put train and test images of same category into same folder
+            train_catg_dir = os.path.join(train_dir, category)
+            test_catg_dir = os.path.join(test_dir, category)
 
-          if os.path.exists(test_catg_dir):
-            for img_name in get_file_list(test_catg_dir):
-              img = os.path.join(test_catg_dir, img_name)
-              shutil.copyfile(img, os.path.join(output_catg_dir, img_name))
+            for img_name in get_file_list(train_catg_dir):
+                img = os.path.join(train_catg_dir, img_name)
+                shutil.copyfile(img, os.path.join(output_catg_dir, img_name))
+
+            if os.path.exists(test_catg_dir):
+                for img_name in get_file_list(test_catg_dir):
+                    img = os.path.join(test_catg_dir, img_name)
+                    shutil.copyfile(img, os.path.join(output_catg_dir, img_name))
 
     def plant_doc_detection(self, dataset_name):
         # Read public_datasources.json to get class information
@@ -812,30 +812,30 @@ class PublicDataPreprocessor(object):
 
         label2id = dict(zip(labels_str, labels_ids))
 
-         # Get paths to xml(annotation) files
+        # Get paths to xml(annotation) files
         dataset_dir = os.path.join(self.data_original_dir, dataset_name)
         train_dir = os.path.join(dataset_dir, "TRAIN")
         test_dir = os.path.join(dataset_dir, "TEST")
 
         train_files = get_file_list(train_dir)
         test_files = get_file_list(test_dir)
-        
+
         anno_files = [os.path.join(train_dir, ann_file) for ann_file in train_files if "xml" in ann_file]
         anno_files += [os.path.join(test_dir, ann_file) for ann_file in test_files if "xml" in ann_file]
-        
+
         # Get paths to image files
         img_files = [os.path.join(train_dir, img) for img in train_files if "xml" not in img]
         img_files += [os.path.join(test_dir, img) for img in test_files if "xml" not in img]
 
         # Remove all images without annotations and make a list only containing annotations with images
-        valid_image_files = [] 
-        valid_anno_files = [] 
+        valid_image_files = []
+        valid_anno_files = []
         for img_file in img_files:
-          anno_file = img_file.rsplit(".", 1)[0] + ".xml" #replace extension with xml to get image's annotation file
-          if anno_file in anno_files:
-            valid_image_files.append(img_file) # add all images that have a corresponding annotation file
-            valid_anno_files.append(anno_file) # add all annotation files that are referenced by an image
-        
+            anno_file = img_file.rsplit(".", 1)[0] + ".xml"  # replace extension with xml to get image's annotation file
+            if anno_file in anno_files:
+                valid_image_files.append(img_file)  # add all images that have a corresponding annotation file
+                valid_anno_files.append(anno_file)  # add all annotation files that are referenced by an image
+
         # Define path to processed annotation files
         output_json_file = os.path.join(
             self.data_processed_dir, dataset_name, 'annotations.json')
@@ -856,18 +856,17 @@ class PublicDataPreprocessor(object):
 
         convert_xmls_to_cocojson(
             general_info,
-            annotation_paths=valid_anno_files,
-            img_paths=valid_image_files,
-            label2id=label2id,
+            annotation_paths = valid_anno_files,
+            img_paths = valid_image_files,
+            label2id = label2id,
             name_converter = None,
-            output_jsonpath=output_json_file,
+            output_jsonpath = output_json_file,
             output_imgpath = output_img_path,
-            extract_num_from_imgid=False
+            extract_num_from_imgid = False
         )
 
     def wheat_head_counting(self, dataset_name):
         label2id = {"Wheat Head": 1}
-
         dataset_dir = os.path.join(self.data_original_dir, dataset_name)
         anno_files = [os.path.join(dataset_dir, 'competition_train.csv'), os.path.join(dataset_dir, 'competition_test.csv'), os.path.join(dataset_dir, 'competition_val.csv')]
         
@@ -944,3 +943,18 @@ class PublicDataPreprocessor(object):
         img = np.where(img[:] == 255, 1, 0)
         processed_path = os.path.join(processed_annotation_dir, anno_path.split('/')[-1])
         cv2.imwrite(processed_path, img)
+
+
+if __name__ == '__main__':
+    # Initialize program arguments.
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--data_dir", type = str, default = '../../data',
+                    help = "The directory containing two sub-directories, "
+                           "`original` and `processed`, with the data.")
+    ap.add_argument("--dataset", type = str,
+                    help = "The dataset to process.")
+    args = ap.parse_args()
+
+    # Execute the preprocessing.
+    p = PublicDataPreprocessor(os.path.abspath(args.data_dir))
+    p.preprocess(args.dataset)

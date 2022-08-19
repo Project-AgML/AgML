@@ -25,7 +25,7 @@ from agml.viz.tools import (
 
 def _reduce_categorical_mask(mask):
     """Reduces a categorical mask label to one-dimensional."""
-    return np.argmax(mask)
+    return np.argmax(mask, axis = -1)
 
 
 def _preprocess_mask(mask):
@@ -50,8 +50,12 @@ def _preprocess_mask(mask):
 
 def _mask_2d_to_3d(mask):
     """Converts a mask from 2-dimensional to channel-by-channel."""
+    if mask.ndim == 3:
+        return mask
     mask = np.squeeze(mask)
     channels = np.unique(mask)[1:]
+    if len(channels) == 0:
+        return np.zeros(shape = (*mask.shape[:2], 1))
     out = np.zeros(shape = (*mask.shape[:2], int(max(channels))))
     iter_idx = 1
     while True:
@@ -115,7 +119,7 @@ def visualize_image_and_mask(image, mask = None):
         "If `image` is a tuple/list, it should contain "
         "two values: the image and its mask.")
     image = format_image(image)
-    mask = _preprocess_mask(format_image(mask))
+    mask = _preprocess_mask(format_image(mask, mask = True))
 
     fig, axes = plt.subplots(1, 2, figsize = (10, 5))
     axes[0].imshow(image)
@@ -167,6 +171,7 @@ def visualize_image_mask_and_predicted(image, mask = None, predicted = None):
         ax.set_title(label)
         ax.set_aspect('equal')
         ax.axis('off')
+    fig.tight_layout()
     return fig
 
 
@@ -198,7 +203,7 @@ def overlay_segmentation_masks(image, mask = None, border = True):
         "If `image` is a tuple/list, it should contain "
         "two values: the image and its mask.")
     image = format_image(image)
-    mask = _mask_2d_to_3d(mask)
+    mask = _mask_2d_to_3d(format_image(mask))
 
     # Plot the segmentation masks over the image
     mask = np.transpose(mask, (2, 0, 1))

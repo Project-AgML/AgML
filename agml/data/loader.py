@@ -12,7 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
+import json
 import copy
+from typing import Union
+from collections.abc import Sequence
 from decimal import getcontext, Decimal
 
 import numpy as np
@@ -20,8 +24,14 @@ import numpy as np
 from agml.framework import AgMLSerializable
 from agml.data.manager import DataManager
 from agml.data.builder import DataBuilder
-from agml.data.metadata import DatasetMetadata
-from agml.utils.general import NoArgument
+from agml.data.metadata import DatasetMetadata, make_metadata
+from agml.utils.logging import log
+from agml.utils.io import get_file_list, get_dir_list
+from agml.utils.data import load_public_sources
+from agml.utils.general import NoArgument, resolve_list_value
+from agml.utils.random import inject_random_state
+from agml.backend.config import data_save_path
+from agml.backend.experimental import AgMLExperimentalFeatureWrapper
 from agml.backend.tftorch import (
     get_backend, set_backend,
     user_changed_backend, StrictBackendError,
@@ -29,7 +39,20 @@ from agml.backend.tftorch import (
 )
 
 
-class AgMLDataLoader(AgMLSerializable):
+class AgMLDataLoaderMeta(type):
+    def __instancecheck__(self, instance):
+        # This override allows for objects of type `AgMLMultiDatasetLoader`
+        # to be treated as an `AgMLDataLoader` when the following command
+        # is run: `isinstance(a, AgMLDataLoader)` (hacky fix, essentially).
+        if isinstance(instance, self.__class__):
+            return True
+        from agml.data.multi_loader import AgMLMultiDatasetLoader
+        if isinstance(instance, AgMLMultiDatasetLoader):
+            return True
+        return False
+
+
+class AgMLDataLoader(AgMLSerializable, metaclass = AgMLDataLoaderMeta):
     """Loads and provides a processing interface for a dataset.
 
     The `AgMLDataLoader` is the main interface to AgML's public dataset
@@ -47,28 +70,64 @@ class AgMLDataLoader(AgMLSerializable):
     seamless usage in training or inference pipelines. Data can also be
     exported into native TensorFlow and PyTorch objects.
 
+    There is also support for using custom datasets outside of the AgML
+    public data repository. To do this, you need to pass an extra argument
+    containing metadata for the dataset, after which point the loader
+    will work as normal (and all interfaces, except for the info parameters
+    which are not provided, will also be available for standard use).
+
     Parameters
     ----------
     dataset : str
         The name of the public dataset you want to load. See the helper
         method `agml.data.public_data_sources()` for a list of datasets.
+        If using a custom dataset, this can be any valid string.
     kwargs : dict, optional
         dataset_path : str, optional
             A custom path to download and load the dataset from.
         overwrite : bool, optional
             Whether to rewrite and re-install the dataset.
+        meta : dict, optional
+            A dictionary consisting of metadata properties, if you want
+            to create a custom loader. At minimum, this needs to contain
+            two parameters: `task`, indicating the type of machine learning
+            task that the dataset is for, and `classes`, a list of the
+            classes that the dataset contains.
 
     Notes
     -----
     See the methods for examples on how to use an `AgMLDataLoader` effectively.
     """
     serializable = frozenset((
-        'info', 'builder', 'manager', 'train_data', 'val_data', 'test_data'))
+        'info', 'builder', 'manager', 'train_data',
+        'val_data', 'test_data', 'is_split', 'meta_properties'))
+
+    def __new__(cls, dataset, **kwargs):
+        # If a single dataset is passed, then we use the base `AgMLDataLoader`.
+        # However, if an iterable of datasets is passed, then we need to
+        # dispatch to the subclass `AgMLMultiDatasetLoader` for them.
+        if isinstance(dataset, (str, DatasetMetadata)):
+            return super(AgMLDataLoader, cls).__new__(cls)
+        elif isinstance(dataset, Sequence):
+            if len(dataset) == 1:
+                log("Received a sequence with only one element when "
+                    "instantiating an `AgMLDataLoader`. Returning "
+                    "a regular, single-element data loader.")
+                return super(AgMLDataLoader, cls).__new__(cls)
+            from agml.data.multi_loader import AgMLMultiDatasetLoader
+            return AgMLMultiDatasetLoader(dataset, **kwargs)
+        raise TypeError(
+            f"Expected either a single dataset name (or metadata), or"
+            f"a list of dataset names/metadata when instantiating an "
+            f"`AgMLDataLoader`. Got {dataset} of type {type(dataset)}.")
+
+    def __getnewargs__(self):
+        return self._info.name,
 
     def __init__(self, dataset, **kwargs):
         """Instantiates an `AgMLDataLoader` with the dataset."""
         # Set up the dataset and its associated metadata.
-        self._info = DatasetMetadata(dataset)
+        self._info = make_metadata(dataset, kwargs.get('meta', None))
 
         # The data for the class is constructed in two stages. First, the
         # internal contents are constructed using a `DataBuilder`, which
@@ -95,14 +154,204 @@ class AgMLDataLoader(AgMLSerializable):
         self._test_data = None
         self._is_split = False
 
+        # Set the direct access metadata properties like `num_images` and
+        # `classes`, since these can be modified depending on the state of
+        # the loader, whilst the `info` parameter attributes cannot.
+        self._meta_properties = {
+            'num_images': self._info.num_images,
+            'classes': self._info.classes,
+            'num_classes': self._info.num_classes,
+            'num_to_class': self._info.num_to_class,
+            'class_to_num': self._info.class_to_num,
+            'data_distributions': {self.name: self._info.num_images}}
+
+    @classmethod
+    def custom(cls, name, dataset_path = None, classes = None, **kwargs):
+        """Creates an `AgMLDataLoader` with a set of custom data.
+
+        If you have a custom dataset that you want to use in an `AgMLDataLoader`,
+        this method constructs the loader using similar semantics to the regular
+        loader instantiation. It is a wrapper around using the `meta` argument to
+        provide dataset properties that provides additional convenience for some
+        circumstances, as summarized below.
+
+        Functionally, this method is equivalent to instantiating `AgMLDataLoader`
+        with an extra argument `meta` that contains metadata for the dataset, with
+        the `task` and `classes` keys required and the others not necessary. This
+        would look like follows:
+
+        > loader = AgMLDataLoader('name', meta = {'task': task, 'classes': classes})
+
+        This method replaces the meta dictionary with keyword arguments to allow
+        for a more Pythonic construction of the custom loader. This method, however
+        includes additional optimizations which allow for a more convenient way
+        to instantiate the loader:
+
+        1. It automatically inferences the task from the structure which the data is
+           in, so you don't need to provide the task at all to this method.
+        2. For image classification and object detection task, this method will
+           attempt to automatically inference the classes in the loader (by searching
+           for the image directories for image classification tasks, and searching
+           in the COCO JSON file for object detection). Semantic segmentation tasks,
+           however, still require the list of classes to be passed.
+
+        This makes it so that in a variety of cases, the loader can be instantiated
+        without even requiring any metadata, as most of it can be inferred directly
+        by this method and thus streamlines the procedure for using custom data.
+
+        If you want to cache the metadata, rather than constantly putting them as
+        arguments, then create a file `.meta.json` at the path `/root/.meta.json`
+        with the parameters that you want.
+
+        Parameters
+        ----------
+        name : str
+            A name for the custom dataset (this can be any valid string).
+        dataset_path : str, optional
+            A custom path to load the dataset from. If this is not passed,
+            we will assume that the dataset is at the traditional path:
+            `~/.agml/datasets/<name>` (or the changed default data path).
+            Otherwise, the dataset can be passed as a path such as `/root/name`,
+            or `/root`; in the latter case the method will check for `/root/name`.
+        classes : list, tuple
+            A list of string-labels for the classes of the dataset, in order.
+            This is not required for image classification/object detection.
+        kwargs : dict
+            Any other metadata for the dataset, this is not required.
+
+        Returns
+        -------
+        An `AgMLDataLoader` outfitted with the custom dataset.
+        """
+        # Check the name and ensure that no dataset with that name exists.
+        if name in load_public_sources().keys() or not isinstance(name, str):
+            raise ValueError(f"Invalid name '{name}', the name should be "
+                             f"a string that is not an existing dataset in "
+                             f"the AgML public data source repository.")
+
+        # Locate the path to the dataset.
+        if dataset_path is None:
+            dataset_path = os.path.abspath(os.path.join(data_save_path(), name))
+            if not os.path.exists(dataset_path):
+                raise NotADirectoryError(
+                    f"Existing directory '{dataset_path}' for dataset of name "
+                    f"{name} not found, pass a custom path if you want to use "
+                    f"a custom dataset path for the dataset.")
+        else:
+            dataset_path = os.path.abspath(os.path.expanduser(dataset_path))
+            if not os.path.exists(dataset_path):
+                if not os.path.exists(dataset_path):
+                    raise NotADirectoryError(
+                        f"Could not find a directory for dataset '{name}' at the "
+                        f"provided dataset path: {dataset_path}.")
+            if not dataset_path.endswith(name):
+                dataset_path = os.path.join(dataset_path, name)
+                if not os.path.exists(dataset_path):
+                    raise NotADirectoryError(
+                        f"Could not find a directory for dataset '{name}' at the "
+                        f"provided dataset path: {dataset_path}.")
+
+        # Infer the task based on the provided dataset path.
+        if os.path.exists(os.path.join(dataset_path, 'annotations.json')):
+            task = 'object_detection'
+        elif os.path.exists(os.path.join(dataset_path, 'images')) and \
+                os.path.exists(os.path.join(dataset_path, 'annotations')):
+            task = 'semantic_segmentation'
+        elif len(get_file_list(dataset_path)) == 0 and \
+                len(get_dir_list(dataset_path)) != 0:
+            task = 'image_classification'
+        else:
+            raise TypeError("Unrecognized dataset annotation format.")
+
+        # Check if there is a metadata file.
+        kwargs['classes'] = classes
+        if os.path.exists(os.path.join(dataset_path, '.meta.json')):
+            with open(os.path.join(dataset_path, '.meta.json'), 'r') as f:
+                kwargs.update(json.load(f))
+
+        # Infer the classes for image classification/object detection.
+        classes = kwargs['classes']
+        if classes is None:
+            if task == 'semantic_segmentation':
+                raise ValueError(
+                    "Classes are required for a semantic segmentation task.")
+            elif task == 'image_classification':
+                classes = get_dir_list(dataset_path)
+            else:  # object detection
+                with open(os.path.join(dataset_path, 'annotations.json'), 'r') as f:
+                    classes = [c['name'] for c in json.load(f)['categories']]
+
+        # Construct and return the `AgMLDataLoader`.
+        return cls(name, dataset_path = dataset_path,
+                   meta = {'task': task, 'classes': classes, **kwargs})
+
+    @staticmethod
+    def merge(*loaders, classes = None):
+        """Merges a set of `AgMLDataLoader`s into a single loader.
+
+        Given a set of input `AgMLDataLoader`s, this method will return a single
+        `AgMLDataLoader` which is capable of returning data from any and every one
+        of the input loaders. The resultant loader is functionally equivalent to
+        the `AgMLDataLoader` returned by instantiating an `AgMLDataLoader` from a
+        sequence of AgML public data sources, except that in this case, the input
+        loaders may be subject to a number of input modifications before merging.
+
+        This also allows the usage of both an AgML public data source and a custom
+        dataset together in a single multi-dataset loader. As such, this method
+        should be used with caution, as since input loaders may be allowed to have
+        any modification, certain methods may not function as expected. For instance,
+        if one of the passed loaders has already been split, then the overall new
+        multi-loader cannot be split as a whole. Similarly, if also using a custom
+        dataset, then any properties of the `info` parameter which are not passed
+        to the dataset cannot be used, even if the other datasets have them.
+
+        Parameters
+        ----------
+        loaders : Tuple[AgMLDataLoader]
+            A collection of `AgMLDataLoader`s (but not any `AgMLDataLoader`s
+            which are already holding a collection of datasets).
+        classes : list
+            A list of classes in the new loader. This argument can be used to
+            construct a custom ordering (non-alphabetical) of classes in the loader.
+
+        Returns
+        -------
+        A new `AgMLDataLoader` wrapping the input datasets.
+        """
+        # Validate the input loaders.
+        from agml.data.multi_loader import AgMLMultiDatasetLoader
+        if len(loaders) == 1:
+            raise ValueError("There should be at least two inputs to the `merge` method.")
+        for loader in loaders:
+            if isinstance(loader, AgMLMultiDatasetLoader):
+                raise TypeError("Cannot merge datasets which already hold a "
+                                "collection of multiple datasets.")
+
+        # Instantiate the `AgMLMultiDatasetLoader`.
+        return AgMLMultiDatasetLoader._instantiate_from_collection(
+            *loaders, classes = classes)
+
+    def __add__(self, other):
+        if not isinstance(other, AgMLDataLoader):
+            return NotImplemented
+        return AgMLDataLoader.merge(self, other)
+
     def __len__(self):
         return self._manager.data_length()
 
-    def __getitem__(self, indexes):
+    def __getitem__(self, indexes: Union[list, int, slice]):
         if isinstance(indexes, slice):
             data = np.arange(self._manager.data_length())
             indexes = data[indexes].tolist()
-        return self._manager.get(indexes)
+        if isinstance(indexes, int):
+            indexes = [indexes]
+        for idx in indexes:
+            if idx not in range(len(self)):
+                if idx not in [-i for i in range(1, len(self) + 1, 1)]:
+                    raise IndexError(
+                        f"Index {idx} out of range of "
+                        f"AgMLDataLoader length: {len(self)}.")
+        return self._manager.get(resolve_list_value(indexes))
 
     def __iter__(self):
         for indx in range(len(self)):
@@ -111,15 +360,52 @@ class AgMLDataLoader(AgMLSerializable):
     def __repr__(self):
         out = f"<AgMLDataLoader: (dataset={self.name}"
         out += f", task={self.task}"
+        out += f", images={self.num_images}"
         out += f") at {hex(id(self))}>"
         return out
 
     def __str__(self):
         return repr(self)
 
+    def __copy__(self):
+        """Copies the loader and updates its state."""
+        cp = super(AgMLDataLoader, self).__copy__()
+        cp.copy_state(self)
+        return cp
+
     def copy(self):
         """Returns a deep copy of the data loader's contents."""
         return self.__copy__()
+
+    def copy_state(self, loader):
+        """Copies the state of another `AgMLDataLoader` into this loader.
+
+        This method copies the state of another `AgMLDataLoader` into this
+        loader, including its transforms, resizing, and training state. Other
+        general parameters such as batch size and shuffling are left intact.
+
+        Parameters
+        ----------
+        loader : AgMLDataLoader
+            The data loader from which the state should be copied.
+
+        Returns
+        -------
+        This `AgMLDataLoader`.
+        """
+        # Re-construct the training manager.
+        new_train_manager = loader._manager._train_manager.__copy__()
+        self._manager._train_manager = new_train_manager
+
+        # Re-construct the transform manager.
+        new_transform_manager = loader._manager._transform_manager.__copy__()
+        self._manager._transform_manager = new_transform_manager
+        self._manager._train_manager._transform_manager = new_transform_manager
+
+        # Re-construct the resizing manager.
+        new_resize_manager = loader._manager._resize_manager.__copy__()
+        self._manager._resize_manager = new_resize_manager
+        self._manager._train_manager._resize_manager = new_resize_manager
 
     @property
     def name(self):
@@ -148,6 +434,36 @@ class AgMLDataLoader(AgMLSerializable):
         return self._info.tasks.ml
 
     @property
+    def num_images(self):
+        """Returns the number of images in the dataset."""
+        return self._meta_properties.get('num_images')
+
+    @property
+    def classes(self):
+        """Returns the classes that the dataset is predicting."""
+        return self._meta_properties.get('classes')
+
+    @property
+    def num_classes(self):
+        """Returns the number of classes in the dataset."""
+        return self._meta_properties.get('num_classes')
+
+    @property
+    def num_to_class(self):
+        """Returns a mapping from a number to a class label."""
+        return self._meta_properties.get('num_to_class')
+
+    @property
+    def class_to_num(self):
+        """Returns a mapping from a class label to a number."""
+        return self._meta_properties.get('class_to_num')
+
+    @property
+    def data_distributions(self):
+        """Displays the distribution of images from each source."""
+        return self._meta_properties.get('data_distributions')
+
+    @property
     def image_size(self):
         """Returns the determined image size for the loader.
 
@@ -157,7 +473,8 @@ class AgMLDataLoader(AgMLSerializable):
         """
         return self._manager._resize_manager.size
 
-    def _generate_split_loader(self, contents, split):
+    def _generate_split_loader(
+            self, contents, split, meta_properties = None, **kwargs):
         """Generates a split `AgMLDataLoader`."""
         # Check if the data split exists.
         if contents is None:
@@ -168,9 +485,10 @@ class AgMLDataLoader(AgMLSerializable):
         # Load a new `DataManager` and update its internal managers
         # using the state of the existing loader's `DataManager`.
         builder = DataBuilder.from_data(
-            contents = contents,
+            contents = [contents, kwargs.get('labels_for_image', None)],
             info = self.info,
-            root = self.dataset_root)
+            root = self.dataset_root,
+            builder = self._builder)
         current_manager = copy.deepcopy(self._manager.__getstate__())
         current_manager.pop('builder')
         current_manager['builder'] = builder
@@ -190,14 +508,29 @@ class AgMLDataLoader(AgMLSerializable):
         new_manager._create_objects(
             new_manager._builder, self.task)
 
+        # Update the `TransformManager` and `ResizeManager` of the
+        # `TrainManager` in the `DataManager` (they need to be synchronized).
+        new_manager._train_manager._transform_manager = \
+            new_manager._transform_manager
+        new_manager._train_manager._resize_manager = \
+            new_manager._resize_manager
+
         # Batching data needs to be done independently.
         if batch_size is not None:
             new_manager.batch_data(batch_size = batch_size)
+
+        # Update the metadata parameters.
+        if meta_properties is None:
+            meta_properties = self._meta_properties.copy()
+            meta_properties['num_images'] = len(contents)
+            meta_properties['data_distributions'] = {
+                self.name: len(contents)}
 
         # Instantiate a new `AgMLDataLoader` from the contents.
         loader_state = self.copy().__getstate__()
         loader_state['builder'] = builder
         loader_state['manager'] = new_manager
+        loader_state['meta_properties'] = meta_properties
         cls = super(AgMLDataLoader, self).__new__(AgMLDataLoader)
         cls.__setstate__(loader_state)
         for attr in ['train', 'val', 'test']:
@@ -232,7 +565,7 @@ class AgMLDataLoader(AgMLSerializable):
             self._test_data, split = 'test')
         return self._test_data
 
-    def eval(self):
+    def eval(self) -> "AgMLDataLoader":
         """Sets the `AgMLDataLoader` in evaluation mode.
 
         Evaluation mode disables transforms, and only keeps the loader applying
@@ -258,7 +591,7 @@ class AgMLDataLoader(AgMLSerializable):
         self._manager.update_train_state('eval')
         return self
 
-    def disable_preprocessing(self):
+    def disable_preprocessing(self) -> "AgMLDataLoader":
         """Disables all preprocessing on the `AgMLDataLoader`.
 
         This sets the loader in a no-preprocessing mode (represented internally as
@@ -279,7 +612,7 @@ class AgMLDataLoader(AgMLSerializable):
         self._manager.update_train_state(False)
         return self
 
-    def reset_preprocessing(self):
+    def reset_preprocessing(self) -> "AgMLDataLoader":
         """Re-enables preprocessing on the `AgMLDataLoader`.
 
         This resets the loader back to its default train state, namely where it
@@ -363,6 +696,26 @@ class AgMLDataLoader(AgMLSerializable):
         self._manager.update_train_state('torch')
         return self
 
+    @property
+    def shuffle_data(self):
+        """Returns whether the loader is set to shuffle data or not.
+
+        By default, if no value is passed in initialization, this is set to
+        `True`. It can be manually toggled to `False` using this property.
+        """
+        return self._manager._shuffle
+
+    @shuffle_data.setter
+    def shuffle_data(self, value):
+        """Set whether the loader should shuffle data or not.
+
+        This can be used to enable/disable shuffling, by passing
+        either `True` or `False`, respectively.
+        """
+        if not isinstance(value, bool):
+            raise TypeError("Expected either `True` or `False` for 'shuffle_data'.")
+        self._manager._shuffle = value
+
     def shuffle(self, seed = None):
         """Potentially shuffles the contents of the loader.
         
@@ -393,6 +746,244 @@ class AgMLDataLoader(AgMLSerializable):
         self._manager.shuffle(seed = seed)
         return self
 
+    def take_dataset(self, name) -> "AgMLDataLoader":
+        """Takes one of the datasets in a multi-dataset loader.
+
+        This method selects one of the datasets (as denoted by `name`)
+        in this multi-dataset collection and returns an `AgMLDataLoader`
+        with its contents. These contents will be subject to any transforms
+        and modifications as applied by the main loader, but the returned
+        loader will be a copy, such that any new changes made to the main
+        multi-dataset loader will not affect the new loader.
+
+        Note that this method only works for multi-dataset collections.
+
+        Parameters
+        ----------
+        name : str
+            The name of one of the sub-datasets of the loader.
+
+        Returns
+        -------
+        An `AgMLDataLoader`.
+        """
+        raise ValueError(
+            "The `loader.take_dataset` method only works for multi-dataset loaders.")
+
+    def take_class(self, classes, reindex = True) -> "AgMLDataLoader":
+        """Reduces the dataset to a subset of class labels.
+
+        This method, given a set of either integer or string class labels,
+        will return a new `AgMLDataLoader` containing a subset of the
+        original dataset, where the only classes in the dataset are those
+        specified in the `classes` argument.
+
+        The new loader will have info parameters like `num_classes` and
+        `class_to_num` updated for the new set of classes; however, the
+        original `info` metadata will remain the same as the original.
+
+        Note that if the dataset contains images which have bounding boxes
+        corresponding to multiple classes, this method will not work.
+
+        Parameters
+        ----------
+        classes : list, int, str
+            Either a single integer/string for a single class, or a list
+            of integers or strings for multiple classes. Integers should
+            be one-indexed for object detection.
+        reindex : bool
+            Re-indexes all of the new classes starting from 1, in ascending
+            order based on their number in the original dataset.
+
+        Notes
+        -----
+        This method only works for object detection datasets.
+        """
+        if self._info.tasks.ml != 'object_detection':
+            raise RuntimeError("The `take_class` method can only be "
+                               "used for object detection datasets.")
+
+        # Parse the provided classes and determine their numerical labels.
+        if isinstance(classes, str):
+            if classes not in self.classes:
+                raise ValueError(
+                    f"Received a class '{classes}' for `loader.take_class`, "
+                    f"which is not in the classes for {self.name}: {self.classes}")
+            classes = [self.class_to_num[classes]]
+        elif isinstance(classes, int):
+            try: self.num_to_class[classes]
+            except IndexError:
+                raise ValueError(
+                    f"The provided class number {classes} is out of "
+                    f"range for {self.num_classes} classes. Make sure "
+                    f"you are using zero-indexing.")
+            classes = [classes]
+        else:
+            parsed_classes = []
+            if isinstance(classes[0], str):
+                for cls in classes:
+                    if cls not in self.classes:
+                        raise ValueError(
+                            f"Received a class '{cls}' for `loader.take_class`, which "
+                            f"is not in the classes for {self.name}: {self.classes}")
+                    parsed_classes.append(self.class_to_num[cls])
+            elif isinstance(classes[0], int):
+                for cls in classes:
+                    try:
+                        self.num_to_class[cls]
+                    except IndexError:
+                        raise ValueError(
+                            f"The provided class number {cls} is out of "
+                            f"range for {self.num_classes} classes. Make "
+                            f"sure you are using zero-indexing.")
+                    parsed_classes.append(cls)
+            classes = parsed_classes.copy()
+
+        # Ensure that there are no images with multi-category boxes.
+        categories = self._builder._labels_for_image
+        if not all(len(np.unique(c)) == 1 for c in categories.values()):
+            raise ValueError(
+                f"Dataset {self.name} has images with multiple categories for "
+                f"bounding boxes, cannot take an individual set of classes.")
+
+        # Get the new data which will go in the loader. The `DataBuilder`
+        # stores a mapping of category IDs corresponding to the bounding
+        # boxes in each image, so we use these to determine the new boxes.
+        new_category_map = {
+            k: v for k, v in categories.items() if v[0] in classes}
+        new_coco_map = {
+            k: v for k, v in self._builder._data.items()
+            if k in new_category_map.keys()}
+
+        # Create the new info parameters for the class. If reindexing
+        # is requested, then we re-index the classes based on the order
+        # in which they are given, and then create a new dictionary
+        # to map the original annotations to the new ones (used later).
+        if reindex:
+            old_to_new = {cls: idx + 1 for idx, cls in enumerate(classes)}
+            new_classes = [self.num_to_class[c] for c in classes]
+            new_properties = {
+                'num_images': len(new_coco_map.keys()),
+                'classes': new_classes,
+                'num_classes': len(new_classes),
+                'num_to_class': {i + 1: c for i, c in enumerate(new_classes)},
+                'class_to_num': {c: i + 1 for i, c in enumerate(new_classes)}}
+        else:
+            new_classes = [self.num_to_class[c] for c in classes]
+            new_properties = {
+                'num_images': len(new_coco_map.keys()),
+                'classes': new_classes,
+                'num_classes': len(classes),
+                'num_to_class': {c: self.num_to_class[c] for c in classes},
+                'class_to_num': {self.num_to_class[c]: c for c in classes}}
+
+        # Create the new loader.
+        obj = self._generate_split_loader(
+            new_coco_map, 'train',
+            meta_properties = new_properties,
+            labels_for_image = new_category_map)
+        obj._is_split = False
+
+        # Re-index the loader if requested to.
+        if reindex:
+            class AnnotationRemap(AgMLSerializable):
+                """A helper class to remap annotation labels for multiple datasets."""
+                serializable = frozenset(("map",))
+
+                def __init__(self, o2n):
+                    self._map = o2n
+
+                def __call__(self, contents, name):
+                    """Re-maps the annotation for the new, multi-dataset mapping."""
+                    image, annotations = contents
+
+                    # Re-map the annotation ID.
+                    category_ids = annotations['category_id']
+                    category_ids[np.where(category_ids == 0)[0]] = 1  # fix
+                    new_ids = np.array([self._map[c]
+                                        for c in category_ids])
+                    annotations['category_id'] = new_ids
+                    return image, annotations
+
+            # Maps the annotations.
+            obj._manager._train_manager._set_annotation_remap_hook(
+                AnnotationRemap(old_to_new)) # noqa
+
+        # Return the loader.
+        return obj
+
+    @inject_random_state
+    def take_random(self, k) -> "AgMLDataLoader":
+        """Takes a random set of contents from the loader.
+
+        This method selects a sub-sample of the contents in the loader,
+        based on the provided number of (or proportion of) elements `k`.
+        It then returns a new loader with just this reduced number of
+        elements. The new loader is functionally similar to the original
+        loader, and contains all of the transforms/batching/other settings
+        which have been applied to it up until this method is called.
+
+        Note that the data which is sampled as part of this new loader
+        is not removed from the original loader; this simply serves as an
+        interface to use a random set of images from the full dataset.
+
+        Parameters
+        ----------
+        k : int, float
+            Either an integer specifying the number of samples or a float
+            specifying the proportion of images from the total to take.
+        {random_state}
+
+        Returns
+        -------
+        A reduced `AgMLDataLoader` with the new data.
+        """
+        # Parse the input to an integer.
+        if isinstance(k, float):
+            # Check that 0.0 <= k <= 1.0.
+            if not 0.0 <= k <= 1.0:
+                raise ValueError(
+                    "If passing a proportion to `take_class`, "
+                    "it should be in range [0.0, 1.0].")
+
+            # Convert the proportion float to an absolute int. Note that
+            # the method used is rounding up to the nearest int for cases
+            # where there is not an exact proportional equivalent.
+            getcontext().prec = 4  # noqa
+            proportion = Decimal(k) / Decimal(1)
+            num_images = self.num_images
+            k = int(proportion * num_images)
+
+        # If the input is an integer (or the float is converted to an int
+        # above), then select a random sampling of images from the dataset.
+        if isinstance(k, int):
+            # Check that `k` is valid for the number of images in the dataset.
+            if not 0 <= k <= self.num_images:
+                raise ValueError(
+                    f"Received a request to take a random sampling of "
+                    f"{k} images, when the dataset has {self.num_images}.")
+
+            # We use a similar functionality to the `split` method here,
+            # essentially choosing a random sampling up until `k` and then
+            # using the `DataManager` to access the reduced data.
+            split = np.arange(0, self.num_images)
+            np.random.shuffle(split)
+            indices = split[:k]
+            content = list(self._manager.generate_split_contents(
+                {'content': indices}).values())[0]
+
+            # Create a new `AgMLDataLoader` from the new contents.
+            obj = self._generate_split_loader(content, 'train')
+            obj._is_split = False
+            return obj
+
+        # Otherwise, raise an error.
+        else:
+            raise TypeError(
+                f"Expected only an int or a float when "
+                f"taking a random split, got {type(k)}.")
+
+    @inject_random_state
     def split(self, train = None, val = None, test = None, shuffle = True):
         """Splits the data into train, val and test splits.
 
@@ -409,14 +1000,15 @@ class AgMLDataLoader(AgMLSerializable):
 
         Parameters
         ----------
-        train : {int, float}
+        train : int, float
             The split for training data.
-        val : {int, float}
+        val : int, float
             The split for validation data.
-        test : {int, float}
+        test : int, float
             The split for testing data.
         shuffle : bool
             Whether to shuffle the split data.
+        {random_state}
 
         Notes
         -----
@@ -425,8 +1017,9 @@ class AgMLDataLoader(AgMLSerializable):
         don't want these to be applied, access them right after splitting.
         """
         # Check if the data is already split or batched.
-        if self._is_split:
-            raise ValueError("Cannot split already split data.")
+        if not AgMLExperimentalFeatureWrapper.nested_splitting():
+            if self._is_split:
+                raise ValueError("Cannot split already split data.")
         elif self._manager._batch_size is not None:
             raise ValueError("Cannot split already batched data. "
                              "Split the data before batching.")
@@ -454,7 +1047,7 @@ class AgMLDataLoader(AgMLSerializable):
             # Convert the splits from floats to ints. If the sum of the int
             # splits are greater than the total number of data, then the largest
             # split is decreased in order to keep compatibility in usage.
-            num_images = self._info.num_images
+            num_images = self.num_images
             proportions = {k: int(v * Decimal(num_images)) for k, v in valid_args.items()}
             if sum(proportions.values()) != num_images:
                 diff = sum(proportions.values()) - num_images
@@ -467,14 +1060,14 @@ class AgMLDataLoader(AgMLSerializable):
         # Create the actual data splits.
         if all(isinstance(i, int) for i in valid_args.values()):
             # Ensure that the sum of the splits is the length of the dataset.
-            if not sum(valid_args.values()) == self._info.num_images:
+            if not sum(valid_args.values()) == self.num_images:
                 raise ValueError(f"Got ints for input splits and expected a sum "
-                                 f"equal to the dataset length, {self._info.num_images},"
+                                 f"equal to the dataset length, {self.num_images},"
                                  f"but instead got {sum(valid_args.values())}.")
 
             # The splits will be generated as sequences of indices.
             generated_splits = {}
-            split = np.arange(0, self._info.num_images)
+            split = np.arange(0, self.num_images)
             names, splits = list(valid_args.keys()), list(valid_args.values())
 
             # Shuffling of the indexes will occur first, such that there is an even
@@ -539,7 +1132,7 @@ class AgMLDataLoader(AgMLSerializable):
             batch_size = batch_size
         )
 
-    def resize_images(self, image_size = None):
+    def resize_images(self, image_size = None, method = 'bilinear'):
         """Resizes images within the loader to a specified size.
 
         This method applies a resizing parameter for images before they are
@@ -574,6 +1167,9 @@ class AgMLDataLoader(AgMLSerializable):
         ----------
         image_size : optional
             The resizing parameter for the image.
+        method : optional
+            The method to resize the images. Should be one of 'nearest',
+            'bilinear', 'linear', or 'cubic'. Defaults to 'bilinear'.
 
         Notes
         -----
@@ -581,7 +1177,8 @@ class AgMLDataLoader(AgMLSerializable):
         *before* being passed into the transform pipeline.
         """
         self._manager.assign_resize(
-            image_size = image_size
+            image_size = image_size,
+            method = method
         )
 
     def transform(self,
@@ -710,21 +1307,77 @@ class AgMLDataLoader(AgMLSerializable):
             transform = ('normalize', normalization_params)
         )
 
-    def labels_to_one_hot(self):
+    def labels_to_one_hot(self, add = True):
         """Converts image classification numerical labels to one-hot labels.
 
         This is a convenience method to apply one-hot vector transformations
         to the output labels for image classification. Essentially, if we have
         a set of labels, [1, 2], it will convert it to [[0, 1, 0], [0, 0, 1]].
         This is a more commonly used format for image classification.
+
+        Parameters
+        ----------
+        add : bool
+            If set to `None` or `False`, this will remove the one-hot
+            label transformation from the manager. This is `True` by default,
+            which adds the one-hot label transformation.
+
         """
         if self._info.tasks.ml != 'image_classification':
-            raise ValueError("The `one_hot` label transformation can only "
-                             "be used for image classification tasks.")
+            raise RuntimeError("The `one_hot` label transformation can only "
+                               "be used for image classification tasks.")
 
         self.transform(
-            target_transform = ('one_hot', self._info.num_classes)
+            target_transform = ('one_hot', self._info.num_classes, add)
         )
+
+    def mask_to_channel_basis(self, add = True):
+        """Converts semantic segmentation masks to channel-wise.
+
+        This is a convenience method to convert integer-labeled semantic
+        segmentation masks into channel-by-channel masks, essentially
+        one-hot vector transformation but for semantic segmentation. Note
+        that if the task is binary segmentation, e.g. there is only one
+        class, then this method will do nothing.
+
+        This method should traditionally be called *after* applying general
+        transformations to the loader, in order to prevent any issues.
+
+        Parameters
+        ----------
+        add : bool
+            If set to `None` or `False`, this will remove the one-hot
+            label transformation from the manager. This is `True` by default,
+            which adds the one-hot label transformation.
+        """
+        if self._info.tasks.ml != 'semantic_segmentation':
+            raise ValueError("The `mask_to_channel_basis` transformation "
+                             "can only be used for semantic segmentation tasks.")
+
+        # Warn about binary segmentation tasks.
+        if self._info.num_classes == 1:
+            log(f"No mask-to-channel transformation will be applied for "
+                f"a binary segmentation task (dataset {self.name}).")
+            return
+
+        self.transform(
+            target_transform = ('channel_basis', self._info.num_classes, add)
+        )
+
+    def generalize_class_detections(self):
+        """Generalizes object detection classes to a single class.
+
+        This is a convenience method for object detection tasks, and
+        converts all of the individual class labels in the task into
+        a single class, essentially allowing the model to purely
+        focus on detection of objects and fine-tuning bounding boxes,
+        with no focus on differentiating classes of different boxes.
+
+        This method is intended to be used for multi-dataset loaders,
+        and will raise an error if using with a single-dataset loader.
+        """
+        raise ValueError(
+            "This method can only be used with multi-dataset loaders.")
 
     def export_contents(self, export_format = None):
         """Exports the internal contents of the `AgMLDataLoader`.
@@ -853,7 +1506,9 @@ class AgMLDataLoader(AgMLSerializable):
 
         Parameters
         ----------
-
+        loader_kwargs : optional
+            A set of keyword arguments for the `torch.utils.data.DataLoader`.
+            See the documentation for the loader for more information.
 
         Returns
         -------
@@ -867,22 +1522,26 @@ class AgMLDataLoader(AgMLSerializable):
                     change = 'torch', obj = self.export_torch)
             set_backend('torch')
 
+        # Make a copy of the `AgMLDataLoader` so the following changes
+        # don't affect the original loader, just the new one.
+        obj = self.copy()
+
         # Convert to a PyTorch dataset.
-        self.as_torch_dataset()
+        obj.as_torch_dataset()
 
         # The `DataLoader` automatically batches objects using its
         # own mechanism, so we remove batching from this DataLoader.
         batch_size = loader_kwargs.pop(
-            'batch_size', self._manager._batch_size)
-        self.batch(None)
+            'batch_size', obj._manager._batch_size)
+        obj.batch(None)
         shuffle = loader_kwargs.pop(
-            'shuffle', self._manager._shuffle)
+            'shuffle', obj._manager._shuffle)
 
         # The `collate_fn` for object detection is different because
         # the COCO JSON dictionaries each have different formats. So,
         # we need to replace it with a custom function.
-        collate_fn = None
-        if self.task == 'object_detection':
+        collate_fn = loader_kwargs.pop('collate_fn')
+        if obj.task == 'object_detection' and collate_fn is None:
             def collate_fn(batch):
                 images = torch.stack(
                     [i[0] for i in batch], dim = 0)
@@ -892,7 +1551,7 @@ class AgMLDataLoader(AgMLSerializable):
         # Return the DataLoader with a copy of this AgMLDataLoader, so
         # that changes to this will not affect the returned loader.
         return DataLoader(
-            self.copy(), # noqa
+            obj,
             batch_size = batch_size,
             shuffle = shuffle,
             collate_fn = collate_fn,

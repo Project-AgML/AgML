@@ -135,6 +135,9 @@ dmypy.json
 __MACOSX
 .idea/
 
+# Benchmarking
+**/lightning_logs
+
 # Extra directories/files
 /**data*/
 
@@ -151,6 +154,13 @@ agml/_internal/*
 !agml/_internal/__init__.py
 !agml/_internal/utils.py
 
+# Training
+experiments/benchmarking/lightning_logs
+experiments/benchmarking/logs
+agml/models/training/*.log
+agml/models/training/*.err
+agml/models/training/*.out
+agml/models/training/*.csv
 .*/
-
+/
 *.pptx
