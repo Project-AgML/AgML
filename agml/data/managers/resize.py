@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import os
-import copy
 import pickle
 
 import cv2
@@ -62,7 +61,8 @@ class ImageResizeManager(AgMLSerializable):
     a transformation pipeline. This is to prevent data loss.
     """
     serializable = frozenset(
-        ('task', 'dataset_name', 'dataset_root', 'resize_type', 'image_size'))
+        ('task', 'dataset_name', 'dataset_root', 'auto_enabled',
+         'resize_type', 'image_size', 'interpolation'))
 
     # Stores the path to the local file which contains the
     # information on the image shapes in all of the datasets.
@@ -83,6 +83,13 @@ class ImageResizeManager(AgMLSerializable):
 
         self._resize_type = 'default'
         self._image_size = None
+        self._interpolation = cv2.INTER_LINEAR
+
+        self._auto_enabled = True
+
+    def disable_auto(self):
+        # For multi-dataset loaders, the `auto` option is disabled.
+        self._auto_enabled = False
 
     @property
     def state(self):
@@ -97,7 +104,10 @@ class ImageResizeManager(AgMLSerializable):
         (x1, y1), (x2, y2) = t1, t2
         return np.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2)
 
-    def assign(self, kind):
+    def _method_resize(self, image, size):
+        return cv2.resize(image, size, interpolation = self._interpolation)
+
+    def assign(self, kind, method = None):
         """Assigns the resize parameter (and does necessary calculations)."""
         if kind == 'default':
             self._resize_type = 'default'
@@ -114,13 +124,16 @@ class ImageResizeManager(AgMLSerializable):
                     f"Got a sequence {kind}, expected two values for "
                     f"the height and width but got {len(kind)} values.")
             self._resize_type = 'custom_size'
-            self._image_size = tuple(*kind)
+            self._image_size = tuple([i for i in kind])
         elif 'auto' in kind:
             # This means that the dataloader has been exported in some format.
             # First, we check whether a different size has automatically been
             # set, since if it has, we don't want to override that size.
             if kind == 'train-auto':
-                if self._resize_type == 'default':
+                if not self._auto_enabled:
+                    self._resize_type = 'train'
+                    self._image_size = self._default_size
+                elif self._resize_type == 'default':
                     info = self._maybe_load_shape_info()
                     if info is None:
                         shape = self._random_inference_shape()
@@ -128,6 +141,18 @@ class ImageResizeManager(AgMLSerializable):
                         shape = self._inference_shape(info)
                     self._resize_type = 'auto'
                     self._image_size = resolve_tuple(shape)
+
+        # Check interpolation method independently.
+        if method is not None:
+            method = method.lower()
+            if method not in ['bilinear', 'area', 'nearest', 'cubic']:
+                raise ValueError(f"Invalid interpolation method: {method}.")
+            self._interpolation = {
+                'bilinear': cv2.INTER_LINEAR,
+                'area': cv2.INTER_AREA,
+                'nearest': cv2.INTER_NEAREST,
+                'cubic': cv2.INTER_CUBIC
+            }[method]
 
     def apply(self, contents):
         """Applies the resizing operation to the input data."""
@@ -250,22 +275,19 @@ class ImageResizeManager(AgMLSerializable):
             return self._resize_single_image(contents, image_size)
         if image_size is not None:
             return {
-                k: cv2.resize(i.astype(np.uint16),
-                              image_size,
-                              cv2.INTER_NEAREST).astype(np.int32)
+                k: self._method_resize(
+                    i.astype(np.uint16), image_size).astype(np.int32)
                 for k, i in image.items()}, label
         return image, label
 
-    @staticmethod
-    def _resize_single_image(contents, image_size):
+    def _resize_single_image(self, contents, image_size):
         image, label = contents
         if image_size is not None:
             # No processing done on the annotation.
-            image = cv2.resize(image, image_size, cv2.INTER_NEAREST)
+            image = self._method_resize(image, image_size)
         return image, label
 
-    @staticmethod
-    def _resize_image_and_coco(contents, image_size):
+    def _resize_image_and_coco(self, contents, image_size):
         image, coco = contents
         if image_size is not None:
             # Extract the original size of the bounding boxes.
@@ -285,8 +307,7 @@ class ImageResizeManager(AgMLSerializable):
             np.clip(processed_bboxes, 0, 1, processed_bboxes)
 
             # Resize the image and calculate its new size ratio.
-            image = cv2.resize(
-                image, image_size, cv2.INTER_NEAREST)
+            image = self._method_resize(image, image_size)
             y_new, x_new = image.shape[0:2]
 
             # Update the bounding boxes and areas with the new ratio.
@@ -305,12 +326,11 @@ class ImageResizeManager(AgMLSerializable):
             coco['area'] = areas
         return image, coco
 
-    @staticmethod
-    def _resize_image_and_mask(contents, image_size):
+    def _resize_image_and_mask(self, contents, image_size):
         image, mask = contents
         if image_size is not None:
             # Resize the image and the mask together if requested.
-            image = cv2.resize(image, image_size, cv2.INTER_NEAREST)
+            image = self._method_resize(image, image_size)
             mask = cv2.resize(mask, image_size, cv2.INTER_NEAREST)
         return image, mask
 

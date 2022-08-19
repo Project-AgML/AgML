@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import os
+import sys
 import json
 import shutil
 import difflib
@@ -20,7 +21,7 @@ import functools
 
 
 @functools.lru_cache(maxsize = None)
-def load_public_sources():
+def load_public_sources() -> dict:
     """Loads the public data sources JSON file."""
     with open(os.path.join(
             os.path.dirname(os.path.dirname(__file__)),
@@ -29,7 +30,7 @@ def load_public_sources():
 
 
 @functools.lru_cache(maxsize = None)
-def load_citation_sources():
+def load_citation_sources() -> dict:
     """Loads the citation sources JSON file."""
     with open(os.path.join(
             os.path.dirname(os.path.dirname(__file__)),
@@ -37,7 +38,16 @@ def load_citation_sources():
         return json.load(f)
 
 
-def maybe_you_meant(name, msg, source = None):
+@functools.lru_cache(maxsize = None)
+def load_model_benchmarks() -> dict:
+    """Loads the citation sources JSON file."""
+    with open(os.path.join(
+            os.path.dirname(os.path.dirname(__file__)),
+            '_assets/model_benchmarks.json')) as f:
+        return json.load(f)
+
+
+def maybe_you_meant(name, msg, source = None) -> str:
     """Suggests potential correct spellings for an invalid name."""
     source = source if source is not None \
                     else load_public_sources().keys()
@@ -105,6 +115,7 @@ def copyright_print(name, location = None):
     if location is not None:
         print(f"\nYou can find your dataset at {location}.")
     print('=' * max_print_length)
+    sys.stdout.flush()
 
 
 

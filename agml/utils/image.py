@@ -45,6 +45,20 @@ def needs_batch_dim(image):
     return False
 
 
+def resolve_image_size(size):
+    if isinstance(size, int):
+        return size, size
+    elif isinstance(size, (list, tuple, set, np.ndarray)):
+        if not len(size) == 2:
+            raise ValueError(
+                "Only two values must be provided for an input image size.")
+        return size
+    else:
+        raise ValueError(
+            f"Expected either an integer or list of two values for "
+            f"image size, got ({size}) of type ({type(size)}).")
+
+
 class imread_context(object):
     """Wraps the `cv2.imread` function into a context.
 

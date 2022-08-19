@@ -26,6 +26,9 @@ from PIL import Image
 import matplotlib.pyplot as plt
 
 from agml.backend.tftorch import tf, torch
+from agml.utils.logging import log
+from agml.utils.image import imread_context
+
 
 # Sets the colormaps used in the other `agml.viz` methods.
 @functools.lru_cache(maxsize = None)
@@ -79,7 +82,8 @@ def auto_resolve_image(f):
             if not os.path.exists(image):
                 raise FileNotFoundError(
                     f"The provided image file {image} does not exist.")
-            image = cv2.imread(image)
+            with imread_context(image) as img:
+                image = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         elif isinstance(image, (list, tuple)):
             if not isinstance(image[0], (str, bytes, os.PathLike)):
                 pass
@@ -87,7 +91,9 @@ def auto_resolve_image(f):
                 processed_images = []
                 for image_path in image:
                     if isinstance(image_path, (str, bytes, os.PathLike)):
-                        processed_images.append(cv2.imread(image_path))
+                        with imread_context(image_path) as img:
+                            image = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+                        processed_images.append(image)
                     else:
                         processed_images.append(image_path)
                 image = processed_images
@@ -116,7 +122,7 @@ def show_when_allowed(f):
     return _cancel_display
 
 
-def format_image(img):
+def format_image(img, mask = False):
     """Formats an image to be used in a Matplotlib visualization.
 
     This method takes in one of a number of common image/array types
@@ -132,6 +138,8 @@ def format_image(img):
     ----------
     img : Any
         An np.ndarray, torch.Tensor, tf.Tensor, or PIL.Image.
+    mask : Any
+        Whether the image is a segmentation mask.
 
     Returns
     -------
@@ -141,8 +149,10 @@ def format_image(img):
     if isinstance(img, np.ndarray):
         img = img
     elif isinstance(img, Image.Image):
-        img = np.array(img.getdata())
+        img = np.array(img).reshape((img.height, img.width, len(img.getbands())))
     elif isinstance(img, torch.Tensor):
+        if img.is_cuda:
+            img = img.cpu().detach().numpy()
         img = img.numpy()
     elif isinstance(img, tf.Tensor):
         img = img.numpy()
@@ -167,9 +177,18 @@ def format_image(img):
 
     # If the image is in range 0-255 but a float image, then
     # we need to convert it to an integer type.
-    if np.issubdtype(img.dtype, np.inexact):
-        if not img.max() <= 1:  # noqa
+    if not mask:
+        if np.issubdtype(img.dtype, np.inexact):
+            if not img.max() <= 1: # noqa
+                img = img.astype(np.uint8)
+            else:
+                img = (img * 255).astype(np.uint8)
+
+        # Convert 64-bit integer to unsigned 8-bit.
+        if img.dtype == np.int64:
+            log("Converting image of dtype `np.int64` to `np.uint8` for display. "
+                "This may cause a loss in precision/invalid result.")
             img = img.astype(np.uint8)
 
+    # Return the formatted image.
     return img
-

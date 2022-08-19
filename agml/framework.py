@@ -31,12 +31,20 @@ class AgMLSerializable(object):
     Subclasses only need to define a `serializable` property with a
     frozen set of strings containing the attributes that are to be
     serialized. The expectation is that the strings in the set will
-    all be the name of attributes minus a leading underscore.
+    all be the name of attributes minus a leading underscore. If
+    there are parameters which are just the name of the attribute,
+    no leading underscore, also add them to another property of the
+    class, `state_override`, to ensure compatibility.
 
     In turn, objects can be used with a JSON serialization format,
     the pickle serialization format, or copied as desired.
     """
     serializable: "frozenset"
+    state_override: "frozenset"
+
+    def __init_subclass__(cls, **kwargs):
+        if not hasattr(cls, 'state_override'):
+            cls.state_override = frozenset(())
 
     def __getstate__(self):
         state = {}
@@ -44,24 +52,30 @@ class AgMLSerializable(object):
             try:
                 state[param] = getattr(self, f'_{param}')
             except AttributeError:
-                raise AttributeError(
-                    f"Encountered error while attempting to "
-                    f"serialize a {self.__class__}: the "
-                    f"attribute '_{param}' does not exist.")
+                if param in self.state_override:
+                    state[param] = getattr(self, param)
+                else:
+                    raise AttributeError(
+                        f"Encountered error while attempting to serialize "
+                        f"a {self.__class__}: the attribute '_{param}' "
+                        f"(or '{param}') does not exist.")
         return state
 
     def __setstate__(self, state):
         for field in state.keys():
-            setattr(self, f'_{field}', state[field])
+            if field in self.state_override:
+                setattr(self, field, state[field])
+            else:
+                setattr(self, f'_{field}', state[field])
 
-    def __copy__(self):
+    def __deepcopy__(self, memo = None):
         params = self.__getstate__()
         cls = super(AgMLSerializable, self).__new__(self.__class__)
         cls.__setstate__(copy.deepcopy(params))
         return cls
 
-    def __deepcopy__(self, memo = None):
-        return self.__copy__()
+    def __copy__(self):
+        return self.__deepcopy__()
 
 
 

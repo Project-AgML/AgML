@@ -27,10 +27,11 @@ def _is_valid_file(file):
     return False
 
 
-def get_file_list(fpath, ext = None):
+def get_file_list(fpath, ext = None, full_paths = True):
     """Gets a list of files from a path."""
-    base_list = [f for f in os.listdir(fpath)
-            if _is_valid_file(os.path.join(fpath, f))]
+    base_list = [os.path.join(fpath, f) if full_paths else f
+                 for f in os.listdir(fpath)
+                 if _is_valid_file(os.path.join(fpath, f))]
     if ext is not None:
         if isinstance(ext, str):
             return [f for f in base_list if f.endswith(ext)]

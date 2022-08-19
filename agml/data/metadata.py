@@ -14,8 +14,10 @@
 
 import io
 import re
+import sys
 import yaml
 import collections
+from typing import Iterable
 
 from agml.framework import AgMLSerializable
 import agml.utils.logging as logging
@@ -23,6 +25,27 @@ from agml.utils.general import has_nested_dicts
 from agml.utils.data import (
     load_public_sources, load_citation_sources, maybe_you_meant, copyright_print
 )
+
+
+# Named tuples which are used by the metadata.
+Tasks = collections.namedtuple('Tasks', ['ml', 'ag'])
+Location = collections.namedtuple('Location', ['continent', 'country'])
+ImageStats = collections.namedtuple('ImageStats', ['mean', 'std'])
+
+
+def make_metadata(name, meta = None):
+    """Creates the metadata object for the dataset.
+
+    For datasets in the AgML public data repository, this simply returns
+    a regular `DatasetMetadata` object with a full set of information for
+    the dataset. Otherwise, it returns a `CustomDatasetMetadata` object,
+    containing only the provided information in a `meta` dictionary.
+    """
+    if isinstance(name, (list, tuple, set, frozenset)): # a single dataset
+        name = next(iter(name))
+    if name in load_public_sources().keys():
+        return DatasetMetadata(name)
+    return CustomDatasetMetadata(name, meta)
 
 
 class _MetadataDict(dict):
@@ -33,11 +56,17 @@ class _MetadataDict(dict):
                 "Cannot instantiate metadata dictionary without the dataset name.")
         super(_MetadataDict, self).__init__(*args, **kwargs)
         self._dataset = dataset
+        self._custom = kwargs.get('custom', False)
 
     def __getitem__(self, item):
         try:
             return super(_MetadataDict, self).__getitem__(item)
         except KeyError:
+            if self._custom:
+                raise KeyError(
+                    f"The provided custom dataset '{self._dataset}' has no "
+                    f"associated metadata '{item}'. Please provide this when"
+                    f"instantiating the loader if you want to use it.")
             raise KeyError(
                 f"The dataset '{self._dataset}' is missing metadata '{item}'. "
                 f"Please bring this issue to the attention of the AgML team.")
@@ -68,6 +97,7 @@ class DatasetMetadata(AgMLSerializable):
     be accessed by treating the `info` object as a dictionary.
     """
     serializable = frozenset(('name', 'metadata', 'citation_meta'))
+    is_custom_dataset = False
 
     def __init__(self, name):
         self._load_source_info(name)
@@ -84,6 +114,8 @@ class DatasetMetadata(AgMLSerializable):
     def __eq__(self, other):
         if isinstance(other, DatasetMetadata):
             return self._name == other._name
+        if isinstance(other, str):
+            return self._name == other
         return False
 
     @property
@@ -139,21 +171,18 @@ class DatasetMetadata(AgMLSerializable):
     @property
     def tasks(self):
         """Returns the ML and Agriculture tasks for this dataset."""
-        Tasks = collections.namedtuple('Tasks', ['ml', 'ag'])
         ml_task, ag_task = self._metadata['ml_task'], self._metadata['ag_task']
         return Tasks(ml = ml_task, ag = ag_task)
 
     @property
     def location(self):
         """Returns the continent and country in which the dataset was made."""
-        Location = collections.namedtuple('Location', ['continent', 'country'])
         continent, country = self._metadata['location'].values()
         return Location(continent = continent, country = country)
 
     @property
     def image_stats(self):
         """Returns the mean and standard deviation of the RGB images."""
-        ImageStats = collections.namedtuple('ImageStats', ['mean', 'std'])
         mean, std = self._metadata['stats'].values()
         return ImageStats(mean = mean, std = std)
 
@@ -272,6 +301,7 @@ class DatasetMetadata(AgMLSerializable):
         print(_bold("Name") + f": {self._name}")
         print(content, end = '')
         print('=' * 57)
+        sys.stdout.flush()
 
     def citation_summary(self):
         """Prints out a summary of the citation information of the dataset.
@@ -281,5 +311,62 @@ class DatasetMetadata(AgMLSerializable):
         license and associated citation (if either exist).
         """
         copyright_print(self._name)
+
+
+class CustomDatasetMetadata(DatasetMetadata):
+    """A metadata wrapper for information given for custom datasets.
+
+    When using a custom dataset in the `AgMLDataLoader`, as there is no
+    metadata in the AgML public data source information file, custom
+    metadata needs to be passed to the loader instantiation. However,
+    this metadata does not necessarily need to be complete to the full
+    extent of the rest of the metadata, and so this class is used
+    to wrap the provided metadata and infer other arguments instead.
+    """
+    serializable = frozenset(("name", "metadata"))
+    is_custom_dataset = True
+
+    def __init__(self, name, meta): # noqa
+        if meta is None:
+            msg = f"Received invalid public source: '{name}'."
+            out_msg = maybe_you_meant(name, msg)
+            if out_msg == msg:
+                raise ValueError("Expected metadata when creating a custom loader, got None.")
+            else:
+                raise ValueError(out_msg)
+        self._load_info(name, meta)
+
+    def _load_info(self, name, meta):
+        """Loads the provided metadata into the class."""
+        # Check that the necessary categories (the task and a list of classes)
+        # have been provided, otherwise the loader will not be able to function.
+        if 'task' not in meta:
+            raise ValueError("Expected a `task` when instantiating a custom loader.")
+        if 'classes' not in meta:
+            raise ValueError("Expected a list of classes when instantiating a custom loader.")
+
+        # Create a custom dictionary of metadata.
+        self._name = name
+        self._metadata = _MetadataDict(
+            {'ml_task': meta['task'], 'ag_task': meta.get('ag_task', None),
+             **meta}, dataset = name)
+        self._metadata['classes'] = {str(i + 1): c for i, c in enumerate(meta['classes'])}
+
+        # There is no citation information necessary for custom datasets.
+        self._citation_meta = None
+
+    @property
+    def license(self):
+        raise ValueError("There is no citation information for custom datasets.")
+
+    @property
+    def citation(self):
+        raise ValueError("There is no citation information for custom datasets.")
+
+    def citation_summary(self): # no citations for custom datasets.
+        raise ValueError("There is no citation information for custom datasets.")
+
+
+
 
 

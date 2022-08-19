@@ -30,28 +30,28 @@ class DataBuilder(AgMLSerializable):
     instead generates an internal representation of the data content
     of a dataset. This allows for all data to be loaded in a standard
     format and streamlined into the `DataManager`.
-    
+
     Primarily, this class attempts to locate the dataset and if unable
     to do so, it downloads the dataset from the public bucket. Then,
     it creates a mapping between the images and annotations which is
     used by the `DataManager` inside the `AgMLDataLoader`.
     """
     serializable = frozenset(
-        ('name', 'task', 'info_map',
-         'dataset_root', 'data', 'external_image_sources'))
+        ('name', 'labels_for_image', 'data',
+         'info', 'dataset_root', 'data_length'))
 
     def __init__(self, info, dataset_path, overwrite):
         # Attempt to locate or download the dataset.
+        self._info = info
         self._name = info.name
-        self._task = info.tasks.ml
-        self._info_map = info.class_to_num
-        self._external_image_sources = info.external_image_sources
         self._configure_dataset(
             dataset_path = dataset_path, overwrite = overwrite)
         self._data = None
+        self._data_length = None
+        self._labels_for_image = None
 
     @classmethod
-    def from_data(cls, contents, info, root):
+    def from_data(cls, contents, info, root, builder):
         """Initializes the `DataBuilder` from a pre-built set of data.
 
         This is mainly used when running `AgMLDataLoader.split`, to create
@@ -61,17 +61,46 @@ class DataBuilder(AgMLSerializable):
         """
         obj = super(DataBuilder, cls).__new__(cls)
         obj._name = info.name
-        obj._task = info.tasks.ml
-        obj._info_map = info.class_to_num
+        obj._info = info
         obj._dataset_root = root
-        obj._data = contents
-        obj._external_image_sources = info.external_image_sources
+        obj._data = contents[0]
+        obj._data_length = len(obj._data)
+        obj._labels_for_image = contents[1]
+        if hasattr(builder, '_default_coco_annotations'):
+            obj._default_coco_annotations = DataBuilder._regenerate_coco_annotations(
+                builder._default_coco_annotations, obj._data)
         return obj
+
+    @staticmethod
+    def _regenerate_coco_annotations(coco, data):
+        """Regenerates COCO annotations from a reduced set."""
+        image_coco = []
+        annotation_coco = []
+        image_id_tracker = 0
+
+        # Update the list of image paths.
+        for c in coco['images']:
+            if c['file_name'] in list(data.keys()):
+                c['image_id'] = image_id_tracker
+                image_coco.append(c)
+                image_id_tracker += 1
+
+        # Update the image IDs for the annotations
+        for image_id, (_, annotation) in enumerate(data.items()):
+            for a in annotation:
+                a['id'] = image_id
+            annotation_coco.append(annotation)
+
+        # Update the complete COCO dictionary.
+        ret_coco = coco.copy()
+        ret_coco['images'] = image_coco
+        ret_coco['annotations'] = annotation_coco
+        return ret_coco
 
     @property
     def dataset_root(self):
         return self._dataset_root
-        
+
     def _configure_dataset(self, **kwargs):
         """Finds and configures the dataset into the loader."""
         # Check if the user wants to overwrite the existing dataset,
@@ -80,6 +109,32 @@ class DataBuilder(AgMLSerializable):
         if kwargs.get('dataset_path', None):
             kwargs['dataset_path'] = os.path.realpath(
                 os.path.expanduser(kwargs['dataset_path']))
+
+        # If a custom dataset has been provided, then we assume the directory
+        # provided is the root of the dataset, e.g., if /root/datasets/dir
+        # is provided, then dir doesn't necessarily need to be the name of
+        # the dataset, but it is assumed to be its root. Note that if no path
+        # is given, then we check similarly to the default path for datasets,
+        # e.g., if there is a directory with the provided name in the custom path.
+        #
+        # No downloading phase for custom datasets, as there is nothing to do.
+        if self._info.is_custom_dataset:
+            if kwargs.get('dataset_path', False):
+                path = kwargs.get('dataset_path')
+                if os.path.exists(path):
+                    self._dataset_root = path
+                    return
+
+            elif os.path.exists(os.path.join(
+                    data_save_path(), self._name)):
+                self._dataset_root = os.path.join(
+                    data_save_path(), self._name)
+                return
+
+            # Otherwise, we don't know what to do.
+            raise OSError(
+                f"Could not find a directory for the dataset {self._name}. "
+                f"Dataset path given: {kwargs.get('dataset_path', None)}")
 
         # If the user doesn't want to overwrite the existing contents,
         # first check whether the dataset already exists. If so, then set
@@ -160,7 +215,13 @@ class DataBuilder(AgMLSerializable):
     def get_contents(self):
         """Extracts the internal representation of the data content."""
         # Create the internal content representation of the dataset.
-        self._generate_contents(self._task)
+        self._generate_contents(self._info.tasks.ml)
+
+        # Update the length of the data in the metadata dictionary for
+        # custom datasets, since they may not be providing the total number.
+        self._data_length = len(self._data)
+        if self._info._metadata.get('n_images', None) is None:
+            self._info._metadata['n_images'] = str(self._data_length)
         return self._data
 
     def export_contents(self, export_format):
@@ -169,7 +230,7 @@ class DataBuilder(AgMLSerializable):
         contents = self.get_contents()
 
         # For a COCO JSON dictionary, we have to make the full paths.
-        if self._task == 'object_detection':
+        if self._info.tasks.ml == 'object_detection':
             paths, coco = contents.keys(), contents.values()
             paths = [os.path.join(
                 self._dataset_root, 'images', i) for i in paths]
@@ -186,7 +247,7 @@ class DataBuilder(AgMLSerializable):
 
         # A special case for COCO JSON dictionaries.
         if export_format == 'coco':
-            if self._task != 'object_detection':
+            if self._info.tasks.ml != 'object_detection':
                 raise ValueError("The `coco` export format is "
                                  "only for object detection tasks.")
             return self._default_coco_annotations
@@ -213,7 +274,7 @@ class DataBuilder(AgMLSerializable):
                 continue
             for file_ in get_file_list(dir_path):
                 file_ = os.path.join(dir_path, file_)
-                image_label_mapping[file_] = self._info_map[dir_]
+                image_label_mapping[file_] = self._info.class_to_num[dir_]
         self._data = image_label_mapping
 
     def _generate_image_regression_data(self):
@@ -226,7 +287,7 @@ class DataBuilder(AgMLSerializable):
         with open(os.path.join(self._dataset_root, 'annotations.json'), 'r') as f:
             annotations = json.load(f)
         content_mapping = {'inputs': [], 'outputs': []}
-        annotation_types = set(list(self._info_map.keys()))
+        annotation_types = set(list(self._info.class_to_num.keys()))
         annotation_types.remove('regression')
         for sample in annotations:
             for k, v in sample.items():
@@ -237,7 +298,7 @@ class DataBuilder(AgMLSerializable):
                 if re.match('(.*?)image', k)})
             out = {'regression': list(sample['outputs']['regression'].values())}
             out.update({
-                k: self._info_map[k][v] for k, v in sample['outputs'].items()
+                k: self._info.class_to_num[k][v] for k, v in sample['outputs'].items()
                 if k in annotation_types})
             content_mapping['outputs'].append(out)
         self._data = content_mapping
@@ -267,14 +328,15 @@ class DataBuilder(AgMLSerializable):
         with open(os.path.join(self._dataset_root, 'annotations.json')) as f:
             self._default_coco_annotations = json.load(f)
         coco_annotations = self._default_coco_annotations
-        categories, labels = coco_annotations['categories'], []
-        for category in categories:
-            labels.append(category['name'])
         image_id_mapping = {}
         for img_meta in coco_annotations['images']:
             image_id_mapping[img_meta['id']] = img_meta['file_name']
         coco_map = {fname: [] for fname in image_id_mapping.values()}
+        image_category_map = {k: [] for k in coco_map.keys()}
         for a_meta in coco_annotations['annotations']:
+            image_category_map[image_id_mapping[a_meta['image_id']]] \
+                .append(a_meta['category_id'])
             coco_map[image_id_mapping[a_meta['image_id']]].append(a_meta)
+        self._labels_for_image = image_category_map
         self._data = coco_map
 

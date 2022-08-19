@@ -22,7 +22,9 @@ from agml.data.managers.transforms import TransformManager
 from agml.data.managers.resize import ImageResizeManager
 from agml.data.managers.training import TrainingManager
 
-from agml.utils.general import seed_context, NoArgument
+from agml.utils.general import NoArgument
+from agml.backend.tftorch import convert_to_batch, is_array_like
+from agml.utils.random import seed_context
 from agml.utils.image import consistent_shapes
 from agml.utils.logging import log
 
@@ -155,11 +157,18 @@ class DataManager(AgMLSerializable):
         which are returned back to the `AgMLDataLoader` to be constructed into
         `DataBuilder`s and wrapped into new `DataManager`s.
         """
-        contents = np.array(
-            list(self._builder.get_contents().items()), dtype = object)
-        return {
-            k: dict(contents[v]) for k, v in splits.items()
-        }
+        if self._task == 'object_detection':
+            contents = np.array(list(
+                self._builder.get_contents().items()), dtype = object)
+        else:
+            contents = np.array(list(self._builder.get_contents().items()))
+        try:
+            return {k: dict(contents[v]) for k, v in splits.items()}
+        except IndexError:
+            raise Exception(
+                f"Could not generate split contents, likely due to an error "
+                f"with the metadata for the dataset `{self._dataset_name}`. "
+                f"Please raise this error with the AgML team.")
 
     def batch_data(self, batch_size):
         """Batches the data into consistent groups.
@@ -192,18 +201,25 @@ class DataManager(AgMLSerializable):
         data_items = np.array(self._accessors)
         overflow = len(self._accessors) - num_splits * batch_size
         extra_items = data_items[-overflow:]
-        batches = np.array_split(
-            np.array(self._accessors
-                     [:num_splits * batch_size]), num_splits)
-        batches.append(extra_items)
+        try:
+            batches = np.array_split(
+                np.array(self._accessors
+                         [:num_splits * batch_size]), num_splits)
+        except ValueError:
+            log(f"There is less data ({len(self._accessors)}) than the provided "
+                f"batch size ({batch_size}). Consider using a smaller batch size.")
+            batches = [self._accessors]
+        else:
+            if len(extra_items) < batch_size:
+                batches.append(extra_items)
         self._accessors = np.array(batches, dtype = object)
         self._batch_size = batch_size
 
-    def assign_resize(self, image_size):
+    def assign_resize(self, image_size, method):
         """Assigns a resizing factor for the image and annotation data."""
         if image_size is None:
             image_size = 'default'
-        self._resize_manager.assign(image_size)
+        self._resize_manager.assign(image_size, method)
 
     def push_transforms(self, **transform_dict):
         """Pushes a transformation to the data transform pipeline."""
@@ -233,9 +249,9 @@ class DataManager(AgMLSerializable):
             if transform_dict['dual_transform'] is None:
                 transform_dict['dual_transform'] = 'reset'
 
-        # Assign the transforms to the manager.
-        for key, transform in transform_dict.items():
-            self._transform_manager.assign(key, transform)
+        # Assign the transforms to the manager in order.
+        for key in ['transform', 'target_transform', 'dual_transform']:
+            self._transform_manager.assign(key, transform_dict[key])
 
     def _load_one_image_and_annotation(self, obj):
         """Loads one image and annotation from a `DataObject`."""
@@ -259,15 +275,8 @@ class DataManager(AgMLSerializable):
     def _batch_multi_image_inputs(self, images):
         """Converts either a list of images or multiple input types into a batch."""
         # If the input images are just a simple batch.
-        if isinstance(images[0], np.ndarray):
-            if not consistent_shapes(images):
-                images = np.array(images, dtype = object)
-                log("Created a batch of images with different "
-                    "shapes. If you want the shapes to be consistent, "
-                    "run `loader.resize_images('auto')`.")
-            else:
-                images = np.array(images)
-            return images
+        if is_array_like(images[0]):
+            return convert_to_batch(images)
 
         # Otherwise, convert all of them independently.
         keys = images[0].keys()
@@ -289,7 +298,11 @@ class DataManager(AgMLSerializable):
                 annotations = np.array(annotations)
             return annotations
 
-        # otherwise, convert all of them independently.
+        # For object detection, just return the COCO JSON dictionaries.
+        if self._task == 'object_detection':
+            return annotations
+
+        # Otherwise, convert all of them independently.
         keys = annotations[0].keys()
         batches = {k: [] for k in keys}
         for sample in annotations:

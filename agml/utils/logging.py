@@ -30,10 +30,12 @@ else:
 # Track already given warnings.
 _GIVEN_WARNINGS = {}
 
+
 # Configure the logger.
 logging.basicConfig(
-    format = '[AgML] %(asctime)s %(levelname)s - %(name)s: %(message)s',
+    format = '%(asctime)s %(levelname)s - %(name)s: %(message)s',
     datefmt = '%m-%d-%Y %H:%M:%S')
+
 
 def log(msg, level = logging.WARNING):
     """Logs a message to the console.
@@ -56,6 +58,7 @@ def log(msg, level = logging.WARNING):
     # Check if the warning has been delivered recently.
     log_method = method_map[level]
     save_hash = f"{round(time.time(), -1)}:{inspect.stack()[1].function}:{msg}"
+    msg = "[AgML] " + msg
     if save_hash in _GIVEN_WARNINGS.keys():
         if _GIVEN_WARNINGS[save_hash] == msg:
             save_time = float(save_hash.split(':')[0])

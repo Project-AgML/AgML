@@ -29,7 +29,8 @@ from agml.data.managers.transform_helpers import (
     NormalizationTransformBase,
     ScaleTransform,
     NormalizationTransform,
-    OneHotLabelTransform
+    OneHotLabelTransform,
+    MaskToChannelBasisTransform
 )
 from agml.utils.logging import log
 
@@ -65,11 +66,26 @@ class TransformManager(AgMLSerializable):
     semantic segmentation and object detection transformations, but
     there is no `dual_transform` for image classification.
     """
-    serializable = frozenset(('task', 'transforms'))
+    serializable = frozenset(
+        ('task', 'transforms', 'time_inserted_transforms'))
 
     def __init__(self, task):
         self._task = task
         self._transforms = dict()
+
+        # A user might want to apply a certain set of transforms first,
+        # which are then followed by a different set of transforms. E.g.,
+        # calling `loader.transform()` with one set of transforms and then
+        # following with another call to `loader.transform()` with the
+        # intention that the transforms in the second call will only be
+        # applied after all of the transforms in the first call are.
+        #
+        # So, while the transform types are tracked in the `_transforms`
+        # attribute, we track the moment that transforms are inserted
+        # using this attribute, which is a list of different transforms.
+        # The `apply()` method loops sequentially through each transform
+        # in this list and applies them as required.
+        self._time_inserted_transforms = []
 
     def get_transform_states(self):
         """Returns a copy of the existing transforms."""
@@ -78,13 +94,28 @@ class TransformManager(AgMLSerializable):
             transform_dict[name] = state.copy()
         return transform_dict
 
-    def assign(self, kind, transform,):
-        """Assigns a new transform to the manager."""
-        prev = self._transforms.get(kind, None)
+    def _pop_transform(self, t_type, search_param):
+        """Removes a certain type of transform from the manager."""
+        for i, tfm in enumerate(self._transforms[search_param]):
+            if isinstance(tfm, t_type):
+                self._transforms[search_param].pop(i)
+                break
+        for i, tfm in enumerate(self._time_inserted_transforms):
+            if isinstance(tfm[1], t_type):
+                self._time_inserted_transforms.pop(i)
+                break
 
+    def assign(self, kind, transform):
+        """Assigns a new transform to the manager."""
         # Determine if the transform is being reset or unchanged.
         if transform == 'reset':
             self._transforms.pop(kind, None)
+            new_time_transforms = []
+            for tfm in self._time_inserted_transforms:
+                if tfm[0] == kind:
+                    continue
+                new_time_transforms.append(tfm)
+            self._time_inserted_transforms = new_time_transforms.copy()
             return
         elif transform is None:
             return
@@ -99,20 +130,27 @@ class TransformManager(AgMLSerializable):
                 if 'albumentations' in transform.__module__:
                     if t_(kind) == TransformKind.Transform:
                         if len(transform.processors) != 0:
-                            kind = TransformKind.DualTransform
+                            kind = 'dual_transform'
                     if self._task == 'semantic_segmentation':
-                        kind = TransformKind.DualTransform
+                        kind = 'dual_transform'
             except AttributeError:
                 # Some type of object that doesn't have `__module__`.
                 pass
+
+        # We can only do this after the albumentations check, to ensure
+        # that we are adding the transforms to the correct location.
+        prev = self._transforms.get(kind, None)
 
         # Validate the transformation based on the task and kind.
         if self._task == 'image_classification':
             if t_(kind) == TransformKind.Transform:
                 transform = self._maybe_normalization_or_regular_transform(transform)
             elif t_(kind) == TransformKind.TargetTransform:
-                if isinstance(transform, tuple):  # a special convenience case
+                if isinstance(transform, tuple): # a special convenience case
                     if transform[0] == 'one_hot':
+                        if transform[2] is not True: # removing the transform
+                            self._pop_transform(OneHotLabelTransform, kind)
+                            return
                         transform = OneHotLabelTransform(transform[1])
             else:
                 raise ValueError("There is no `dual_transform` for image "
@@ -124,6 +162,9 @@ class TransformManager(AgMLSerializable):
             elif t_(kind) == TransformKind.TargetTransform:
                 if isinstance(transform, tuple): # a special convenience case
                     if transform[0] == 'one_hot':
+                        if transform[2] is not True: # removing the transform
+                            self._pop_transform(OneHotLabelTransform, kind)
+                            return
                         transform = OneHotLabelTransform(transform[1])
             else:
                 pass
@@ -131,7 +172,13 @@ class TransformManager(AgMLSerializable):
             if t_(kind) == TransformKind.Transform:
                 transform = self._maybe_normalization_or_regular_transform(transform)
             elif t_(kind) == TransformKind.TargetTransform:
-                transform = self._maybe_normalization_or_regular_transform(transform)
+                if isinstance(transform, tuple): # a special convenience case
+                    if transform[0] == 'channel_basis':
+                        if transform[2] is not True: # removing the transform
+                            self._pop_transform(MaskToChannelBasisTransform, kind)
+                        transform = MaskToChannelBasisTransform(transform[1])
+                else:
+                    transform = self._maybe_normalization_or_regular_transform(transform)
             else:
                 transform = self._construct_image_and_mask_transform(transform)
         elif self._task == 'object_detection':
@@ -148,6 +195,7 @@ class TransformManager(AgMLSerializable):
                 self._transforms[kind].append(transform)
             else:
                 self._transforms[kind] = [transform]
+            self._time_inserted_transforms.append((kind, transform))
 
     def apply(self, contents):
         """Applies a transform to a set of input data.
@@ -175,25 +223,17 @@ class TransformManager(AgMLSerializable):
         """
         image, annotation = contents
 
-        # Iterate through the different types of transforms.
-        for kind in TransformKind:
-            if kind == TransformKind.Transform:
-                transform = self._transforms.get('transform', None)
-                if transform is not None:
-                    for t in transform:
-                        image = self._apply_to_objects(t, (image, ), kind)
-            if kind == TransformKind.TargetTransform:
-                transform = self._transforms.get('target_transform', None)
-                if transform is not None:
-                    for t in transform:
-                        annotation = self._apply_to_objects(
-                            t, (annotation, ), kind)
-            if kind == TransformKind.DualTransform:
-                transform = self._transforms.get('dual_transform', None)
-                if transform is not None:
-                    for t in transform:
-                        image, annotation = self._apply_to_objects(
-                            t, (image, annotation), kind)
+        # Iterate through the different transforms.
+        for (kind, transform) in self._time_inserted_transforms:
+            if t_(kind) == TransformKind.Transform:
+                image = self._apply_to_objects(
+                    transform, (image, ), kind)
+            if t_(kind) == TransformKind.TargetTransform:
+                annotation = self._apply_to_objects(
+                    transform, (annotation, ), kind)
+            if t_(kind) == TransformKind.DualTransform:
+                image, annotation = self._apply_to_objects(
+                    transform, (image, annotation), kind)
 
         # Return the processed image and annotation.
         return image, annotation
@@ -213,7 +253,7 @@ class TransformManager(AgMLSerializable):
             # general `torchvision.transforms` pipeline.
             if "PIL" in str(e):
                 raise TypeError("If using a `torchvision.transforms` pipeline "
-                                "when not in a PyTorch training mode, you need "
+                                "when not in PyTorch training mode, you need "
                                 "to include `ToTensor()` in the pipeline.")
 
             # Otherwise, raise the default exception.
@@ -236,11 +276,15 @@ class TransformManager(AgMLSerializable):
         """
         # First, we check if a normalization transform already exists
         # within the transform dict, and then we get its location.
-        norm_transform_index = -1
+        norm_transform_index, norm_transform_index_time = -1, -1
         try:
             for i, t in enumerate(self._transforms['transform']):
                 if isinstance(t, NormalizationTransformBase):
                     norm_transform_index = i
+                    break
+            for i, (_, t) in enumerate(self._time_inserted_transforms):
+                if isinstance(t, NormalizationTransformBase):
+                    norm_transform_index_time = i
                     break
         except:
             self._transforms['transform'] = []
@@ -249,8 +293,11 @@ class TransformManager(AgMLSerializable):
             tfm = ScaleTransform(None)
             if norm_transform_index != -1:
                 self._transforms['transform'][norm_transform_index] = tfm
+                self._time_inserted_transforms[norm_transform_index_time] \
+                    = ('transform', tfm)
             else:
                 self._transforms['transform'].append(tfm)
+                self._time_inserted_transforms.append(('transform', tfm))
         elif hasattr(transform[1], 'mean') or transform[1] == 'imagenet':
             try:
                 mean, std = transform[1].mean, transform[1].std
@@ -261,12 +308,16 @@ class TransformManager(AgMLSerializable):
             tfm = NormalizationTransform((mean, std))
             if norm_transform_index != -1:
                 self._transforms['transform'][norm_transform_index] = tfm
+                self._time_inserted_transforms[norm_transform_index_time] \
+                    = ('transform', tfm)
             else:
                 self._transforms['transform'].append(tfm)
+                self._time_inserted_transforms.append(('transform', tfm))
         elif transform[1] == 'reset':
             if norm_transform_index != -1:
                 self._transforms['transform'].pop(norm_transform_index)
-        return
+                self._time_inserted_transforms.pop(norm_transform_index_time)
+        return None
 
     # The following methods implement different checks which validate
     # as well as process input transformations, and manage the backend.
@@ -293,7 +344,7 @@ class TransformManager(AgMLSerializable):
             sig = inspect.signature(transform).parameters
             if not len(sig) == 1:
                 raise TypeError("Expected a single-image transform passed "
-                                "to `transform` to accept one input image,"
+                                "to `transform` to accept one input image, "
                                 f"instead got {len(sig)} parameters.")
             return transform
 

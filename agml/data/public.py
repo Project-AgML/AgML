@@ -149,21 +149,26 @@ def source(name):
     return DatasetMetadata(name)
 
 
-def download_public_dataset(dataset, location = None):
+def download_public_dataset(dataset, location = None, redownload = False):
     """Downloads a public dataset from AgML to a directory.
 
-    While `AgMLDataLoader` exists to load data directly into an
+    While the `AgMLDataLoader` exists to load data directly into an
     accessor class, if you want to simply download the data to
     a location, whether for inspection or other purposes, this
     method enables such downloading. By default, data will be
     downloaded to the `~/.agml/datasets` directory.
 
+    If you want to download multiple datasets at once, simply pass
+    a sequence of datasets to the `dataset` argument.
+
     Parameters
     ----------
-    dataset : str
-        The name of the dataset you want to download.
+    dataset : str, list
+        The name of the dataset(s) you want to download.
     location : str
         The local location you want to download the data to.
+    redownload : bool
+        Whether to download the dataset irrespective of existence.
 
     Returns
     -------
@@ -171,7 +176,10 @@ def download_public_dataset(dataset, location = None):
     """
     location = location if location \
                         else data_save_path()
-    _download(dataset, location)
+    if not isinstance(dataset, (list, tuple, set, np.ndarray)):
+        dataset = [dataset]
+    for d in dataset:
+        _download(d, location, redownload = redownload)
     return location
 
 
