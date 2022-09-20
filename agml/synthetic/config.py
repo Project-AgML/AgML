@@ -207,7 +207,8 @@ def _get_canopy_params():
         if any(i == name for i in canopy_types) and 'std::cout' not in source:  # noqa
             canopy_parameters[name] = {}
             definitions = [
-                s.replace(';', '') for s in re.split('[\\s]{2,}', source) if s != '']
+                s.replace(';', '') for s in re.split('[\\s]{2,}', source)
+                if s != '' and not s.startswith('//')]
             for d in definitions:
                 # Ignore comments.
                 if d.startswith('//'):
