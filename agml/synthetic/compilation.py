@@ -132,7 +132,48 @@ def _compile_helios_default():
 
 def _compile_helios_executable_only():
     """Compiles only the Helios executable."""
+    if not os.path.exists(PROJECT_PATH):
+        raise NotADirectoryError(
+            f"The expected project path {PROJECT_PATH} does not exist. "
+            f"There may have been an error in installing Helios. Try "
+            f"re-installing it, or raise an issue with the AgML team.")
 
+    # Construct arguments for the compilation.
+    make_args = ['cmake', '--build', '.']
+
+    # Create the log file and clear the existing one.
+    log_file = os.path.expanduser(
+        f"~/.agml/.helios_compilation_log"
+        f"-{dt.now().strftime('%Y%m%d-%H%M%S')}.log")
+    try:
+        existing_log = glob.glob(os.path.expanduser(
+            '~/.agml/.helios_compilation_log-*.log'))[0]
+        os.remove(existing_log)
+    except:
+        pass
+
+    # Generate the main executable.
+    cmake_log = "\n"
+    sys.stderr.write("Building Helios executable with CMake.\n\n")
+    make_process = sp.Popen(make_args, stdout = sp.PIPE, cwd = HELIOS_BUILD,
+                            stderr = sp.STDOUT, universal_newlines = True)
+    for line in iter(make_process.stdout.readline, ""):
+        cmake_log += line
+        sys.stderr.write(line)
+    make_process.stdout.close()
+    with open(log_file, 'a') as f:
+        f.write(cmake_log)
+    make_return = make_process.wait()
+    if make_return != 0:
+        sys.stderr.write(
+            f'\nEncountered an error when attempting to compile '
+            f'Helios with CMake. Please report this traceback to '
+            f'the AgML team. A full traceback of the compilation '
+            f'process can be found at "{log_file}".')
+
+    # Print the final message.
+    sys.stdout.write('\n')
+    sys.stderr.write('\nHelios compilation successful!')
 
 
 def recompile_helios(executable_only = False):
