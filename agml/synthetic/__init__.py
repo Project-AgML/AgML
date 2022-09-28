@@ -29,5 +29,7 @@ from .compilation import (
     recompile_helios
 )
 from .config import (
-    reinstall_helios
+    reinstall_helios,
+    available_canopies,
+    default_canopy_parameters
 )

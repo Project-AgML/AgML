@@ -283,4 +283,15 @@ def _get_lidar_params():
     return {'parameters': lidar_params}
 
 
+################## API FUNCTIONS FOR CONVENIENCE ##################
+
+
+def available_canopies():
+    """Returns a list of available canopies in Helios."""
+    return load_default_helios_configuration()['canopy']['types']
+
+
+def default_canopy_parameters(canopy):
+    """Returns the default canopy parameters for a given `canopy`."""
+    return load_default_helios_configuration()['canopy']['parameters'][canopy]
 
