@@ -12,8 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-__version__ = '0.3.0'
+__version__ = '0.4.0'
 __all__ = ['data', 'backend', 'viz']
+
 
 # If AgML is being imported for the first time, then we need to setup
 # the module, namely prepping the config file.
@@ -27,8 +28,10 @@ def _setup():
             _json.dump({'data_path': _os.path.expanduser('~/.agml/datasets')}, f)
 _setup(); del _setup # noqa
 
+
 # There are no top-level imported functions or classes, only the modules.
-from . import data, backend, viz
+from . import data, backend, synthetic, viz
+
 
 
 

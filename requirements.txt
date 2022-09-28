@@ -8,6 +8,7 @@ torch
 torchvision
 pyyaml>=5.4.1
 albumentations
+dict2xml
 pytorch-lightning
 effdet==0.2.4
 ensemble_boxes

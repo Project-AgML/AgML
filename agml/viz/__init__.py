@@ -34,3 +34,7 @@ from .labels import (
     visualize_images,
     visualize_images_with_labels
 )
+from .inspection import (
+    plot_synthetic_camera_positions,
+    visualize_all_views
+)

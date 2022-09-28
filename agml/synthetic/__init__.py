@@ -12,29 +12,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""
-Methods for checking the dataset information in AgML.
-"""
 
-import os
-import pickle
-
-from agml.utils.io import recursive_dirname
-
-
-_PERSONAL_ACCESS_TOKEN = None
-
-
-def shape_info_file_contents():
-    with open(os.path.join(recursive_dirname(__file__, 2), '_assets', 'shape_info.pickle'), 'rb') as f:
-        return pickle.load(f)
-
-
-def set_git_personal_access_token(token):
-    global _PERSONAL_ACCESS_TOKEN
-    _PERSONAL_ACCESS_TOKEN = token
-
-
-def get_personal_access_token():
-    global _PERSONAL_ACCESS_TOKEN
-    return _PERSONAL_ACCESS_TOKEN
+from .options import (
+    HeliosOptions,
+    AnnotationType,
+    SimulationType
+)
+from .generator import (
+    HeliosDataGenerator
+)
+from .tools import (
+    generate_environment_map,
+    generate_camera_positions
+)
+from .compilation import (
+    recompile_helios
+)
+from .config import (
+    reinstall_helios,
+    available_canopies,
+    default_canopy_parameters
+)

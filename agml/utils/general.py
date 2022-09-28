@@ -13,6 +13,14 @@
 # limitations under the License.
 
 import re
+import cv2
+import glob
+import math
+import matplotlib.pyplot as plt
+import matplotlib.patches as patches
+
+from math import pi, floor
+from scipy import signal
 
 import numpy as np
 
@@ -74,12 +82,44 @@ def has_nested_dicts(obj):
     return any(isinstance(i, dict) for i in obj.values())
 
 
+def as_scalar(inp):
+    """Converts an input value to a scalar."""
+    if isinstance(inp, (int, float)):
+        return inp
+    if np.isscalar(inp):
+        return inp.item()
+    if isinstance(inp, np.ndarray):
+        return inp.item()
+    from agml.backend.tftorch import torch
+    if isinstance(inp, torch.Tensor):
+        return inp.item()
+    from agml.backend.tftorch import tf
+    if isinstance(inp, tf.Tensor):
+        return inp.numpy()
+    raise TypeError(f"Unsupported variable type {type(inp)}.")
+
+
+def scalar_unpack(inp):
+    """Unpacks a 1-d array into a list of scalars."""
+    return [as_scalar(item) for item in inp]
+
+
+def is_array_like(inp):
+    """Determines if an input is a np.ndarray, torch.Tensor, or tf.Tensor."""
+    if isinstance(inp, np.ndarray):
+        return True
+    from agml.backend.tftorch import torch
+    if isinstance(inp, torch.Tensor):
+        return True
+    from agml.backend.tftorch import tf
+    if isinstance(inp, tf.Tensor):
+        return True
+    return False
+
+
 def shapes(seq):
     """Returns the shapes (or lengths) of all of the objects in the sequence."""
     try:
         return [getattr(obj, 'shape', len(obj)) for obj in seq]
     except:
         raise ValueError(f"One or more of the objects has no shape or length: {seq}.")
-
-
-
