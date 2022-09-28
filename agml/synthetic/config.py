@@ -226,6 +226,7 @@ def _get_canopy_params():
                 # but we also can't just replace `.f` with `0` or `.0`.
                 value = value.replace(',', ' ').replace('\"', '')
                 value = re.sub('(\\.|\\d)f', r'\g<1>0', value)
+                value = re.sub('//.*?$', '', value)
 
                 # A specific case to replace values using pi.
                 value = value.strip().replace('  ', ' ')

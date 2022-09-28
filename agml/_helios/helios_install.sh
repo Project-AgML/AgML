@@ -8,18 +8,17 @@
 PATH_TO_ME="$(readlink -nf "$0")"
 INSTALL_PATH="$(dirname "$(dirname "$PATH_TO_ME")")/_helios/Helios"
 
-
 # Install or Update Helios, depending on whether the directory for Helios
 # already exists. While the actual Python installation script which calls
 # this shell script has slightly more complex logic (for figuring out
 # version Helios is on, and in turn, whether it needs an update or not),
 # this simply installs/updates based on the existence of the directory.
 if [ ! -d "$INSTALL_PATH" ]; then
-  git clone -b master "https://github.com/PlantSimulationLab/Helios.git" "$INSTALL_PATH"
+  git clone -b master https://github.com/PlantSimulationLab/Helios.git "$INSTALL_PATH"
 else
   ORIGINAL_DIR="$PWD"
-  cd "$INSTALL_PATH" || echo "Issue when trying to update Helios. Please report this to the AgML team."; exit
-  git pull https://github.com/PlantSimulationLab/Helios_autolabeldev.git master
+  cd "$INSTALL_PATH"
+  git pull https://github.com/PlantSimulationLab/Helios.git master
   cd "$ORIGINAL_DIR" || echo "Issue when trying to update Helios. Please report this to the AgML team."; exit
 fi
 

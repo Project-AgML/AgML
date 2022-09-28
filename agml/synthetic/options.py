@@ -99,10 +99,12 @@ class CanopyParameters(Parameters):
     leaf_area_index: Number               = None
     leaf_area_density: Number             = None
     leaf_spacing_fraction: Number         = None
+    leaflet_length: Number                = None
     stem_color: List[Number]              = None
     stem_subdivisions: Number             = None
     stems_per_plant: Number               = None
     stem_radius: Number                   = None
+    stem_length: Number                   = None
     plant_height: Number                  = None
     grape_radius: Number                  = None
     grape_color: List[Number]             = None
@@ -140,6 +142,10 @@ class CanopyParameters(Parameters):
     shoot_angle_base: Number              = None
     shoot_color: List[Number]             = None
     shoot_subdivisions: List[Number]      = None
+    pod_color: List[Number]               = None
+    pod_subdivisions: List[Number]        = None
+    pod_length: None                      = None
+    germination_probability: Number       = None
     needle_width: Number                  = None
     needle_length: Number                 = None
     needle_color: List[Number]            = None
@@ -294,7 +300,7 @@ class HeliosOptions(AgMLSerializable):
         # Initialize the default data generation parameters.
         self._annotation_type = AnnotationType.object_detection
         self._simulation_type = SimulationType.RGB
-        self._labels = ['fruits']
+        self._labels = ['leaves']
 
     def _initialize_canopy(self, canopy):
         """Initializes Helios options from the provided canopy."""
