@@ -220,7 +220,7 @@
         "platform": "ground",
         "input_data_format": "png",
         "annotation_format": "image",
-        "n_images": "1931",
+        "n_images": "125",
         "docs_url": "https://github.com/inkyusa/weedNet",
         "stats": {
             "mean": [
@@ -320,6 +320,10 @@
     "leaf_counting_denmark": {
         "ml_task": "image_classification",
         "ag_task": "leaf_counting",
+        "location": {
+            "continent": "europe",
+            "country": "denmark"
+        },
         "platform": "mixed",
         "input_data_format": "png",
         "annotation_format": "directory_names",
@@ -377,7 +381,7 @@
             ]
         },
         "classes": {
-            "0": "apple"
+            "1": "apple"
         },
         "external_image_sources": []
     },
@@ -393,7 +397,7 @@
         "platform": "handheld",
         "input_data_format": "jpg",
         "annotation_format": "coco_json",
-        "n_images": "1730",
+        "n_images": "1242",
         "docs_url": "https://researchdata.edu.au/mangoyolo-set/1697505",
         "stats": {
             "mean": [
@@ -408,7 +412,7 @@
             ]
         },
         "classes": {
-            "0": "mango"
+            "1": "mango"
         },
         "external_image_sources": []
     },

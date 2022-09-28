@@ -1,0 +1,271 @@
+{
+    "carrot_weeds_germany": {
+        "metric": {
+            "mIOU": 52.18
+        },
+        "hyperparameters": {
+            "epochs": 50,
+            "model_config": {
+                "image_size": [
+                    512,
+                    512
+                ]
+            },
+            "optimizer_config": {
+                "lr": 0.005
+            }
+        }
+    },
+    "sugarbeet_weed_segmentation": {
+        "metric": {
+            "mIOU": 53.59
+        },
+        "hyperparameters": {
+            "epochs": 50,
+            "model_config": {
+                "image_size": [
+                    512,
+                    512
+                ]
+            },
+            "optimizer_config": {
+                "lr": 0.005
+            }
+        }
+    },
+    "apple_flower_segmentation": {
+        "metric": {
+            "mIOU": 68.38
+        },
+        "hyperparameters": {
+            "epochs": 50,
+            "model_config": {
+                "image_size": [
+                    512,
+                    512
+                ]
+            },
+            "optimizer_config": {
+                "lr": 0.005
+            }
+        }
+    },
+    "apple_segmentation_minnesota": {
+        "metric": {
+            "mIOU": 79.08
+        },
+        "hyperparameters": {
+            "epochs": 50,
+            "model_config": {
+                "image_size": [
+                    512,
+                    512
+                ]
+            },
+            "optimizer_config": {
+                "lr": 0.005
+            }
+        }
+    },
+    "rice_seedling_segmentation": {
+        "metric": {
+            "mIOU": 52.2
+        },
+        "hyperparameters": {
+            "epochs": 50,
+            "model_config": {
+                "image_size": [
+                    512,
+                    512
+                ]
+            },
+            "optimizer_config": {
+                "lr": 0.005
+            }
+        }
+    },
+    "peachpear_flower_segmentation": {
+        "metric": {
+            "mIOU": 72.58
+        },
+        "hyperparameters": {
+            "epochs": 50,
+            "model_config": {
+                "image_size": [
+                    512,
+                    512
+                ]
+            },
+            "optimizer_config": {
+                "lr": 0.005
+            }
+        }
+    },
+    "red_grapes_and_leaves_segmentation": {
+        "metric": {
+            "mIOU": 49.18
+        },
+        "hyperparameters": {
+            "epochs": 50,
+            "model_config": {
+                "image_size": [
+                    512,
+                    512
+                ]
+            },
+            "optimizer_config": {
+                "lr": 0.005
+            }
+        }
+    },
+    "white_grapes_and_leaves_segmentation": {
+        "metric": {
+            "mIOU": 51.93
+        },
+        "hyperparameters": {
+            "epochs": 50,
+            "model_config": {
+                "image_size": [
+                    512,
+                    512
+                ]
+            },
+            "optimizer_config": {
+                "lr": 0.005
+            }
+        }
+    },
+    "grape_detection_californiaday": {
+        "metric": {
+            "mAP": 69.01
+        },
+        "hyperparameters": {
+            "epochs": 50,
+            "model_config": {
+                "box_loss_weight": 100.0,
+                "image_size": [
+                    512,
+                    512
+                ],
+                "confidence_threshold": 0.3
+            },
+            "optimizer_config": {
+                "lr": 0.0002
+            }
+        }
+    },
+    "grape_detection_californianight": {
+        "metric": {
+            "mAP": 63.99
+        },
+        "hyperparameters": {
+            "epochs": 50,
+            "model_config": {
+                "box_loss_weight": 100.0,
+                "image_size": [
+                    512,
+                    512
+                ],
+                "confidence_threshold": 0.3
+            },
+            "optimizer_config": {
+                "lr": 0.0002
+            }
+        }
+    },
+    "fruit_detection_worldwide": {
+        "metric": {
+            "mIOU": 70.35
+        },
+        "hyperparameters": {
+            "epochs": 50,
+            "model_config": {
+                "box_loss_weight": 50.0,
+                "image_size": [
+                    512,
+                    512
+                ],
+                "confidence_threshold": 0.3
+            },
+            "optimizer_config": {
+                "lr": 0.0008
+            }
+        }
+    },
+    "mango_detection_australia": {
+        "metric": {
+            "mAP": 95.32
+        },
+        "hyperparameters": {
+            "epochs": 50,
+            "model_config": {
+                "box_loss_weight": 100.0,
+                "image_size": [
+                    512,
+                    512
+                ],
+                "confidence_threshold": 0.3
+            },
+            "optimizer_config": {
+                "lr": 0.0002
+            }
+        }
+    },
+    "apple_detection_usa": {
+        "metric": {
+            "mAP": 94.16
+        },
+        "hyperparameters": {
+            "epochs": 50,
+            "model_config": {
+                "box_loss_weight": 100.0,
+                "image_size": [
+                    512,
+                    512
+                ],
+                "confidence_threshold": 0.3
+            },
+            "optimizer_config": {
+                "lr": 0.0002
+            }
+        }
+    },
+    "apple_detection_spain": {
+        "metric": {
+            "mAP": 86.65
+        },
+        "hyperparameters": {
+            "epochs": 50,
+            "model_config": {
+                "box_loss_weight": 100.0,
+                "image_size": [
+                    512,
+                    512
+                ],
+                "confidence_threshold": 0.3
+            },
+            "optimizer_config": {
+                "lr": 0.0002
+            }
+        }
+    },
+    "apple_detection_drone_brazil": {
+        "metric": {
+            "mAP": 79.62
+        },
+        "hyperparameters": {
+            "epochs": 50,
+            "model_config": {
+                "box_loss_weight": 100.0,
+                "image_size": [
+                    512,
+                    512
+                ],
+                "confidence_threshold": 0.3
+            },
+            "optimizer_config": {
+                "lr": 0.0002
+            }
+        }
+    }
+}

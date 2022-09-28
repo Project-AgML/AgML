@@ -70,19 +70,53 @@ class InternalAgMLS3API(object):
         # Setup progress bar
         self.pg = tqdm(
             total=os.stat(os.path.abspath(os.path.join(dataset_dir, dataset_name + '.zip'))).st_size,
-            file = sys.stdout, desc = f"Uploading {dataset_name}")
+            file=sys.stdout, desc=f"Uploading {dataset_name}")
 
         # Upload data to agdata-data bucket
         try:
             with open(os.path.join(dataset_dir, dataset_name + '.zip'), 'rb') as data:
                 self.s3.upload_fileobj(Fileobj=data, 
                                        Bucket='agdata-data',
-                                       Key=dataset_name + '.zip',
+                                       Key='datasets/' + dataset_name + '.zip',
                                        Callback=lambda x: self.pg.update(x))
         except:
             warnings.warn(
                 f'Upload of {dataset_name} unsuccessful. You may not have permission '
                 f'to upload to the agdata-data s3 bucket.', category = UserWarning)
+        finally:
+            self.pg.close()
+
+    def upload_model(self, model_name, model_dir):
+        """Uploads model to agdata-data s3 file storage.
+
+        Parameters
+        ----------
+        model_name : str
+            name of model (without '.pth')
+        model_dir : str
+            path to directory where model is stored
+        """
+        # Establish connection with s3 via boto
+        self.s3 = boto3.client('s3')
+
+        # Setup progress bar
+        self.pg = tqdm(
+            total=os.stat(os.path.abspath(os.path.join(model_dir, model_name + '.pth'))).st_size,
+            file=sys.stdout, desc = f"Uploading {model_name}")
+
+        # Upload data to agdata-data bucket
+        try:
+            with open(os.path.join(model_dir, model_name + '.pth'), 'rb') as data:
+                self.s3.upload_fileobj(Fileobj=data, 
+                                       Bucket='agdata-data',
+                                       Key='models/' + model_name + '.pth',
+                                       Callback=lambda x: self.pg.update(x))
+        except:
+            warnings.warn(
+                f'Upload of {model_name} unsuccessful. You may not have permission '
+                f'to upload to the agdata-data s3 bucket.', category = UserWarning)
+        finally:
+            self.pg.close()
 
     def download_dataset(self, dataset_name, dest_dir):
         """
@@ -108,7 +142,7 @@ class InternalAgMLS3API(object):
             self.pg = tqdm(
                 total=float(self.s3_resource.ObjectSummary(
                     bucket_name='agdata-data', key=dataset_name + '.zip').size),
-                file = sys.stdout, desc = f"Downloading {dataset_name}")
+                file=sys.stdout, desc = f"Downloading {dataset_name}")
         except botocore.exceptions.ClientError as ce:
             if "Not Found" in str(ce):
                 raise ValueError(

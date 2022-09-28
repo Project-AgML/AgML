@@ -29,8 +29,11 @@ from .config import (
     set_data_save_path,
     synthetic_data_save_path,
     set_synthetic_save_path,
+    model_save_path,
+    set_model_save_path,
     clear_all_datasets,
     downloaded_datasets
 )
 from .tftorch import get_backend, set_backend
-from .learn import set_seed
+from .random import set_seed
+from . import experimental

@@ -17,7 +17,8 @@ import abc
 import numpy as np
 
 from agml.framework import AgMLSerializable
-from agml.utils.general import seed_context
+from agml.utils.random import seed_context
+
 
 class TransformApplierBase(AgMLSerializable):
     """Applies a transform to the input data.
@@ -126,9 +127,21 @@ class OneHotLabelTransform(TransformApplierBase):
         # This applies a one-hot label transformation. The only argument
         # in the `_transform` parameter is simply the number of labels.
         one_hot = np.zeros(shape = (self._transform, ))
-        one_hot[labels - 1] = 1
-        return one_hot.astype(np.int32)
+        one_hot[labels] = 1
+        return one_hot.astype(np.float32)
 
 
+class MaskToChannelBasisTransform(TransformApplierBase):
+    def apply(self, mask):
+        # Converts a 2-d mask of `n` labels, excluding background, to a
+        # `n x h x w` 3-dimensional mask with each channel a label.
+        input_shape = mask.shape
+        mask = mask.ravel()
+        n = mask.shape[0]
+        mask = np.array(mask, dtype = np.int32)
+        out = np.zeros(shape = (n, self._transform + 1))
+        out[np.arange(n), mask] = 1
+        out = np.reshape(out, input_shape + (self._transform + 1,))
+        return out[..., 1:].astype(np.int32)
 
 

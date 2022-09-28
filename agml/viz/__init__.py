@@ -18,6 +18,7 @@ from .tools import (
     get_colormap
 )
 from .masks import (
+    output_to_mask,
     visualize_image_and_mask,
     overlay_segmentation_masks,
     visualize_overlaid_masks,
@@ -25,7 +26,9 @@ from .masks import (
 )
 from .boxes import (
     annotate_bboxes_on_image,
-    visualize_image_and_boxes
+    visualize_image_and_boxes,
+    visualize_real_and_predicted_bboxes,
+    visualize_image_and_many_boxes
 )
 from .labels import (
     visualize_images,
