@@ -64,6 +64,14 @@ def reinstall_helios():
     _check_helios_installation()
 
 
+def verify_helios(f):
+    """This decorator wraps any methods which require Helios to be installed."""
+    def verify(*args, **kwargs):
+        _check_helios_installation()
+        return f(*args, **kwargs)
+    return verify
+
+
 # Run the Helios configuration check.
 def _check_helios_installation():
     """Checks for the latest Helios installation (and does as such).
@@ -286,11 +294,13 @@ def _get_lidar_params():
 ################## API FUNCTIONS FOR CONVENIENCE ##################
 
 
+@verify_helios
 def available_canopies():
     """Returns a list of available canopies in Helios."""
     return load_default_helios_configuration()['canopy']['types']
 
 
+@verify_helios
 def default_canopy_parameters(canopy):
     """Returns the default canopy parameters for a given `canopy`."""
     return load_default_helios_configuration()['canopy']['parameters'][canopy]

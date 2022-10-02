@@ -29,7 +29,7 @@ from agml.framework import AgMLSerializable
 from agml.backend.config import synthetic_data_save_path
 from agml.synthetic.options import HeliosOptions
 from agml.synthetic.options import AnnotationType, SimulationType
-from agml.synthetic.config import load_default_helios_configuration
+from agml.synthetic.config import load_default_helios_configuration, verify_helios
 from agml.synthetic.compilation import (
     HELIOS_BUILD, HELIOS_EXECUTABLE, XML_PATH, PROJECT_PATH
 )
@@ -101,21 +101,7 @@ class HeliosDataGenerator(AgMLSerializable):
         A specific canopy to generate images for. This can be passed for
         in place of `options` to initialize the default options.
     """
-
-    def __new__(cls, *args, **kwargs):
-        # Run the configuration check. Notice that we run this here because
-        # users may not necessarily want to use Helios on first installing
-        # AgML, but the `synthetic` module is loaded into the main AgML
-        # module as in the top-level `__init__.py` file. By putting the check
-        # here, it ensures that Helios is only installed if and when data is
-        # actually being generated, and not just by a standard import.
-        from .config import _check_helios_installation
-        _check_helios_installation()
-        del _check_helios_installation
-
-        # Return a `HeliosDataGenerator`.
-        return super(HeliosDataGenerator, cls).__new__(cls)
-
+    @verify_helios
     def __init__(self, options: HeliosOptions = None, *, canopy = None):
         if options is None and canopy is not None:
             self._options = HeliosOptions(canopy)

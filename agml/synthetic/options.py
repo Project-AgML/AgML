@@ -19,7 +19,7 @@ from dataclasses import dataclass, fields, asdict
 from typing import List, Union, Sequence
 
 from agml.framework import AgMLSerializable
-from agml.synthetic.config import load_default_helios_configuration
+from agml.synthetic.config import load_default_helios_configuration, verify_helios
 from agml.synthetic.tools import generate_camera_positions
 
 
@@ -277,22 +277,13 @@ class HeliosOptions(AgMLSerializable):
                               'annotation_type', 'simulation_type', 'labels'))
     
     def __new__(cls, *args, **kwargs):
-        # Run the configuration check. Notice that we run this here because
-        # users may not necessarily want to use Helios on first installing
-        # AgML, but the `synthetic` module is loaded into the main AgML
-        # module as in the top-level `__init__.py` file. By putting the check
-        # here, it ensures that Helios is only installed if and when data is
-        # actually being generated, and not just by a standard import.
-        from .config import _check_helios_installation
-        _check_helios_installation()
-        del _check_helios_installation
-
         # The default configuration parameters are loaded directly from
         # the `helios_config.json` file which is constructed each time
         # Helios is installed or updated.
         cls._default_config = load_default_helios_configuration()
         return super(HeliosOptions, cls).__new__(cls)
 
+    @verify_helios
     def __init__(self, canopy = None):
         # Check that the provided canopy is valid.
         self._initialize_canopy(canopy)
@@ -301,6 +292,9 @@ class HeliosOptions(AgMLSerializable):
         self._annotation_type = AnnotationType.object_detection
         self._simulation_type = SimulationType.RGB
         self._labels = ['leaves']
+
+    def __str__(self):
+        return f"HeliosOptions({self._canopy})({self._to_dict()})"
 
     def _initialize_canopy(self, canopy):
         """Initializes Helios options from the provided canopy."""
