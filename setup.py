@@ -72,17 +72,7 @@ setuptools.setup(
     packages=setuptools.find_packages(exclude = ('agml/_internal', )),
     include_package_data=True,
     classifiers=CLASSIFIERS,
-    install_requires=[
-        'numpy',
-        'matplotlib',
-        'tqdm',
-        'scikit-learn',
-        'opencv-python',
-        'torch',
-        'torchvision',
-        'tensorflow',
-        'pyyaml>=5.4.1'
-    ],
+    install_requires=install_requires,
     extras_require={
         'dev': dev_requires,
         'test': tests_require
