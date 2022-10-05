@@ -100,7 +100,8 @@ def generate_camera_positions(
         origin: List[Union[int, float]] = None,
         camera_spacing: int = 2,
         crop_distance: int = 4,
-        height: int = 1) -> Tuple:
+        height: int = 1,
+        aerial_parameters: dict = {}) -> Tuple:
     """Generates camera placement and lookat positions in the Helios format.
 
     This method, given the origin and a number of camera positions to generate
@@ -123,6 +124,8 @@ def generate_camera_positions(
         The distance of the cameras from the crop itself.
     height : int
         The height of the cameras relative to the crop.
+    aerial_angled : bool
+        Whether the aeiral camera should be angled or directly facing down.
 
     Returns
     -------
@@ -141,15 +144,36 @@ def generate_camera_positions(
             origin[0], camera_spacing * num_views + origin[0], camera_spacing)
         return [[camera_pos[x], crop_distance + origin[1], height]
                 for x in range(len(camera_pos))], \
-                [[camera_pos[x], origin[1], height] for x in range(len(camera_pos))]
+                [[camera_pos[x], origin[0], height] for x in range(len(camera_pos))]
 
     elif camera_type == 'aerial':
-        t = camera_spacing * np.linspace(0, 1, num_views)
-        triangle = camera_spacing * sawtooth(1 * np.pi * 5 * t, 0.5)
-        return [[t[x] + origin[0], triangle[x] + origin[1],
-                  crop_distance + origin[2]] for x in range(len(triangle))], \
-                [[t[x] + origin[0], triangle[x] + origin[1] + 1,
-                  height + origin[2]] for x in range(len(triangle))]
+        if aerial_parameters.get('distribution', '') == 'sawtooth':
+            angled = aerial_parameters.get('angled', False)
+            t = camera_spacing * np.linspace(0, 1, num_views)
+            triangle = camera_spacing * sawtooth(1 * np.pi * 5 * t, 0.5)
+            return [[t[x] + origin[0], triangle[x] + origin[1],
+                      crop_distance + origin[2]] for x in range(len(triangle))], \
+                    [[t[x] + origin[0], triangle[x] + origin[1] + (1 if angled else 0.05),
+                      height + origin[2]] for x in range(len(triangle))]
+        else: # distribution is circular around the center
+            angled = aerial_parameters.get('angled', True)
+            center_coord = [[origin[0], origin[1]]]
+            if num_views == 1:
+                coords = center_coord
+            elif num_views == 2:
+                coords = [center_coord[0], [origin[0], origin[1] + 0.5]]
+            elif num_views == 3:
+                coords = [center_coord[0], [origin[0], origin[1] - 0.5],
+                          [origin[0], origin[1] + 0.5]]
+            else:
+                coords = center_coord
+                coords.extend(
+                    [[origin[0] + np.cos(theta), origin[1] + np.sin(theta)]
+                     for theta in np.linspace(0, 2 * np.pi, num_views)])
+
+            return [[*coord, crop_distance + origin[2]] for coord in coords], \
+                   [[coord[0], coord[1] + (1 if angled else 0.05),
+                     height + origin[2]] for coord in coords]
 
     else:
         raise ValueError(f"Got `camera_type`: ({camera_type}), "

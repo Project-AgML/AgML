@@ -57,6 +57,7 @@ def reinstall_helios():
     check = input("Are you sure you want to re-install Helios? [y|n] ")
     if check != 'y':
         print("Aborting re-installation")
+        return
     else:
         print("Re-installing Helios.")
     if os.path.exists(HELIOS_PATH):
@@ -142,8 +143,9 @@ def _check_helios_installation():
     # Copy the project files to the Helios directory.
     project_dir = os.path.join(os.path.dirname(__file__), 'synthetic_data_generation')
     output_dir = os.path.join(helios_dir, 'projects', 'SyntheticImageAnnotation')
-    shutil.copytree(project_dir, output_dir)
-    os.makedirs(os.path.join(output_dir, 'xml'), exist_ok = True)
+    if not os.path.exists(output_dir):
+        shutil.copytree(project_dir, output_dir)
+        os.makedirs(os.path.join(output_dir, 'xml'), exist_ok = True)
 
     # Recompile Helios.
     from agml.synthetic.compilation import _compile_helios_default

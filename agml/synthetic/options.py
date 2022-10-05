@@ -227,13 +227,15 @@ class CameraParameters(Parameters):
                            num_views: int,
                            origin: List[Union[int, float]] = None,
                            camera_spacing: int = 2,
-                           crop_distance: int = 4,
-                           height: int = 1):
+                           crop_distance: Union[int, float] = 4,
+                           height: int = 1,
+                           aerial_parameters: dict = {}):
         """Generates camera positions from the input environment parameters."""
         self.camera_position, self.camera_lookat = generate_camera_positions(
             camera_type = camera_type, num_views = num_views,
             origin = origin, camera_spacing = camera_spacing,
-            crop_distance = crop_distance, height = height)
+            crop_distance = crop_distance, height = height,
+            aerial_parameters = aerial_parameters)
 
 
 @dataclass(repr = False)
