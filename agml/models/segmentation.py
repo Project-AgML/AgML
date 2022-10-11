@@ -231,7 +231,7 @@ class SegmentationModel(AgMLModelBase):
         method : str
             Either `True` for overlaid masks, or `False` for
             visualizing the mask separately from the image.
-        kwargs : dict
+        kwargs
             Visualization keyword arguments.
 
         Returns
@@ -240,10 +240,9 @@ class SegmentationModel(AgMLModelBase):
         """
         image = self._expand_input_images(image)[0]
         mask = self.predict(image)
-        if method == 'overlay':
+        if overlay:
             return visualize_overlaid_masks(image, mask, **kwargs)
-        else:
-            return visualize_image_and_mask(image, mask, **kwargs)
+        return visualize_image_and_mask(image, mask, **kwargs)
 
     def load_benchmark(self, dataset):
         """Loads a benchmark for the given semantic segmentation dataset.

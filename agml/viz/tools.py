@@ -17,6 +17,7 @@ A tools module for `agml.viz`, which also serves as almost a
 mini-backend to control ops such as the colormap being used.
 """
 import os
+import io
 import json
 import functools
 
@@ -192,3 +193,15 @@ def format_image(img, mask = False):
 
     # Return the formatted image.
     return img
+
+
+def convert_figure_to_image(fig = None):
+    """This method is used to convert a Matplotlib figure to an image array."""
+    # Use PIL to get the image, then convert to an array.
+    buf = io.BytesIO()
+    fig = fig if fig is not None else plt.gcf()
+    fig.savefig(buf, format = 'png')
+    buf.seek(0)
+    arr = np.fromstring(buf.read(), dtype = np.uint8)
+    return cv2.imdecode(arr, cv2.IMREAD_COLOR)
+
