@@ -156,7 +156,7 @@ def generate_camera_positions(
                     [[t[x] + origin[0], triangle[x] + origin[1] + (1 if angled else 0.05),
                       height + origin[2]] for x in range(len(triangle))]
         else: # distribution is circular around the center
-            angled = aerial_parameters.get('angled', True)
+            angled = aerial_parameters.get('angled', False)
             center_coord = [[origin[0], origin[1]]]
             if num_views == 1:
                 coords = center_coord
