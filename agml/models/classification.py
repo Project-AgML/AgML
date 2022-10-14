@@ -66,18 +66,19 @@ class ClassificationModel(AgMLModelBase):
     serializable = frozenset(("model", ))
     state_override = serializable
 
-    def __init__(self, dataset):
+    def __init__(self, num_classes):
         # Construct the network and load in pretrained weights.
         super(ClassificationModel, self).__init__()
-        self.net = self._construct_sub_net(dataset)
+        self._num_classes = num_classes
+        self.net = self._construct_sub_net(num_classes)
 
     @auto_move_data
     def forward(self, batch):
         return self.net(batch)
 
     @staticmethod
-    def _construct_sub_net(dataset):
-        return EfficientNetB4Transfer(source(dataset).num_classes)
+    def _construct_sub_net(num_classes):
+        return EfficientNetB4Transfer(num_classes)
 
     @staticmethod
     def _preprocess_image(image):

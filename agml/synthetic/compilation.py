@@ -66,7 +66,8 @@ def _compile_helios_default():
 
     # Construct arguments for the compilation.
     cmake_args = ['cmake', '..', '-G', 'Unix Makefiles',
-                  f'-DCMAKE_LIBRARY_OUTPUT_DIRECTORY={HELIOS_BUILD}']
+                  f'-DCMAKE_LIBRARY_OUTPUT_DIRECTORY={HELIOS_BUILD}',
+                  '-DCMAKE_BUILD_TYPE=Release']
     make_args = ['cmake', '--build', '.']
 
     # Create the log file and clear the existing one.

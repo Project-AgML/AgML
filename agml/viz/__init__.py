@@ -15,7 +15,8 @@
 from .tools import (
     format_image,
     set_colormap,
-    get_colormap
+    get_colormap,
+    convert_figure_to_image
 )
 from .masks import (
     output_to_mask,

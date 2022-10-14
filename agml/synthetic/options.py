@@ -16,7 +16,7 @@ import os
 from enum import Enum
 from numbers import Number
 from dataclasses import dataclass, fields, asdict
-from typing import List, Union, Sequence
+from typing import List, Union, Sequence, TypeVar
 
 from agml.framework import AgMLSerializable
 from agml.synthetic.config import load_default_helios_configuration, verify_helios
@@ -35,6 +35,9 @@ class SimulationType(Enum):
     """The simulation render (RGB vs. LiDAR) that is generated."""
     RGB: str = "rgb"
     LiDAR: str = "lidar"
+
+
+NumberOrMaybeList = TypeVar('NumberOrMaybeList', Number, List[Number])
 
 
 @dataclass(repr = False)
@@ -141,9 +144,9 @@ class CanopyParameters(Parameters):
     shoot_angle_tip: Number               = None
     shoot_angle_base: Number              = None
     shoot_color: List[Number]             = None
-    shoot_subdivisions: List[Number]      = None
+    shoot_subdivisions: NumberOrMaybeList = None
     pod_color: List[Number]               = None
-    pod_subdivisions: List[Number]        = None
+    pod_subdivisions: NumberOrMaybeList   = None
     pod_length: None                      = None
     germination_probability: Number       = None
     needle_width: Number                  = None

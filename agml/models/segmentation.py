@@ -27,7 +27,7 @@ from agml.models.tools import auto_move_data, imagenet_style_process
 from agml.data.public import source
 from agml.utils.general import resolve_list_value
 from agml.utils.image import resolve_image_size
-from agml.viz.masks import visualize_overlaid_masks
+from agml.viz.masks import visualize_overlaid_masks, visualize_image_and_mask
 
 
 class DeepLabV3Transfer(nn.Module):
@@ -215,7 +215,7 @@ class SegmentationModel(AgMLModelBase):
                 size = shape).int())))
         return resolve_list_value(masks)
 
-    def show_prediction(self, image):
+    def show_prediction(self, image, overlay = False, **kwargs):
         """Shows the output predictions for one input image.
 
         This method is useful for instantly visualizing the predictions
@@ -228,6 +228,11 @@ class SegmentationModel(AgMLModelBase):
         ----------
         image : Any
             See `preprocess_input()` for allowed types of inputs.
+        method : str
+            Either `True` for overlaid masks, or `False` for
+            visualizing the mask separately from the image.
+        kwargs
+            Visualization keyword arguments.
 
         Returns
         -------
@@ -235,7 +240,9 @@ class SegmentationModel(AgMLModelBase):
         """
         image = self._expand_input_images(image)[0]
         mask = self.predict(image)
-        return visualize_overlaid_masks(image, mask)
+        if overlay:
+            return visualize_overlaid_masks(image, mask, **kwargs)
+        return visualize_image_and_mask(image, mask, **kwargs)
 
     def load_benchmark(self, dataset):
         """Loads a benchmark for the given semantic segmentation dataset.
