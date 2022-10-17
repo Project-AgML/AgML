@@ -24,6 +24,28 @@ from PIL import Image
 import albumentations as A
 from albumentations.pytorch import ToTensorV2
 
+from agml.models.tools import imagenet_style_process as _isp
+
+
+def imagenet_preprocess(image, size = None):
+    """Preprocesses a single input image to ImageNet standards.
+
+    The preprocessing steps are applied logically; if the images
+    are passed with preprocessing already having been applied, for
+    instance, the images are already resized or they are already been
+    normalized, the operation is not applied again, for efficiency.
+
+    Preprocessing includes the following steps:
+
+    1. Resizing the image to size (224, 224).
+    2. Performing normalization with ImageNet parameters.
+    3. Converting the image into a PyTorch tensor format.
+
+    as well as other intermediate steps such as adding a channel
+    dimension for two-channel inputs, for example.
+    """
+    return _isp(image, size = size)
+
 
 class EfficientDetPreprocessor(object):
     """A preprocessor which prepares a data sample for `EfficientDet`.
