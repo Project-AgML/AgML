@@ -63,16 +63,27 @@ def set_colormap(colormap):
     1. "default": Traditional matplotlib RGB colors.
     2. "agriculture": Various shades of green (for agriculture).
 
+    If you want to set a custom colormap, then pass a list of RGB
+    values which will be used as the colormap.
+
     Parameters
     ----------
     colormap : str
         The colormap to set.
     """
     global _COLORMAP_CHOICE, _COLORMAPS
-    colormap = colormap.lower()
-    if colormap not in _COLORMAPS.keys():
-        raise ValueError(f"Invalid colormap {colormap} received.")
-    _COLORMAP_CHOICE = colormap
+    if isinstance(colormap, list):
+        if not all(len(i) == 3 for i in colormap):
+            raise ValueError(
+                "If you want a custom colormap, then pass a list of RGB values.")
+    elif isinstance(colormap, str):
+        colormap = colormap.lower()
+        if colormap not in _COLORMAPS.keys():
+            raise ValueError(f"Invalid colormap {colormap} received.")
+    else:
+        raise TypeError(f"Invalid colormap of type {type(colormap)}.")
+    _COLORMAPS['custom'] = colormap
+    _COLORMAP_CHOICE = 'custom'
 
 
 def auto_resolve_image(f):
