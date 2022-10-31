@@ -12,8 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-__version__ = '0.4.4'
-__all__ = ['data', 'backend', 'viz']
+__version__ = '0.4.5'
+__all__ = ['data', 'synthetic', 'backend', 'viz']
 
 
 # If AgML is being imported for the first time, then we need to setup
