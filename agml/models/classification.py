@@ -63,13 +63,14 @@ class ClassificationModel(AgMLModelBase):
     parameter `net`, and you'll need to implement methods like `training_step`,
     `configure_optimizers`, etc. See PyTorch Lightning for more information.
     """
-    serializable = frozenset(("model", ))
-    state_override = serializable
+    serializable = frozenset(("model", "regression"))
+    state_override = frozenset(("model",))
 
-    def __init__(self, num_classes):
+    def __init__(self, num_classes, regression = False):
         # Construct the network and load in pretrained weights.
         super(ClassificationModel, self).__init__()
         self._num_classes = num_classes
+        self._regression = regression
         self.net = self._construct_sub_net(num_classes)
 
     @auto_move_data
@@ -169,7 +170,10 @@ class ClassificationModel(AgMLModelBase):
         A `np.ndarray` with integer labels for each image.
         """
         images = self.preprocess_input(images)
-        return self._to_out(torch.squeeze(torch.argmax(self.forward(images), 1)))
+        out = self.forward(images)
+        if not self._regression: # standard classification
+            out = torch.argmax(out, 1)
+        return self._to_out(torch.squeeze(out))
 
     def evaluate(self, loader, **kwargs):
         """Runs an accuracy evaluation on the given loader.

@@ -63,21 +63,20 @@ def mean_average_precision(
     # Calculate average precision for each class.
     pred_boxes, true_boxes = torch.tensor(predicted_boxes), torch.tensor(truth_boxes)
     for c in range(num_classes):
+        # If there are no predictions, then the per-class AP is 0.
+        if len(pred_boxes) == 0:
+            average_precisions.append(torch.tensor(0.0))
+            continue
+
         # Get the predictions and targets corresponding to this class.
         detections = pred_boxes[torch.where(pred_boxes[:, 1] == c)[0]].tolist()
         ground_truths = true_boxes[torch.where(true_boxes[:, 1] == c)[0]].tolist()
+        torch_gt = torch.tensor(ground_truths)
 
         # If there are no ground truths, then the per-class AP is 0.
         if len(ground_truths) == 0:
-            average_precisions.append(0.0)
+            average_precisions.append(torch.tensor(0.0))
             continue
-
-        # Get all of the unique data samples and create a dictionary
-        # storing all of the corresponding bounding boxes for each sample.
-        training_ids = torch.unique(true_boxes[:, 0])
-        truth_samples_by_id = {
-            idx.numpy().item(): true_boxes[torch.where(true_boxes[:, 0] == idx)] # noqa
-            for idx in training_ids}
 
         # Determine the number of boxes for each of the training samples.
         numpy_gt = torch.tensor(ground_truths)
@@ -101,7 +100,8 @@ def mean_average_precision(
 
             # Only take out the ground_truths that have the same
             # training idx as the detection.
-            ground_truth_img = truth_samples_by_id[update_num]
+            ground_truth_img = torch_gt[
+                torch.where(torch_gt[:, 0] == update_num)[0]]
 
             # Get the bounding box with the highest IoU.
             ious = torch.tensor([bbox_iou(
@@ -198,6 +198,7 @@ class MeanAveragePrecision(nn.Module):
         pred_scores = np.squeeze(pred_scores)
         pred_labels, gt_labels, pred_scores = \
             self._scalar_to_array(pred_labels, gt_labels, pred_scores)
+        gt_boxes = np.squeeze(gt_boxes)
         if pred_boxes.ndim == 1:
             pred_boxes = np.expand_dims(pred_boxes, axis = 0)
         if gt_boxes.ndim == 1:
