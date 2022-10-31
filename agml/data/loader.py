@@ -270,7 +270,7 @@ class AgMLDataLoader(AgMLSerializable, metaclass = AgMLDataLoaderMeta):
                 kwargs.update(json.load(f))
 
         # Infer the classes for image classification/object detection.
-        classes = kwargs['classes']
+        classes = kwargs.pop('classes')
         if classes is None:
             if task == 'semantic_segmentation':
                 raise ValueError(
