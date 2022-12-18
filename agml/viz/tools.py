@@ -216,3 +216,18 @@ def convert_figure_to_image(fig = None):
     arr = np.fromstring(buf.read(), dtype = np.uint8)
     return cv2.imdecode(arr, cv2.IMREAD_COLOR)
 
+
+def _inference_best_shape(n_images):
+    """Inferences the best matplotlib row/column layout.
+
+    This method searches for the two closest factors of the number
+    `n_images`, and returns this tuple as the best shape, since this
+    is the closest to a square grid as possible.
+    """
+    a, b, i = 1, n_images, 0
+    while a < b:
+        i += 1
+        if n_images % i == 0:
+            a = i
+            b = n_images // a
+    return [b, a]

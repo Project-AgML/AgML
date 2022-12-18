@@ -224,10 +224,11 @@ class HeliosDataGenerator(AgMLSerializable):
                         f"`{output_path}`, clearing the directory.")
                     shutil.rmtree(output_path)
                     os.makedirs(output_path)
-                raise OSError(f"The provided directory for generation, "
-                              f"'{output_path}', is not empty. Please "
-                              f"clear out the contents of this directory "
-                              f"and try again.")
+                else:
+                    raise OSError(f"The provided directory for generation, "
+                                  f"'{output_path}', is not empty. Please "
+                                  f"clear out the contents of this directory "
+                                  f"and try again.")
         else:
             os.makedirs(output_path)
 
