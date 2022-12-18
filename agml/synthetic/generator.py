@@ -14,6 +14,7 @@
 
 import os
 import io
+import shutil
 import sys
 import json
 import datetime
@@ -34,6 +35,7 @@ from agml.synthetic.compilation import (
     HELIOS_BUILD, HELIOS_EXECUTABLE, XML_PATH, PROJECT_PATH
 )
 from agml.synthetic.converter import HeliosDataFormatConverter
+from agml.utils.logging import log
 
 
 @dataclass
@@ -213,10 +215,15 @@ class HeliosDataGenerator(AgMLSerializable):
         return cfg['canopy']['parameters']['Ground']
 
     @staticmethod
-    def _parse_output_path(output_path: str):
+    def _parse_output_path(output_path: str, clear_existing_files: bool):
         output_path = os.path.abspath(output_path)
         if os.path.exists(output_path) and os.path.isdir(output_path):
             if any(os.scandir(output_path)):
+                if clear_existing_files:
+                    log(f"Existing files found in the output directory "
+                        f"`{output_path}`, clearing the directory.")
+                    shutil.rmtree(output_path)
+                    os.makedirs(output_path)
                 raise OSError(f"The provided directory for generation, "
                               f"'{output_path}', is not empty. Please "
                               f"clear out the contents of this directory "
@@ -242,7 +249,8 @@ class HeliosDataGenerator(AgMLSerializable):
                  name: str = None,
                  num_images: int = 5,
                  output_dir: os.PathLike = None,
-                 convert_data: bool = True):
+                 convert_data: bool = True,
+                 clear_existing_files: bool = False):
         """Generates a batch of synthetic data using Helios.
 
         This method is the one which conducts the actual data generation using
@@ -309,6 +317,11 @@ class HeliosDataGenerator(AgMLSerializable):
         convert_data : {bool, optional}
             Whether to convert data to the AgML format after generation. If left to
             False, then data is left in the corresponding Helios format.
+        clear_existing_files : bool
+            If set to `True`, then this will clear any existing files in the directory
+            `output_dir` before regenerating data, if files remain. This is useful for
+            interactive mode, e.g., if you're repeatedly regenerating a dataset and
+            don't care to keep each iteration of it.
 
         Notes
         -----
@@ -333,7 +346,7 @@ class HeliosDataGenerator(AgMLSerializable):
             output_dir = synthetic_data_save_path()
         output_dir = os.path.join(output_dir, name)
         if os.path.exists(output_dir):
-            self._parse_output_path(output_dir)
+            self._parse_output_path(output_dir, clear_existing_files)
         else:
             os.makedirs(output_dir)
 
