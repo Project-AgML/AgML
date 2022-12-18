@@ -123,3 +123,5 @@ def shapes(seq):
         return [getattr(obj, 'shape', len(obj)) for obj in seq]
     except:
         raise ValueError(f"One or more of the objects has no shape or length: {seq}.")
+
+

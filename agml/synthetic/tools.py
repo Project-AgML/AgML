@@ -103,12 +103,10 @@ def generate_camera_positions(
         height: int = 1,
         aerial_parameters: dict = {}) -> Tuple:
     """Generates camera placement and lookat positions in the Helios format.
-
     This method, given the origin and a number of camera positions to generate
     (as specified in `num_views`), returns the 3-d coordinates of the camera
     positions as well as lookat vectors symbolizing their perspective of the
     provided origin point.
-
     Parameters
     ----------
     camera_type : str
@@ -126,7 +124,6 @@ def generate_camera_positions(
         The height of the cameras relative to the crop.
     aerial_angled : bool
         Whether the aeiral camera should be angled or directly facing down.
-
     Returns
     -------
     A tuple of two values: the camera positions and the lookat vectors.

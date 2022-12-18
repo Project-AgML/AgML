@@ -89,3 +89,22 @@ def is_image_file(file):
     end = os.path.splitext(file)[-1][1:]
     return end.lower() in ['jpg', 'jpeg', 'png', 'bmp', 'tiff']
 
+
+def load_code_from_string_or_file(code):
+    """Returns valid code either from the file `code` or the string `code`."""
+    if not isinstance(code, str):
+        raise TypeError(
+            f"`code` must be either a code string or a path to "
+            f"a code file, got {code} of type ({type(code)}).")
+
+    # Check if it is a path. Just because the path doesn't exist doesn't mean
+    # that it isn't a path: it could be an incorrect path.
+    if os.path.exists(code):
+        with open(code, 'r') as f:
+            code = f.read()
+    else:
+        if code.endswith('.cpp') or code.endswith('.cc') \
+                or code.endswith('.txt') or code.endswith('.py'):
+            raise ValueError(f"The provided file at {code} could not be found.")
+    return code
+

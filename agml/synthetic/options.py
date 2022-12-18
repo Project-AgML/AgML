@@ -78,8 +78,8 @@ class Parameters:
             annotation = (int, float)
         if not isinstance(value, annotation):
             raise TypeError(
-                f"Expected a value of type ({annotation}) for attribute "
-                f"'{key}', instead got '{value}' of type ({type(value)}).")
+               f"Expected a value of type ({annotation}) for attribute "
+               f"'{key}', instead got '{value}' of type ({type(value)}).")
         super().__setattr__(key, value)
 
 
@@ -239,7 +239,6 @@ class CameraParameters(Parameters):
             origin = origin, camera_spacing = camera_spacing,
             crop_distance = crop_distance, height = height,
             aerial_parameters = aerial_parameters)
-
 
 @dataclass(repr = False)
 class LiDARParameters(Parameters):

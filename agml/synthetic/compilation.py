@@ -36,7 +36,7 @@ HELIOS_EXECUTABLE = os.path.join(
 XML_PATH = os.path.join(PROJECT_PATH, 'xml')
 
 
-def _compile_helios_default():
+def _compile_helios_default(cmake_build_type = 'Release'):
     """Compiles the default Helios library upon installation and update."""
     if not os.path.exists(PROJECT_PATH):
         raise NotADirectoryError(
@@ -67,7 +67,7 @@ def _compile_helios_default():
     # Construct arguments for the compilation.
     cmake_args = ['cmake', '..', '-G', 'Unix Makefiles',
                   f'-DCMAKE_LIBRARY_OUTPUT_DIRECTORY={HELIOS_BUILD}',
-                  '-DCMAKE_BUILD_TYPE=Release']
+                  f'-DCMAKE_BUILD_TYPE={cmake_build_type}']
     make_args = ['cmake', '--build', '.']
 
     # Create the log file and clear the existing one.
@@ -177,7 +177,7 @@ def _compile_helios_executable_only():
     sys.stderr.write('\nHelios compilation successful!')
 
 
-def recompile_helios(executable_only = False):
+def recompile_helios(executable_only = False, debug_mode = False):
     """Recompiles the Helios library with the set parameters.
 
     This method can be used by the user in order to recompile Helios, if, for
@@ -187,11 +187,23 @@ def recompile_helios(executable_only = False):
     If just the `generate.cpp` file itself is edited, then you can pass the
     parameter `executable_only` as `True`, which will result in a much quicker
     compilation as just the generation file itself is edited.
+
+    Parameters
+    ----------
+    executable_only : bool
+        Whether to compile only the `generate.cpp` executable.
+    debug_mode : bool
+        Whether to compile the entirety of Helios in Debug mode (defaults to
+        Release). Debug mode is more verbose, but Release mode is faster.
     """
+    if executable_only and debug_mode:
+        raise ValueError("If you want to compile the build in `Debug` mode, "
+                         "you cannot compile only the executable.")
     if executable_only:
         _compile_helios_executable_only()
     else:
-        _compile_helios_default()
+        cmake_build_type = 'Debug' if debug_mode else 'Release'
+        _compile_helios_default(cmake_build_type = cmake_build_type)
 
 
 def _compilation_failed(helios_temp_dir, temp_dir):
