@@ -123,3 +123,11 @@ def shapes(seq):
         return [getattr(obj, 'shape', len(obj)) for obj in seq]
     except:
         raise ValueError(f"One or more of the objects has no shape or length: {seq}.")
+
+
+def load_code_from_string_or_file(code):
+    """Returns valid code either from the file `code` or the string `code`."""
+    if not isinstance(code, str):
+        raise TypeError(
+            f"`code` must be either a code string or a path to "
+            f"a code file, got {code} of type ({type(code)}).")
