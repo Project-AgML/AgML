@@ -33,3 +33,4 @@ from .config import (
     available_canopies,
     default_canopy_parameters
 )
+from .manual import generate_manual_data

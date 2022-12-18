@@ -15,13 +15,11 @@
 import os
 import re
 import sys
-import shutil
 import subprocess as sp
 
 from agml.backend.config import SUPER_BASE_DIR
 from agml.synthetic.config import HELIOS_PATH
-from agml.utils.io import recursive_dirname
-from agml.utils.general import load_code_from_string_or_file
+from agml.utils.io import recursive_dirname, load_code_from_string_or_file
 from agml.utils.logging import log
 
 
@@ -77,22 +75,23 @@ def generate_manual_data(code = None,
         Whether to compile Helios in debug or release mode.
     """
     if not files_already_placed:
-        process_and_move_files(code = code,
-                               cmake = cmake,
-                               xml = xml,
-                               project_name = project_name,
-                               project_path = project_path,
-                               overwrite_existing_files = overwrite_existing_files)
+        project_path, project_name, cmake = process_and_move_files(
+            code = code,
+            cmake = cmake,
+            xml = xml,
+            project_name = project_name,
+            project_path = project_path,
+            overwrite_existing_files = overwrite_existing_files)
     else:
         # Still run the project name/path check.
-        if not project_name and not project_path:
+        if project_name is None and project_path is None:
             raise ValueError("You need to provide either the project name or project path.")
-        if project_name and project_path:
+        if project_name is not None and project_path is not None:
             raise ValueError("Do not provide both the project name and path, just use one.")
 
-        if project_name and not project_path:
+        if project_name is not None and project_path is None:
             project_path = os.path.join(HELIOS_PATH, 'projects', project_name)
-        if project_path and not project_name:
+        if project_path is not None and project_name is None:
             project_name = os.path.basename(project_path)
             if not os.path.exists(project_path):
                 if not os.path.exists(recursive_dirname(project_path, 2)):
@@ -118,7 +117,7 @@ def generate_manual_data(code = None,
             current_cpp = f.read()
         if legacy_cpp == current_cpp:
             cpp_same = True
-            
+
         # Check if the CMake file has changed.
         with open(os.path.join(SUPER_BASE_DIR, '.last_manual_compilation_cmake.txt'), 'r') as f:
             legacy_cmake = f.read()
@@ -136,6 +135,7 @@ def generate_manual_data(code = None,
                       f'-DCMAKE_BUILD_TYPE={cmake_build_type}']
         make_args = ['cmake', '--build', '.']
         log_file = os.path.join(SUPER_BASE_DIR, '.last_helios_manual_compilation.log')
+        os.unlink(log_file)
 
         # Create the build directory again, since it has been moved.
         os.makedirs(helios_build, exist_ok = True)
@@ -194,6 +194,12 @@ def generate_manual_data(code = None,
     process.stdout.close()
     process.wait()
 
+    # Save the existing files for comparison in future runs.
+    with open(os.path.join(SUPER_BASE_DIR, '.last_manual_compilation_cpp.cpp'), 'w') as f:
+        f.write(code)
+    with open(os.path.join(SUPER_BASE_DIR, '.last_manual_compilation_cmake.txt'), 'w') as f:
+        f.write(cmake)
+
 
 def process_and_move_files(code = None,
                            cmake = None,
@@ -222,22 +228,6 @@ def process_and_move_files(code = None,
                 fname = fname[1:-1]
             xml_fname = fname
 
-    # Create the CMake file.
-    if cmake is None:
-        cmake_default = os.path.join(
-            os.path.dirname(__file__),
-            'synthetic_data_generation', 'CMakeLists.txt')
-        if 'lidar' in code:
-            log("Detected a reference to LiDAR annotations in the provided"
-                "C++ generation file. Since no CMake file has been provided,"
-                "the LiDAR plugin will be automatically used.")
-            cmake_default.replace(
-                'set( PLUGINS "visualizer;canopygenerator;syntheticannotation" )',
-                'set( PLUGINS "visualizer;canopygenerator;syntheticannotation;lidar" )')
-            cmake_default.replace('generate.cpp', 'main.cpp')
-    else:
-        cmake = load_code_from_string_or_file(cmake)
-
     # Create the project directory.
     if not project_name and not project_path:
         raise ValueError("You need to provide either the project name or project path.")
@@ -258,12 +248,31 @@ def process_and_move_files(code = None,
     if any(os.scandir(project_path)):
         if overwrite_existing_files:
             log(f"Existing files found at ({project_path}). Overwriting them.")
-            shutil.rmtree(project_path)
-            os.makedirs(project_path)
+            os.makedirs(project_path, exist_ok = True)
         else:
             raise ValueError(
                 f"Existing files found at ({project_path}). If you want to "
                 f"overwrite them, use the `overwrite_existing_files` argument.")
+
+    # Create the CMake file.
+    if cmake is None:
+        cmake_default_path = os.path.join(
+            os.path.dirname(__file__),
+            'synthetic_data_generation', 'CMakeLists.txt')
+        with open(cmake_default_path, 'r') as f:
+            cmake_default = f.read()
+        if 'lidar' in code:
+            log("Detected a reference to LiDAR annotations in the provided"
+                "C++ generation file. Since no CMake file has been provided,"
+                "the LiDAR plugin will be automatically used.")
+            cmake_default = cmake_default.replace(
+                'set( PLUGINS "visualizer;canopygenerator;syntheticannotation" )',
+                'set( PLUGINS "visualizer;canopygenerator;syntheticannotation;lidar" )')
+        cmake = cmake_default.replace('generate.cpp', 'main.cpp').replace(
+            'SyntheticImageAnnotation', project_name
+        )
+    else:
+        cmake = load_code_from_string_or_file(cmake)
 
     # Move in the necessary files.
     with open(os.path.join(project_path, 'main.cpp'), 'w') as f:
@@ -273,5 +282,8 @@ def process_and_move_files(code = None,
     if xml is not None:
         with open(os.path.join(project_path, xml_fname)) as f:
             f.write(xml)
+
+    # Return the project name and path.
+    return project_path, project_name, cmake
 
 
