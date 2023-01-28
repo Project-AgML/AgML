@@ -66,12 +66,13 @@ class ClassificationModel(AgMLModelBase):
     serializable = frozenset(("model", "regression"))
     state_override = frozenset(("model",))
 
-    def __init__(self, num_classes, regression = False):
+    def __init__(self, num_classes = None, regression = False, **kwargs):
         # Construct the network and load in pretrained weights.
         super(ClassificationModel, self).__init__()
-        self._num_classes = num_classes
-        self._regression = regression
-        self.net = self._construct_sub_net(num_classes)
+        if kwargs.get('model_initialized', False):
+            self._num_classes = num_classes
+            self._regression = regression
+            self.net = self._construct_sub_net(num_classes)
 
     @auto_move_data
     def forward(self, batch):
