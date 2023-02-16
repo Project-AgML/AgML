@@ -114,5 +114,9 @@
     "white_grapes_and_leaves_segmentation": {
         "license": "",
         "citation": "@inproceedings{kalampokas2020semantic,\n  title={Semantic segmentation of vineyard images using convolutional neural networks},\n  author={Kalampokas, Theofanis and Tziridis, Konstantinos and Nikolaou, Alexandros and Vrochidou, Eleni and Papakostas, George A and Pachidis, Theodore and Kaburlasos, Vassilis G},\n  booktitle={International Conference on Engineering Applications of Neural Networks},\n  pages={292--303},\n  year={2020},\n  organization={Springer}}"
+    },
+    "sugarbeet_weed_segmentation_europe": {
+        "license": "CC BY-SA 4.0",
+        "citation": "@ARTICLE{weedMap-2018, \n  author={I. Sa, M. Popovic, R. Khanna, Z. Chen, P. Lottes, F. Liebisch, J. Nieto, C. Stachniss, A. Walter, and R. Siegwart}, \n  journal={MDPI Remote Sensing}, \n  title={WeedMap: A large-scale semantic weed mapping framework using aerial multispectral imaging and deep neural network for precision farming}, \n  year={2018}, \n  volume={10}, \n  number={9}, \n  doi={doi: 10.3390/rs10091423}, \n  month={Aug}}"
     }
 }

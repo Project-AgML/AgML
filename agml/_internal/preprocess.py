@@ -39,8 +39,9 @@ from agml.utils.io import create_dir, nested_dir_list, get_dir_list, get_file_li
 from agml.utils.data import load_public_sources
 from agml._internal.process_utils import (
     read_txt_file, get_image_info, get_label2id,
-    convert_bbox_to_coco, get_coco_annotation_from_obj,
-    convert_xmls_to_cocojson, move_segmentation_dataset,
+    convert_bbox_to_coco, get_coco_annotation_from_obj, convert_xmls_to_cocojson,
+    mask_annotation_per_bbox, move_segmentation_dataset,
+    create_sub_masks, create_sub_mask_annotation_per_bbox, rgb2mask
 )
 
 
@@ -869,22 +870,22 @@ class PublicDataPreprocessor(object):
         label2id = {"Wheat Head": 1}
         dataset_dir = os.path.join(self.data_original_dir, dataset_name)
         anno_files = [os.path.join(dataset_dir, 'competition_train.csv'), os.path.join(dataset_dir, 'competition_test.csv'), os.path.join(dataset_dir, 'competition_val.csv')]
-        
+
         annotations = []
         for anno_file in anno_files:
-          with open(anno_file, 'r') as file:
-              reader = csv.reader(file)
-              for row in reader:
-                  img_path = os.path.join(dataset_dir, "images", row[0])
-                  anno = [img_path]
-                  bboxs = row[1].split(";")
-                  anno.append(len(bboxs))
-                  for bbox in bboxs:
-                      if bbox != "no_box":
-                        bbox = bbox.split(" ")
-                        bbox.append("1")
-                        anno.append(bbox)
-                  annotations.append(anno)
+            with open(anno_file, 'r') as file:
+                reader = csv.reader(file)
+                for row in reader:
+                    img_path = os.path.join(dataset_dir, "images", row[0])
+                    anno = [img_path]
+                    bboxs = row[1].split(";")
+                    anno.append(len(bboxs))
+                    for bbox in bboxs:
+                        if bbox != "no_box":
+                            bbox = bbox.split(" ")
+                            bbox.append("1")
+                            anno.append(bbox)
+                    annotations.append(anno)
 
         # Define path to processed annotation files
         output_json_file = os.path.join(
@@ -893,7 +894,7 @@ class PublicDataPreprocessor(object):
         # Create directory for processed image files
         output_img_path = os.path.join(
             self.data_processed_dir, dataset_name, 'images')
-        create_dir(output_img_path) 
+        create_dir(output_img_path)
 
         general_info = {
             "description": "Global Wheat Head Detection (GWHD) dataset",
@@ -909,40 +910,108 @@ class PublicDataPreprocessor(object):
             output_img_path, general_info, resize=512/1024)
 
     def peachpear_flower_segmentation(self, dataset_name):
-      # Create processed directories 
-      processed_dir = os.path.join(self.data_processed_dir, dataset_name)
-      os.makedirs(processed_dir, exist_ok = True)
-      processed_image_dir = os.path.join(processed_dir, 'images')
-      os.makedirs(processed_image_dir, exist_ok = True)
-      processed_annotation_dir = os.path.join(processed_dir, 'annotations')
-      os.makedirs(processed_annotation_dir, exist_ok = True)
+        # Create processed directories
+        processed_dir = os.path.join(self.data_processed_dir, dataset_name)
+        os.makedirs(processed_dir, exist_ok = True)
+        processed_image_dir = os.path.join(processed_dir, 'images')
+        os.makedirs(processed_image_dir, exist_ok = True)
+        processed_annotation_dir = os.path.join(processed_dir, 'annotations')
+        os.makedirs(processed_annotation_dir, exist_ok = True)
 
-      dataset_dir = os.path.join(self.data_original_dir, dataset_name)
+        dataset_dir = os.path.join(self.data_original_dir, dataset_name)
 
-      # Get image files
-      img_dirs = ["Peach", "Pear"]
-      img_paths = []
-      for img_dir in img_dirs:
-        img_paths += [os.path.join(dataset_dir, img_dir, file_name) for file_name in get_file_list(os.path.join(dataset_dir, img_dir))]
+        # Get image files
+        img_dirs = ["Peach", "Pear"]
+        img_paths = []
+        for img_dir in img_dirs:
+            img_paths += [os.path.join(dataset_dir, img_dir, file_name) for file_name in get_file_list(os.path.join(dataset_dir, img_dir))]
 
-      # Save all images as jpg in processed directory
-      for img_path in img_paths:
-        processed_path = os.path.join(processed_image_dir, img_path.split('/')[-1].replace('.bmp', '.jpg'))
-        img = cv2.imread(img_path)
-        cv2.imwrite(processed_path, img)
+        # Save all images as jpg in processed directory
+        for img_path in img_paths:
+            processed_path = os.path.join(processed_image_dir, img_path.split('/')[-1].replace('.bmp', '.jpg'))
+            img = cv2.imread(img_path)
+            cv2.imwrite(processed_path, img)
 
-      # Get annotation files
-      anno_dirs = ["PeachLabels", "PearLabels"]
-      anno_paths = []
-      for anno_dir in anno_dirs:
-        anno_paths += [os.path.join(dataset_dir, anno_dir, file_name) for file_name in get_file_list(os.path.join(dataset_dir, anno_dir))]
+        # Get annotation files
+        anno_dirs = ["PeachLabels", "PearLabels"]
+        anno_paths = []
+        for anno_dir in anno_dirs:
+            anno_paths += [os.path.join(dataset_dir, anno_dir, file_name) for file_name in get_file_list(os.path.join(dataset_dir, anno_dir))]
 
-      # Transform mask and save to processed directory
-      for anno_path in anno_paths:
-        img = cv2.imread(anno_path, cv2.IMREAD_GRAYSCALE)
-        img = np.where(img[:] == 255, 1, 0)
-        processed_path = os.path.join(processed_annotation_dir, anno_path.split('/')[-1])
-        cv2.imwrite(processed_path, img)
+        # Transform mask and save to processed directory
+        for anno_path in anno_paths:
+            img = cv2.imread(anno_path, cv2.IMREAD_GRAYSCALE)
+            img = np.where(img[:] == 255, 1, 0)
+            processed_path = os.path.join(processed_annotation_dir, anno_path.split('/')[-1])
+            cv2.imwrite(processed_path, img)
+
+    def sugarbeet_weed_segmentation_europe(self, dataset_name):
+        dataset_dir = os.path.join(self.data_original_dir, dataset_name)
+        tiles_dir = os.path.join(dataset_dir, 'Tiles')
+        rgb_paths, r_paths, g_paths, b_paths, cir_paths, ndvi_paths, nir_paths, re_paths, binary_masks, rgb_masks = \
+            ['rgb-images'], ['images'], ['g-images'], ['b-images'], ['cir-images'], \
+            ['ndvi-images'], ['nir-images'], ['re-images'], ['binary_masks-images'], []
+
+        def getImages(root, files):
+            images = []
+            for file in sorted(files):
+                unique_name = root.split('/')[-3] + file
+                images.append([os.path.join(root, file), unique_name])
+            return images
+
+        # Get image paths for each type of image
+        for root, subdirs, files in os.walk(tiles_dir):
+            dir_ = root.split('/')[-1]
+            if dir_ == 'R':
+                r_paths.extend(getImages(root, files))
+            elif dir_ == 'G':
+                g_paths.extend(getImages(root, files))
+            elif dir_ == 'CIR':
+                cir_paths.extend(getImages(root, files))
+            elif dir_ == 'NDVI':
+                ndvi_paths.extend(getImages(root, files))
+            elif dir_ == 'NIR':
+                nir_paths.extend(getImages(root, files))
+            elif dir_ == 'RE':
+                re_paths.extend(getImages(root, files))
+            elif dir_ == 'mask':
+                for file in sorted(files):
+                    unique_name = root.split('/')[-2] + file
+                    binary_masks.append([os.path.join(root, file), unique_name])
+            elif dir_ == 'B':
+                b_paths.extend(getImages(root, files))
+            elif dir_ == 'RGB':
+                rgb_paths.extend(getImages(root, files))
+            elif dir_ == 'groundtruth':
+                for file in sorted(files):
+                    if file.split('_')[-1] == 'color.png':
+                        rgb_masks.append([os.path.join(root, file), file])
+
+        image_types = [rgb_paths, r_paths, g_paths, b_paths, cir_paths, ndvi_paths, nir_paths, re_paths, binary_masks]
+
+        processed_dir = os.path.join(self.data_processed_dir, dataset_name)
+        os.makedirs(processed_dir, exist_ok = True)
+        processed_annotation_dir = os.path.join(processed_dir, 'annotations')
+        os.makedirs(processed_annotation_dir, exist_ok = True)
+
+        for image_type in image_types:
+            processed_image_dir = os.path.join(processed_dir, image_type[0])
+            os.makedirs(processed_image_dir, exist_ok = True)
+            for image_path in image_type[1:]:
+                shutil.copyfile(image_path[0], os.path.join(processed_image_dir, image_path[1]))
+
+        color2index = {
+            (0, 0, 0): 0,  # black is background
+            (0, 255, 0): 1,  # green is sugarbeet
+            (0, 0, 255): 2,  # red is weed
+        }
+
+        for rgb_mask in rgb_masks:
+            rgb_mask_img = cv2.imread(rgb_mask[0])
+            index_mask = rgb2mask(rgb_mask_img, color2index)
+            mask_name = rgb_mask[1].split('_')[0] + rgb_mask[1].split('_')[1] + ".png"
+            anno_out = os.path.join(processed_annotation_dir, mask_name)
+            cv2.imwrite(anno_out, index_mask)
 
 
 if __name__ == '__main__':
