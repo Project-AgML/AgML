@@ -167,8 +167,6 @@ class HeliosDataFormatConverter(object):
             image_id_map[image] = indx + 1
             fpath = os.path.basename(image_new_map[image])
             image_coco.append({
-                #'file_name': fpath, 'height': self._meta.image_size[0],
-                #'width': self._meta.image_size[1], 'id': indx + 1})
                 'file_name': fpath, 'width': self._meta.image_size[0],
                 'height': self._meta.image_size[1], 'id': indx + 1})
 
@@ -202,7 +200,6 @@ class HeliosDataFormatConverter(object):
 
     def _convert_text_files_to_object_annotations(self, image_dir):
         """Converts text file annotations to COCO JSON object annotations."""
-        #height, width = self._meta.image_size
         width, height = self._meta.image_size
         txt_fmt = os.path.join(image_dir, 'rectangular_labels_{0}.txt')
 
