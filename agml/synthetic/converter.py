@@ -167,8 +167,10 @@ class HeliosDataFormatConverter(object):
             image_id_map[image] = indx + 1
             fpath = os.path.basename(image_new_map[image])
             image_coco.append({
-                'file_name': fpath, 'height': self._meta.image_size[0],
-                'width': self._meta.image_size[1], 'id': indx + 1})
+                #'file_name': fpath, 'height': self._meta.image_size[0],
+                #'width': self._meta.image_size[1], 'id': indx + 1})
+                'file_name': fpath, 'width': self._meta.image_size[0],
+                'height': self._meta.image_size[1], 'id': indx + 1})
 
         # Generate the annotation COCO JSON contents.
         annotation_coco = []
@@ -200,7 +202,8 @@ class HeliosDataFormatConverter(object):
 
     def _convert_text_files_to_object_annotations(self, image_dir):
         """Converts text file annotations to COCO JSON object annotations."""
-        height, width = self._meta.image_size
+        #height, width = self._meta.image_size
+        width, height = self._meta.image_size
         txt_fmt = os.path.join(image_dir, 'rectangular_labels_{0}.txt')
 
         # Read each of the files corresponding to the given labels.
@@ -223,18 +226,20 @@ class HeliosDataFormatConverter(object):
             with open(path, 'r') as f:
                 annotations = np.array(
                     [line.replace('\n', '').strip().split(' ') for line in f.readlines()])
+
+            if len(annotations) > 0:
                 annotations = annotations[:, 1:].astype(np.float32)
 
-            # Convert the bounding boxes to COCO JSON format.
-            x_c, y_c, w, h = np.rollaxis(annotations, 1)
-            x_min = (x_c - w / 2) * width
-            y_min = ((1 - y_c) - h / 2) * height
-            w = w * width
-            h = h * height
-            coords = np.dstack([x_min, y_min, w, h])[0].astype(np.int32)
+                # Convert the bounding boxes to COCO JSON format.
+                x_c, y_c, w, h = np.rollaxis(annotations, 1)
+                x_min = (x_c - w / 2) * width
+                y_min = ((1 - y_c) - h / 2) * height
+                w = w * width
+                h = h * height
+                coords = np.dstack([x_min, y_min, w, h])[0].astype(np.int32)
 
-            # Update the bounding box dictionary.
-            bboxes[indx + 1] = coords
+                # Update the bounding box dictionary.
+                bboxes[indx + 1] = coords
 
         # Return the bounding box dictionary.
         return bboxes
