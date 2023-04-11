@@ -89,7 +89,7 @@ class DataBuilder(AgMLSerializable):
         for image_id, (_, annotation) in enumerate(data.items()):
             for a in annotation:
                 a['id'] = image_id
-            annotation_coco.append(annotation)
+            annotation_coco.extend(annotation)
 
         # Update the complete COCO dictionary.
         ret_coco = coco.copy()

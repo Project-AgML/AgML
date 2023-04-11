@@ -944,6 +944,19 @@ class PublicDataPreprocessor(object):
         processed_path = os.path.join(processed_annotation_dir, anno_path.split('/')[-1])
         cv2.imwrite(processed_path, img)
 
+    def ghai_romaine_detection(self, dataset_name):
+        # Create processed directories
+        original_dir = os.path.join(self.data_original_dir, dataset_name)
+        processed_dir = os.path.join(self.data_processed_dir, dataset_name)
+        processed_image_dir = os.path.join(processed_dir, 'images')
+        os.makedirs(processed_image_dir, exist_ok = True)
+
+        # Move images
+        for image in glob.glob(os.path.join(original_dir, '*.jpg')):
+            shutil.move(image, processed_image_dir)
+        shutil.move(os.path.join(original_dir, 'coco.json'),
+                    os.path.join(processed_dir, 'annotations.json'))
+
 
 if __name__ == '__main__':
     # Initialize program arguments.
