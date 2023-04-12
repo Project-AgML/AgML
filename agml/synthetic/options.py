@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import os
-import json
 from enum import Enum
 from numbers import Number
 from dataclasses import dataclass, fields, asdict
@@ -330,12 +329,19 @@ class HeliosOptions(AgMLSerializable):
         return self._lidar_parameters
     
     @property
-    def annotation_type(self) -> str:
-        return self._annotation_type
+    def annotation_type(self) -> List:
+        # The returned annotation type needs to be a list. If there is only
+        # one type of annotation (the most common situation), then this makes sure
+        # that it is passed in a list format to the Helios data generator.
+        at = self._annotation_type
+        return at if isinstance(at, list) else [at]
     
     @annotation_type.setter
-    def annotation_type(self, value: Union[AnnotationType, str]):
-        self._annotation_type = AnnotationType(value)
+    def annotation_type(self, value: Union[AnnotationType, str, List[Union[AnnotationType, str]]]):
+        if isinstance(value, list):
+            self._annotation_type = [AnnotationType(v) for v in value]
+        else:
+            self._annotation_type = AnnotationType(value)
 
     @property
     def simulation_type(self) -> str:

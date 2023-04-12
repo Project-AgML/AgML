@@ -10,7 +10,7 @@ using namespace helios;
 struct SyntheticAnnotationConfig {
 public:
     int num_images;
-    string annotation_type;
+    vector<string> annotation_type;
     string simulation_type;
     vector<string> labels;
     string xml_path;
@@ -44,6 +44,12 @@ void SyntheticAnnotationConfig::load_config(const char* path) {
         if (i == 0) {
             this->num_images = stoi(line);
         } else if (i == 1) {
+            string delimeter = " "; size_t pos;
+            vector<string> annotation_types;
+            while ((pos = line.find(' ')) != string::npos) {
+                annotation_types.push_back(line.substr(0, pos));
+                line.erase(0, pos + delimeter.length());
+            }
             this->annotation_type = line;
         } else if (i == 2) {
             this->simulation_type = line;
@@ -143,34 +149,35 @@ int main(int argc, char** argv) {
 
         if (config.annotation_type != "none") {
             // Set the annotation type based on the configuration.
-            if (config.annotation_type != "semantic_segmentation") {
+            vector<string> va = config.annotation_type;
+            if (!contains(va, "semantic_segmentation")) {
                 annotation.disableSemanticSegmentation();
             }
-            if (config.annotation_type != "object_detection") {
+            if (!contains(va, "object_detection")) {
                 annotation.disableObjectDetection();
             }
-            if (config.annotation_type != "instance_segmentation") {
+            if (!contains(va, "instance_segmentation")) {
                 annotation.disableInstanceSegmentation();
             }
 
             // Add labels according to whatever scheme we want.
-            vector<string> v = config.labels;
+            vector<string> vl = config.labels;
             for(int p = 0; p < cgen.getPlantCount(); p++) { // loop over vines
                 if (config.simulation_type == "rgb") {
-                    if (contains(v, "trunks")) {
+                    if (contains(vl, "trunks")) {
                         annotation.labelPrimitives(cgen.getTrunkUUIDs(p), "trunks");
                     }
-                    if (contains(v, "branches")) {
+                    if (contains(vl, "branches")) {
                         annotation.labelPrimitives(cgen.getBranchUUIDs(p), "branches");
                     }
-                    if (contains(v, "cordon")) {
+                    if (contains(vl, "cordon")) {
                         // Not implemented?
                         // annotation.labelPrimitives(cgen.getCordonUUIDs(p), "cordon");
                     }
-                    if (contains(v, "leaves")) {
+                    if (contains(vl, "leaves")) {
                         annotation.labelPrimitives(cgen.getLeafUUIDs(p), "leaves");
                     }
-                    if (contains(v, "fruits")) {
+                    if (contains(vl, "fruits")) {
                         std::vector<std::vector<std::vector<uint>>> fruitUUIDs = cgen.getFruitUUIDs(p);
                         for(int c = 0; c < fruitUUIDs.size(); c++){ // loop over fruit clusters
                             annotation.labelPrimitives( flatten(fruitUUIDs.at(c)), "clusters" );
