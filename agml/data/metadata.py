@@ -41,6 +41,8 @@ def make_metadata(name, meta = None):
     the dataset. Otherwise, it returns a `CustomDatasetMetadata` object,
     containing only the provided information in a `meta` dictionary.
     """
+    if isinstance(name, DatasetMetadata):
+        name = name.name
     if isinstance(name, (list, tuple, set, frozenset)): # a single dataset
         name = next(iter(name))
     if name in load_public_sources().keys():

@@ -114,5 +114,13 @@
     "white_grapes_and_leaves_segmentation": {
         "license": "",
         "citation": "@inproceedings{kalampokas2020semantic,\n  title={Semantic segmentation of vineyard images using convolutional neural networks},\n  author={Kalampokas, Theofanis and Tziridis, Konstantinos and Nikolaou, Alexandros and Vrochidou, Eleni and Papakostas, George A and Pachidis, Theodore and Kaburlasos, Vassilis G},\n  booktitle={International Conference on Engineering Applications of Neural Networks},\n  pages={292--303},\n  year={2020},\n  organization={Springer}}"
+    },
+    "ghai_romaine_detection": {
+        "license": "CC BY-SA 4.0",
+        "citation": ""
+    },
+    "ghai_green_cabbage_detection": {
+        "license": "CC BY-SA 4.0",
+        "citation": ""
     }
 }

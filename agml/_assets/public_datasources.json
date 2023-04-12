@@ -1043,5 +1043,67 @@
                 0.25335168838500977
             ]
         }
+    },
+    "ghai_romaine_detection": {
+        "classes": {
+            "1": "romaine"
+        },
+        "ml_task": "object_detection",
+        "ag_task": "crop_detection",
+        "location": {
+            "continent": "north_america",
+            "country": "usa"
+        },
+        "sensor_modality": "rgb",
+        "real_synthetic": "real",
+        "platform": "handheld/ground",
+        "input_data_format": "jpg",
+        "annotation_format": "coco_json",
+        "n_images": "500",
+        "docs_url": "https://github.com/AxisAg/GHAIDatasets/blob/main/datasets/romaine.md",
+        "external_image_sources": [],
+        "stats": {
+            "mean": [
+                0.3551516532897949,
+                0.4719887971878052,
+                0.33378446102142334
+            ],
+            "std": [
+                0.253168523311615,
+                0.26515713334083557,
+                0.2393222600221634
+            ]
+        }
+    },
+    "ghai_green_cabbage_detection": {
+        "classes": {
+            "1": "green_cabbage"
+        },
+        "ml_task": "object_detection",
+        "ag_task": "crop_detection",
+        "location": {
+            "continent": "north_america",
+            "country": "usa"
+        },
+        "sensor_modality": "rgb",
+        "real_synthetic": "real",
+        "platform": "handheld/ground",
+        "input_data_format": "jpg",
+        "annotation_format": "coco_json",
+        "n_images": "500",
+        "docs_url": "https://github.com/AxisAg/GHAIDatasets/blob/main/datasets/green_cabbage.md",
+        "external_image_sources": [],
+        "stats": {
+            "mean": [
+                0.4649180769920349,
+                0.49569201469421387,
+                0.46829652786254883
+            ],
+            "std": [
+                0.28846681118011475,
+                0.27976617217063904,
+                0.276553213596344
+            ]
+        }
     }
 }
