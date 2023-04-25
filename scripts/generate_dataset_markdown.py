@@ -152,6 +152,31 @@ def generate_markdown(name):
             examples = build_examples(name)))
 
 
+def update_readme(datasets):
+    # Find the part of the README where datasets are listed out.
+    with open(os.path.join(LOCAL_AGML_REPO, 'README.md'), 'r') as f:
+        original_readme = [i[:-1] for i in f.readlines()]
+    with open(os.path.join(LOCAL_AGML_REPO, 'README.md'), 'r') as f:
+        original_readme_full = f.read()
+    end_line = original_readme.index('## Usage Information') - 1
+
+    # Update the README.
+    for ds in tqdm(datasets):
+        if ds.name not in original_readme_full:
+            content = '[{name}]({url}) | {task} | {num_images} |'.format(
+                name = ds.name,
+                url = f'https://github.com/Project-AgML/AgML/blob/main/docs/datasets/{ds.name}.md',
+                task = to_title(ds.tasks.ml),
+                num_images = ds.num_images
+            )
+            original_readme.insert(end_line, content)
+            end_line += 1
+
+    # Rewrite the README.
+    with open(os.path.join(LOCAL_AGML_REPO, 'README.md'), 'w') as f:
+        f.write('\n'.join(original_readme))
+
+
 if __name__ == '__main__':
     os.makedirs(os.path.join(LOCAL_AGML_REPO, 'docs/datasets'), exist_ok = True)
     os.makedirs(os.path.join(LOCAL_AGML_REPO, 'docs/sample_images'), exist_ok = True)
@@ -159,6 +184,10 @@ if __name__ == '__main__':
     for ds in tqdm(datasets):
         if not os.path.exists(os.path.join(LOCAL_AGML_REPO, 'docs/datasets', f'{ds.name}.md')):
             generate_markdown(ds.name)
+            pass
+
+    # Update the README with any new datasets.
+    update_readme(datasets)
 
 
 

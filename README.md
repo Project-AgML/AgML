@@ -131,6 +131,9 @@ You're now ready to use AgML for training your own models!
 [peachpear_flower_segmentation](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/peachpear_flower_segmentation.md) | Semantic Segmentation | 42 | 
 [red_grapes_and_leaves_segmentation](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/red_grapes_and_leaves_segmentation.md) | Semantic Segmentation | 258 | 
 [white_grapes_and_leaves_segmentation](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/white_grapes_and_leaves_segmentation.md) | Semantic Segmentation | 273 | 
+[ghai_romaine_detection](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/ghai_romaine_detection.md) | Object Detection | 500 |
+[ghai_green_cabbage_detection](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/ghai_green_cabbage_detection.md) | Object Detection | 500 |
+[ghai_iceberg_lettuce_detection](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/ghai_iceberg_lettuce_detection.md) | Object Detection | 500 |
 
 ## Usage Information
 
