@@ -122,5 +122,9 @@
     "ghai_green_cabbage_detection": {
         "license": "CC BY-SA 4.0",
         "citation": ""
+    },
+    "ghai_iceberg_lettuce_detection": {
+        "license": "CC BY-SA 4.0",
+        "citation": ""
     }
 }

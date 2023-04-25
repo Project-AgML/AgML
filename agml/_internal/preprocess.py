@@ -970,11 +970,24 @@ class PublicDataPreprocessor(object):
         shutil.move(os.path.join(original_dir, 'coco.json'),
                     os.path.join(processed_dir, 'annotations.json'))
 
+    def ghai_iceberg_lettuce_detection(self, dataset_name):
+        # Create processed directories
+        original_dir = os.path.join(self.data_original_dir, dataset_name)
+        processed_dir = os.path.join(self.data_processed_dir, dataset_name)
+        processed_image_dir = os.path.join(processed_dir, 'images')
+        os.makedirs(processed_image_dir, exist_ok = True)
+
+        # Move images
+        for image in glob.glob(os.path.join(original_dir, '*.jpg')):
+            shutil.move(image, processed_image_dir)
+        shutil.move(os.path.join(original_dir, 'coco.json'),
+                    os.path.join(processed_dir, 'annotations.json'))
+
 
 if __name__ == '__main__':
     # Initialize program arguments.
     ap = argparse.ArgumentParser()
-    ap.add_argument("--data_dir", type = str, default = '../../data',
+    ap.add_argument("--data_dir", type = str, default = '../../data_new',
                     help = "The directory containing two sub-directories, "
                            "`original` and `processed`, with the data.")
     ap.add_argument("--dataset", type = str,
@@ -984,3 +997,5 @@ if __name__ == '__main__':
     # Execute the preprocessing.
     p = PublicDataPreprocessor(os.path.abspath(args.data_dir))
     p.preprocess(args.dataset)
+
+

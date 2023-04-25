@@ -1105,5 +1105,36 @@
                 0.276553213596344
             ]
         }
+    },
+    "ghai_iceberg_lettuce_detection": {
+        "classes": {
+            "1": "iceberg_lettuce"
+        },
+        "ml_task": "object_detection",
+        "ag_task": "crop_detection",
+        "location": {
+            "continent": "north_america",
+            "country": "usa"
+        },
+        "sensor_modality": "rgb",
+        "real_synthetic": "real",
+        "platform": "handheld/ground",
+        "input_data_format": "jpg",
+        "annotation_format": "coco_json",
+        "n_images": "500",
+        "docs_url": "https://github.com/AxisAg/GHAIDatasets/blob/main/datasets/iceberg.md",
+        "external_image_sources": [],
+        "stats": {
+            "mean": [
+                0.3193310499191284,
+                0.4143226742744446,
+                0.3003973960876465
+            ],
+            "std": [
+                0.2828165590763092,
+                0.2841264605522156,
+                0.25660744309425354
+            ]
+        }
     }
 }
