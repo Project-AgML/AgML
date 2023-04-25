@@ -123,7 +123,7 @@ def generate_example_images(name):
             loader[:NUM_EXAMPLES], info = info, show = False)
     elif info.tasks.ml == 'object_detection':
         return agml.viz.visualize_images([
-            agml.viz.visualize_image_and_boxes(i, show = False)
+            agml.viz.annotate_bboxes_on_image(i, show = False)
             for i in loader[:NUM_EXAMPLES]])
     elif info.tasks.ml == 'semantic_segmentation':
         return agml.viz.visualize_images([
