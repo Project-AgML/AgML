@@ -50,7 +50,7 @@ void SyntheticAnnotationConfig::load_config(const char* path) {
                 annotation_types.push_back(line.substr(0, pos));
                 line.erase(0, pos + delimeter.length());
             }
-            this->annotation_type = line;
+            this->annotation_type.push_back(line);
         } else if (i == 2) {
             this->simulation_type = line;
         } else if (i == 3) {
@@ -90,7 +90,8 @@ int main(int argc, char** argv) {
     // Run the same procedure `num_images` number of times.
     for (int i = 0; i < config.num_images; i++) {
         // If there are no labels, then no need to instantiate the synthetic annotation class.
-        if (config.annotation_type == "none") {
+        if (!config.annotation_type.empty() && config.annotation_type[0] == "none") {
+
             // Declare the context.
             Context context;
             context.loadXML(config.xml_path.c_str());
@@ -147,7 +148,8 @@ int main(int argc, char** argv) {
         // Declare the Synthetic Annotation class.
         SyntheticAnnotation annotation(&context);
 
-        if (config.annotation_type != "none") {
+        if (!config.annotation_type.empty() && config.annotation_type[0] != "none") {
+
             // Set the annotation type based on the configuration.
             vector<string> va = config.annotation_type;
             if (!contains(va, "semantic_segmentation")) {
@@ -170,19 +172,23 @@ int main(int argc, char** argv) {
                     if (contains(vl, "branches")) {
                         annotation.labelPrimitives(cgen.getBranchUUIDs(p), "branches");
                     }
-                    if (contains(vl, "cordon")) {
-                        // Not implemented?
-                        // annotation.labelPrimitives(cgen.getCordonUUIDs(p), "cordon");
-                    }
                     if (contains(vl, "leaves")) {
                         annotation.labelPrimitives(cgen.getLeafUUIDs(p), "leaves");
                     }
                     if (contains(vl, "fruits")) {
-                        std::vector<std::vector<std::vector<uint>>> fruitUUIDs = cgen.getFruitUUIDs(p);
-                        for(int c = 0; c < fruitUUIDs.size(); c++){ // loop over fruit clusters
-                            annotation.labelPrimitives( flatten(fruitUUIDs.at(c)), "clusters" );
+                    std::vector<std::vector<std::vector<uint>>> fruitUUIDs = cgen.getFruitUUIDs(p);
+                    if( fruitUUIDs.size()==1 ){ //no clusters, only individual fruit
+                        for( auto &fruit : fruitUUIDs.front() ){
+                            annotation.labelPrimitives( fruit, "clusters" );
+                        }
+                    }else if( fruitUUIDs.size()>1 ){ //fruit contained within cluster - label by cluster
+                        for( auto &cluster : fruitUUIDs ){
+                            annotation.labelPrimitives( flatten(cluster), "clusters" );
                         }
                     }
+
+                    }
+
                 }
             }
         }
