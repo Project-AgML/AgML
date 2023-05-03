@@ -353,6 +353,15 @@ class HeliosOptions(AgMLSerializable):
     def simulation_type(self, value: Union[SimulationType, str]):
         self._simulation_type = SimulationType(value)
 
+        # Check that a GPU is available if the simulation type is set to LiDAR.
+        if self._simulation_type == SimulationType.LiDAR:
+            try:
+                import subprocess as sp
+                sp.check_call('nvidia-smi')
+            except Exception:
+                raise RuntimeError(
+                    "You must have a CUDA-capable GPU to run LiDAR simulations.")
+
     @property
     def labels(self) -> list:
         return self._labels

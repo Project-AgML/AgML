@@ -376,7 +376,8 @@ class HeliosDataGenerator(AgMLSerializable):
         # Write the actual configuration file.
         cfg_file = os.path.join(PROJECT_PATH, f'config_{name}.txt')
         self._write_config(
-            cfg_file = cfg_file, xml_file = os.path.join(XML_PATH, xml_file_base))
+            cfg_file = cfg_file,
+            xml_file = os.path.join(XML_PATH, xml_file_base))
         self._write_config(
             cfg_file = os.path.join(metadata_dir, f'config_{name}.txt'),
             xml_file = os.path.join(metadata_dir, xml_file_base))
