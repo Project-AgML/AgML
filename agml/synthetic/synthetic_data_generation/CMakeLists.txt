@@ -12,7 +12,7 @@ set( EXECUTABLE_NAME "SyntheticImageAnnotation" )
 set( SOURCE_FILES "generate.cpp" )
 
 #specify which plug-ins to use (separate plug-in names with semicolon)
-set( PLUGINS "visualizer;canopygenerator;syntheticannotation" )
+set( PLUGINS "lidar;visualizer;canopygenerator;syntheticannotation" )
 
 #-------- MAIN CODE (Dont Modify) ---------#
 cmake_minimum_required(VERSION 2.4)
