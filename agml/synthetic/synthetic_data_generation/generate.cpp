@@ -2,6 +2,7 @@
 #include "SyntheticAnnotation.h"
 #include "Visualizer.h"
 #include "CanopyGenerator.h"
+#include "LiDAR.h"
 
 using namespace std;
 using namespace helios;
@@ -47,7 +48,7 @@ void SyntheticAnnotationConfig::load_config(const char* path) {
             string delimeter = " "; size_t pos;
             vector<string> annotation_types;
             while ((pos = line.find(' ')) != string::npos) {
-                annotation_types.push_back(line.substr(0, pos));
+                this -> annotation_type.push_back(line.substr(0, pos));
                 line.erase(0, pos + delimeter.length());
             }
             this->annotation_type.push_back(line);
@@ -148,8 +149,51 @@ int main(int argc, char** argv) {
         // Declare the Synthetic Annotation class.
         SyntheticAnnotation annotation(&context);
 
-        if (!config.annotation_type.empty() && config.annotation_type[0] != "none") {
+        //LiDAR option
+         if (config.simulation_type == "lidar") {
 
+            // Get the UUID of all the elements on the scene
+            vector<uint> UUID_trunk = cgen.getTrunkUUIDs();
+            vector<uint> UUID_shoot = cgen.getBranchUUIDs();
+            vector<uint> UUID_leaf = cgen.getLeafUUIDs();
+            vector<uint> UUID_fruit = cgen.getFruitUUIDs();
+            vector<uint> UUID_ground = cgen.getGroundUUIDs();
+
+            // Add labels according to whatever scheme we want.
+            vector<string> vlidar = config.labels;
+
+            LiDARcloud lidarcloud;
+
+            if (contains(vlidar, "ground")) {
+                    context.setPrimitiveData( UUID_ground, "object_label", 1 );
+                }
+                if (contains(vlidar, "trunks")) {
+                    context.setPrimitiveData( UUID_trunk, "object_label", 2 );
+                }
+                if (contains(vlidar, "branches")) {
+                    context.setPrimitiveData( UUID_shoot, "object_label", 3 );
+                }
+                if (contains(vlidar, "leaves")) {
+                    context.setPrimitiveData( UUID_leaf, "object_label", 4 );
+                }
+                if (contains(vlidar, "fruits")) {
+                    context.setPrimitiveData( UUID_fruit, "object_label", 5 );
+                }
+
+              
+
+                lidarcloud.loadXML(config.xml_path.c_str());
+
+                lidarcloud.syntheticScan( &context);
+
+                // Export point Cloud data
+                string this_image_dir = config.output_path + "/" + string("point_cloud_" + to_string(i) + ".xyz");
+                std::cout << this_image_dir << std::endl;
+                lidarcloud.exportPointCloud(this_image_dir.c_str());
+
+         }else{        
+
+        if (!config.annotation_type.empty() && config.annotation_type[0] != "none") {
             // Set the annotation type based on the configuration.
             vector<string> va = config.annotation_type;
             if (!contains(va, "semantic_segmentation")) {
@@ -197,5 +241,6 @@ int main(int argc, char** argv) {
         string this_image_dir = config.output_path + "/" + string("image" + to_string(i));
         cout << this_image_dir;
         annotation.render(this_image_dir.c_str());
+        }
     }
 }
