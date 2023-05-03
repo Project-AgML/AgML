@@ -22,7 +22,7 @@ import albumentations as A
 from agml.backend.tftorch import is_array_like
 
 
-def imagenet_style_process(image, size = None):
+def imagenet_style_process(image, size = None, **kwargs):
     """Preprocesses a single input image to ImageNet standards.
 
     The preprocessing steps are applied logically; if the images
@@ -61,14 +61,18 @@ def imagenet_style_process(image, size = None):
         image = rz(image = image)['image']
 
     # Normalize the image to ImageNet standards.
-    if 1 <= image.max() <= 255:
-        mean = [0.485, 0.456, 0.406]
-        std = [0.229, 0.224, 0.225]
-        image = image.astype(np.float32) / 255.
-        mean = np.array(mean, dtype = np.float32)
-        std = np.array(std, dtype = np.float32)
-        denominator = np.reciprocal(std, dtype = np.float32)
-        image = (image - mean) * denominator
+    if kwargs.get('normalize', True):
+        if 1 <= image.max() <= 255:
+            mean = [0.485, 0.456, 0.406]
+            std = [0.229, 0.224, 0.225]
+            image = image.astype(np.float32) / 255.
+            mean = np.array(mean, dtype = np.float32)
+            std = np.array(std, dtype = np.float32)
+            denominator = np.reciprocal(std, dtype = np.float32)
+            image = (image - mean) * denominator
+    else: # Otherwise, just scale the image.
+        if 1 <= image.max() <= 255:
+            image = image.astype(np.float32) / 255.0
 
     # Convert the image into a PyTorch tensor.
     image = torch.from_numpy(image).permute(2, 0, 1)

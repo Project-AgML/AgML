@@ -1136,5 +1136,35 @@
                 0.25660744309425354
             ]
         }
+    },
+    "riseholme_strawberry_classification_2021": {
+        "classes": {
+            "0": "anomalous",
+            "1": "occluded",
+            "2": "ripe",
+            "3": "unripe"
+        },
+        "ml_task": "image_classification",
+        "ag_task": "disease_classification",
+        "sensor_modality": "rgb",
+        "real_synthetic": "real",
+        "platform": "ground",
+        "input_data_format": "png",
+        "annotation_format": "directory_names",
+        "n_images": "3520",
+        "docs_url": "https://github.com/ctyeong/Riseholme-2021",
+        "external_image_sources": [],
+        "stats": {
+            "mean": [
+                0.5753855109214783,
+                0.4637872874736786,
+                0.3637043833732605
+            ],
+            "std": [
+                0.1983788013458252,
+                0.19222092628479004,
+                0.1773509532213211
+            ]
+        }
     }
 }

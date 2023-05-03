@@ -43,6 +43,7 @@ NumberOrMaybeList = TypeVar('NumberOrMaybeList', Number, List[Number])
 @dataclass(repr = False)
 class Parameters:
     """Base class for parameters, to enable runtime type checks."""
+
     def __post_init__(self):
         # Remove all parameters which don't belong to this class. We know
         # they don't belong if they are still `None` after initialization.
@@ -78,8 +79,8 @@ class Parameters:
             annotation = (int, float)
         if not isinstance(value, annotation):
             raise TypeError(
-               f"Expected a value of type ({annotation}) for attribute "
-               f"'{key}', instead got '{value}' of type ({type(value)}).")
+                f"Expected a value of type ({annotation}) for attribute "
+                f"'{key}', instead got '{value}' of type ({type(value)}).")
         super().__setattr__(key, value)
 
 
@@ -240,6 +241,7 @@ class CameraParameters(Parameters):
             crop_distance = crop_distance, height = height,
             aerial_parameters = aerial_parameters)
 
+
 @dataclass(repr = False)
 class LiDARParameters(Parameters):
     """Stores LiDAR parameters for Helios."""
@@ -279,7 +281,7 @@ class HeliosOptions(AgMLSerializable):
     serializable = frozenset(('canopy', 'canopy_parameters',
                               'camera_parameters', 'lidar_parameters',
                               'annotation_type', 'simulation_type', 'labels'))
-    
+
     def __new__(cls, *args, **kwargs):
         # The default configuration parameters are loaded directly from
         # the `helios_config.json` file which is constructed each time
