@@ -15,14 +15,19 @@
 import os
 
 
+# Files which shouldn't be included in a file list.
+EXCLUDED_FILES: list = ['.DS_Store']
+
+
 def _is_valid_file(file):
     """Returns whether a file is valid.
 
     This means that it is a file and not a directory, but also that
     it isn't an unnecessary dummy file like `.DS_Store` on MacOS.
     """
+    global EXCLUDED_FILES
     if os.path.isfile(file):
-        if not file.startswith('.git') and file not in ['.DS_Store']:
+        if not file.startswith('.git') and file not in EXCLUDED_FILES:
             return True
     return False
 
@@ -60,13 +65,12 @@ def nested_dir_list(fpath):
     return dirs
 
 
-def nested_file_list(fpath):
+def nested_file_list(fpath, ext = None):
     """Returns a nested list of files from a path."""
     files = []
     dirs = nested_dir_list(fpath)
     for dir_ in dirs:
-        files.extend([os.path.join(dir_, i) for i in os.listdir(dir_)
-                      if _is_valid_file(os.path.join(dir_, i))])
+        files.extend(get_file_list(dir_, ext = ext))
     return files
 
 
