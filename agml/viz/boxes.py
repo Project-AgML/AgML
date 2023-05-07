@@ -45,7 +45,7 @@ def _resolve_proportional_bboxes(coords, shape):
 
 @auto_resolve_image
 def annotate_bboxes_on_image(
-        image, bboxes = None, labels = None, bbox_format = None):
+        image, bboxes = None, labels = None, bbox_format = None, **kwargs):
     """Annotates bounding boxes onto an image.
 
     Given an image with bounding boxes and labels, this method will
@@ -68,6 +68,8 @@ def annotate_bboxes_on_image(
         The format of the bounding box (for non-COCO-JSON bounding
         boxes).  See `agml.data.convert_bbox_format` for information
         on the valid parameters for the format.
+    kwargs : optional
+        Additional keyword arguments to pass to `cv2.rectangle`.
 
     Returns
     -------
@@ -102,7 +104,8 @@ def annotate_bboxes_on_image(
             _resolve_proportional_bboxes(bbox, image.shape)
         x2, y2 = x1 + width, y1 + height
         cv2.rectangle(image, (x1, y1), (x2, y2),
-                      get_colormap()[as_scalar(label)], 2)
+                      get_colormap()[as_scalar(label)],
+                      kwargs.get('thickness', 2))
     return image
 
 

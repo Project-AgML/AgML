@@ -205,7 +205,7 @@ def scalar_unpack(inp):
 def is_array_like(inp):
     """Determines if an input is a np.ndarray, torch.Tensor, or tf.Tensor."""
     if isinstance(inp, (list, tuple)): # no need to import tensorflow for this
-        return False
+        return True
     if isinstance(inp, np.ndarray):
         return True
     if isinstance(inp, torch.Tensor):
