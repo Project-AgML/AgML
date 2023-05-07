@@ -416,7 +416,10 @@ class HeliosDataGenerator(AgMLSerializable):
         # Convert the dataset format.
         if convert_data:
             if len(self.options.annotation_type) > 1:
-                log("Cannot convert data for multiple annotation types.")
+                log("Cannot convert data into the AgML format for multiple annotation types.")
+                return
+            if self.options.simulation_type == SimulationType.LiDAR:
+                log("Cannot convert data into the AgML format for LiDAR simulations.")
                 return
             cvt = HeliosDataFormatConverter(output_dir)
             cvt.convert()
