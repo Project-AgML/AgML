@@ -12,6 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import random
+import inspect
+
 from agml.utils.io import (
     get_file_list as _get_file_list,
     get_dir_list as _get_dir_list,
@@ -79,7 +82,35 @@ def recursive_dirname(path, depth = 1):
     Returns:
         str: The directory name of the path.
     """
-    return _recursive_dirname(path, depth)
+    return _recursive_dirname(path, level = depth)
+
+
+def parent_path(depth):
+    """Returns the parent folder at level `depth` of the current file.
+
+    Args:
+        depth (int): The number of levels to go up.
+
+    Returns:
+        str: The path to the parent folder.
+    """
+    frame = inspect.stack()[1]
+    fname = inspect.getmodule(frame[0]).__file__
+    return _recursive_dirname(fname, level = depth)
+
+
+def random_file(path, **kwargs):
+    """Returns a random file from a directory.
+
+    Args:
+        path (str): The path to the directory.
+        **kwargs: Keyword arguments to pass to `get_file_list`.
+
+    Returns:
+        str: The path to the random file.
+    """
+    return random.choice(get_file_list(path, **kwargs))
+
 
 
 
