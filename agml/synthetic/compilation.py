@@ -21,6 +21,7 @@ import tempfile
 import subprocess as sp
 from datetime import datetime as dt
 
+from agml.backend.config import _update_config, _get_config
 from agml.synthetic.config import HELIOS_PATH
 
 
@@ -192,8 +193,7 @@ def _compile_helios_executable_only(lidar_enabled):
             f'process can be found at "{log_file}".')
 
     # Print the final message.
-    sys.stdout.write('\n')
-    sys.stderr.write('\nHelios compilation successful!')
+    _compilation_successful(lidar_enabled = lidar_enabled)
 
 
 def recompile_helios(executable_only = False,
@@ -228,6 +228,18 @@ def recompile_helios(executable_only = False,
         cmake_build_type = 'Debug' if debug_mode else 'Release'
         _compile_helios_default(cmake_build_type = cmake_build_type,
                                 lidar_enabled = lidar_enabled)
+
+
+def _compilation_successful(lidar_enabled):
+    """Updates after successful Helios compilation."""
+    sys.stdout.write('\n')
+    sys.stderr.write('\nHelios compilation successful!')
+    _update_config('lidar_enabled', lidar_enabled)
+
+
+def is_helios_compiled_with_lidar():
+    """Returns whether Helios was compiled with LiDAR support enabled."""
+    return _get_config('lidar_enabled')
 
 
 def _compilation_failed(helios_temp_dir, temp_dir):

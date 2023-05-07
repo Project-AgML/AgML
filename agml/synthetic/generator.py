@@ -32,7 +32,8 @@ from agml.synthetic.options import HeliosOptions
 from agml.synthetic.options import AnnotationType, SimulationType
 from agml.synthetic.config import load_default_helios_configuration, verify_helios
 from agml.synthetic.compilation import (
-    HELIOS_BUILD, HELIOS_EXECUTABLE, XML_PATH, PROJECT_PATH, recompile_helios
+    HELIOS_BUILD, HELIOS_EXECUTABLE, XML_PATH, PROJECT_PATH,
+    recompile_helios, is_helios_compiled_with_lidar
 )
 from agml.synthetic.converter import HeliosDataFormatConverter
 from agml.utils.logging import log
@@ -366,7 +367,8 @@ class HeliosDataGenerator(AgMLSerializable):
         
         # Recompile Helios with LiDAR capabilities if it is needed.
         if self._options.simulation_type == SimulationType.LiDAR:
-            recompile_helios(executable_only = True, lidar_enabled = True)
+            if not is_helios_compiled_with_lidar():
+                recompile_helios(executable_only = True, lidar_enabled = True)
 
         # Create the output metadata directory.
         metadata_dir = os.path.join(output_dir, '.metadata')
