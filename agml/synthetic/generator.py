@@ -368,7 +368,8 @@ class HeliosDataGenerator(AgMLSerializable):
         # Recompile Helios with LiDAR capabilities if it is needed.
         if self._options.simulation_type == SimulationType.LiDAR:
             if not is_helios_compiled_with_lidar():
-                recompile_helios(executable_only = True, lidar_enabled = True)
+                log("Recompiling Helios with LiDAR enabled.")
+                recompile_helios(lidar_enabled = True)
 
         # Create the output metadata directory.
         metadata_dir = os.path.join(output_dir, '.metadata')

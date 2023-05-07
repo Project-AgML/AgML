@@ -45,8 +45,8 @@ def _update_cmake(lidar_enabled):
     if lidar_enabled:
         if 'lidar' not in default_cmake_contents: # add LiDAR to plugins
             cmake_contents = default_cmake_contents.replace(
-                'set(PLUGINS "visualizer;canopygenerator;syntheticannotation")',
-                'set(PLUGINS "lidar;visualizer;canopygenerator;syntheticannotation")'
+                'set( PLUGINS "visualizer;canopygenerator;syntheticannotation" )',
+                'set( PLUGINS "lidar;visualizer;canopygenerator;syntheticannotation" )'
             )
         else:
             cmake_contents = default_cmake_contents
@@ -57,7 +57,8 @@ def _update_cmake(lidar_enabled):
 
 
 def _compile_helios_default(cmake_build_type = 'Release',
-                            lidar_enabled = False):
+                            lidar_enabled = False,
+                            parallel = True):
     """Compiles the default Helios library upon installation and update."""
     if not os.path.exists(PROJECT_PATH):
         raise NotADirectoryError(
@@ -81,7 +82,10 @@ def _compile_helios_default(cmake_build_type = 'Release',
         cmake_args = ['cmake', '..', '-G', 'Unix Makefiles',
                       f'-DCMAKE_LIBRARY_OUTPUT_DIRECTORY={HELIOS_BUILD}',
                       f'-DCMAKE_BUILD_TYPE={cmake_build_type}']
-        make_args = ['cmake', '--build', '.']
+        if not parallel or sys.platform == 'win32':
+            make_args = ['cmake', '--build', '.']
+        else:
+            make_args = ['make', f'-j{os.cpu_count()}']
 
         # Create the log file and clear the existing one.
         log_file = os.path.expanduser(
@@ -131,6 +135,7 @@ def _compile_helios_default(cmake_build_type = 'Release',
         with open(log_file, 'a') as f:
             f.write(cmake_log)
         make_return = make_process.wait()
+
         if make_return != 0:
             sys.stderr.write(
                 f'\nEncountered an error when attempting to compile '
@@ -148,7 +153,7 @@ def _compile_helios_default(cmake_build_type = 'Release',
         _compilation_failed(helios_temp_dir, temp_dir)
 
 
-def _compile_helios_executable_only(lidar_enabled):
+def _compile_helios_executable_only(lidar_enabled, parallel):
     """Compiles only the Helios executable."""
     if not os.path.exists(PROJECT_PATH):
         raise NotADirectoryError(
@@ -160,7 +165,10 @@ def _compile_helios_executable_only(lidar_enabled):
     _update_cmake(lidar_enabled = lidar_enabled)
 
     # Construct arguments for the compilation.
-    make_args = ['cmake', '--build', '.']
+    if not parallel or sys.platform == 'win32':
+        make_args = ['cmake', '--build', '.']
+    else:
+        make_args = ['make', f'-j{os.cpu_count()}']
 
     # Create the log file and clear the existing one.
     log_file = os.path.expanduser(
@@ -198,7 +206,8 @@ def _compile_helios_executable_only(lidar_enabled):
 
 def recompile_helios(executable_only = False,
                      debug_mode = False,
-                     lidar_enabled = False):
+                     lidar_enabled = False,
+                     parallel = True):
     """Recompiles the Helios library with the set parameters.
 
     This method can be used by the user in order to recompile Helios, if, for
@@ -218,28 +227,41 @@ def recompile_helios(executable_only = False,
         Release). Debug mode is more verbose, but Release mode is faster.
     lidar_enabled : bool
         Whether to compile Helios with LiDAR support enabled.
+    parallel : bool
+        Whether to compile Helios in parallel. This is not enabled for Windows
+        users, as the `make` command does not exist on Windows. This leads to
+        significantly faster compilation, at the cost of high CPU usage.
     """
+    if executable_only and lidar_enabled:
+        raise ValueError("If you want to compile Helios with LiDAR support, "
+                         "you cannot compile only the executable.")
     if executable_only and debug_mode:
         raise ValueError("If you want to compile the build in `Debug` mode, "
                          "you cannot compile only the executable.")
     if executable_only:
-        _compile_helios_executable_only(lidar_enabled = lidar_enabled)
+        _compile_helios_executable_only(lidar_enabled = lidar_enabled,
+                                        parallel = parallel)
     else:
         cmake_build_type = 'Debug' if debug_mode else 'Release'
         _compile_helios_default(cmake_build_type = cmake_build_type,
-                                lidar_enabled = lidar_enabled)
+                                lidar_enabled = lidar_enabled,
+                                parallel = parallel)
 
 
 def _compilation_successful(lidar_enabled):
     """Updates after successful Helios compilation."""
     sys.stdout.write('\n')
-    sys.stderr.write('\nHelios compilation successful!')
+    sys.stderr.write('\nHelios compilation successful!\n')
     _update_config('lidar_enabled', lidar_enabled)
 
 
 def is_helios_compiled_with_lidar():
     """Returns whether Helios was compiled with LiDAR support enabled."""
-    return _get_config('lidar_enabled')
+    try:
+        return _get_config('lidar_enabled')
+    except:
+        _update_config('lidar_enabled', False)
+        return False
 
 
 def _compilation_failed(helios_temp_dir, temp_dir):
