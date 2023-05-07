@@ -92,7 +92,6 @@ int main(int argc, char** argv) {
     for (int i = 0; i < config.num_images; i++) {
         // If there are no labels, then no need to instantiate the synthetic annotation class.
         if (!config.annotation_type.empty() && config.annotation_type[0] == "none") {
-
             // Declare the context.
             Context context;
             context.loadXML(config.xml_path.c_str());
@@ -148,6 +147,7 @@ int main(int argc, char** argv) {
 
         // Declare the Synthetic Annotation class.
         SyntheticAnnotation annotation(&context);
+        std::cout << "config " << config.simulation_type << std::endl;
 
         // Choose between an RGB or a LiDAR simulation.
         if (config.simulation_type == "lidar") { // LiDAR SIMULATION
@@ -184,8 +184,10 @@ int main(int argc, char** argv) {
                 lidarcloud.syntheticScan( &context);
 
                 // Export point cloud data.
-                string this_image_dir = config.output_path + "/" + string("point_cloud_" + to_string(i) + ".xyz");
-                std::cout << this_image_dir << std::endl;
+                string this_image_dir = config.output_path + "/" + string("image" + to_string(i));
+                system(("mkdir -p " + this_image_dir).c_str());
+                string cloud_export = this_image_dir + "/" + string("point_cloud_" + to_string(i) + ".xyz");
+                std::cout << "Writing LiDAR Point cloud to " << cloud_export << " " << std::endl;
                 lidarcloud.exportPointCloud(this_image_dir.c_str());
 
         } else {
@@ -205,7 +207,7 @@ int main(int argc, char** argv) {
 
                 // Add labels according to whatever scheme we want.
                 vector<string> vl = config.labels;
-                for(int p = 0; p < cgen.getPlantCount(); p++) { // loop over vines
+                for (int p = 0; p < cgen.getPlantCount(); p++) { // loop over vines
                     if (config.simulation_type == "rgb") {
                         if (contains(vl, "trunks")) {
                             annotation.labelPrimitives(cgen.getTrunkUUIDs(p), "trunks");
@@ -218,13 +220,13 @@ int main(int argc, char** argv) {
                         }
                         if (contains(vl, "fruits")) {
                         std::vector<std::vector<std::vector<uint>>> fruitUUIDs = cgen.getFruitUUIDs(p);
-                        if( fruitUUIDs.size()==1 ){ //no clusters, only individual fruit
-                            for( auto &fruit : fruitUUIDs.front() ){
-                                annotation.labelPrimitives( fruit, "clusters" );
+                        if (fruitUUIDs.size() == 1){ // no clusters, only individual fruit
+                            for(auto &fruit : fruitUUIDs.front()){
+                                annotation.labelPrimitives(fruit, "clusters");
                             }
-                        }else if( fruitUUIDs.size()>1 ){ //fruit contained within cluster - label by cluster
-                            for( auto &cluster : fruitUUIDs ){
-                                annotation.labelPrimitives( flatten(cluster), "clusters" );
+                        } else if (fruitUUIDs.size() > 1){ // fruit contained within cluster - label by cluster
+                            for(auto &cluster : fruitUUIDs){
+                                annotation.labelPrimitives(flatten(cluster), "clusters");
                             }
                         }
 
@@ -232,12 +234,13 @@ int main(int argc, char** argv) {
 
                     }
                 }
+
+                // Render the annotations.
+                string this_image_dir = config.output_path + "/" + string("image" + to_string(i));
+                std::cout << "Writing image to " << this_image_dir << " " << std::endl;
+                annotation.render(this_image_dir.c_str());
             }
 
-            // Render the annotations.
-            string this_image_dir = config.output_path + "/" + string("image" + to_string(i));
-            cout << this_image_dir;
-            annotation.render(this_image_dir.c_str());
         }
     }
 }

@@ -145,24 +145,20 @@ def _compile_helios_default(cmake_build_type = 'Release',
             _compilation_failed(helios_temp_dir, temp_dir)
 
         # Print the final message.
-        sys.stdout.write('\n')
-        sys.stderr.write('\nHelios compilation successful!')
+        _compilation_successful(lidar_enabled = lidar_enabled)
 
     # Even account for KeyboardInterrupt when compiling.
     except BaseException:
         _compilation_failed(helios_temp_dir, temp_dir)
 
 
-def _compile_helios_executable_only(lidar_enabled, parallel):
+def _compile_helios_executable_only(parallel):
     """Compiles only the Helios executable."""
     if not os.path.exists(PROJECT_PATH):
         raise NotADirectoryError(
             f"The expected project path {PROJECT_PATH} does not exist. "
             f"There may have been an error in installing Helios. Try "
             f"re-installing it, or raise an issue with the AgML team.")
-
-    # Update the CMake file with or without LiDAR compilation enabled.
-    _update_cmake(lidar_enabled = lidar_enabled)
 
     # Construct arguments for the compilation.
     if not parallel or sys.platform == 'win32':
@@ -201,7 +197,7 @@ def _compile_helios_executable_only(lidar_enabled, parallel):
             f'process can be found at "{log_file}".')
 
     # Print the final message.
-    _compilation_successful(lidar_enabled = lidar_enabled)
+    _compilation_successful(lidar_enabled = None)
 
 
 def recompile_helios(executable_only = False,
@@ -239,8 +235,7 @@ def recompile_helios(executable_only = False,
         raise ValueError("If you want to compile the build in `Debug` mode, "
                          "you cannot compile only the executable.")
     if executable_only:
-        _compile_helios_executable_only(lidar_enabled = lidar_enabled,
-                                        parallel = parallel)
+        _compile_helios_executable_only(parallel = parallel)
     else:
         cmake_build_type = 'Debug' if debug_mode else 'Release'
         _compile_helios_default(cmake_build_type = cmake_build_type,
@@ -252,7 +247,8 @@ def _compilation_successful(lidar_enabled):
     """Updates after successful Helios compilation."""
     sys.stdout.write('\n')
     sys.stderr.write('\nHelios compilation successful!\n')
-    _update_config('lidar_enabled', lidar_enabled)
+    if lidar_enabled is not None:
+        _update_config('lidar_enabled', lidar_enabled)
 
 
 def is_helios_compiled_with_lidar():
