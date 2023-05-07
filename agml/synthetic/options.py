@@ -357,7 +357,7 @@ class HeliosOptions(AgMLSerializable):
         if self._simulation_type == SimulationType.LiDAR:
             try:
                 import subprocess as sp
-                sp.check_call('nvidia-smi')
+                sp.check_call('nvidia-smi', stdout = sp.DEVNULL)
             except Exception:
                 raise RuntimeError(
                     "You must have a CUDA-capable GPU to run LiDAR simulations.")
