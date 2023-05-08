@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from .loader import AgMLDataLoader
+from .image_loader import ImageLoader
 from .public import (
     public_data_sources, source
 )

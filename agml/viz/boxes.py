@@ -112,7 +112,7 @@ def annotate_bboxes_on_image(
 @show_when_allowed
 @auto_resolve_image
 def visualize_image_and_boxes(
-        image, bboxes = None, labels = None, bbox_format = None):
+        image, bboxes = None, labels = None, bbox_format = None, **kwargs):
     """Visualizes an image with annotated bounding boxes.
 
     This method performs the same actions as `annotate_bboxes_on_image`,
@@ -131,6 +131,8 @@ def visualize_image_and_boxes(
         The format of the bounding box (for non-COCO-JSON bounding
         boxes).  See `agml.data.convert_bbox_format` for information
         on the valid parameters for the format.
+    kwargs : optional
+        Additional keyword arguments to pass to `cv2.rectangle`.
 
     Returns
     -------
@@ -140,7 +142,7 @@ def visualize_image_and_boxes(
         image, bboxes, labels, custom_error =
         "If `image` is a tuple/list, it should contain "
         "three values: the image, boxes, and (optionally) labels.")
-    image = annotate_bboxes_on_image(image, bboxes, labels, bbox_format)
+    image = annotate_bboxes_on_image(image, bboxes, labels, bbox_format, **kwargs)
 
     plt.figure(figsize = (10, 10))
     plt.imshow(image)
@@ -152,7 +154,7 @@ def visualize_image_and_boxes(
 @show_when_allowed
 @auto_resolve_image
 def visualize_real_and_predicted_bboxes(
-        image, truth_boxes = None, predicted_boxes = None):
+        image, truth_boxes = None, predicted_boxes = None, **kwargs):
     """Visualizes an image with annotated truth/predicted bounding boxes.
 
     This method performs the same actions as `annotate_bboxes_on_image`,
@@ -168,6 +170,8 @@ def visualize_real_and_predicted_bboxes(
         The true bounding boxes in COCO JSON format.
     predicted_boxes : Any
         The predicted bounding boxes in COCO JSON format.
+    kwargs : optional
+        Additional keyword arguments to pass to `cv2.rectangle`.
 
     Returns
     -------
@@ -177,8 +181,8 @@ def visualize_real_and_predicted_bboxes(
         image, truth_boxes, predicted_boxes, custom_error =
         "If `image` is a tuple/list, it should contain "
         "three values: the image, truth boxes, and predicted boxes.")
-    real_image = annotate_bboxes_on_image(image.copy(), truth_boxes)
-    predicted_image = annotate_bboxes_on_image(image.copy(), predicted_boxes)
+    real_image = annotate_bboxes_on_image(image.copy(), truth_boxes, **kwargs)
+    predicted_image = annotate_bboxes_on_image(image.copy(), predicted_boxes, **kwargs)
 
     # Create two side-by-side figures with the images.
     fig, axes = plt.subplots(1, 2, figsize = (10, 5))
@@ -195,7 +199,7 @@ def visualize_real_and_predicted_bboxes(
 
 @show_when_allowed
 @auto_resolve_image
-def visualize_image_and_many_boxes(image, *boxes, titles = None):
+def visualize_image_and_many_boxes(image, *boxes, titles = None, **kwargs):
     """Visualizes an image with an arbitrary number of bounding boxes.
 
     This method performs the same actions as `annotate_bboxes_on_image`,
@@ -210,12 +214,14 @@ def visualize_image_and_many_boxes(image, *boxes, titles = None):
         An arbitrary number of bounding boxes.
     titles : Any
         The titles for the axes.
+    kwargs : optional
+        Additional keyword arguments to pass to `cv2.rectangle`.
 
     Returns
     -------
     The matplotlib figure with the image.
     """
-    images = [annotate_bboxes_on_image(image.copy(), box) for box in boxes]
+    images = [annotate_bboxes_on_image(image.copy(), box, **kwargs) for box in boxes]
     titles = titles if titles is not None else [None] * len(images)
 
     # Create two side-by-side figures with the images.

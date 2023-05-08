@@ -67,7 +67,7 @@ def nested_dir_list(fpath):
 
 def nested_file_list(fpath, ext = None):
     """Returns a nested list of files from a path."""
-    files = []
+    files = get_file_list(fpath, ext = ext)
     dirs = nested_dir_list(fpath)
     for dir_ in dirs:
         files.extend(get_file_list(dir_, ext = ext))
