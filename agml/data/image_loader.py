@@ -53,12 +53,18 @@ class ImageLoader(AgMLSerializable):
         self.image_size = image_size # checks for validity.
         self._grayscale = False
         self._return_paths = False
+        self._transforms = []
 
     def __getitem__(self, index):
         # Load the image and convert it to RGB format.
         accessor_value = self._accessor_list[index]
         image_file = self._image_files[accessor_value]
         image = cv2.cvtColor(cv2.imread(image_file), cv2.COLOR_BGR2RGB)
+
+        # Apply any transforms (this is conducted before resizing and grayscale
+        # conversion in order to retain as much information as possible).
+        for transform in self._transforms:
+            image = transform(image)
 
         # Perform necessary input operations based on the parameters.
         if self._image_size is not None:
@@ -131,5 +137,13 @@ class ImageLoader(AgMLSerializable):
         else:
             raise ValueError(f'Invalid path for `ImageLoader`: {location}')
 
+    def transform(self, transform):
+        """Adds a transform to the loader.
 
+        Parameters
+        ----------
+        transform : callable
+            A function which takes in an image and returns a modified image.
+        """
+        self._transforms.append(transform)
 
