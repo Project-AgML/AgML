@@ -1185,6 +1185,18 @@
         "annotation_format": "coco_json",
         "n_images": "500",
         "docs_url": "https://github.com/AxisAg/GHAIDatasets/blob/main/datasets/broccoli.md",
-        "external_image_sources": []
+        "external_image_sources": [],
+        "stats": {
+            "mean": [
+                0.42832377552986145,
+                0.45015057921409607,
+                0.43816232681274414
+            ],
+            "std": [
+                0.24546495079994202,
+                0.23975253105163574,
+                0.23829665780067444
+            ]
+        }
     }
 }
