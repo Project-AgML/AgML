@@ -7,9 +7,6 @@ on:
   push:
     paths:
       - agml/_assets/public_datasources.json
-  pull_request:
-    paths:
-      - agml/_assets/public_datasources.json
 
 permissions: write-all
 
@@ -33,12 +30,14 @@ jobs:
         python3 setup.py install
     - name: Configure Git
       run: |
-        git config user.name "AgML Dataset Update Bot"
-        git config user.email "joshi.amoghn@gmail.com"
+        git config user.name 'github-actions[bot]'
+        git config user.email 'github-actions[bot]@users.noreply.github.com'
     - name: Update Datasets
       run: |
         python scripts/run_full_dataset_update.py
-        git add agml/_assets/*
+        git add -f agml/_assets/*
+        git add -f docs/
+        git add README.md
         git commit -m "Updated information for new dataset"
         git push origin dev
-        
+
