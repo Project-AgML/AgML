@@ -1003,6 +1003,19 @@ class PublicDataPreprocessor(object):
             for file in image_set:
                 shutil.copyfile(file, os.path.join(class_dir, os.path.basename(file)))
 
+    def ghai_broccoli_detection(self, dataset_name):
+        # Create processed directories
+        original_dir = os.path.join(self.data_original_dir, dataset_name)
+        processed_dir = os.path.join(self.data_processed_dir, dataset_name)
+        processed_image_dir = os.path.join(processed_dir, 'images')
+        os.makedirs(processed_image_dir, exist_ok = True)
+
+        # Move images
+        for image in tqdm(glob.glob(os.path.join(original_dir, '*.jpg'))):
+            shutil.move(image, processed_image_dir)
+        shutil.move(os.path.join(original_dir, 'coco.json'),
+                    os.path.join(processed_dir, 'annotations.json'))
+
 
 if __name__ == '__main__':
     # Initialize program arguments.
@@ -1016,6 +1029,10 @@ if __name__ == '__main__':
 
     # Execute the preprocessing.
     p = PublicDataPreprocessor(os.path.abspath(args.data_dir))
+    print("Processing dataset")
     p.preprocess(args.dataset)
+    print("Converting dataset")
+    os.chdir(f'{args.data_dir}/processed')
+    os.system(f'zip -r {args.dataset}.zip {args.dataset} -x ".*" -x "__MACOSX"')
 
 

@@ -130,5 +130,9 @@
     "riseholme_strawberry_classification_2021": {
         "license": "",
         "citation": "@inproceedings{CWSC21,\n  title={Self-supervised Representation Learning for Reliable Robotic Monitoring of Fruit Anomalies},\n  author={Choi, Taeyeong and Would, Owen and Salazar-Gomez, Adrian and Cielniak, Grzegorz},\n  booktitle={2022 International Conference on Robotics and Automation (ICRA)},\n  pages={2266--2272},\n  year={2022},\n  organization={IEEE}\n}"
+    },
+    "ghai_broccoli_detection": {
+        "license": "CC BY-SA 4.0",
+        "citation": ""
     }
 }

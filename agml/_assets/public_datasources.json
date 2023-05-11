@@ -1166,5 +1166,25 @@
                 0.1773509532213211
             ]
         }
+    },
+    "ghai_broccoli_detection": {
+        "classes": {
+            "1": "canopy",
+            "2": "crown"
+        },
+        "ml_task": "object_detection",
+        "ag_task": "crop_detection",
+        "location": {
+            "continent": "north_america",
+            "country": "usa"
+        },
+        "sensor_modality": "rgb",
+        "real_synthetic": "real",
+        "platform": "handheld/ground",
+        "input_data_format": "jpg",
+        "annotation_format": "coco_json",
+        "n_images": "500",
+        "docs_url": "https://github.com/AxisAg/GHAIDatasets/blob/main/datasets/broccoli.md",
+        "external_image_sources": []
     }
 }

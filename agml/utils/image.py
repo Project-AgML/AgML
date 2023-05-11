@@ -15,6 +15,7 @@
 import os
 
 import cv2
+import numpy as np
 
 
 def consistent_shapes(objects):
