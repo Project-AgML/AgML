@@ -3,6 +3,8 @@
 import os
 import json
 
+import agml
+
 
 # Check whether any dataset has been added that needs information updated (we do this
 # by checking for any datasets in the `public_datasources.json` file that don't have
@@ -17,6 +19,7 @@ print("DATASETS TO UPDATE:", datasets)
 
 # For each of the datasets which need to be updated, run the corresponding update scripts.
 for dataset in datasets:
+    agml.data.download_public_dataset(dataset) # only download dataset once
     os.system(f'python3 scripts/generate_normalization_info.py --datasets {dataset}')
     os.system(f'python3 scripts/generate_shape_info.py --datasets {dataset}')
     os.system(f'python3 scripts/generate_dataset_markdown.py')
