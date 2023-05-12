@@ -21,11 +21,10 @@ from .tools import (
     get_viz_backend
 )
 from .masks import (
-    output_to_mask,
-    visualize_image_and_mask,
-    overlay_segmentation_masks,
-    visualize_overlaid_masks,
-    visualize_image_mask_and_predicted
+    convert_mask_to_colored_image,
+    annotate_semantic_segmentation,
+    show_image_with_overlaid_mask,
+    show_semantic_segmentation_truth_and_prediction,
 )
 from .boxes import (
     annotate_object_detection,
@@ -43,3 +42,4 @@ from .inspection import (
     plot_synthetic_camera_positions,
     visualize_all_views
 )
+from .display import display_image

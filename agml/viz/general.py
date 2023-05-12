@@ -14,8 +14,8 @@
 
 import matplotlib.pyplot as plt
 
-from agml.viz.boxes import visualize_image_and_boxes
-from agml.viz.masks import visualize_image_and_mask
+from agml.viz.boxes import show_image_and_boxes
+from agml.viz.masks import show_image_with_overlaid_mask
 from agml.viz.labels import visualize_images_with_labels
 from agml.viz.tools import format_image, _inference_best_shape
 from agml.viz.utils import show_when_allowed, auto_resolve_image
@@ -45,9 +45,9 @@ def show_sample(loader, image_only = False):
         return visualize_images(sample[0])
 
     if loader.task == 'object_detection':
-        return visualize_image_and_boxes(sample)
+        return show_image_and_boxes(sample, info = loader.info)
     elif loader.task == 'semantic_segmentation':
-        return visualize_image_and_mask(sample)
+        return show_image_with_overlaid_mask(sample)
     elif loader.task == 'image_classification':
         return visualize_images_with_labels(sample)
 
