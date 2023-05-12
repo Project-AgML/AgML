@@ -25,7 +25,8 @@ def _setup():
         _os.makedirs(_os.path.expanduser('~/.agml'))
         with open(_os.path.join(
                 _os.path.expanduser('~/.agml/config.json')), 'w') as f:
-            _json.dump({'data_path': _os.path.expanduser('~/.agml/datasets')}, f)
+            _json.dump({'data_path': _os.path.expanduser('~/.agml/datasets'),
+                        'viz_backend': 'matplotlib'}, f)
 _setup(); del _setup # noqa
 
 

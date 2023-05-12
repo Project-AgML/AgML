@@ -17,10 +17,8 @@ import matplotlib.pyplot as plt
 from agml.viz.boxes import visualize_image_and_boxes
 from agml.viz.masks import visualize_image_and_mask
 from agml.viz.labels import visualize_images_with_labels
-from agml.viz.tools import (
-    show_when_allowed, auto_resolve_image,
-    format_image, _inference_best_shape
-)
+from agml.viz.tools import format_image, _inference_best_shape
+from agml.viz.utils import show_when_allowed, auto_resolve_image
 
 
 def show_sample(loader, image_only = False):

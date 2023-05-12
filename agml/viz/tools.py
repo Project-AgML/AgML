@@ -28,8 +28,8 @@ from PIL import Image
 import matplotlib.pyplot as plt
 
 from agml.backend.tftorch import tf, torch
+from agml.backend.config import _get_config, _update_config
 from agml.utils.logging import log
-from agml.utils.image import imread_context
 
 
 # Sets the colormaps used in the other `agml.viz` methods.
@@ -43,9 +43,16 @@ def _load_colormaps():
         ret_dict[map_[0]] = map_[1] * 5
     return ret_dict
 
-
 _COLORMAPS = _load_colormaps()
-_COLORMAP_CHOICE = 'default'
+_COLORMAP_CHOICE: str = 'default'
+
+
+# Sets the visualization backend: either `matplotlib` or `cv2`.
+@functools.lru_cache(maxsize = None)
+def _load_backend():
+    return _get_config('viz_backend')
+
+_BACKEND: str = _load_backend()
 
 
 def get_colormap():
@@ -85,6 +92,21 @@ def set_colormap(colormap):
         raise TypeError(f"Invalid colormap of type {type(colormap)}.")
     _COLORMAPS['custom'] = colormap
     _COLORMAP_CHOICE = 'custom'
+
+
+def get_viz_backend():
+    """Returns the current AgML visualization backend."""
+    global _BACKEND
+    return _BACKEND
+
+
+def set_viz_backend(backend):
+    """Sets the global AgML visualization backend."""
+    if backend not in ['matplotlib', 'cv2']:
+        raise ValueError(f"Invalid backend {backend} received.")
+    global _BACKEND
+    _update_config('viz_backend', backend)
+    _BACKEND = backend
 
 
 def format_image(img, mask = False):

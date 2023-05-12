@@ -49,8 +49,7 @@ def resolve_list_value(val):
 
 
 def resolve_tuple_values(*inputs, custom_error = None):
-    """Determines whether `inputs[0]` contains two values or
-    they are distributed amongst the values in `inputs`. """
+    """Determines whether values are distributed amongst the values in `inputs`. """
     if isinstance(inputs[0], (list, tuple)) and all(c is None for c in inputs[1:]):
         if len(inputs[0]) != len(inputs):
             # special case for COCO JSON
@@ -62,9 +61,8 @@ def resolve_tuple_values(*inputs, custom_error = None):
             if custom_error is not None:
                 raise ValueError(custom_error)
             else:
-                raise ValueError(
-                    f"Expected either a tuple with {len(inputs)} values "
-                    f"or {len(inputs)} values across two arguments.")
+                raise ValueError(f"Expected either a tuple with {len(inputs)} values "
+                                 f"or {len(inputs)} values across two arguments.")
         else:
             return inputs[0]
     return inputs
@@ -125,3 +123,10 @@ def shapes(seq):
         raise ValueError(f"One or more of the objects has no shape or length: {seq}.")
 
 
+def weak_squeeze(arr, ndims = 2):
+    """Performs a 'weak squeeze', adding a dimension back if necessary."""
+    if isinstance(arr, np.ndarray):
+        arr = np.squeeze(arr)
+        while arr.ndim < ndims:
+            arr = np.expand_dims(arr, axis = 0)
+    return arr

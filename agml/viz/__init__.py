@@ -16,7 +16,9 @@ from .tools import (
     format_image,
     set_colormap,
     get_colormap,
-    convert_figure_to_image
+    convert_figure_to_image,
+    set_viz_backend,
+    get_viz_backend
 )
 from .masks import (
     output_to_mask,
@@ -26,10 +28,9 @@ from .masks import (
     visualize_image_mask_and_predicted
 )
 from .boxes import (
-    annotate_bboxes_on_image,
-    visualize_image_and_boxes,
-    visualize_real_and_predicted_bboxes,
-    visualize_image_and_many_boxes
+    annotate_object_detection,
+    show_image_and_boxes,
+    show_object_detection_truth_and_prediction
 )
 from .labels import (
     visualize_images_with_labels
