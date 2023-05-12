@@ -18,9 +18,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from agml.utils.general import resolve_tuple_values
-from agml.viz.tools import (
-    format_image, get_colormap, auto_resolve_image, show_when_allowed
-)
+from agml.viz.tools import format_image, get_colormap
+from agml.viz.utils import show_when_allowed, auto_resolve_image
 
 
 def _reduce_categorical_mask(mask):

@@ -21,9 +21,8 @@ from agml.backend.tftorch import as_scalar, scalar_unpack, is_array_like
 from agml.data.tools import (
     _resolve_coco_annotations, convert_bbox_format # noqa
 )
-from agml.viz.tools import (
-    get_colormap, auto_resolve_image, format_image, show_when_allowed
-)
+from agml.viz.tools import get_colormap, format_image
+from agml.viz.utils import show_when_allowed, auto_resolve_image
 
 
 def _resolve_proportional_bboxes(coords, shape):

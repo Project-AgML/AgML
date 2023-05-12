@@ -21,7 +21,7 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import FancyArrowPatch
 from mpl_toolkits.mplot3d import proj3d
 
-from agml.viz.tools import show_when_allowed
+from agml.viz.utils import show_when_allowed
 from agml.viz.labels import _inference_best_shape
 from agml.synthetic.tools import _is_agml_converted
 from agml.utils.image import imread_context

@@ -15,10 +15,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-from agml.viz.tools import (
-    auto_resolve_image, show_when_allowed,
-    format_image, _inference_best_shape
-)
+from agml.viz.tools import format_image, _inference_best_shape
+from agml.viz.utils import show_when_allowed, auto_resolve_image
 from agml.backend.tftorch import as_scalar, is_array_like
 
 

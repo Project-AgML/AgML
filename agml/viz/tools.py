@@ -16,6 +16,7 @@
 A tools module for `agml.viz`, which also serves as almost a
 mini-backend to control ops such as the colormap being used.
 """
+
 import os
 import io
 import json
@@ -84,54 +85,6 @@ def set_colormap(colormap):
         raise TypeError(f"Invalid colormap of type {type(colormap)}.")
     _COLORMAPS['custom'] = colormap
     _COLORMAP_CHOICE = 'custom'
-
-
-def auto_resolve_image(f):
-    """Resolves an image path or image into a read-in image."""
-    @functools.wraps(f)
-    def _resolver(image, *args, **kwargs):
-        if isinstance(image, (str, bytes, os.PathLike)):
-            if not os.path.exists(image):
-                raise FileNotFoundError(
-                    f"The provided image file {image} does not exist.")
-            with imread_context(image) as img:
-                image = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-        elif isinstance(image, (list, tuple)):
-            if not isinstance(image[0], (str, bytes, os.PathLike)):
-                pass
-            else:
-                processed_images = []
-                for image_path in image:
-                    if isinstance(image_path, (str, bytes, os.PathLike)):
-                        with imread_context(image_path) as img:
-                            image = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-                        processed_images.append(image)
-                    else:
-                        processed_images.append(image_path)
-                image = processed_images
-        return f(image, *args, **kwargs)
-    return _resolver
-
-
-def show_when_allowed(f):
-    """Stops running `plt.show()` when in a Jupyter Notebook."""
-    _in_notebook = False
-    try:
-        shell = eval("get_ipython().__class__.__name__")
-        cls = eval("get_ipython().__class__")
-        if shell == 'ZMQInteractiveShell' or 'colab' in cls:
-            _in_notebook = True
-    except:
-        pass
-
-    @functools.wraps(f)
-    def _cancel_display(*args, **kwargs):
-        show = kwargs.pop('show', True)
-        res = f(*args, **kwargs)
-        if not _in_notebook and show:
-            plt.show()
-        return res
-    return _cancel_display
 
 
 def format_image(img, mask = False):
