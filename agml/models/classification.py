@@ -21,7 +21,6 @@ from torchvision.models import efficientnet_b4
 from agml.models.base import AgMLModelBase
 from agml.models.tools import auto_move_data, imagenet_style_process
 from agml.models.metrics.accuracy import Accuracy
-from agml.data.public import source
 
 
 class EfficientNetB4Transfer(nn.Module):

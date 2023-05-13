@@ -36,7 +36,7 @@ from agml.data.public import source
 from agml.backend.tftorch import is_array_like
 from agml.utils.image import resolve_image_size
 from agml.utils.logging import log
-from agml.viz.boxes import visualize_image_and_boxes
+from agml.viz.boxes import show_image_and_boxes
 
 
 class DetectionModel(AgMLModelBase):
@@ -386,7 +386,7 @@ class DetectionModel(AgMLModelBase):
         bboxes, labels, _ = self.predict(image)
         if isinstance(labels, int):
             bboxes, labels = [bboxes], [labels]
-        return visualize_image_and_boxes(image, bboxes, labels)
+        return show_image_and_boxes(image, bboxes, labels)
 
     def load_benchmark(self, dataset, strict = False):
         """Loads a benchmark for the given semantic segmentation dataset.
