@@ -32,11 +32,11 @@ from .boxes import (
     show_object_detection_truth_and_prediction
 )
 from .labels import (
-    visualize_images_with_labels
+    show_images_and_labels
 )
 from .general import (
-    visualize_images,
-    show_sample
+    show_sample,
+    show_images
 )
 from .inspection import (
     plot_synthetic_camera_positions,

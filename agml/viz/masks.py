@@ -140,7 +140,8 @@ def annotate_semantic_segmentation(image,
 def show_image_with_overlaid_mask(image,
                                   mask = None,
                                   alpha = 0.3,
-                                  border = True):
+                                  border = True,
+                                  **kwargs):
     """Displays an image with an annotated segmentation mask.
 
     This method overlays a segmentation mask over an image. It uses contours
@@ -171,7 +172,9 @@ def show_image_with_overlaid_mask(image,
                                            border = border)
 
     # Display the annotated image.
-    display_image(image)
+    if not kwargs.get('no_show', False):
+        display_image(image)
+    return image
 
 
 def show_image_and_mask(image,

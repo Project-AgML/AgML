@@ -21,7 +21,6 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import FancyArrowPatch
 from mpl_toolkits.mplot3d import proj3d
 
-from agml.viz.utils import show_when_allowed
 from agml.viz.labels import _inference_best_shape
 from agml.synthetic.tools import _is_agml_converted
 from agml.utils.image import imread_context
@@ -40,7 +39,6 @@ class Arrow3D(FancyArrowPatch):
         super().draw(renderer)
 
 
-@show_when_allowed
 def plot_synthetic_camera_positions(positions, lookat):
     """Plots camera perspectives: positions and lookat vectors.
 
@@ -84,7 +82,6 @@ def plot_synthetic_camera_positions(positions, lookat):
     return fig
 
 
-@show_when_allowed
 def visualize_all_views(dataset_path, image):
     """Plots all of the camera views for a specific rendered canopy.
 

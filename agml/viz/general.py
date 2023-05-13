@@ -22,7 +22,7 @@ from agml.viz.tools import format_image, _inference_best_shape, convert_figure_t
 from agml.viz.display import display_image
 
 
-def show_sample(loader, image_only = False):
+def show_sample(loader, image_only = False, **kwargs):
     """A simplified convenience method that visualizes a sample from a loader.
 
     This method works for all kind of annotations; it picks the appropriate
@@ -41,16 +41,22 @@ def show_sample(loader, image_only = False):
     -------
     The matplotlib figure.
     """
-    sample = loader[0]
-    if image_only:
-        return show_images(sample[0])
+    if kwargs.get('sample', None) is not None:
+        sample = kwargs['sample']
+    else:
+        sample = loader[0]
+        if image_only:
+            return show_images(sample[0])
 
     if loader.task == 'object_detection':
-        return show_image_and_boxes(sample, info = loader.info)
+        return show_image_and_boxes(
+            sample, info = loader.info, no_show = kwargs.get('no_show', False))
     elif loader.task == 'semantic_segmentation':
-        return show_image_with_overlaid_mask(sample)
+        return show_image_with_overlaid_mask(
+            sample, no_show = kwargs.get('no_show', False))
     elif loader.task == 'image_classification':
-        return show_images_and_labels(sample, info = loader.info)
+        return show_images_and_labels(
+            sample, info = loader.info, no_show = kwargs.get('no_show', False))
 
 
 def show_images(images,
