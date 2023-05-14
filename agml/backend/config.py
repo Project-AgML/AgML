@@ -167,6 +167,8 @@ def _get_config(param):
     global SUPER_BASE_DIR
     with open(os.path.join(SUPER_BASE_DIR, 'config.json'), 'r') as f:
         contents = json.load(f)
+    if param not in contents.keys():
+        return None
     return contents[param]
 
 

@@ -50,6 +50,8 @@ _COLORMAP_CHOICE: str = 'default'
 # Sets the visualization backend: either `matplotlib` or `cv2`.
 @functools.lru_cache(maxsize = None)
 def _load_backend():
+    if _get_config('viz_backend') is None:
+        _update_config('viz_backend', 'matplotlib')
     return _get_config('viz_backend')
 
 _BACKEND: str = _load_backend()
@@ -178,7 +180,6 @@ def format_image(img, mask = False):
             log("Converting image of dtype `np.int64` to `np.uint8` for display. "
                 "This may cause a loss in precision/invalid result.")
             img = img.astype(np.uint8)
-
 
     # Return the formatted image.
     return img
