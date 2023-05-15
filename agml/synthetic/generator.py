@@ -183,7 +183,7 @@ class HeliosDataGenerator(AgMLSerializable):
             self._canopy + "Parameters": parameters['canopy'],
             'Ground': parameters['Ground']}
         xml_params = {'canopygenerator': canopy_parameters}
-        if self._generation_options.simulation_type == 'lidar':
+        if self._generation_options.simulation_type == SimulationType.LiDAR:
             xml_params['scan'] = parameters['lidar']
         else:
             xml_params[''] = parameters['camera']

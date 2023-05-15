@@ -282,7 +282,7 @@ def _get_lidar_params():
     # No files are read here, the parameters are hard-coded.
     lidar_params = {
         "origin": [0.0, 0.0, 0.0],
-        "size": [250.0, 450.0],
+        "size": [250, 450],
         "thetaMin": 0,
         "thetaMax": 180,
         "phiMin": 0,

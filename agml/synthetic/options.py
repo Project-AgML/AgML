@@ -246,7 +246,7 @@ class CameraParameters(Parameters):
 class LiDARParameters(Parameters):
     """Stores LiDAR parameters for Helios."""
     origin: List[Number]    = None
-    size: List[Number]      = None
+    size: List[int]         = None
     thetaMin: Number        = None
     thetaMax: Number        = None
     phiMin: Number          = None
