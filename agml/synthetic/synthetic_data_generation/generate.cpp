@@ -186,10 +186,10 @@ int main(int argc, char** argv) {
             // Export point cloud data.
             string this_image_dir = config.output_path + "/" + string("image" + to_string(i));
             system(("mkdir -p " + this_image_dir).c_str());
+            std::this_thread::sleep_for(std::chrono::milliseconds(100)); // wait until folder is made
             string cloud_export = this_image_dir + "/" + string("point_cloud_" + to_string(i) + ".xyz");
             std::cout << "Writing LiDAR Point cloud to " << cloud_export << " " << std::endl;
-            lidarcloud.exportPointCloud(this_image_dir.c_str());
-
+            lidarcloud.exportPointCloud(cloud_export.c_str());
         } else {
             if (!config.annotation_type.empty() && config.annotation_type[0] != "none") {
                 // Set the annotation type based on the configuration.

@@ -140,28 +140,6 @@ class HeliosDataGenerator(AgMLSerializable):
 
     def _convert_options_to_xml(self):
         """Converts the `HeliosOptions` parameters to XML format."""
-        # Convert all of the parameters to XML format.
-        tree = ET.parse(io.StringIO(dict2xml(
-            {'helios': self._prepare_parameters_for_generation()})))
-
-        # Update the camera tags.
-        root = tree.getroot()
-        for child in root:
-            if child.tag == 'camera_position':
-                child.tag = 'globaldata_vec3'
-                child.set('label', 'camera_position')
-            if child.tag == 'camera_lookat':
-                child.tag = 'globaldata_vec3'
-                child.set('label', 'camera_lookat')
-            if child.tag == 'image_resolution':
-                child.tag = 'globaldata_int2'
-                child.set('label', 'image_resolution')
-
-        # Return the modified tree.
-        return tree
-
-    def _prepare_parameters_for_generation(self):
-        """Prepares the provided Helios parameter options for generation."""
         parameters = self._options._to_dict()
 
         # Divide the image resolution in half. For some reason, Helios
@@ -175,6 +153,18 @@ class HeliosDataGenerator(AgMLSerializable):
         ground_params = self._load_ground_parameters()
         parameters['Ground'] = ground_params
 
+        # The `scan` tag is used for LiDAR generation. This must be added later
+        # because there can be multiple origins and thus multiple `scan` tags.
+        if self._generation_options.simulation_type == SimulationType.LiDAR:
+            scan_tags = []
+            if isinstance(parameters['lidar']['origin'][0], list):
+                for origin in parameters['lidar']['origin']:
+                    scan_tag = parameters['lidar']
+                    scan_tag['origin'] = origin
+                    scan_tags.append(scan_tag)
+            else:
+                scan_tags.append(parameters['lidar'])
+
         # Convert the canopy parameters to the Helios string format.
         self._convert_dict_params_to_string(parameters)
 
@@ -183,13 +173,36 @@ class HeliosDataGenerator(AgMLSerializable):
             self._canopy + "Parameters": parameters['canopy'],
             'Ground': parameters['Ground']}
         xml_params = {'canopygenerator': canopy_parameters}
-        if self._generation_options.simulation_type == SimulationType.LiDAR:
-            xml_params['scan'] = parameters['lidar']
-        else:
+        if self._generation_options.simulation_type == SimulationType.RGB:
             xml_params[''] = parameters['camera']
 
-        # Return the parsed dictionary.
-        return xml_params
+        # Convert all of the parameters to XML format.
+        tree = ET.parse(io.StringIO(dict2xml({'helios': xml_params})))
+        root = tree.getroot()
+
+        # Add the `scan` tags if necessary for LiDAR generation.
+        if self._generation_options.simulation_type == SimulationType.LiDAR:
+            for scan_tag in scan_tags: # noqa
+                scan_tag_contents = ET.parse(
+                    io.StringIO(dict2xml({'scan': scan_tag}))).getroot()
+                ET.indent(scan_tag_contents)
+                root.append(scan_tag_contents)
+
+        # Update the camera tags.
+        for child in root:
+            if child.tag == 'camera_position':
+                child.tag = 'globaldata_vec3'
+                child.set('label', 'camera_position')
+            if child.tag == 'camera_lookat':
+                child.tag = 'globaldata_vec3'
+                child.set('label', 'camera_lookat')
+            if child.tag == 'image_resolution':
+                child.tag = 'globaldata_int2'
+                child.set('label', 'image_resolution')
+
+        # Return the modified tree.
+        ET.indent(tree, '    ')
+        return tree
 
     @staticmethod
     def _convert_dict_params_to_string(d):

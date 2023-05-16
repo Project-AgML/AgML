@@ -16,7 +16,7 @@ import os
 from enum import Enum
 from numbers import Number
 from dataclasses import dataclass, fields, asdict
-from typing import List, Union, Sequence, TypeVar
+from typing import List, Union, Sequence, TypeVar, Any
 
 from agml.framework import AgMLSerializable
 from agml.synthetic.config import load_default_helios_configuration, verify_helios
@@ -72,15 +72,18 @@ class Parameters:
                                  f"to class {self.__class__.__name__}.")
 
         # Check if the type of the value matches that of the key.
-        try:
-            annotation = self.__annotations__[key].__origin__
-        except AttributeError:
-            # enables type checks for subscripted generics
-            annotation = (int, float)
-        if not isinstance(value, annotation):
-            raise TypeError(
-                f"Expected a value of type ({annotation}) for attribute "
-                f"'{key}', instead got '{value}' of type ({type(value)}).")
+        annotation = self.__annotations__[key]
+        if annotation is not Any:
+            try:
+                annotation = annotation.__origin__
+            except AttributeError:
+                # enables type checks for subscripted generics
+                annotation = (int, float)
+            if not isinstance(value, annotation):
+                raise TypeError(
+                    f"Expected a value of type ({annotation}) for attribute "
+                    f"'{key}', instead got '{value}' of type ({type(value)}).")
+
         super().__setattr__(key, value)
 
 
@@ -245,15 +248,15 @@ class CameraParameters(Parameters):
 @dataclass(repr = False)
 class LiDARParameters(Parameters):
     """Stores LiDAR parameters for Helios."""
-    origin: List[Number]    = None
-    size: List[int]         = None
-    thetaMin: Number        = None
-    thetaMax: Number        = None
-    phiMin: Number          = None
-    phiMax: Number          = None
-    exitDiameter: Number    = None
-    beamDivergence: Number  = None
-    ASCII_format: str       = None
+    origin: Any                 = None # can be a list of lists or a list of numbers
+    size: List[int]             = None
+    thetaMin: Number            = None
+    thetaMax: Number            = None
+    phiMin: Number              = None
+    phiMax: Number              = None
+    exitDiameter: Number        = None
+    beamDivergence: Number      = None
+    ASCII_format: str           = None
 
 
 class HeliosOptions(AgMLSerializable):
@@ -353,7 +356,7 @@ class HeliosOptions(AgMLSerializable):
     def simulation_type(self, value: Union[SimulationType, str]):
         self._simulation_type = SimulationType(value)
 
-        # Check that a GPU is available if the simulation type is set to LiDAR.
+        # Check that CUDA is available if the simulation type is set to LiDAR.
         if self._simulation_type == SimulationType.LiDAR:
             try:
                 import subprocess as sp
