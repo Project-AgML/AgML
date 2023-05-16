@@ -130,3 +130,26 @@ def weak_squeeze(arr, ndims = 2):
         while arr.ndim < ndims:
             arr = np.expand_dims(arr, axis = 0)
     return arr
+
+
+def is_float(num):
+    """Determines if a number is a float."""
+    is_ = isinstance(num, float) or isinstance(num, np.float32) or isinstance(num, np.float64)
+    if is_: return True
+    try:
+        float(num)
+    except ValueError:
+        return False
+    return True
+
+
+def is_int(num):
+    """Determines if a number is an int."""
+    is_ = isinstance(num, int) or isinstance(num, np.int32) or isinstance(num, np.int64)
+    if is_: return True
+    try:
+        int(num)
+    except ValueError:
+        return False
+    return True
+
