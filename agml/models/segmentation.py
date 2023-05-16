@@ -18,8 +18,13 @@ from tqdm import tqdm
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torchmetrics import JaccardIndex as IoU
-from torchvision.models.segmentation import deeplabv3_resnet50
+
+try:
+    from torchvision.models.segmentation import deeplabv3_resnet50
+except ImportError:
+    raise ImportError("To use image classification models in `agml.models`, you "
+                      "need to install Torchvision first. You can do this by "
+                      "running `pip install torchvision`.")
 
 from agml.models.base import AgMLModelBase
 from agml.models.benchmarks import BenchmarkMetadata
@@ -28,6 +33,10 @@ from agml.data.public import source
 from agml.utils.general import resolve_list_value
 from agml.utils.image import resolve_image_size
 from agml.viz.masks import show_image_with_overlaid_mask, show_image_and_mask
+
+# This is last since `agml.models.base` will check for PyTorch Lightning,
+# and PyTorch Lightning automatically installed torchmetrics with it.
+from torchmetrics import JaccardIndex as IoU
 
 
 class DeepLabV3Transfer(nn.Module):

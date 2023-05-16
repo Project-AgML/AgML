@@ -19,14 +19,28 @@ import numpy as np
 import albumentations as A
 
 from tqdm import tqdm
-from ensemble_boxes.ensemble_boxes_wbf import weighted_boxes_fusion
 
-from effdet import (
-    create_model_from_config,
-    get_efficientdet_config,
-    DetBenchPredict,
-    DetBenchTrain
-)
+try:
+    from ensemble_boxes.ensemble_boxes_wbf import weighted_boxes_fusion
+except ImportError:
+    raise ImportError(
+        "Could not find an installation of the `ensemble_boxes` package. "
+        "Try `pip install ensemble-boxes` to install it."
+    )
+
+try:
+    from effdet import (
+        create_model_from_config,
+        get_efficientdet_config,
+        DetBenchPredict,
+        DetBenchTrain
+    )
+except ImportError:
+    raise ImportError(
+        "Could not find an installation of the `effdet` package. "
+        "Try `pip install effdet==0.2.4` to install it (note that "
+        "the version is important for proper functionality)."
+    )
 
 from agml.models.base import AgMLModelBase
 from agml.models.benchmarks import BenchmarkMetadata

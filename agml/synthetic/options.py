@@ -77,8 +77,11 @@ class Parameters:
             try:
                 annotation = annotation.__origin__
             except AttributeError:
-                # enables type checks for subscripted generics
-                annotation = (int, float)
+                if annotation is str:
+                    pass
+                else:
+                    # enables type checks for subscripted generics
+                    annotation = (int, float)
             if not isinstance(value, annotation):
                 raise TypeError(
                     f"Expected a value of type ({annotation}) for attribute "

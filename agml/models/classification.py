@@ -16,7 +16,13 @@ from tqdm import tqdm
 
 import torch
 import torch.nn as nn
-from torchvision.models import efficientnet_b4
+
+try:
+    from torchvision.models import efficientnet_b4
+except ImportError:
+    raise ImportError("To use image classification models in `agml.models`, you "
+                      "need to install Torchvision first. You can do this by "
+                      "running `pip install torchvision`.")
 
 from agml.models.base import AgMLModelBase
 from agml.models.tools import auto_move_data, imagenet_style_process
