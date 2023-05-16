@@ -14,6 +14,7 @@
 
 from .loader import AgMLDataLoader
 from .image_loader import ImageLoader
+from .point_cloud import PointCloud
 from .public import (
     public_data_sources, source
 )

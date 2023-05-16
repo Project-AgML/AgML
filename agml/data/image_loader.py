@@ -40,6 +40,9 @@ class ImageLoader(AgMLSerializable):
     image_size : tuple, optional
         The size to resize the images to. If `None`, the images will not be resized.
     """
+    serializable = frozenset(
+        ('accessor_list', 'image_size', 'grayscale', 'return_paths', 'transforms'))
+
     def __init__(self, location, image_size = None, **kwargs):
         # Parse the input `location`: this can be either a directory of images,
         # a directory tree with nested image folders, or an AgML dataset.
