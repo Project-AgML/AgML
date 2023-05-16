@@ -34,3 +34,4 @@ from .config import (
     default_canopy_parameters
 )
 from .manual import generate_manual_data
+from .lidar_loader import LiDARDataLoader

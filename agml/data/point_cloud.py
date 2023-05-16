@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import os
-import sys
 
 import numpy as np
 
@@ -81,8 +80,20 @@ class PointCloud(object):
         return len(self._coordinates)
 
     @property
+    def coordinates(self):
+        return self._coordinates
+
+    @property
+    def labels(self):
+        return self._labels
+
+    @property
     def shape(self):
         return self._coordinates.shape
+
+    @property
+    def structure_3d(self):
+        return self._structure_3d
 
     @staticmethod
     def _infer_structure(row, pointcloud_structure):
@@ -174,15 +185,19 @@ class PointCloud(object):
         """
         # Construct the point cloud with the points and colors.
         if o3d is not None:
-            self.pcd = o3d.geometry.PointCloud()
+            self._structure_3d = o3d.geometry.PointCloud()
             points, colors = o3d.utility.Vector3dVector(), o3d.utility.Vector3dVector()
             for color, coord in zip(self._pointcloud_colors, self._coordinates):
                 points.append(coord)
                 colors.append(color)
-            self.pcd.points = points
-            self.pcd.colors = colors
+            self._structure_3d.points = points
+            self._structure_3d.colors = colors
+        else:
+            self._structure_3d = None
 
-    def plot(self):
-        """Displays the point cloud with Open3D or matplotlib depending on backend."""
-        o3d.visualization.draw_geometries([self.pcd])
+    def show(self, format = 'default'):
+        """Show a point cloud sample with its labels."""
+        # Prevent circular imports.
+        from agml.viz.point_clouds import show_point_cloud
+        show_point_cloud(self, format = format)
 

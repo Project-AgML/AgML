@@ -42,4 +42,7 @@ from .inspection import (
     plot_synthetic_camera_positions,
     visualize_all_views
 )
+from .point_clouds import (
+    show_point_cloud
+)
 from .display import display_image

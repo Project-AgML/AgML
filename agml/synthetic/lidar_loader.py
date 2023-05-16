@@ -26,7 +26,7 @@ from agml.utils.random import inject_random_state
 
 class LiDARDataLoader(AgMLSerializable):
     """A data loader for Helios-generated LiDAR point clouds."""
-    serializable = frozenset(('point_clouds',))
+    serializable = frozenset(('point_clouds', 'accessor_list'))
 
     def __init__(self, location):
         # Parse the input location and load all of the point clouds.
@@ -70,11 +70,19 @@ class LiDARDataLoader(AgMLSerializable):
         style_file = glob.glob(style_query_path)
         if len(style_file) == 0:
             return None
+        style_file = style_file[0]
 
         # Load the `ASCII_format` XML tag if it exists.
-        contents = style_file.read()
-        ascii_format = re.search('<ASCII_format>(.*)</ASCII_format>', contents).group(0).strip()
+        contents = open(style_file, 'r').read()
+        ascii_format = re.search('<ASCII_format>(.*)</ASCII_format>', contents).group(1).strip()
+        ascii_format = ascii_format.replace('object_label', 'label')
         ascii_format = ascii_format.split(' ')
         return ascii_format
+
+    def show_sample(self, format = 'default'):
+        """Shows a sample of a point cloud in the loader."""
+        # Prevent circular imports.
+        from agml.viz.point_clouds import show_point_cloud
+        show_point_cloud(self._point_clouds[np.random.choice(self._accessor_list)], format = format)
 
 
