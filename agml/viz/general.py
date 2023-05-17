@@ -16,7 +16,7 @@ import matplotlib.pyplot as plt
 
 from agml.backend.tftorch import is_array_like
 from agml.viz.boxes import show_image_and_boxes
-from agml.viz.masks import show_image_with_overlaid_mask
+from agml.viz.masks import show_image_and_overlaid_mask
 from agml.viz.labels import show_images_and_labels
 from agml.viz.tools import format_image, _inference_best_shape, convert_figure_to_image
 from agml.viz.display import display_image
@@ -52,7 +52,7 @@ def show_sample(loader, image_only = False, **kwargs):
         return show_image_and_boxes(
             sample, info = loader.info, no_show = kwargs.get('no_show', False))
     elif loader.task == 'semantic_segmentation':
-        return show_image_with_overlaid_mask(
+        return show_image_and_overlaid_mask(
             sample, no_show = kwargs.get('no_show', False))
     elif loader.task == 'image_classification':
         return show_images_and_labels(

@@ -28,9 +28,9 @@ def binary_to_channel_by_channel(mask, num_classes = None):
     if mask.ndim == 3 and not np.all(mask[:, :, 0] == mask[:, :, 1]):
         return mask
 
-    # For binary classification tasks, return the mask as-is.
+    # For binary classification tasks, return the mask with an additional channel.
     if len(np.unique(mask)) == 2 and mask.max() == 1:
-        return mask
+        return np.expand_dims(mask, -1)
 
     # Otherwise, convert the mask to channel-by-channel format.
     input_shape = mask.shape
@@ -137,11 +137,11 @@ def annotate_semantic_segmentation(image,
     return image
 
 
-def show_image_with_overlaid_mask(image,
-                                  mask = None,
-                                  alpha = 0.3,
-                                  border = True,
-                                  **kwargs):
+def show_image_and_overlaid_mask(image,
+                                 mask = None,
+                                 alpha = 0.3,
+                                 border = True,
+                                 **kwargs):
     """Displays an image with an annotated segmentation mask.
 
     This method overlays a segmentation mask over an image. It uses contours

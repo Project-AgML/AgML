@@ -30,7 +30,8 @@ from agml.data.managers.transform_helpers import (
     ScaleTransform,
     NormalizationTransform,
     OneHotLabelTransform,
-    MaskToChannelBasisTransform
+    MaskToChannelBasisTransform,
+    ToTensorSeg
 )
 from agml.utils.logging import log
 
@@ -67,7 +68,8 @@ class TransformManager(AgMLSerializable):
     there is no `dual_transform` for image classification.
     """
     serializable = frozenset(
-        ('task', 'transforms', 'time_inserted_transforms'))
+        ('task', 'transforms', 'time_inserted_transforms',
+         'contains_tf_transforms', 'contains_torch_transforms'))
 
     def __init__(self, task):
         self._task = task
@@ -86,6 +88,12 @@ class TransformManager(AgMLSerializable):
         # The `apply()` method loops sequentially through each transform
         # in this list and applies them as required.
         self._time_inserted_transforms = []
+
+        # Check if the loader already contains TensorFlow/PyTorch transforms.
+        # This is to track whether there are issues when a new transform is added
+        # or if there already exists one, so we whether to apply transforms.
+        self._contains_tf_transforms = False
+        self._contains_torch_transforms = False
 
     def get_transform_states(self):
         """Returns a copy of the existing transforms."""
@@ -319,13 +327,34 @@ class TransformManager(AgMLSerializable):
                 self._time_inserted_transforms.pop(norm_transform_index_time)
         return None
 
+    def _transform_update_and_check(self, tfm_type):
+        """Checks whether a TensorFlow/PyTorch transform has been added."""
+        # Check for transform conflicts.
+        if tfm_type == 'torch' and self._contains_tf_transforms:
+            raise TypeError("Received a PyTorch-type transform, yet the loader "
+                            "already contains TensorFlow/Keras transforms. This "
+                            "will cause an error, please only pass one format. If "
+                            "you want to remove a transform, pass a value of `None` "
+                            "to reset all of the transforms for a certain type.")
+        if tfm_type == 'tf' and self._contains_torch_transforms:
+            raise TypeError("Received a TensorFlow/Keras-type transform, yet the "
+                            "loader already contains PyTorch transforms. This "
+                            "will cause an error, please only pass one format. If "
+                            "you want to remove a transform, pass a value of `None` "
+                            "to reset all of the transforms for a certain type.")
+
+        # Update the transform type.
+        if tfm_type == 'torch':
+            self._contains_torch_transforms = True
+        if tfm_type == 'tf':
+            self._contains_tf_transforms = True
+
     # The following methods implement different checks which validate
     # as well as process input transformations, and manage the backend.
     # The transforms here will be also checked to match a specific
     # backend. Alternatively, the backend will dynamically be switched.
 
-    @staticmethod
-    def _construct_single_image_transform(transform):
+    def _construct_single_image_transform(self, transform):
         """Validates a transform which is applied to a single image.
 
         This is used for image classification transforms, which only
@@ -361,6 +390,7 @@ class TransformManager(AgMLSerializable):
                 if user_changed_backend():
                     raise StrictBackendError(change = 'tf', obj = transform)
                 set_backend('torch')
+            self._transform_update_and_check('torch')
             return transform
 
         # A `tf.keras.Sequential` preprocessing model or an individual
@@ -370,6 +400,7 @@ class TransformManager(AgMLSerializable):
                 if user_changed_backend():
                     raise StrictBackendError(change = 'torch', obj = transform)
                 set_backend('tf')
+            self._transform_update_and_check('tf')
             return transform
 
         # Otherwise, it may be a transform from a (lesser-known) third-party
@@ -377,8 +408,7 @@ class TransformManager(AgMLSerializable):
         # which are used in a more complex manner should be passed as decorators.
         return transform
 
-    @staticmethod
-    def _construct_image_and_mask_transform(transform):
+    def _construct_image_and_mask_transform(self, transform):
         """Validates a transform for an image and annotation mask.
 
         This is used for a semantic segmentation transform. Such
@@ -426,18 +456,41 @@ class TransformManager(AgMLSerializable):
                     if user_changed_backend():
                         raise StrictBackendError(
                             change = 'tf', obj = transform)
-                    set_backend('tf')
+                    set_backend('torch')
+
+                # Update `torchvision.transforms.ToTensor` to a custom
+                # updated class as this will modify the mask incorrectly.
+                import torchvision
+                if isinstance(transform, torchvision.transforms.ToTensor):
+                    transform = ToTensorSeg(None)
+                    log("Updated `ToTensor` transform in the provided pipeline "
+                        f"{transform} to an updated transform which does not "
+                        f"modify the mask. If you want to change this behaviour, "
+                        f"please raise an error with the AgML team.")
+                elif isinstance(transform, torchvision.transforms.Compose):
+                    tfm_list = transform.transforms.copy()
+                    for i, compose_tfm in enumerate(transform.transforms):
+                        if isinstance(compose_tfm, torchvision.transforms.ToTensor):
+                            tfm_list[i] = ToTensorSeg(None)
+                    transform = torchvision.transforms.Compose(tfm_list)
+                    log("Updated `ToTensor` transform in the provided pipeline "
+                        f"{transform} to an updated transform which does not "
+                        f"modify the mask. If you want to change this behaviour, "
+                        f"please raise an error with the AgML team.")
+
+                self._transform_update_and_check('torch')
             elif 'keras.layers' in transform.__module__:
                 if get_backend() != 'tf':
                     if user_changed_backend():
                         raise StrictBackendError(
                             change = 'torch', obj = transform)
-                    set_backend('torch')
+                    set_backend('tf')
                 log('Got a Keras transformation for a dual image and '
                     'mask transform. If you are passing preprocessing '
                     'layers to this method, then use `agml.data.experimental'
                     '.generate_keras_segmentation_dual_transform` in order '
                     'for the random state to be applied properly.', 'warning')
+                self._transform_update_and_check('tf')
             return SameStateImageMaskTransform(transform)
 
         # Another type of transform, most likely some form of transform

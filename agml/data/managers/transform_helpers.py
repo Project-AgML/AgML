@@ -145,3 +145,17 @@ class MaskToChannelBasisTransform(TransformApplierBase):
         return out[..., 1:].astype(np.int32)
 
 
+class ToTensorSeg(TransformApplierBase):
+    def apply(self, image, mask):
+        # This is essentially the same as `torchvision.transforms.ToTensor`,
+        # except it doesn't scale the values of the segmentation mask from
+        # 0-255 -> 0-1, as this would break the segmentaiotn pipeline.
+        if image.ndim == 2:
+            image = image[:, :, None]
+        image = torch.from_numpy(image).permute(2, 0, 1).contiguous()
+        if isinstance(image, torch.ByteTensor):
+            image = image.to(dtype = torch.float32).div(255)
+        mask = torch.from_numpy(mask)
+        return mask
+
+
