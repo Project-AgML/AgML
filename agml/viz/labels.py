@@ -57,7 +57,7 @@ def show_images_and_labels(images,
     The matplotlib figure with the plotted info.
     """
     if images is not None and labels is None:
-        if is_array_like(images[0]):
+        if is_array_like(images[0], no_list = True):
             if images[0].ndim >= 3:
                 images, labels = images[0], images[1]
             else:
@@ -82,8 +82,9 @@ def show_images_and_labels(images,
 
     # Check if the labels are converted to one-hot, and re-convert them back.
     if is_array_like(labels):
-        if labels.ndim == 2: # noqa
-            labels = np.argmax(labels, axis = -1)
+        if not isinstance(labels, (list, tuple)):
+            if labels.ndim == 2: # noqa
+                labels = np.argmax(labels, axis = -1)
 
     # If a prime number is passed, e.g. 23, then the `_inference_best_shape`
     # method will return the shape of (23, 1). Likely, the user is expecting
@@ -118,7 +119,7 @@ def show_images_and_labels(images,
     # Display and return the image.
     image = convert_figure_to_image()
     if not kwargs.get('no_show', False):
-        display_image(image)
+        _ = display_image(image)
     return image
 
 

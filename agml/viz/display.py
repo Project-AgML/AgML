@@ -34,17 +34,33 @@ def display_image(image, **kwargs):
             cv2_imshow(image)
             return
 
-        if kwargs.get('read_raw', False):
-            image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR) # convert back to BGR
-        cv2.imshow('image', image)
-        cv2.waitKey(0)
-        cv2.destroyWindow('image')
+        # If running in a Jupyter notebook, then for some weird reason it automatically
+        # displays images in the background, so don't actually do anything here.
+        notebook = False
+        try:
+            shell = eval("get_ipython().__class__.__name__")
+            if shell == 'ZMQInteractiveShell':
+                notebook = True
+        except NameError:
+            pass
+        if notebook:
+            # If the input content is not a figure, then we can display it.
+            if kwargs.get('matplotlib_figure', True):
+                return
 
-    if get_viz_backend() == 'matplotlib':
-        plt.figure(figsize = (10, 10))
-        plt.imshow(image)
-        plt.gca().axis('off')
-        plt.gca().set_aspect('equal')
-        plt.show()
+        else:
+            if kwargs.get('read_raw', False):
+                image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR) # convert back to BGR
+            cv2.imshow('image', image)
+            cv2.waitKey(0)
+            cv2.destroyWindow('image')
+            return
+
+    # Default case is matplotlib, since it is the most modular.
+    fig = plt.figure(figsize = (10, 10))
+    plt.imshow(image)
+    plt.gca().axis('off')
+    plt.gca().set_aspect('equal')
+    plt.show()
 
 

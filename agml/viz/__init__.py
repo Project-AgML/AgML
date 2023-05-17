@@ -23,6 +23,7 @@ from .tools import (
 from .masks import (
     convert_mask_to_colored_image,
     annotate_semantic_segmentation,
+    show_image_and_mask,
     show_image_with_overlaid_mask,
     show_semantic_segmentation_truth_and_prediction,
 )

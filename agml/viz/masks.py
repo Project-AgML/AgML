@@ -173,7 +173,7 @@ def show_image_with_overlaid_mask(image,
 
     # Display the annotated image.
     if not kwargs.get('no_show', False):
-        display_image(image)
+        _ = display_image(image, matplotlib_figure = False)
     return image
 
 
@@ -221,7 +221,7 @@ def show_image_and_mask(image,
     # Display and return the image.
     image = convert_figure_to_image()
     if not kwargs.get('no_show', False):
-        display_image(image)
+        _ = display_image(image)
     return image
 
 
@@ -262,6 +262,6 @@ def show_semantic_segmentation_truth_and_prediction(image,
     # Display and return the image.
     image = convert_figure_to_image()
     if not kwargs.get('no_show', False):
-        display_image(image)
+        _ = display_image(image)
     return image
 

@@ -193,7 +193,8 @@ def show_image_and_boxes(image,
                                       **kwargs)
 
     # Display the image.
-    display_image(image)
+    _ = display_image(image, matplotlib_figure = False)
+    return image
 
 
 def show_object_detection_truth_and_prediction(image,
@@ -312,7 +313,7 @@ def show_object_detection_truth_and_prediction(image,
     # Display and return the image.
     image = convert_figure_to_image()
     if not kwargs.get('no_show', False):
-        display_image(image)
+        _ = display_image(image)
     return image
 
 
