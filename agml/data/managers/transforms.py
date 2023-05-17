@@ -360,16 +360,16 @@ class TransformManager(AgMLSerializable):
             if get_backend() != 'torch':
                 if user_changed_backend():
                     raise StrictBackendError(change = 'tf', obj = transform)
-                set_backend('tf')
+                set_backend('torch')
             return transform
 
         # A `tf.keras.Sequential` preprocessing model or an individual
         # Keras preprocessing layer. This simply confirms the backend.
-        elif 'keras' in transform.__module__:
+        elif 'keras' in transform.__module__ or 'tensorflow' in transform.__module__:
             if get_backend() != 'tf':
                 if user_changed_backend():
                     raise StrictBackendError(change = 'torch', obj = transform)
-                set_backend('torch')
+                set_backend('tf')
             return transform
 
         # Otherwise, it may be a transform from a (lesser-known) third-party

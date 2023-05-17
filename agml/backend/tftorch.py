@@ -90,7 +90,9 @@ def set_backend(backend):
     global _USER_SET_BACKEND, _BACKEND
     # Check whether the user has modified the backend.
     mod = inspect.getmodule(inspect.stack()[1][0])
-    if 'agml.' not in mod.__name__:
+    if mod is None: # IPython shell
+        _USER_SET_BACKEND = True
+    elif 'agml.' not in mod.__name__:
         _USER_SET_BACKEND = True
 
     # If the backend is the same, don't do anything.
@@ -202,9 +204,11 @@ def scalar_unpack(inp):
     return [as_scalar(item) for item in inp]
 
 
-def is_array_like(inp):
+def is_array_like(inp, no_list = False):
     """Determines if an input is a np.ndarray, torch.Tensor, or tf.Tensor."""
     if isinstance(inp, (list, tuple)): # no need to import tensorflow for this
+        if no_list:
+            return False
         return True
     if isinstance(inp, np.ndarray):
         return True
