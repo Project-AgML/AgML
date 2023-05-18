@@ -21,14 +21,6 @@ from matplotlib.pyplot import cm
 from agml.utils.general import is_float, is_int
 from agml.utils.logging import log
 
-try:
-    import open3d as o3d
-except:
-    log("Open3D is not installed. If you want to have high-res point cloud "
-        "visualizations, please install Open3D using `pip install open3d`. "
-        "For now, defaulting to using 3D matplotlib visualizations.")
-    o3d = None
-
 
 class PointCloud(object):
     """Represents a 3D point cloud object, with utilities for format + visualization."""
@@ -183,6 +175,14 @@ class PointCloud(object):
     def _build_3d_object(self):
         """Function to construct the point cloud as a open3d point cloud object
         """
+        try:
+            import open3d as o3d
+        except:
+            log("Open3D is not installed. If you want to have high-res point cloud "
+                "visualizations, please install Open3D using `pip install open3d`. "
+                "For now, defaulting to using 3D matplotlib visualizations.")
+            o3d = None
+
         # Construct the point cloud with the points and colors.
         if o3d is not None:
             self._structure_3d = o3d.geometry.PointCloud()

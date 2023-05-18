@@ -16,7 +16,8 @@ import numpy as np
 
 import matplotlib.pyplot as plt
 
-from agml.data.point_cloud import PointCloud, o3d
+from agml.data.point_cloud import PointCloud
+from agml.utils.logging import log
 
 
 def show_point_cloud(point_cloud, format = 'default'):
@@ -33,6 +34,14 @@ def show_point_cloud(point_cloud, format = 'default'):
         done using Open3D. If 'matplotlib', then the visualization will be
         done using matplotlib. Defaults to 'default'.
     """
+    try:
+        import open3d as o3d
+    except:
+        log("Open3D is not installed. If you want to have high-res point cloud "
+            "visualizations, please install Open3D using `pip install open3d`. "
+            "For now, defaulting to using 3D matplotlib visualizations.")
+        o3d = None
+
     # We need to hard-code this check because this method isn't designed to
     # run with regular point cloud arrays, only `point_cloud` objects.
     if not isinstance(point_cloud, PointCloud):
