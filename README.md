@@ -136,6 +136,7 @@ You're now ready to use AgML for training your own models!
 [ghai_iceberg_lettuce_detection](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/ghai_iceberg_lettuce_detection.md) | Object Detection | 500 |
 [riseholme_strawberry_classification_2021](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/riseholme_strawberry_classification_2021.md) | Image Classification | 3520 |
 [ghai_broccoli_detection](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/ghai_broccoli_detection.md) | Object Detection | 500 |
+[bean_synthetic_earlygrowth_aerial](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/bean_synthetic_earlygrowth_aerial.md) | Semantic Segmentation | 2500 |
 
 ## Usage Information
 
@@ -166,4 +167,4 @@ a bug or feature that you would like to see implemented, please don't hesitate t
 See the [contributing guidelines](/CONTRIBUTING.md) for more information.
 
 ## Funding
-This project is partly funded by the [National AI Institute for Food Systems (AIFS)](https://aifs.ucdavis.edu)
+This project is partly funded by the [National AI Institute for Food Systems (AIFS)](https://aifs.ucdavis.edu

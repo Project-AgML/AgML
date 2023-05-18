@@ -1217,6 +1217,18 @@
         "annotation_format": "image",
         "n_images": "2500",
         "docs_url": "https://github.com/Project-AgML/AgML/blob/main/docs/datasets/bean_synthetic_earlygrowth_aerial.md",
-        "external_image_sources": []
+        "external_image_sources": [],
+        "stats": {
+            "mean": [
+                0.24804304540157318,
+                0.2218194305896759,
+                0.16611839830875397
+            ],
+            "std": [
+                0.10789012163877487,
+                0.12054657936096191,
+                0.08992248773574829
+            ]
+        }
     }
 }
