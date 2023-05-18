@@ -627,8 +627,8 @@
         "ml_task": "object_detection",
         "ag_task": "fruit_detection",
         "location": {
-            "continent": "north_america",
-            "country": "usa"
+            "continent": "digital",
+            "country": "digital"
         },
         "sensor_modality": "rgb",
         "real_synthetic": "synthetic",
@@ -1198,5 +1198,25 @@
                 0.23829665780067444
             ]
         }
+    },
+    "bean_synthetic_earlygrowth_aerial": {
+        "classes": {
+            "1": "leaves",
+            "2": "branches"
+        },
+        "ml_task": "semantic_segmentation",
+        "ag_task": "plant_segmentation",
+        "location": {
+            "continent": "digital",
+            "country": "digital"
+        },
+        "sensor_modality": "rgb",
+        "real_synthetic": "synthetic",
+        "platform": "aerial",
+        "input_data_format": "jpg",
+        "annotation_format": "image",
+        "n_images": "2500",
+        "docs_url": "https://github.com/Project-AgML/AgML/blob/main/docs/datasets/bean_synthetic_earlygrowth_aerial.md",
+        "external_image_sources": []
     }
 }

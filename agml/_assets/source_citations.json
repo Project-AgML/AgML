@@ -134,5 +134,9 @@
     "ghai_broccoli_detection": {
         "license": "CC BY-SA 4.0",
         "citation": ""
+    },
+    "bean_synthetic_earlygrowth_aerial": {
+        "license": "MIT",
+        "citation": "@ARTICLE{10.3389/fpls.2019.01185,\n  \nAUTHOR={Bailey, Brian N.},   \n\t \nTITLE={Helios: A Scalable 3D Plant and Environmental Biophysical Modeling Framework},      \n\t\nJOURNAL={Frontiers in Plant Science},      \n\t\nVOLUME={10},      \n\t\nYEAR={2019},      \n\t  \nURL={https://www.frontiersin.org/article/10.3389/fpls.2019.01185},       \n\t\nDOI={10.3389/fpls.2019.01185},      \n\t\nISSN={1664-462X},   \n   \nABSTRACT={This article presents an overview of Helios, a new three-dimensional (3D) plant and environmental modeling framework. Helios is a model coupling framework designed to provide maximum flexibility in integrating and running arbitrary 3D environmental system models. Users interact with Helios through a well-documented open-source C++ API. Version 1.0 comes with model plug-ins for radiation transport, the surface energy balance, stomatal conductance, photosynthesis, solar position, and procedural tree generation. Additional plug-ins are also available for visualizing model geometry and data and for processing and integrating LiDAR scanning data. Many of the plug-ins perform calculations on the graphics processing unit, which allows for efficient simulation of very large domains with high detail. An example modeling study is presented in which leaf-level heterogeneity in water usage and photosynthesis of an orchard is examined to understand how this leaf-scale variability contributes to whole-tree and -canopy fluxes.}\n}"
     }
 }

@@ -67,7 +67,7 @@ def _check_tf_torch():
 
 
 # Default backend is PyTorch.
-_BACKEND = 'torch'
+_BACKEND = None
 _USER_SET_BACKEND = False
 
 

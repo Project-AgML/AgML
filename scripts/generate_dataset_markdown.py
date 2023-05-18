@@ -18,6 +18,7 @@ Generates a markdown file with information for a given dataset.
 
 import os
 
+import cv2
 from tqdm import tqdm
 
 import agml
@@ -116,21 +117,8 @@ def build_table(json):
 def generate_example_images(name):
     """Generates the example images for the given dataset."""
     agml.backend.set_seed(189)
-    info = agml.data.source(name)
     loader = agml.data.AgMLDataLoader(name)
-    if info.tasks.ml == 'image_classification':
-        return agml.viz.visualize_images_with_labels(
-            loader[:NUM_EXAMPLES], info = info, show = False)
-    elif info.tasks.ml == 'object_detection':
-        return agml.viz.visualize_images([
-            agml.viz.annotate_bboxes_on_image(i, show = False)
-            for i in loader[:NUM_EXAMPLES]])
-    elif info.tasks.ml == 'semantic_segmentation':
-        return agml.viz.visualize_images([
-            agml.viz.visualize_overlaid_masks(i)
-            for i in loader[:NUM_EXAMPLES]], show = False)
-    else:
-        raise ValueError(f'Unknown ML task: {info.tasks.ml}')
+    return agml.viz.show_sample(loader, no_show = True)
 
 
 def build_examples(name):
@@ -140,7 +128,7 @@ def build_examples(name):
         LOCAL_AGML_REPO, 'docs/sample_images', f'{name}_examples.png')
     save_path_remote = os.path.join(
         AGML_REPO, 'docs/sample_images', f'{name}_examples.png')
-    sample.savefig(save_path_local)
+    cv2.imwrite(save_path_local, sample)
     return f'![Example Images for {name}]({save_path_remote})'
 
 
