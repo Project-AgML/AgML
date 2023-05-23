@@ -2,13 +2,9 @@ numpy
 matplotlib
 tqdm
 scikit-learn
+requests>=2.0.0
 opencv-python; sys.platform != 'linux'
 opencv-python-headless; sys.platform == 'linux'
-torch
-torchvision
 pyyaml>=5.4.1
 albumentations
 dict2xml
-pytorch-lightning
-effdet==0.2.4
-ensemble_boxes

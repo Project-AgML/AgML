@@ -19,14 +19,28 @@ import numpy as np
 import albumentations as A
 
 from tqdm import tqdm
-from ensemble_boxes.ensemble_boxes_wbf import weighted_boxes_fusion
 
-from effdet import (
-    create_model_from_config,
-    get_efficientdet_config,
-    DetBenchPredict,
-    DetBenchTrain
-)
+try:
+    from ensemble_boxes.ensemble_boxes_wbf import weighted_boxes_fusion
+except ImportError:
+    raise ImportError(
+        "Could not find an installation of the `ensemble_boxes` package. "
+        "Try `pip install ensemble-boxes` to install it."
+    )
+
+try:
+    from effdet import (
+        create_model_from_config,
+        get_efficientdet_config,
+        DetBenchPredict,
+        DetBenchTrain
+    )
+except ImportError:
+    raise ImportError(
+        "Could not find an installation of the `effdet` package. "
+        "Try `pip install effdet==0.2.4` to install it (note that "
+        "the version is important for proper functionality)."
+    )
 
 from agml.models.base import AgMLModelBase
 from agml.models.benchmarks import BenchmarkMetadata
@@ -36,7 +50,7 @@ from agml.data.public import source
 from agml.backend.tftorch import is_array_like
 from agml.utils.image import resolve_image_size
 from agml.utils.logging import log
-from agml.viz.boxes import visualize_image_and_boxes
+from agml.viz.boxes import show_image_and_boxes
 
 
 class DetectionModel(AgMLModelBase):
@@ -386,7 +400,7 @@ class DetectionModel(AgMLModelBase):
         bboxes, labels, _ = self.predict(image)
         if isinstance(labels, int):
             bboxes, labels = [bboxes], [labels]
-        return visualize_image_and_boxes(image, bboxes, labels)
+        return show_image_and_boxes(image, bboxes, labels)
 
     def load_benchmark(self, dataset, strict = False):
         """Loads a benchmark for the given semantic segmentation dataset.

@@ -51,7 +51,7 @@ class DataBuilder(AgMLSerializable):
         self._labels_for_image = None
 
     @classmethod
-    def from_data(cls, contents, info, root, builder):
+    def from_data(cls, contents, info, root, builder = None):
         """Initializes the `DataBuilder` from a pre-built set of data.
 
         This is mainly used when running `AgMLDataLoader.split`, to create
@@ -66,9 +66,10 @@ class DataBuilder(AgMLSerializable):
         obj._data = contents[0]
         obj._data_length = len(obj._data)
         obj._labels_for_image = contents[1]
-        if hasattr(builder, '_default_coco_annotations'):
-            obj._default_coco_annotations = DataBuilder._regenerate_coco_annotations(
-                builder._default_coco_annotations, obj._data)
+        if builder is not None:
+            if hasattr(builder, '_default_coco_annotations'):
+                obj._default_coco_annotations = DataBuilder._regenerate_coco_annotations(
+                    builder._default_coco_annotations, obj._data)
         return obj
 
     @staticmethod

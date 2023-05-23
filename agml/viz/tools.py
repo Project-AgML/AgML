@@ -16,6 +16,7 @@
 A tools module for `agml.viz`, which also serves as almost a
 mini-backend to control ops such as the colormap being used.
 """
+
 import os
 import io
 import json
@@ -27,8 +28,8 @@ from PIL import Image
 import matplotlib.pyplot as plt
 
 from agml.backend.tftorch import tf, torch
+from agml.backend.config import _get_config, _update_config
 from agml.utils.logging import log
-from agml.utils.image import imread_context
 
 
 # Sets the colormaps used in the other `agml.viz` methods.
@@ -42,9 +43,18 @@ def _load_colormaps():
         ret_dict[map_[0]] = map_[1] * 5
     return ret_dict
 
-
 _COLORMAPS = _load_colormaps()
-_COLORMAP_CHOICE = 'default'
+_COLORMAP_CHOICE: str = 'default'
+
+
+# Sets the visualization backend: either `matplotlib` or `cv2`.
+@functools.lru_cache(maxsize = None)
+def _load_backend():
+    if _get_config('viz_backend') is None:
+        _update_config('viz_backend', 'matplotlib')
+    return _get_config('viz_backend')
+
+_BACKEND: str = _load_backend()
 
 
 def get_colormap():
@@ -86,52 +96,19 @@ def set_colormap(colormap):
     _COLORMAP_CHOICE = 'custom'
 
 
-def auto_resolve_image(f):
-    """Resolves an image path or image into a read-in image."""
-    @functools.wraps(f)
-    def _resolver(image, *args, **kwargs):
-        if isinstance(image, (str, bytes, os.PathLike)):
-            if not os.path.exists(image):
-                raise FileNotFoundError(
-                    f"The provided image file {image} does not exist.")
-            with imread_context(image) as img:
-                image = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-        elif isinstance(image, (list, tuple)):
-            if not isinstance(image[0], (str, bytes, os.PathLike)):
-                pass
-            else:
-                processed_images = []
-                for image_path in image:
-                    if isinstance(image_path, (str, bytes, os.PathLike)):
-                        with imread_context(image_path) as img:
-                            image = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-                        processed_images.append(image)
-                    else:
-                        processed_images.append(image_path)
-                image = processed_images
-        return f(image, *args, **kwargs)
-    return _resolver
+def get_viz_backend():
+    """Returns the current AgML visualization backend."""
+    global _BACKEND
+    return _BACKEND
 
 
-def show_when_allowed(f):
-    """Stops running `plt.show()` when in a Jupyter Notebook."""
-    _in_notebook = False
-    try:
-        shell = eval("get_ipython().__class__.__name__")
-        cls = eval("get_ipython().__class__")
-        if shell == 'ZMQInteractiveShell' or 'colab' in cls:
-            _in_notebook = True
-    except:
-        pass
-
-    @functools.wraps(f)
-    def _cancel_display(*args, **kwargs):
-        show = kwargs.pop('show', True)
-        res = f(*args, **kwargs)
-        if not _in_notebook and show:
-            plt.show()
-        return res
-    return _cancel_display
+def set_viz_backend(backend):
+    """Sets the global AgML visualization backend."""
+    if backend not in ['matplotlib', 'cv2']:
+        raise ValueError(f"Invalid backend {backend} received.")
+    global _BACKEND
+    _update_config('viz_backend', backend)
+    _BACKEND = backend
 
 
 def format_image(img, mask = False):
@@ -189,7 +166,9 @@ def format_image(img, mask = False):
 
     # If the image is in range 0-255 but a float image, then
     # we need to convert it to an integer type.
-    if not mask:
+    if mask:
+        img = img.astype(np.uint8)
+    else:
         if np.issubdtype(img.dtype, np.inexact):
             if not img.max() <= 1: # noqa
                 img = img.astype(np.uint8)

@@ -16,12 +16,17 @@ from tqdm import tqdm
 
 import torch
 import torch.nn as nn
-from torchvision.models import efficientnet_b4
+
+try:
+    from torchvision.models import efficientnet_b4
+except ImportError:
+    raise ImportError("To use image classification models in `agml.models`, you "
+                      "need to install Torchvision first. You can do this by "
+                      "running `pip install torchvision`.")
 
 from agml.models.base import AgMLModelBase
 from agml.models.tools import auto_move_data, imagenet_style_process
 from agml.models.metrics.accuracy import Accuracy
-from agml.data.public import source
 
 
 class EfficientNetB4Transfer(nn.Module):
@@ -69,9 +74,9 @@ class ClassificationModel(AgMLModelBase):
     def __init__(self, num_classes = None, regression = False, **kwargs):
         # Construct the network and load in pretrained weights.
         super(ClassificationModel, self).__init__()
-        if kwargs.get('model_initialized', False):
+        self._regression = regression
+        if not kwargs.get('model_initialized', False):
             self._num_classes = num_classes
-            self._regression = regression
             self.net = self._construct_sub_net(num_classes)
 
     @auto_move_data
@@ -83,7 +88,7 @@ class ClassificationModel(AgMLModelBase):
         return EfficientNetB4Transfer(num_classes)
 
     @staticmethod
-    def _preprocess_image(image):
+    def _preprocess_image(image, **kwargs):
         """Preprocesses a single input image to EfficientNet standards.
 
         The preprocessing steps are applied logically; if the images
@@ -100,10 +105,10 @@ class ClassificationModel(AgMLModelBase):
         as well as other intermediate steps such as adding a channel
         dimension for two-channel inputs, for example.
         """
-        return imagenet_style_process(image)
+        return imagenet_style_process(image, **kwargs)
 
     @staticmethod
-    def preprocess_input(images = None) -> "torch.Tensor":
+    def preprocess_input(images = None, **kwargs) -> "torch.Tensor":
         """Preprocesses the input image to the specification of the model.
 
         This method takes in a set of inputs and preprocesses them into the
@@ -142,10 +147,10 @@ class ClassificationModel(AgMLModelBase):
         images = ClassificationModel._expand_input_images(images)
         return torch.stack(
             [ClassificationModel._preprocess_image(
-                image) for image in images], dim = 0)
+                image, **kwargs) for image in images], dim = 0)
 
     @torch.no_grad()
-    def predict(self, images):
+    def predict(self, images, **kwargs):
         """Runs `EfficientNetB4` inference on the input image(s).
 
         This method is the primary inference method for the model; it
@@ -170,7 +175,7 @@ class ClassificationModel(AgMLModelBase):
         -------
         A `np.ndarray` with integer labels for each image.
         """
-        images = self.preprocess_input(images)
+        images = self.preprocess_input(images, **kwargs)
         out = self.forward(images)
         if not self._regression: # standard classification
             out = torch.argmax(out, 1)
@@ -195,7 +200,7 @@ class ClassificationModel(AgMLModelBase):
         bar = tqdm(loader, desc = "Calculating Accuracy")
         for sample in bar:
             image, truth = sample
-            pred_label = self.predict(image)
+            pred_label = self.predict(image, **kwargs)
             acc.update([pred_label], [truth])
             bar.set_postfix({'accuracy': acc.compute().numpy().item()})
 

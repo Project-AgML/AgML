@@ -627,8 +627,8 @@
         "ml_task": "object_detection",
         "ag_task": "fruit_detection",
         "location": {
-            "continent": "north_america",
-            "country": "usa"
+            "continent": "digital",
+            "country": "digital"
         },
         "sensor_modality": "rgb",
         "real_synthetic": "synthetic",
@@ -1103,6 +1103,131 @@
                 0.28846681118011475,
                 0.27976617217063904,
                 0.276553213596344
+            ]
+        }
+    },
+    "ghai_iceberg_lettuce_detection": {
+        "classes": {
+            "1": "iceberg_lettuce"
+        },
+        "ml_task": "object_detection",
+        "ag_task": "crop_detection",
+        "location": {
+            "continent": "north_america",
+            "country": "usa"
+        },
+        "sensor_modality": "rgb",
+        "real_synthetic": "real",
+        "platform": "handheld/ground",
+        "input_data_format": "jpg",
+        "annotation_format": "coco_json",
+        "n_images": "500",
+        "docs_url": "https://github.com/AxisAg/GHAIDatasets/blob/main/datasets/iceberg.md",
+        "external_image_sources": [],
+        "stats": {
+            "mean": [
+                0.3193310499191284,
+                0.4143226742744446,
+                0.3003973960876465
+            ],
+            "std": [
+                0.2828165590763092,
+                0.2841264605522156,
+                0.25660744309425354
+            ]
+        }
+    },
+    "riseholme_strawberry_classification_2021": {
+        "classes": {
+            "0": "anomalous",
+            "1": "occluded",
+            "2": "ripe",
+            "3": "unripe"
+        },
+        "ml_task": "image_classification",
+        "ag_task": "disease_classification",
+        "sensor_modality": "rgb",
+        "real_synthetic": "real",
+        "platform": "ground",
+        "input_data_format": "png",
+        "annotation_format": "directory_names",
+        "n_images": "3520",
+        "docs_url": "https://github.com/ctyeong/Riseholme-2021",
+        "external_image_sources": [],
+        "stats": {
+            "mean": [
+                0.5753855109214783,
+                0.4637872874736786,
+                0.3637043833732605
+            ],
+            "std": [
+                0.1983788013458252,
+                0.19222092628479004,
+                0.1773509532213211
+            ]
+        }
+    },
+    "ghai_broccoli_detection": {
+        "classes": {
+            "1": "canopy",
+            "2": "crown"
+        },
+        "ml_task": "object_detection",
+        "ag_task": "crop_detection",
+        "location": {
+            "continent": "north_america",
+            "country": "usa"
+        },
+        "sensor_modality": "rgb",
+        "real_synthetic": "real",
+        "platform": "handheld/ground",
+        "input_data_format": "jpg",
+        "annotation_format": "coco_json",
+        "n_images": "500",
+        "docs_url": "https://github.com/AxisAg/GHAIDatasets/blob/main/datasets/broccoli.md",
+        "external_image_sources": [],
+        "stats": {
+            "mean": [
+                0.42832377552986145,
+                0.45015057921409607,
+                0.43816232681274414
+            ],
+            "std": [
+                0.24546495079994202,
+                0.23975253105163574,
+                0.23829665780067444
+            ]
+        }
+    },
+    "bean_synthetic_earlygrowth_aerial": {
+        "classes": {
+            "1": "leaves",
+            "2": "branches"
+        },
+        "ml_task": "semantic_segmentation",
+        "ag_task": "plant_segmentation",
+        "location": {
+            "continent": "digital",
+            "country": "digital"
+        },
+        "sensor_modality": "rgb",
+        "real_synthetic": "synthetic",
+        "platform": "aerial",
+        "input_data_format": "jpg",
+        "annotation_format": "image",
+        "n_images": "2500",
+        "docs_url": "https://github.com/Project-AgML/AgML/blob/main/docs/datasets/bean_synthetic_earlygrowth_aerial.md",
+        "external_image_sources": [],
+        "stats": {
+            "mean": [
+                0.24804304540157318,
+                0.2218194305896759,
+                0.16611839830875397
+            ],
+            "std": [
+                0.10789012163877487,
+                0.12054657936096191,
+                0.08992248773574829
             ]
         }
     }

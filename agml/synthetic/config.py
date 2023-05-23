@@ -147,9 +147,9 @@ def _check_helios_installation():
         shutil.copytree(project_dir, output_dir)
         os.makedirs(os.path.join(output_dir, 'xml'), exist_ok = True)
 
-    # Recompile Helios.
-    from agml.synthetic.compilation import _compile_helios_default
-    _compile_helios_default()
+    # Recompile Helios (with the prior configuration).
+    from agml.synthetic.compilation import _compile_helios_default, is_helios_compiled_with_lidar
+    _compile_helios_default(lidar_enabled = is_helios_compiled_with_lidar())
 
     # Update the latest check.
     with open(os.path.expanduser('~/.agml/config.json')) as f:
@@ -282,7 +282,7 @@ def _get_lidar_params():
     # No files are read here, the parameters are hard-coded.
     lidar_params = {
         "origin": [0.0, 0.0, 0.0],
-        "size": [250.0, 450.0],
+        "size": [250, 450],
         "thetaMin": 0,
         "thetaMax": 180,
         "phiMin": 0,

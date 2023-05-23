@@ -109,6 +109,10 @@ class DataManager(AgMLSerializable):
         """Calculates the length of the data based on the batching state."""
         return len(self._accessors)
 
+    def _get_random_index(self):
+        """Returns a random accessor index to get a specific sample."""
+        return np.random.choice(self._accessors)
+
     def _create_objects(self, builder, task):
         """Creates `DataObject`s from the provided content.
 

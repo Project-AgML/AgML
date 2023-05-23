@@ -14,16 +14,15 @@
 
 import matplotlib.pyplot as plt
 
-from agml.viz.boxes import visualize_image_and_boxes
-from agml.viz.masks import visualize_image_and_mask
-from agml.viz.labels import visualize_images_with_labels
-from agml.viz.tools import (
-    show_when_allowed, auto_resolve_image,
-    format_image, _inference_best_shape
-)
+from agml.backend.tftorch import is_array_like
+from agml.viz.boxes import show_image_and_boxes
+from agml.viz.masks import show_image_and_overlaid_mask
+from agml.viz.labels import show_images_and_labels
+from agml.viz.tools import format_image, _inference_best_shape, convert_figure_to_image
+from agml.viz.display import display_image
 
 
-def show_sample(loader, image_only = False):
+def show_sample(loader, image_only = False, **kwargs):
     """A simplified convenience method that visualizes a sample from a loader.
 
     This method works for all kind of annotations; it picks the appropriate
@@ -42,27 +41,36 @@ def show_sample(loader, image_only = False):
     -------
     The matplotlib figure.
     """
-    sample = loader[0]
-    if image_only:
-        return visualize_images(sample[0])
+    if kwargs.get('sample', None) is not None:
+        sample = kwargs['sample']
+    else:
+        sample = loader[0]
+        if image_only:
+            return show_images(sample[0])
 
     if loader.task == 'object_detection':
-        return visualize_image_and_boxes(sample)
+        return show_image_and_boxes(
+            sample, info = loader.info, no_show = kwargs.get('no_show', False))
     elif loader.task == 'semantic_segmentation':
-        return visualize_image_and_mask(sample)
+        return show_image_and_overlaid_mask(
+            sample, no_show = kwargs.get('no_show', False))
     elif loader.task == 'image_classification':
-        return visualize_images_with_labels(sample)
+        return show_images_and_labels(
+            sample, info = loader.info, no_show = kwargs.get('no_show', False))
 
 
-@show_when_allowed
-@auto_resolve_image
-def visualize_images(images, shape = None):
-    """Visualizes a set of images in the given shape.
+def show_images(images,
+                shape = None,
+                **kwargs):
+    """Shows multiple images in a grid format with the given shape.
 
     Given a set of images, this method will generate a grid for the
     images and display them as such. The shape of the grid will by
     default be inferenced to be the two closest factors of the number
-    of images (to  be as close to square as possible).
+    of images (to be as close to square as possible).
+
+    If you don't want to display the image (and just get the output), pass
+    `no_show` as true in order to bypass this.
 
     Parameters
     ----------
@@ -76,6 +84,14 @@ def visualize_images(images, shape = None):
     -------
     The matplotlib figure with the plotted images.
     """
+    # If only one image is passed, then we can directly display that image.
+    if not isinstance(images, (list, tuple)):
+        if is_array_like(images):
+            images = format_image(images)
+            if not kwargs.get('no_show', False):
+                display_image(images)
+            return images
+
     # If a prime number is passed, e.g. 23, then the `_inference_best_shape`
     # method will return the shape of (23, 1). Likely, the user is expecting
     # a non-rectangular shape such as (6, 4), where the bottom right axis is
@@ -103,7 +119,11 @@ def visualize_images(images, shape = None):
             top = False, left = False, right = False
         )
         plt.setp(ax.spines.values(), visible = False)
-
     fig.tight_layout()
-    return fig
+
+    # Display and return the image.
+    image = convert_figure_to_image()
+    if not kwargs.get('no_show', False):
+        display_image(image)
+    return image
 

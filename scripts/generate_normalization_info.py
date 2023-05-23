@@ -57,7 +57,7 @@ for ds in tqdm(datasets, desc = 'Processing Datasets'):
     if not os.path.exists(os.path.join(
             os.path.expanduser('~'), '.agml', 'datasets', ds.name)):
         leave = False
-    loader = agml.data.AgMLDataLoader(ds)
+    loader = agml.data.AgMLDataLoader(ds if isinstance(ds, str) else ds.name)
 
     # Get the mean/std of individual images.
     num_images, mean, std = 0, 0., 0.

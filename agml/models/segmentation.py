@@ -18,8 +18,13 @@ from tqdm import tqdm
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torchmetrics import JaccardIndex as IoU
-from torchvision.models.segmentation import deeplabv3_resnet50
+
+try:
+    from torchvision.models.segmentation import deeplabv3_resnet50
+except ImportError:
+    raise ImportError("To use image classification models in `agml.models`, you "
+                      "need to install Torchvision first. You can do this by "
+                      "running `pip install torchvision`.")
 
 from agml.models.base import AgMLModelBase
 from agml.models.benchmarks import BenchmarkMetadata
@@ -27,7 +32,11 @@ from agml.models.tools import auto_move_data, imagenet_style_process
 from agml.data.public import source
 from agml.utils.general import resolve_list_value
 from agml.utils.image import resolve_image_size
-from agml.viz.masks import visualize_overlaid_masks, visualize_image_and_mask
+from agml.viz.masks import show_image_with_overlaid_mask, show_image_and_mask
+
+# This is last since `agml.models.base` will check for PyTorch Lightning,
+# and PyTorch Lightning automatically installed torchmetrics with it.
+from torchmetrics import JaccardIndex as IoU
 
 
 class DeepLabV3Transfer(nn.Module):
@@ -101,7 +110,7 @@ class SegmentationModel(AgMLModelBase):
         return DeepLabV3Transfer(num_classes)
 
     @staticmethod
-    def _preprocess_image(image, image_size):
+    def _preprocess_image(image, image_size, **kwargs):
         """Preprocesses a single input image to EfficientNet standards.
 
         The preprocessing steps are applied logically; if the images
@@ -118,9 +127,9 @@ class SegmentationModel(AgMLModelBase):
         as well as other intermediate steps such as adding a channel
         dimension for two-channel inputs, for example.
         """
-        return imagenet_style_process(image, size = image_size)
+        return imagenet_style_process(image, size = image_size, **kwargs)
 
-    def preprocess_input(self, images, return_shapes = False):
+    def preprocess_input(self, images, return_shapes = False, **kwargs):
         """Preprocesses the input image to the specification of the model.
 
         This method takes in a set of inputs and preprocesses them into the
@@ -163,13 +172,13 @@ class SegmentationModel(AgMLModelBase):
         shapes = self._get_shapes(images)
         images = torch.stack(
             [self._preprocess_image(
-                image, self._image_size) for image in images], dim = 0)
+                image, self._image_size, **kwargs) for image in images], dim = 0)
         if return_shapes:
             return images, shapes
         return images
 
     @torch.no_grad()
-    def predict(self, images):
+    def predict(self, images, **kwargs):
         """Runs `DeepLabV3` inference on the input image(s).
 
         This method is the primary inference method for the model; it
@@ -195,7 +204,7 @@ class SegmentationModel(AgMLModelBase):
         A list of `np.ndarray`s with resized output masks.
         """
         # Process the images and run inference.
-        images, shapes = self.preprocess_input(images, return_shapes = True)
+        images, shapes = self.preprocess_input(images, return_shapes = True, **kwargs)
         out = torch.sigmoid(self.forward(images))
 
         # Post-process the output masks to a valid format.
@@ -239,10 +248,10 @@ class SegmentationModel(AgMLModelBase):
         The matplotlib figure containing the image.
         """
         image = self._expand_input_images(image)[0]
-        mask = self.predict(image)
+        mask = self.predict(image, **kwargs)
         if overlay:
-            return visualize_overlaid_masks(image, mask, **kwargs)
-        return visualize_image_and_mask(image, mask, **kwargs)
+            return show_image_with_overlaid_mask(image, mask, **kwargs)
+        return show_image_and_mask(image, mask, **kwargs)
 
     def load_benchmark(self, dataset):
         """Loads a benchmark for the given semantic segmentation dataset.
@@ -301,7 +310,7 @@ class SegmentationModel(AgMLModelBase):
         bar = tqdm(loader, desc = "Calculating Mean Intersection Over Union")
         for sample in bar:
             image, truth = sample
-            pred_mask = self.predict(image)
+            pred_mask = self.predict(image, **kwargs)
             if pred_mask.ndim == 3:
                 pred_mask = np.transpose(pred_mask, (2, 0, 1))
                 truth = np.transpose(truth, (2, 0, 1))

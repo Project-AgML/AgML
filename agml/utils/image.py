@@ -13,8 +13,9 @@
 # limitations under the License.
 
 import os
-import numpy as np
+
 import cv2
+import numpy as np
 
 
 def consistent_shapes(objects):

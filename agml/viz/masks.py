@@ -14,214 +14,122 @@
 
 import cv2
 import numpy as np
-
 import matplotlib.pyplot as plt
 
 from agml.utils.general import resolve_tuple_values
-from agml.viz.tools import (
-    format_image, get_colormap, auto_resolve_image, show_when_allowed
-)
+from agml.viz.tools import get_colormap, format_image, convert_figure_to_image
+from agml.viz.display import display_image
 
 
-def _reduce_categorical_mask(mask):
-    """Reduces a categorical mask label to one-dimensional."""
-    return np.argmax(mask, axis = -1)
+def binary_to_channel_by_channel(mask, num_classes = None):
+    """Converts a mask from 2-dimensional to channel-by-channel."""
+    # If the mask is already 3 channels (in channel-by-channel format),
+    # then don't do anything and return the original mask as-is.
+    if mask.ndim == 3 and not np.all(mask[:, :, 0] == mask[:, :, 1]):
+        return mask
+
+    # For binary classification tasks, return the mask with an additional channel.
+    if len(np.unique(mask)) == 2 and mask.max() == 1:
+        return np.expand_dims(mask, -1)
+
+    # Otherwise, convert the mask to channel-by-channel format.
+    input_shape = mask.shape
+    mask = mask.ravel()
+    n = mask.shape[0]
+    mask = np.array(mask, dtype = np.int32)
+    if num_classes is None:
+        num_classes = np.max(mask) + 1
+    out = np.zeros(shape = (n, num_classes))
+    out[np.arange(n), mask] = 1
+    out = np.reshape(out, input_shape + (num_classes,))
+    return out[..., 1:].astype(np.int32)
 
 
-def _preprocess_mask(mask):
-    """Preprocesses a mask with a distinct colorscheme."""
+def convert_mask_to_colored_image(mask):
+    """Converts a semantic segmentation mask into a colored image.
+
+    Parameters
+    ----------
+    mask : np.ndarray
+        A semantic segmentation mask.
+
+    Returns
+    -------
+    The post-processed mask with different colors for each class.
+    """
+    # Check that the mask has an appropriate number of dimensions. If it is
+    # 2-dimensional, then convert it into a three-dimensional mask. Otherwise,
+    # if all of the channel slices are the same, then it is fine. If not, then
+    # convert it from a channel-by-channel mask to a 2-dimensional mask.
     if mask.ndim == 3:
         if not np.all(mask[:, :, 0] == mask[:, :, 1]):
-            mask = _reduce_categorical_mask(mask)
+            mask = np.argmax(mask, axis = -1)
     if mask.ndim == 2:
         mask = np.dstack((mask, mask, mask))
 
     # Add a colorscheme to the labels.
-    label_indx = 1
-    while True:
+    cmap = get_colormap()
+    label_indices = np.unique(mask)[1:] # skip the background label
+    for label_indx in label_indices:
         x_values, y_values, *_ = np.where(mask == label_indx)
-        coords = np.stack([x_values, y_values]).T
-        if coords.size == 0:
-            break
-        mask[tuple([*coords.T])] = get_colormap()[label_indx]
-        label_indx += 1
+        mask[tuple([*np.stack([x_values, y_values])])] = cmap[label_indx]
     return mask
 
 
-def _mask_2d_to_3d(mask):
-    """Converts a mask from 2-dimensional to channel-by-channel."""
-    if mask.ndim == 3:
-        return mask
-    mask = np.squeeze(mask)
-    channels = np.unique(mask)[1:]
-    if len(channels) == 0:
-        return np.zeros(shape = (*mask.shape[:2], 1))
-    out = np.zeros(shape = (*mask.shape[:2], int(max(channels))))
-    iter_idx = 1
-    while True:
-        if iter_idx > max(channels):
-            break
-        elif iter_idx not in channels:
-            out[:, :, iter_idx - 1] = np.zeros(shape = (mask.shape[:2]))
-            iter_idx += 1
-            continue
-        coords = np.stack(np.where(mask == iter_idx)[:2]).T
-        channel = np.zeros(shape = (*mask.shape[:2],))
-        channel[tuple([*coords.T])] = 1
-        out[:, :, iter_idx - 1] = channel
-        iter_idx += 1
-    return out
+def annotate_semantic_segmentation(image,
+                                   mask = None,
+                                   alpha = 0.3,
+                                   border = True):
+    """Annotates a semantic segmentation mask over an image.
 
-
-def output_to_mask(mask):
-    """Converts an output annotation mask into a visual segmentation mask.
-
-    Given the output segmentation mask from a model (a 2-dimensional
-    image array with a number representing a class label) this method
-    will convert it into an image with colors for the regions with
-    different labels. This is a purely visual transformation.
+    This method overlays a segmentation mask over an image. It uses contours
+    to draw out the segmentation borders. The mask can be either a binary mask
+    or a channel-by-channel mask. The level to which the overlay is done can be
+    controlled using the `alpha` argument, and if you want to see the actual
+    borders of each of the individual segmented blobs, then set `border` to True.
 
     Parameters
     ----------
-    mask : np.ndarray
-        The above cases of a possible segmentation mask.
+    image : np.ndarray
+        The image to annotate.
+    mask : np.ndarray, optional
+        The segmentation mask to overlay over the image.
+    alpha : float, optional
+        The level of transparency to use when overlaying the mask over the image.
+    border : bool, optional
+        Whether or not to draw the actual borders of the segmented blobs.
 
     Returns
     -------
-    The colorful visually formatted mask.
+    The annotated image.
     """
-    return _preprocess_mask(mask)
-
-
-@show_when_allowed
-@auto_resolve_image
-def visualize_image_and_mask(image, mask = None):
-    """Visualizes an image and its corresponding segmentation mask.
-
-    Creates a 1 row, 2 column frame and displays an image with
-    its corresponding segmentation mask. Applies a distinct
-    colorscheme to the mask to visualize colors more clearly.
-
-    Parameters
-    ----------
-    image : Any
-        Either the original image, or a tuple containing the image
-        and its mask (if using a DataLoader, for example).
-    mask : np.ndarray
-        The output mask.
-
-    Returns
-    -------
-    The matplotlib figure with the images.
-    """
+    # Get the image and mask from the given input arguments.
     image, mask = resolve_tuple_values(
         image, mask, custom_error =
         "If `image` is a tuple/list, it should contain "
         "two values: the image and its mask.")
     image = format_image(image)
-    mask = _preprocess_mask(format_image(mask, mask = True))
+    mask = binary_to_channel_by_channel(format_image(mask, mask = True))
 
-    fig, axes = plt.subplots(1, 2, figsize = (10, 5))
-    axes[0].imshow(image)
-    axes[1].imshow(mask)
-    for ax in axes:
-        ax.set_aspect('equal')
-        ax.axis('off')
-    return fig
-
-
-@show_when_allowed
-@auto_resolve_image
-def visualize_image_mask_and_predicted(image, mask = None, predicted = None):
-    """Visualizes an image, its segmentation mask, and a predicted mask.
-
-    Creates a 1 row, 3 column frame and displays an image with
-    its corresponding segmentation mask and a predicted segmentation
-    mask as given in `predicted`. This figure includes axis titles
-    for the image, mask, and predicted mask, for differentiation.
-
-    Parameters
-    ----------
-    image : Any
-        Either the original image, or a tuple containing the image
-        and its mask (if using a DataLoader, for example).
-    mask : np.ndarray
-        The output mask.
-    predicted : np.ndarray
-        The predicted mask.
-
-    Returns
-    -------
-    The matplotlib figure with the images.
-    """
-    image, mask, predicted = resolve_tuple_values(
-        image, mask, predicted, custom_error =
-        "If `image` is a tuple/list, it should contain three "
-        "values: the image, its mask, and a predicted mask.")
-    image = format_image(image)
-    mask = _preprocess_mask(format_image(mask))
-    predicted = _preprocess_mask(format_image(predicted))
-
-    fig, axes = plt.subplots(1, 3, figsize = (10, 5))
-    for im, ax, label in zip(
-        [image, mask, predicted], axes,
-        ['Input Image', 'Ground Truth Mask', 'Predicted Mask']
-    ):
-        ax.imshow(im)
-        ax.set_title(label)
-        ax.set_aspect('equal')
-        ax.axis('off')
-    fig.tight_layout()
-    return fig
-
-
-@auto_resolve_image
-def overlay_segmentation_masks(image, mask = None, border = True):
-    """Overlays segmentation masks over an image.
-
-    Creates a single image and displays the segmentation annotations
-    from the mask overlaid onto the main image. The mask will be
-    semi-transparent and have a colorscheme applied to it in order
-    to facilitate easier visualization of it.
-
-    Parameters
-    ----------
-    image : Any
-        Either the original image, or a tuple containing the image
-        and its mask (if using a DataLoader, for example).
-    mask : np.ndarray
-        The output mask (should be an array with dimension 2).
-    border : bool
-        Whether to add a border to the segmentation overlay.
-
-    Returns
-    -------
-    A `np.ndarray` representing the image.
-    """
-    image, mask = resolve_tuple_values(
-        image, mask, custom_error =
-        "If `image` is a tuple/list, it should contain "
-        "two values: the image and its mask.")
-    image = format_image(image)
-    mask = _mask_2d_to_3d(format_image(mask))
-
-    # Plot the segmentation masks over the image
+    # Plot the given segmentation mask over the image. This essentially
+    # overlays the given mask using contours to draw out segmentation borders.
+    cmap = get_colormap()
     mask = np.transpose(mask, (2, 0, 1))
     for level, label in enumerate(mask):
         label = np.expand_dims(label, axis = -1)
-        label = (label * (255 / (np.max(label, axis = (0, 1))))) \
-                .astype(np.uint8)
+        label = (label * np.true_divide(255, np.max(label, axis = (0, 1)) + 1e-6)).astype(np.uint8)
 
-        # Find contours and plot them
+        # Find the given contours and plot them.
         _, thresh = cv2.threshold(label, 127, 255, cv2.THRESH_BINARY)
         contours, _ = cv2.findContours(
             thresh, cv2.RETR_LIST, cv2.CHAIN_APPROX_NONE)
         for indx, contour in enumerate(contours):
-            color = get_colormap()[level + 1]
+            color = cmap[level + 1]
             overlay = image.copy()
             cv2.fillPoly(overlay, pts = [contour], color = color)
-            label = label.astype(np.float32)
-            image = cv2.addWeighted(overlay, 0.3, image, 0.7, 0)
+            image = cv2.addWeighted(overlay, alpha, image, 1 - alpha, 0)
+
+            # Draws the actual contour borders to show the segmented blobs.
             if border:
                 image = cv2.polylines(
                     image, pts = [contour], isClosed = True,
@@ -229,38 +137,131 @@ def overlay_segmentation_masks(image, mask = None, border = True):
     return image
 
 
-@show_when_allowed
-@auto_resolve_image
-def visualize_overlaid_masks(image, mask = None, border = True):
-    """Displays an image with segmentation masks overlaid on it.
+def show_image_and_overlaid_mask(image,
+                                 mask = None,
+                                 alpha = 0.3,
+                                 border = True,
+                                 **kwargs):
+    """Displays an image with an annotated segmentation mask.
 
-    See `overlay_segmentation_masks` for an explanation of procedure.
+    This method overlays a segmentation mask over an image. It uses contours
+    to draw out the segmentation borders. The mask can be either a binary mask
+    or a channel-by-channel mask. The level to which the overlay is done can be
+    controlled using the `alpha` argument, and if you want to see the actual
+    borders of each of the individual segmented blobs, then set `border` to True.
 
     Parameters
     ----------
-    image : Any
-        Either the original image, or a tuple containing the image
-        and its mask (if using a DataLoader, for example).
-    mask : np.ndarray
-        The output mask (should be an array with dimension 2).
-    border : bool
-        Whether to add a border to the segmentation overlay.
+    image : np.ndarray
+        The image to annotate.
+    mask : np.ndarray, optional
+        The segmentation mask to overlay over the image.
+    alpha : float, optional
+        The level of transparency to use when overlaying the mask over the image.
+    border : bool, optional
+        Whether or not to draw the actual borders of the segmented blobs.
 
     Returns
     -------
-    A `np.ndarray` representing the image.
+    The annotated image.
     """
-    # Plot the segmentation masks over the image
-    image = overlay_segmentation_masks(image, mask, border)
+    # Parse the inputs and annotate the image.
+    image = annotate_semantic_segmentation(image = image,
+                                           mask = mask,
+                                           alpha = alpha,
+                                           border = border)
 
-    # Plot the figure
-    plt.figure(figsize = (10, 10))
-    plt.imshow(image)
-    plt.gca().axis('off')
-    plt.gca().set_aspect('equal')
+    # Display the annotated image.
+    if not kwargs.get('no_show', False):
+        _ = display_image(image, matplotlib_figure = False)
     return image
 
 
+def show_image_and_mask(image,
+                        mask = None,
+                        **kwargs):
+    """Displays an image and its mask side-by-side.
+
+    This method displays an image and its mask side-by-side. Note that if you
+    want to simply get the output without displaying it, then you should pass
+    `no_show` as True.
+
+    Parameters
+    ----------
+    image : np.ndarray
+        The image to display.
+    mask : np.ndarray
+        The mask to display.
+    kwargs : dict
+        Additional keyword arguments.
+
+    Returns
+    -------
+    A image containing the original image and its mask side-by-side.
+    """
+    # Get the image and mask from the given input arguments.
+    image, mask = resolve_tuple_values(
+        image, mask, custom_error =
+        "If `image` is a tuple/list, it should contain "
+        "two values: the image and its mask.")
+
+    # Prepare the inputs.
+    image = format_image(image)
+    mask = convert_mask_to_colored_image(format_image(mask, mask = True))
+
+    # Display the image and its mask side-by-side.
+    fig, axes = plt.subplots(1, 2, figsize = (12, 6))
+    axes[0].imshow(image)
+    axes[1].imshow(mask)
+    for ax in axes:
+        ax.set_aspect('equal')
+        ax.axis('off')
+    plt.tight_layout()
+
+    # Display and return the image.
+    image = convert_figure_to_image()
+    if not kwargs.get('no_show', False):
+        _ = display_image(image)
+    return image
 
 
+def show_semantic_segmentation_truth_and_prediction(image,
+                                                    real_mask = None,
+                                                    predicted_mask = None,
+                                                    alpha = 0.3,
+                                                    border = True,
+                                                    **kwargs):
+    # Parse the input arguments to get the corresponding images
+    # and masks stored in the correct variables.
+    image, real_mask, predicted_mask = resolve_tuple_values(
+        image, real_mask, predicted_mask, custom_error =
+        "If `image` is a tuple/list, it should contain "
+        "three values: the image, the real mask, and the predicted mask.")
+
+    # Generate the real and predicted images with their segmentation masks.
+    real_image = annotate_semantic_segmentation(image = image,
+                                                mask = real_mask,
+                                                alpha = alpha,
+                                                border = border)
+    predicted_image = annotate_semantic_segmentation(image = image,
+                                                     mask = predicted_mask,
+                                                     alpha = alpha,
+                                                     border = border)
+
+    # Create two side-by-side figures with the images.
+    fig, axes = plt.subplots(1, 2, figsize = (12, 6))
+    for ax, img, label in zip(
+            axes, (real_image, predicted_image),
+            ("Ground Truth Mask", "Predicted Mask")):
+        ax.imshow(img)
+        ax.set_axis_off()
+        ax.set_title(label, fontsize = 15)
+        ax.set_aspect('equal')
+    fig.tight_layout()
+
+    # Display and return the image.
+    image = convert_figure_to_image()
+    if not kwargs.get('no_show', False):
+        _ = display_image(image)
+    return image
 

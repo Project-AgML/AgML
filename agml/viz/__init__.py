@@ -16,29 +16,34 @@ from .tools import (
     format_image,
     set_colormap,
     get_colormap,
-    convert_figure_to_image
+    convert_figure_to_image,
+    set_viz_backend,
+    get_viz_backend
 )
 from .masks import (
-    output_to_mask,
-    visualize_image_and_mask,
-    overlay_segmentation_masks,
-    visualize_overlaid_masks,
-    visualize_image_mask_and_predicted
+    convert_mask_to_colored_image,
+    annotate_semantic_segmentation,
+    show_image_and_mask,
+    show_image_and_overlaid_mask,
+    show_semantic_segmentation_truth_and_prediction,
 )
 from .boxes import (
-    annotate_bboxes_on_image,
-    visualize_image_and_boxes,
-    visualize_real_and_predicted_bboxes,
-    visualize_image_and_many_boxes
+    annotate_object_detection,
+    show_image_and_boxes,
+    show_object_detection_truth_and_prediction
 )
 from .labels import (
-    visualize_images_with_labels
+    show_images_and_labels
 )
 from .general import (
-    visualize_images,
-    show_sample
+    show_sample,
+    show_images
 )
 from .inspection import (
     plot_synthetic_camera_positions,
     visualize_all_views
 )
+from .point_clouds import (
+    show_point_cloud
+)
+from .display import display_image

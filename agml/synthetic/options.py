@@ -16,7 +16,7 @@ import os
 from enum import Enum
 from numbers import Number
 from dataclasses import dataclass, fields, asdict
-from typing import List, Union, Sequence, TypeVar
+from typing import List, Union, Sequence, TypeVar, Any
 
 from agml.framework import AgMLSerializable
 from agml.synthetic.config import load_default_helios_configuration, verify_helios
@@ -43,6 +43,7 @@ NumberOrMaybeList = TypeVar('NumberOrMaybeList', Number, List[Number])
 @dataclass(repr = False)
 class Parameters:
     """Base class for parameters, to enable runtime type checks."""
+
     def __post_init__(self):
         # Remove all parameters which don't belong to this class. We know
         # they don't belong if they are still `None` after initialization.
@@ -71,15 +72,21 @@ class Parameters:
                                  f"to class {self.__class__.__name__}.")
 
         # Check if the type of the value matches that of the key.
-        try:
-            annotation = self.__annotations__[key].__origin__
-        except AttributeError:
-            # enables type checks for subscripted generics
-            annotation = (int, float)
-        if not isinstance(value, annotation):
-            raise TypeError(
-               f"Expected a value of type ({annotation}) for attribute "
-               f"'{key}', instead got '{value}' of type ({type(value)}).")
+        annotation = self.__annotations__[key]
+        if annotation is not Any:
+            try:
+                annotation = annotation.__origin__
+            except AttributeError:
+                if annotation is str:
+                    pass
+                else:
+                    # enables type checks for subscripted generics
+                    annotation = (int, float)
+            if not isinstance(value, annotation):
+                raise TypeError(
+                    f"Expected a value of type ({annotation}) for attribute "
+                    f"'{key}', instead got '{value}' of type ({type(value)}).")
+
         super().__setattr__(key, value)
 
 
@@ -240,18 +247,19 @@ class CameraParameters(Parameters):
             crop_distance = crop_distance, height = height,
             aerial_parameters = aerial_parameters)
 
+
 @dataclass(repr = False)
 class LiDARParameters(Parameters):
     """Stores LiDAR parameters for Helios."""
-    origin: List[Number]    = None
-    size: List[Number]      = None
-    thetaMin: Number        = None
-    thetaMax: Number        = None
-    phiMin: Number          = None
-    phiMax: Number          = None
-    exitDiameter: Number    = None
-    beamDivergence: Number  = None
-    ASCII_format: str       = None
+    origin: Any                 = None # can be a list of lists or a list of numbers
+    size: List[int]             = None
+    thetaMin: Number            = None
+    thetaMax: Number            = None
+    phiMin: Number              = None
+    phiMax: Number              = None
+    exitDiameter: Number        = None
+    beamDivergence: Number      = None
+    ASCII_format: str           = None
 
 
 class HeliosOptions(AgMLSerializable):
@@ -279,7 +287,7 @@ class HeliosOptions(AgMLSerializable):
     serializable = frozenset(('canopy', 'canopy_parameters',
                               'camera_parameters', 'lidar_parameters',
                               'annotation_type', 'simulation_type', 'labels'))
-    
+
     def __new__(cls, *args, **kwargs):
         # The default configuration parameters are loaded directly from
         # the `helios_config.json` file which is constructed each time
@@ -350,6 +358,15 @@ class HeliosOptions(AgMLSerializable):
     @simulation_type.setter
     def simulation_type(self, value: Union[SimulationType, str]):
         self._simulation_type = SimulationType(value)
+
+        # Check that CUDA is available if the simulation type is set to LiDAR.
+        if self._simulation_type == SimulationType.LiDAR:
+            try:
+                import subprocess as sp
+                sp.check_call('nvidia-smi', stdout = sp.DEVNULL)
+            except Exception:
+                raise RuntimeError(
+                    "You must have a CUDA-capable GPU to run LiDAR simulations.")
 
     @property
     def labels(self) -> list:

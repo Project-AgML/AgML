@@ -18,6 +18,7 @@ Generates a markdown file with information for a given dataset.
 
 import os
 
+import cv2
 from tqdm import tqdm
 
 import agml
@@ -116,21 +117,8 @@ def build_table(json):
 def generate_example_images(name):
     """Generates the example images for the given dataset."""
     agml.backend.set_seed(189)
-    info = agml.data.source(name)
     loader = agml.data.AgMLDataLoader(name)
-    if info.tasks.ml == 'image_classification':
-        return agml.viz.visualize_images_with_labels(
-            loader[:NUM_EXAMPLES], info = info, show = False)
-    elif info.tasks.ml == 'object_detection':
-        return agml.viz.visualize_images([
-            agml.viz.visualize_image_and_boxes(i, show = False)
-            for i in loader[:NUM_EXAMPLES]])
-    elif info.tasks.ml == 'semantic_segmentation':
-        return agml.viz.visualize_images([
-            agml.viz.visualize_overlaid_masks(i)
-            for i in loader[:NUM_EXAMPLES]], show = False)
-    else:
-        raise ValueError(f'Unknown ML task: {info.tasks.ml}')
+    return agml.viz.show_sample(loader, no_show = True)
 
 
 def build_examples(name):
@@ -140,7 +128,7 @@ def build_examples(name):
         LOCAL_AGML_REPO, 'docs/sample_images', f'{name}_examples.png')
     save_path_remote = os.path.join(
         AGML_REPO, 'docs/sample_images', f'{name}_examples.png')
-    sample.savefig(save_path_local)
+    cv2.imwrite(save_path_local, sample)
     return f'![Example Images for {name}]({save_path_remote})'
 
 
@@ -152,6 +140,31 @@ def generate_markdown(name):
             examples = build_examples(name)))
 
 
+def update_readme(datasets):
+    # Find the part of the README where datasets are listed out.
+    with open(os.path.join(LOCAL_AGML_REPO, 'README.md'), 'r') as f:
+        original_readme = [i[:-1] for i in f.readlines()]
+    with open(os.path.join(LOCAL_AGML_REPO, 'README.md'), 'r') as f:
+        original_readme_full = f.read()
+    end_line = original_readme.index('## Usage Information') - 1
+
+    # Update the README.
+    for ds in tqdm(datasets):
+        if ds.name not in original_readme_full:
+            content = '[{name}]({url}) | {task} | {num_images} |'.format(
+                name = ds.name,
+                url = f'https://github.com/Project-AgML/AgML/blob/main/docs/datasets/{ds.name}.md',
+                task = to_title(ds.tasks.ml),
+                num_images = ds.num_images
+            )
+            original_readme.insert(end_line, content)
+            end_line += 1
+
+    # Rewrite the README.
+    with open(os.path.join(LOCAL_AGML_REPO, 'README.md'), 'w') as f:
+        f.write('\n'.join(original_readme))
+
+
 if __name__ == '__main__':
     os.makedirs(os.path.join(LOCAL_AGML_REPO, 'docs/datasets'), exist_ok = True)
     os.makedirs(os.path.join(LOCAL_AGML_REPO, 'docs/sample_images'), exist_ok = True)
@@ -159,6 +172,10 @@ if __name__ == '__main__':
     for ds in tqdm(datasets):
         if not os.path.exists(os.path.join(LOCAL_AGML_REPO, 'docs/datasets', f'{ds.name}.md')):
             generate_markdown(ds.name)
+            pass
+
+    # Update the README with any new datasets.
+    update_readme(datasets)
 
 
 

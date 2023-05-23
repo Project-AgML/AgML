@@ -13,7 +13,7 @@
 # limitations under the License.
 
 __version__ = '0.4.7'
-__all__ = ['data', 'synthetic', 'backend', 'viz']
+__all__ = ['data', 'synthetic', 'backend', 'viz', 'io']
 
 
 # If AgML is being imported for the first time, then we need to setup
@@ -25,12 +25,13 @@ def _setup():
         _os.makedirs(_os.path.expanduser('~/.agml'))
         with open(_os.path.join(
                 _os.path.expanduser('~/.agml/config.json')), 'w') as f:
-            _json.dump({'data_path': _os.path.expanduser('~/.agml/datasets')}, f)
+            _json.dump({'data_path': _os.path.expanduser('~/.agml/datasets'),
+                        'viz_backend': 'matplotlib'}, f)
 _setup(); del _setup # noqa
 
 
 # There are no top-level imported functions or classes, only the modules.
-from . import data, backend, synthetic, viz
+from . import data, backend, synthetic, viz, io
 
 
 

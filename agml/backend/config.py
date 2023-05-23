@@ -34,7 +34,6 @@ SUPER_BASE_DIR = os.path.join(os.path.expanduser('~'), '.agml')
 DATASET_SAVE_DIR: str
 
 
-
 # This is similar to `DATASET_SAVE_DIR`, but is for synthetically generated
 # datasets using Helios. By default, this will be SUPER_BASE_DIR/synthetic,
 # but it can be overridden. The value is set upon instantiation of the module.
@@ -96,11 +95,7 @@ def set_data_save_path(location = None):
         raise NotADirectoryError(
             f"The provided destination {location} does "
             f"not exist, or is not a directory.")
-    with open(os.path.join(SUPER_BASE_DIR, 'config.json'), 'r') as f:
-        contents = json.load(f)
-    contents['data_path'] = os.path.realpath(os.path.abspath(location))
-    with open(os.path.join(SUPER_BASE_DIR, 'config.json'), 'w') as f:
-        json.dump(contents, f)
+    _update_config('data_path', os.path.realpath(os.path.abspath(location)))
     return
 
 
@@ -132,11 +127,7 @@ def set_synthetic_save_path(location = None):
         raise NotADirectoryError(
             f"The provided destination {location} does "
             f"not exist, or is not a directory.")
-    with open(os.path.join(SUPER_BASE_DIR, 'config.json'), 'r') as f:
-        contents = json.load(f)
-    contents['synthetic_data_path'] = os.path.realpath(os.path.abspath(location))
-    with open(os.path.join(SUPER_BASE_DIR, 'config.json'), 'w') as f:
-        json.dump(contents, f)
+    _update_config('synthetic_data_path', os.path.realpath(os.path.abspath(location)))
     return
 
 
@@ -167,13 +158,28 @@ def set_model_save_path(location = None):
         raise NotADirectoryError(
             f"The provided destination {location} does "
             f"not exist, or is not a directory.")
-    with open(os.path.join(SUPER_BASE_DIR, 'config.json'), 'r') as f:
-        contents = json.load(f)
-    contents['model_path'] = os.path.realpath(os.path.abspath(location))
-    with open(os.path.join(SUPER_BASE_DIR, 'config.json'), 'w') as f:
-        json.dump(contents, f)
+    _update_config('model_path', os.path.realpath(os.path.abspath(location)))
     return
 
+
+def _get_config(param):
+    """Update the configuration file with a new parameter."""
+    global SUPER_BASE_DIR
+    with open(os.path.join(SUPER_BASE_DIR, 'config.json'), 'r') as f:
+        contents = json.load(f)
+    if param not in contents.keys():
+        return None
+    return contents[param]
+
+
+def _update_config(param, value):
+    """Update the configuration file with a new parameter."""
+    global SUPER_BASE_DIR
+    with open(os.path.join(SUPER_BASE_DIR, 'config.json'), 'r') as f:
+        contents = json.load(f)
+    contents[param] = value
+    with open(os.path.join(SUPER_BASE_DIR, 'config.json'), 'w') as f:
+        json.dump(contents, f)
 
 
 def clear_all_datasets():

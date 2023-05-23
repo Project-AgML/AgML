@@ -15,16 +15,16 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-from agml.viz.tools import (
-    auto_resolve_image, show_when_allowed,
-    format_image, _inference_best_shape
-)
 from agml.backend.tftorch import as_scalar, is_array_like
+from agml.viz.tools import format_image, _inference_best_shape, convert_figure_to_image
+from agml.viz.display import display_image
 
 
-@show_when_allowed
-@auto_resolve_image
-def visualize_images_with_labels(images, labels = None, *, info = None, shape = None):
+def show_images_and_labels(images,
+                           labels = None,
+                           info = None,
+                           shape = None,
+                           **kwargs):
     """Visualizes a set of images with their classification labels.
 
     Given a set of images and their corresponding labels, this method
@@ -36,6 +36,9 @@ def visualize_images_with_labels(images, labels = None, *, info = None, shape = 
     If you provide an `info` parameter, which will consist of the `info`
     property of an AgMLDataLoader (literally pass `loader.info`), then the
     method will convert the classification numbers to their label names.
+
+    If you don't want to display the image (and just get the output), pass
+    `no_show` as true in order to bypass this.
 
     Parameters
     ----------
@@ -54,12 +57,12 @@ def visualize_images_with_labels(images, labels = None, *, info = None, shape = 
     The matplotlib figure with the plotted info.
     """
     if images is not None and labels is None:
-        if is_array_like(images[0]):
+        if is_array_like(images[0], no_list = True):
             if images[0].ndim >= 3:
                 images, labels = images[0], images[1]
             else:
                 raise ValueError(
-                    "If passing a numpy array for images, expected at "
+                    "If passing a numpy array for `images`, expected at "
                     "least three dimensions: (batch, height, width).")
         elif isinstance(images[0], (tuple, list)):
             if isinstance(images[0][0], np.ndarray):
@@ -79,8 +82,9 @@ def visualize_images_with_labels(images, labels = None, *, info = None, shape = 
 
     # Check if the labels are converted to one-hot, and re-convert them back.
     if is_array_like(labels):
-        if labels.ndim == 2: # noqa
-            labels = np.argmax(labels, axis = -1)
+        if not isinstance(labels, (list, tuple)):
+            if labels.ndim == 2: # noqa
+                labels = np.argmax(labels, axis = -1)
 
     # If a prime number is passed, e.g. 23, then the `_inference_best_shape`
     # method will return the shape of (23, 1). Likely, the user is expecting
@@ -107,15 +111,17 @@ def visualize_images_with_labels(images, labels = None, *, info = None, shape = 
             label = info.num_to_class[label]
         ax.set_xticklabels([])
         ax.set_yticklabels([])
-        ax.tick_params(
-            axis = 'both', which = 'both', bottom = False,
-            top = False, left = False, right = False
-        )
+        ax.tick_params(axis = 'both', which = 'both', bottom = False,
+                       top = False, left = False, right = False)
         plt.setp(ax.spines.values(), visible = False)
         ax.set_xlabel(label)
 
-    fig.tight_layout()
-    return fig
+    # Display and return the image.
+    image = convert_figure_to_image()
+    if not kwargs.get('no_show', False):
+        _ = display_image(image)
+    return image
+
 
 
 
