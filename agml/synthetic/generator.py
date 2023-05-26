@@ -155,7 +155,7 @@ class HeliosDataGenerator(AgMLSerializable):
 
         # The `scan` tag is used for LiDAR generation. This must be added later
         # because there can be multiple origins and thus multiple `scan` tags.
-        if self._generation_options.simulation_type == SimulationType.LiDAR:
+        if self._generation_options.simulation_type == SimulationType.LiDAR or self._generation_options.simulation_type == SimulationType.Both:
             scan_tags = []
             if isinstance(parameters['lidar']['origin'][0], list):
                 for origin in parameters['lidar']['origin']:
@@ -173,7 +173,7 @@ class HeliosDataGenerator(AgMLSerializable):
             self._canopy + "Parameters": parameters['canopy'],
             'Ground': parameters['Ground']}
         xml_params = {'canopygenerator': canopy_parameters}
-        if self._generation_options.simulation_type == SimulationType.RGB:
+        if self._generation_options.simulation_type == SimulationType.RGB or self._generation_options.simulation_type == SimulationType.Both:
             xml_params[''] = parameters['camera']
 
         # Convert all of the parameters to XML format.
@@ -181,7 +181,7 @@ class HeliosDataGenerator(AgMLSerializable):
         root = tree.getroot()
 
         # Add the `scan` tags if necessary for LiDAR generation.
-        if self._generation_options.simulation_type == SimulationType.LiDAR:
+        if self._generation_options.simulation_type == SimulationType.LiDAR or self._generation_options.simulation_type == SimulationType.Both:
             for scan_tag in scan_tags: # noqa
                 scan_tag_contents = ET.parse(
                     io.StringIO(dict2xml({'scan': scan_tag}))).getroot()
