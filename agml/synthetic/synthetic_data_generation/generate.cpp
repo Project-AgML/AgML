@@ -12,7 +12,7 @@ struct SyntheticAnnotationConfig {
 public:
     int num_images;
     vector<string> annotation_type;
-    string simulation_type;
+    vector<string> simulation_type;
     vector<string> labels;
     string xml_path;
     string output_path;
@@ -53,7 +53,14 @@ void SyntheticAnnotationConfig::load_config(const char* path) {
             }
             this->annotation_type.push_back(line);
         } else if (i == 2) {
-            this->simulation_type = line;
+            string delimeter = " "; size_t pos;
+            vector<string> simulation_type;
+            while ((pos = line.find(' ')) != string::npos)
+            {
+                this -> simulation_type.push_back(line.substr(0,pos));
+                line.erase(0, pos + delimeter.length());
+            }
+            this->simulation_type.push_back(line);
         } else if (i == 3) {
             string delimeter = " "; size_t pos;
             vector<string> labels;
@@ -150,7 +157,7 @@ int main(int argc, char** argv) {
         SyntheticAnnotation annotation(&context);
 
         // Choose either the LiDAR or RGB image simulation.
-        if (config.simulation_type == "lidar") {
+        if (!config.simulation_type.empty() && config.simulation_type[1] == "lidar") {
             // Get the UUID of all the elements on the scene
             vector<uint> UUID_trunk = cgen.getTrunkUUIDs();
             vector<uint> UUID_shoot = cgen.getBranchUUIDs();
@@ -190,7 +197,9 @@ int main(int argc, char** argv) {
             string cloud_export = this_image_dir + "/" + string("point_cloud_" + to_string(i) + ".xyz");
             std::cout << "Writing LiDAR Point cloud to " << cloud_export << " " << std::endl;
             lidarcloud.exportPointCloud(cloud_export.c_str());
-        } else {
+        }
+        if (!config.simulation_type.empty() && config.simulation_type[0] == "rgb")
+        {
             if (!config.annotation_type.empty() && config.annotation_type[0] != "none") {
                 // Set the annotation type based on the configuration.
                 vector<string> va = config.annotation_type;
@@ -207,7 +216,7 @@ int main(int argc, char** argv) {
                 // Add labels according to whatever scheme we want.
                 vector<string> vl = config.labels;
                 for (int p = 0; p < cgen.getPlantCount(); p++) { // loop over vines
-                    if (config.simulation_type == "rgb") {
+                    if (!config.simulation_type.empty() && config.simulation_type[0] == "rgb") {
                         if (contains(vl, "trunks")) {
                             annotation.labelPrimitives(cgen.getTrunkUUIDs(p), "trunks");
                         }
