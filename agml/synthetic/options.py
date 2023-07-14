@@ -35,6 +35,7 @@ class SimulationType(Enum):
     """The simulation render (RGB vs. LiDAR) that is generated."""
     RGB: str = "rgb"
     LiDAR: str = "lidar"
+    Both: str = "rgb lidar"
 
 
 NumberOrMaybeList = TypeVar('NumberOrMaybeList', Number, List[Number])

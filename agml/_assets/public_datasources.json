@@ -1230,5 +1230,45 @@
                 0.08992248773574829
             ]
         }
+    },
+    "ghai_strawberry_fruit_detection": {
+        "classes": {
+            "1": "Bud",
+            "2": "Calyx",
+            "3": "Detached Fruit",
+            "4": "Flower",
+            "5": "Large green",
+            "6": "Leaf",
+            "7": "Ripe fruit",
+            "8": "Small Green",
+            "9": "Stem",
+            "10": "Unripe fruit"
+        },
+        "ml_task": "object_detection",
+        "ag_task": "crop_detection",
+        "location": {
+            "continent": "north_america",
+            "country": "usa"
+        },
+        "sensor_modality": "rgb",
+        "real_synthetic": "real",
+        "platform": "handheld/ground",
+        "input_data_format": "jpg",
+        "annotation_format": "coco_json",
+        "n_images": "500",
+        "docs_url": "https://github.com/AxisAg/GHAIDatasets/blob/main/datasets/strawberry.md",
+        "external_image_sources": [],
+        "stats": {
+            "mean": [
+                0.49159616231918335,
+                0.5238277316093445,
+                0.4485996663570404
+            ],
+            "std": [
+                0.18163496255874634,
+                0.16137710213661194,
+                0.18042609095573425
+            ]
+        }
     }
 }

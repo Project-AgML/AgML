@@ -15,6 +15,7 @@
 import os
 import json
 import copy
+import glob
 from typing import Union
 from collections.abc import Sequence
 from decimal import getcontext, Decimal
@@ -296,6 +297,38 @@ class AgMLDataLoader(AgMLSerializable, metaclass = AgMLDataLoaderMeta):
         information which is provided in the `.metadata` directory of the Helios
         generated dataset, allowing it to contain potentially even more info.
         """
+        # Instantiate from a list of datasets.
+        if isinstance(name, (list, tuple)):
+            if dataset_path is None:
+                dataset_path = [None] * len(name)
+            elif isinstance(dataset_path, str):
+                dataset_path = [dataset_path] * len(name)
+            else:
+                if not len(dataset_path) == len(name):
+                    raise ValueError("The number of dataset paths must be "
+                                     "the same as the number of dataset names.")
+            datasets = [cls.helios(n, dataset_path = dp)
+                        for n, dp in zip(name, dataset_path)]
+            return cls.merge(*datasets)
+
+        # Instantiate from a wildcard pattern.
+        if isinstance(name, str) and '*' in name:
+            if dataset_path is None:
+                dataset_path = os.path.abspath(synthetic_data_save_path())
+            elif not os.path.exists(dataset_path):
+                raise NotADirectoryError(
+                    f"Existing directory '{dataset_path}' for dataset of name "
+                    f"{name} not found, pass a custom path if you want to use "
+                    f"a custom dataset path for the dataset.")
+
+            # Get the list of datasets.
+            possible_datasets = glob.glob(os.path.join(dataset_path, name))
+            if len(possible_datasets) == 0:
+                raise ValueError(f"No datasets found for pattern: {name}.")
+            datasets = [cls.helios(os.path.basename(p), dataset_path = dataset_path)
+                        for p in sorted(possible_datasets)]
+            return cls.merge(*datasets)
+
         # Locate the path to the dataset, using synthetic semantics.
         if dataset_path is None:
             dataset_path = os.path.abspath(

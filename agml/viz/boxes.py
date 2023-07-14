@@ -110,6 +110,8 @@ def annotate_object_detection(image,
                     "either `bbox` or `bboxes` for bounding boxes.")
     if bbox_format is not None:
         bboxes = convert_bbox_format(bboxes, bbox_format)
+    if labels is None:
+        labels = [0] * len(bboxes)
 
     # Run a few final checks in order to ensure data is formatted properly.
     image = format_image(image, mask = False)
