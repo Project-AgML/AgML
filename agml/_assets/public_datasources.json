@@ -1257,6 +1257,18 @@
         "annotation_format": "coco_json",
         "n_images": "500",
         "docs_url": "https://github.com/AxisAg/GHAIDatasets/blob/main/datasets/strawberry.md",
-        "external_image_sources": []
+        "external_image_sources": [],
+        "stats": {
+            "mean": [
+                0.49159616231918335,
+                0.5238277316093445,
+                0.4485996663570404
+            ],
+            "std": [
+                0.18163496255874634,
+                0.16137710213661194,
+                0.18042609095573425
+            ]
+        }
     }
 }
