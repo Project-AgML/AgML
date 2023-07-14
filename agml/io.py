@@ -15,6 +15,8 @@
 import random
 import inspect
 
+import cv2
+
 from agml.utils.io import (
     get_file_list as _get_file_list,
     get_dir_list as _get_dir_list,
@@ -112,5 +114,15 @@ def random_file(path, **kwargs):
     return random.choice(get_file_list(path, **kwargs))
 
 
+def read_image(path, **kwargs):
+    """Reads an image from a file.
 
+    Args:
+        path (str): The path to the image file.
+        **kwargs: Keyword arguments to pass to `cv2.imread`.
+
+    Returns:
+        numpy.ndarray: The image.
+    """
+    return cv2.imread(path, **kwargs)
 
