@@ -176,6 +176,10 @@ class EfficientDetPreprocessor(object):
         if image.shape[0] == 4:
             image = image[:3]
 
+        # Scale the image from [0, 255] to [0, 1] if necessary.
+        if image.max() > 1.0:
+            image /= 255.0
+
         # Convert to yxyx from xyxy.
         _, new_h, new_w = image.shape
         if bboxes.ndim == 1:

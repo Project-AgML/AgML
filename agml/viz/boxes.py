@@ -108,16 +108,22 @@ def annotate_object_detection(image,
                     "Unexpected COCO JSON format found in input `bboxes` "
                     "dictionary, got {list(bboxes.keys())} but expected "
                     "either `bbox` or `bboxes` for bounding boxes.")
+
+    # If there are no bounding boxes, then simply return the image.
+    if len(bboxes) == 0:
+        return image
+
+    # Format the bounding boxes and labels.
     if bbox_format is not None:
         bboxes = convert_bbox_format(bboxes, bbox_format)
-    if labels is None:
-        labels = [0] * len(bboxes)
 
     # Run a few final checks in order to ensure data is formatted properly.
-    image = format_image(image, mask = False)
+    image = format_image(image, mask = False).copy()
     if not inplace:
         image = image.copy()
     bboxes = weak_squeeze(bboxes, ndims = 2)
+    if labels is None:
+        labels = [0] * len(bboxes)
     labels = weak_squeeze(labels, ndims = 1)
 
     # Check for any additional information that can be used to annotate labels.

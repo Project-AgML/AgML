@@ -334,7 +334,8 @@ class DetectionModel(AgMLModelBase):
         return [squeeze(b, l, c)
                 for b, l, c in zip(boxes, labels, confidences)]
 
-    def _to_out(self, tensor: "torch.Tensor") -> "torch.Tensor":
+    @staticmethod
+    def _to_out(tensor: "torch.Tensor") -> "torch.Tensor":
         if isinstance(tensor, dict):
             tensor = tensor['detections']
         return super()._to_out(tensor)

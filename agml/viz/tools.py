@@ -182,7 +182,7 @@ def format_image(img, mask = False):
             img = img.astype(np.uint8)
 
     # Return the formatted image.
-    return img
+    return np.ascontiguousarray(img)
 
 
 def convert_figure_to_image(fig = None):
