@@ -1227,7 +1227,7 @@ class AgMLDataLoader(AgMLSerializable, metaclass = AgMLDataLoaderMeta):
         with open(os.path.join(split_dir, f'{name}.json'), 'w') as f:
             json.dump(splits, f)
 
-    def load_split(self, name):
+    def load_split(self, name, **kwargs):
         """Loads a previously saved split of data.
 
         This method can be used to load a previously saved split of data
@@ -1243,14 +1243,18 @@ class AgMLDataLoader(AgMLSerializable, metaclass = AgMLDataLoaderMeta):
             The name of the split to load. This name will be used to identify
             the split to load.
         """
-        # Ensure that the split exists.
-        split_dir = os.path.join(SUPER_BASE_DIR, 'splits', self.name)
-        if not os.path.exists(os.path.join(split_dir, f'{name}.json')):
-            raise FileNotFoundError(f"Could not find a split with the name {name}.")
+        if kwargs.get('manual_split_set', False):
+            splits = kwargs['manual_split_set']
 
-        # Load the split from the internal location.
-        with open(os.path.join(split_dir, f'{name}.json'), 'r') as f:
-            splits = json.load(f)
+        else:
+            # Ensure that the split exists.
+            split_dir = os.path.join(SUPER_BASE_DIR, 'splits', self.name)
+            if not os.path.exists(os.path.join(split_dir, f'{name}.json')):
+                raise FileNotFoundError(f"Could not find a split with the name {name}.")
+
+            # Load the split from the internal location.
+            with open(os.path.join(split_dir, f'{name}.json'), 'r') as f:
+                splits = json.load(f)
 
         # Set the split contents.
         for split, content in splits.items():
