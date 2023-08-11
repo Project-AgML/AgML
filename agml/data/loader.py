@@ -103,7 +103,7 @@ class AgMLDataLoader(AgMLSerializable, metaclass = AgMLDataLoaderMeta):
     See the methods for examples on how to use an `AgMLDataLoader` effectively.
     """
     serializable = frozenset((
-        'info', 'builder', 'manager', 'train_data', 'train_content' 'val_data',
+        'info', 'builder', 'manager', 'train_data', 'train_content', 'val_data',
         'val_content', 'test_data', 'test_content', 'is_split', 'meta_properties'))
 
     def __new__(cls, dataset, **kwargs):
