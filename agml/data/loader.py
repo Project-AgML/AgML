@@ -213,7 +213,9 @@ class AgMLDataLoader(AgMLSerializable, metaclass = AgMLDataLoaderMeta):
         Parameters
         ----------
         name : str
-            A name for the custom dataset (this can be any valid string).
+            A name for the custom dataset (this can be any valid string). This
+            can also be a path to the dataset (in which case the name will be
+            the base directory inferred from the path).
         dataset_path : str, optional
             A custom path to load the dataset from. If this is not passed,
             we will assume that the dataset is at the traditional path:
@@ -235,6 +237,11 @@ class AgMLDataLoader(AgMLSerializable, metaclass = AgMLDataLoaderMeta):
             raise ValueError(f"Invalid name '{name}', the name should be "
                              f"a string that is not an existing dataset in "
                              f"the AgML public data source repository.")
+
+        # Check if the `name` is itself the path to the dataset.
+        if os.path.exists(name):
+            dataset_path = name
+            name = os.path.basename(name)
 
         # Locate the path to the dataset.
         if dataset_path is None:
