@@ -16,6 +16,7 @@ import os
 import json
 import copy
 import glob
+import fnmatch
 from typing import Union
 from collections.abc import Sequence
 from decimal import getcontext, Decimal
@@ -111,6 +112,17 @@ class AgMLDataLoader(AgMLSerializable, metaclass = AgMLDataLoaderMeta):
         # However, if an iterable of datasets is passed, then we need to
         # dispatch to the subclass `AgMLMultiDatasetLoader` for them.
         if isinstance(dataset, (str, DatasetMetadata)):
+            if '*' in dataset:  # enables wildcard search for datasets
+                valid_datasets = fnmatch.filter(load_public_sources().keys(), dataset)
+                if len(valid_datasets) == 0:
+                    raise ValueError(
+                        f"Wildcard search for dataset '{dataset}' yielded no results.")
+                if len(valid_datasets) == 1:
+                    log(f"Wildcard search for dataset '{dataset}' yielded only "
+                        f"one result. Returning a regular, single-element data loader.")
+                    return super(AgMLDataLoader, cls).__new__(cls)
+                from agml.data.multi_loader import AgMLMultiDatasetLoader
+                return AgMLMultiDatasetLoader(valid_datasets, **kwargs)
             return super(AgMLDataLoader, cls).__new__(cls)
         elif isinstance(dataset, Sequence):
             if len(dataset) == 1:
