@@ -22,7 +22,6 @@ import torch
 import numpy as np
 from PIL import Image
 import albumentations as A
-from albumentations.pytorch import ToTensorV2
 
 from agml.models.tools import imagenet_style_process as _isp
 
@@ -100,8 +99,7 @@ class EfficientDetPreprocessor(object):
                 min_visibility = 0, label_fields = ["labels"]),
             standard_augmentations = [
                 A.Resize(height = image_size[0],
-                         width = image_size[1], p = 1),
-                ToTensorV2(p = 1)])
+                         width = image_size[1], p = 1)])
         self._check_and_make_augmentation(augmentation)
 
     def _check_and_make_augmentation(self, augmentation):
@@ -170,11 +168,18 @@ class EfficientDetPreprocessor(object):
         bboxes = np.array(sample['bboxes'])
         labels = sample['labels']
 
+        # Convert the image to a tensor.
+        image = torch.from_numpy(image).permute(2, 0, 1)
+
         # Convert 1-channel and 4-channel to 3-channel.
         if image.shape[0] == 1:
             image = torch.tile(image, (3, 1, 1))
         if image.shape[0] == 4:
             image = image[:3]
+
+        # Scale the image from [0, 255] to [0, 1] if necessary.
+        if image.max() > 1.0:
+            image /= 255.0
 
         # Convert to yxyx from xyxy.
         _, new_h, new_w = image.shape

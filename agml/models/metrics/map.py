@@ -107,10 +107,17 @@ def mean_average_precision(
             ious = torch.tensor([bbox_iou(
                 torch.tensor(detection[3:]), gt[3:].clone())
                 for gt in ground_truth_img])
+
+            # If there are no ground truths for this image, then
+            # this is a false positive.
+            if len(ious) == 0:
+                fp[detection_idx] = 1
+                continue
+            
             best_iou = torch.max(ious)
             best_gt_idx = torch.argmax(ious)
 
-            # If the IoU is above the threshold, then it may be a true positive.'
+            # If the IoU is above the threshold, then it may be a true positive.
             if best_iou > iou_thresh:
                 # This should be the first time the box is detected. Otherwise,
                 # that would mean that there are multiple predicted bounding
@@ -236,8 +243,3 @@ class MeanAveragePrecision(nn.Module):
         del self._prediction_data, self._truth_data
         self._prediction_data, self._truth_data = [], []
         self._num_updates = 0
-
-
-
-
-

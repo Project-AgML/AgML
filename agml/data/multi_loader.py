@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
+import json
 import types
 import collections
 from typing import Union
@@ -28,6 +30,7 @@ from agml.utils.general import (
 from agml.utils.random import seed_context, inject_random_state
 from agml.utils.image import consistent_shapes
 from agml.utils.logging import log
+from agml.backend.config import SUPER_BASE_DIR
 from agml.backend.tftorch import (
     get_backend, set_backend,
     user_changed_backend, StrictBackendError,
@@ -92,7 +95,7 @@ class MultiDatasetMetadata(AgMLSerializable):
     Functionally, this class is just a wrapper around multiple
     `DatasetMetadata` objects, and for each of the traditional
     attributes in the original `DatasetMetadata`, returns a
-    dictionary with all of the values for the corresponding
+    dictionary with all the values for the corresponding
     datasets rather than just a single value.
     """
     serializable = frozenset(("names", "metas", "task"))
@@ -125,6 +128,11 @@ class MultiDatasetMetadata(AgMLSerializable):
                              f"must be of the same task. Got tasks {tasks} "
                              f"for the provided datasets {self._names}.")
         self._task = tasks[0]
+
+    @property
+    def name(self):
+        """A unique identifier for a specific collection of datasets."""
+        return "-".join(self._names)
 
     def __getattr__(self, attr):
         # This is the main functionality of the `DatasetMetadata`
@@ -385,9 +393,8 @@ class AgMLMultiDatasetLoader(AgMLSerializable):
             indexes = [indexes]
         for idx in indexes:
             if idx not in range(len(self)):
-                raise IndexError(
-                    f"Index {idx} out of range of "
-                    f"AgMLDataLoader length: {len(self)}.")
+                raise IndexError(f"Index {idx} out of range of "
+                                 f"AgMLDataLoader length: {len(self)}.")
         return self._get_item_impl(resolve_list_value(indexes))
 
     def __iter__(self):
@@ -457,14 +464,14 @@ class AgMLMultiDatasetLoader(AgMLSerializable):
             dataset_path = False
         kwargs.update({'dataset_path': dataset_path})
 
-        # Create all of the loaders.
+        # Create all the loaders.
         self._loaders = CollectionWrapper([
             AgMLDataLoader(dataset, **kwargs) for dataset in datasets],
             keys = datasets)
 
     def _adapt_classes(self, cls = None):
         """Adapts the classes in the loader."""
-        # Get all of the unique classes in the loader.
+        # Get all the unique classes in the loader.
         classes = self._info.classes.values()
         class_values = [[o.lower() for o in c] for c in classes]
         class_values = [i for s in class_values for i in s]
@@ -504,6 +511,11 @@ class AgMLMultiDatasetLoader(AgMLSerializable):
         See the `DatasetMetadata` class for more information.
         """
         return self._info
+
+    @property
+    def name(self):
+        """The name of the collection of datasets, based on the individual datasets."""
+        return self._info.name
 
     @property
     def task(self):
@@ -554,8 +566,7 @@ class AgMLMultiDatasetLoader(AgMLSerializable):
                 f"parent loader has not been split.")
 
         # Create a new `CollectionWrapper` around the datasets.
-        new_collection = CollectionWrapper(
-            loaders, keys = [l_.name for l_ in loaders])
+        new_collection = CollectionWrapper(loaders, keys = [l_.name for l_ in loaders])
 
         # Get the state of the current loader and update it
         # with the new collection of loaders. Then, update
@@ -596,7 +607,7 @@ class AgMLMultiDatasetLoader(AgMLSerializable):
         if batch_size is not None:
             new_loader.batch(batch_size = batch_size)
 
-        # Block out all of the splits of the already split
+        # Block out all the splits of the already split
         # loader and set the `_is_split` attribute to True,
         # preventing future splits, and return.
         for attr in ['train', 'val', 'test']:
@@ -957,12 +968,89 @@ class AgMLMultiDatasetLoader(AgMLSerializable):
         # Similar to the `AgMLDataLoader` itself, we will not access the
         # `train/val/test_data` parameters instantly, as this will allow
         # any new transforms or other parameters which are applied to the
-        # parent loader to be also applied to all of the child split loaders
+        # parent loader to be also applied to all the child split loaders
         # until they are actually accessed in this overhead multi-dataset
         # loader class. Then, they will be unset and created.
         self._loaders.apply(
             lambda x: x.split(
                 train = train, val = val, test = test, shuffle = shuffle))
+
+    def save_split(self, name, overwrite = False):
+        """Saves the current split of data to an internal location.
+
+        This method can be used to save the current split of data to an
+        internal file, such that the same split can be later loaded using
+        the `load_split` method (for reproducibility). This method will only
+        save the actual split of data, not any of the transforms or other
+        parameters which have been applied to the loader.
+
+        Parameters
+        ----------
+        name: str
+            The name of the split to save. This name will be used to identify
+            the split when loading it later.
+        overwrite: bool
+            Whether to overwrite an existing split with the same name.
+        """
+        # Get the train/val/test splits for each of the sub-loaders.
+        ds_names = self._loaders.get_attributes('name')
+        train_splits = self._loaders.get_attributes('_train_content')
+        val_splits = self._loaders.get_attributes('_val_content')
+        test_splits = self._loaders.get_attributes('_test_content')
+
+        # Check that there is split data.
+        if (
+                all(i is None for i in train_splits)
+                and all(i is None for i in val_splits)
+                and all(i is None for i in test_splits)
+        ):
+            raise ValueError(
+                f"Cannot save a split when no split has been created.")
+
+        # Remap the dictionary such that there is a train/val/test dict for each dataset.
+        split_data = {name: {
+            'train': train_splits[i],
+            'val': val_splits[i],
+            'test': test_splits[i]
+        } for i, name in enumerate(ds_names)}
+
+        # Save the split data.
+        split_dir = os.path.join(SUPER_BASE_DIR, 'splits', self.name)
+        os.makedirs(split_dir, exist_ok = True)
+        if os.path.exists(os.path.join(split_dir, f'{name}.json')) and not overwrite:
+            raise FileExistsError(f"Split with name {name} already exists. "
+                                  f"Set `overwrite = True` to overwrite it.")
+        with open(os.path.join(split_dir, f'{name}.json'), 'w') as f:
+            json.dump(split_data, f)
+
+    def load_split(self, name):
+        """Loads a previously saved split of data.
+
+        This method can be used to load a previously saved split of data
+        if the split was saved using the `save_split` method. This method
+        will only load the actual split of data, not any of the transforms
+        or other parameters which have been applied to the loader. You can
+        use the traditional split accessors (`train_data`, `val_data`, and
+        `test_data`) to access the loaded data.
+
+        Parameters
+        ----------
+        name: str
+            The name of the split to load. This name will be used to identify
+            the split to load.
+        """
+        # Ensure that the split exists.
+        split_dir = os.path.join(SUPER_BASE_DIR, 'splits', self.name)
+        if not os.path.exists(os.path.join(split_dir, f'{name}.json')):
+            raise FileNotFoundError(f"Could not find a split with the name {name}.")
+
+        # Load the split from the internal location.
+        with open(os.path.join(split_dir, f'{name}.json'), 'r') as f:
+            all_splits = json.load(f)
+
+        # Set the split contents.
+        for ds_name, splits in all_splits.items():
+            self._loaders[ds_name].load_split(None, manual_split_set = splits)
 
     def batch(self, batch_size = None):
         """Batches sets of image and annotation data according to a size.
@@ -1149,7 +1237,7 @@ class AgMLMultiDatasetLoader(AgMLSerializable):
         - Albumentations transforms are special in that even transforms which
           would normally be passed to `dual_transform` (e.g., they act on the
           input image and the output annotation) can simply be passed to the
-          `transform` argument and they will automatically be applied.
+          `transform` argument, and they will automatically be applied.
         """
         self._loaders.apply(
             lambda x: x._manager.push_transforms(
