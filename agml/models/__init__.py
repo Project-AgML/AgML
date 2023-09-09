@@ -40,4 +40,5 @@ from .detection import DetectionModel
 from . import metrics
 from . import losses
 from . import preprocessing
+from .benchmarks import get_benchmark
 
