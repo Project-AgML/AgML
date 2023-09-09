@@ -70,4 +70,16 @@ class BenchmarkMetadata(AgMLSerializable):
         return Metric(name = name, value = value)
 
 
+def get_benchmark(dataset):
+    """Returns the benchmark for a dataset.
+
+    Parameters
+    ----------
+    dataset : str
+        The name of the dataset or a DatasetMetadata object.
+    """
+    if hasattr(dataset, 'name'):
+        dataset = dataset.name
+    return BenchmarkMetadata(dataset)
+
 
