@@ -107,6 +107,7 @@ def generate_camera_positions(
     (as specified in `num_views`), returns the 3-d coordinates of the camera
     positions as well as lookat vectors symbolizing their perspective of the
     provided origin point.
+
     Parameters
     ----------
     camera_type : str
@@ -122,8 +123,13 @@ def generate_camera_positions(
         The distance of the cameras from the crop itself.
     height : int
         The height of the cameras relative to the crop.
-    aerial_angled : bool
-        Whether the aeiral camera should be angled or directly facing down.
+    aerial_parameters : dict
+        A dictionary of parameters to use when generating aerial camera
+        positions. The following keys are supported:
+        - `distribution`: The distribution of the cameras around the
+            center point. Either 'sawtooth' or 'circular'.
+        - `angled`: Whether the cameras should be angled directly downwards.
+
     Returns
     -------
     A tuple of two values: the camera positions and the lookat vectors.

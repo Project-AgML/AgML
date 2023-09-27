@@ -47,19 +47,20 @@ def load_default_helios_configuration():
         return json.load(f)
 
 
-def reinstall_helios():
+def reinstall_helios(force = False):
     """Re-installs the Helios module from scratch.
 
     See `_check_helios_installation()` for a specific description of what
     this method does. Running this method manually also clears out the
     Helios directory, which is why extra confirmation is required.
     """
-    check = input("Are you sure you want to re-install Helios? [y|n] ")
-    if check != 'y':
-        print("Aborting re-installation")
-        return
-    else:
-        print("Re-installing Helios.")
+    if not force:
+        check = input("Are you sure you want to re-install Helios? [y|n] ")
+        if check != 'y':
+            print("Aborting re-installation")
+            return
+        else:
+            print("Re-installing Helios.")
     if os.path.exists(HELIOS_PATH):
         shutil.rmtree(HELIOS_PATH)
     _check_helios_installation()
