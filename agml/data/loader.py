@@ -658,6 +658,7 @@ class AgMLDataLoader(AgMLSerializable, metaclass = AgMLDataLoaderMeta):
             return self._val_data
         self._val_data = self._generate_split_loader(
             self._val_content, split = 'val')
+        self._val_data.eval()
         return self._val_data
 
     @property
@@ -667,6 +668,7 @@ class AgMLDataLoader(AgMLSerializable, metaclass = AgMLDataLoaderMeta):
             return self._test_data
         self._test_data = self._generate_split_loader(
             self._test_content, split = 'test')
+        self._test_data.eval()
         return self._test_data
 
     def eval(self) -> "AgMLDataLoader":
