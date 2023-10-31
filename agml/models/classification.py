@@ -207,11 +207,11 @@ class ClassificationModel(AgMLModelBase):
         # Compute the final accuracy.
         return acc.compute().numpy().item()
 
-    def prepare_for_training(self,
-                             loss = 'ce',
-                             metrics = (),
-                             optimizer = None,
-                             **kwargs):
+    def _prepare_for_training(self,
+                              loss = 'ce',
+                              metrics = (),
+                              optimizer = None,
+                              **kwargs):
         """Prepares this classification model for training."""
 
         # Initialize the loss
@@ -242,9 +242,15 @@ class ClassificationModel(AgMLModelBase):
 
                     # Check if `torchmetrics.classification` has the metric.
                     if hasattr(class_metrics, metric):
+                        # accuracy is a special case, we use our own accuracy
+                        if metric == 'accuracy':
+                            from agml.models.metrics.accuracy import Accuracy
+                            metric_collection.append(['accuracy', Accuracy()])
+
                         # convert to camel case
-                        metric = ''.join([word.capitalize() for word in metric.split('_')])
-                        metric_collection.append(getattr(class_metrics, metric)())
+                        else:
+                            metric = ''.join([word.capitalize() for word in metric.split('_')])
+                            metric_collection.append([metric, getattr(class_metrics, metric)()])
                     else:
                         raise ValueError(
                             f"Expected a valid metric torchmetrics metric name, "
@@ -259,6 +265,7 @@ class ClassificationModel(AgMLModelBase):
                 else:
                     raise TypeError(
                         f"Expected a metric name or a metric class, but got '{type(metric)}'.")
+        self._metrics = metric_collection
 
         # Initialize the optimizer/learning rate scheduler.
         if isinstance(optimizer, str):
@@ -299,7 +306,59 @@ class ClassificationModel(AgMLModelBase):
             return opt
         return [opt], [scheduler]
 
+    def training_step(self, batch, *args, **kwargs): # noqa
+        x, y = batch
+        y_pred = self(x)
 
+        # Compute metrics and loss.
+        loss = self.loss(y_pred, y)
+        self.log('loss', loss.item(), prog_bar = True)
+        for metric_name, metric in self._metrics:
+            if metric_name == 'accuracy':
+                metric.update(y_pred, torch.argmax(y, 1))
+            else:
+                metric.update(y_pred, y)
+            self.log(metric_name, metric.compute().numpy().item(), prog_bar = True)
+
+        return {
+            'loss': loss,
+        }
+
+    def validation_step(self, batch, *args, **kwargs): # noqa
+        x, y = batch
+        y_pred = self(x)
+
+        # Compute metrics and loss.
+        val_loss = self.loss(y_pred, y)
+        self.log('val_loss', val_loss.item(), prog_bar = True)
+        for metric_name, metric in self._metrics:
+            if metric_name == 'accuracy':
+                metric.update(y_pred, torch.argmax(y, 1))
+            else:
+                metric.update(y_pred, y)
+            self.log('val_' + metric_name, metric.compute().numpy().item(), prog_bar = True)
+
+        return {
+            'val_loss': val_loss,
+        }
+
+    def test_step(self, batch, *args, **kwargs):
+        x, y = batch
+        y_pred = self(x)
+
+        # Compute metrics and loss.
+        test_loss = self.loss(y_pred, y)
+        self.log('test_loss', test_loss.item(), prog_bar = True)
+        for metric_name, metric in self._metrics:
+            if metric_name == 'accuracy':
+                metric.update(y_pred, torch.argmax(y, 1))
+            else:
+                metric.update(y_pred, y)
+            self.log('test_' + metric_name, metric.compute().numpy().item(), prog_bar = True)
+
+        return {
+            'test_loss': test_loss,
+        }
 
 
 

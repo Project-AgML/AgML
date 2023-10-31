@@ -42,8 +42,6 @@ class AgMLModelBase(AgMLSerializable, LightningModule):
         self._benchmark = BenchmarkMetadata(None)
         super(AgMLModelBase, self).__init__()
 
-        #
-
     @property
     def original(self):
         """Returns the original model architecture (without weights)."""
@@ -186,8 +184,31 @@ class AgMLModelBase(AgMLSerializable, LightningModule):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def prepare_for_training(self, **kwargs):
+    def _prepare_for_training(self, **kwargs):
         """Prepares the model for training (setting parameters, etc.)"""
         raise NotImplementedError
+
+    def on_train_epoch_end(self):
+        for _, metric in self.metrics.items():
+            metric.reset()
+
+    def on_validation_epoch_end(self):
+        for _, metric in self.metrics.items():
+            metric.reset()
+
+    def get_progress_bar_dict(self):
+        if not hasattr(super(), 'get_progress_bar_dict'):
+            return
+        tqdm_dict = super().get_progress_bar_dict()
+        tqdm_dict.pop('v_num', None)
+        return tqdm_dict
+
+    def get_metrics(self):
+        if not hasattr(super(), 'get_metrics'):
+            return
+        tqdm_dict = super().get_metrics()
+        tqdm_dict.pop('v_num', None)
+        return tqdm_dict
+
 
 

@@ -41,6 +41,9 @@ class Accuracy(nn.Module):
         super(Accuracy, self).__init__()
         self._prediction_data, self._truth_data = [], []
 
+    def __call__(self, pred_data, gt_data):
+        self.update(pred_data, gt_data)
+
     def update(self, pred_data, gt_data):
         """Updates the state of the accuracy metric.
 
