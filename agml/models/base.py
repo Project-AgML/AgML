@@ -42,6 +42,8 @@ class AgMLModelBase(AgMLSerializable, LightningModule):
         self._benchmark = BenchmarkMetadata(None)
         super(AgMLModelBase, self).__init__()
 
+        #
+
     @property
     def original(self):
         """Returns the original model architecture (without weights)."""
@@ -183,5 +185,9 @@ class AgMLModelBase(AgMLSerializable, LightningModule):
         """Evaluates the model on the given loader."""
         raise NotImplementedError
 
+    @abc.abstractmethod
+    def prepare_for_training(self, **kwargs):
+        """Prepares the model for training (setting parameters, etc.)"""
+        raise NotImplementedError
 
 

@@ -207,6 +207,103 @@ class ClassificationModel(AgMLModelBase):
         # Compute the final accuracy.
         return acc.compute().numpy().item()
 
+    def prepare_for_training(self,
+                             loss = 'ce',
+                             metrics = (),
+                             optimizer = None,
+                             **kwargs):
+        """Prepares this classification model for training."""
+
+        # Initialize the loss
+        if loss == 'ce':
+            # either binary or multiclass, binary is likely never used
+            if self._num_classes == 1:
+                self.loss = nn.BCEWithLogitsLoss()
+            else:
+                self.loss = nn.CrossEntropyLoss()
+        else:
+            if not isinstance(loss, nn.Module) or not callable(loss):
+                raise TypeError(
+                    f"Expected a callable loss function, but got '{type(loss)}'.")
+
+        # Initialize the metrics.
+        metric_collection = []
+        if len(metrics) > 0:
+            for metric in metrics:
+                # Check if it is a valid torchmetrics metric.
+                if isinstance(metric, str):
+                    try:
+                        from torchmetrics import classification as class_metrics
+                    except ImportError:
+                        raise ImportError(
+                            "Received the name of a metric. If you want to use named "
+                            "metrics, then you need to have `torchmetrics` installed. "
+                            "You can do this by running `pip install torchmetrics`.")
+
+                    # Check if `torchmetrics.classification` has the metric.
+                    if hasattr(class_metrics, metric):
+                        # convert to camel case
+                        metric = ''.join([word.capitalize() for word in metric.split('_')])
+                        metric_collection.append(getattr(class_metrics, metric)())
+                    else:
+                        raise ValueError(
+                            f"Expected a valid metric torchmetrics metric name, "
+                            f"but got '{metric}'. Check `torchmetrics.classification` "
+                            f"for a list of valid image classification metrics.")
+
+                # Check if it is any other class.
+                elif isinstance(metric, nn.Module):
+                    metric_collection.append(metric)
+
+                # Otherwise, raise an error.
+                else:
+                    raise TypeError(
+                        f"Expected a metric name or a metric class, but got '{type(metric)}'.")
+
+        # Initialize the optimizer/learning rate scheduler.
+        if isinstance(optimizer, str):
+            optimizer_class = optimizer.capitalize()
+            if not not hasattr(torch.optim, self.optimizer_class):
+                raise ValueError(
+                    f"Expected a valid optimizer name, but got '{self.optimizer_class}'. "
+                    f"Check `torch.optim` for a list of valid optimizers.")
+
+            optimizer = getattr(torch.optim, optimizer_class)(
+                self.parameters(), lr = kwargs.get('lr', 1e-3))
+        elif isinstance(optimizer, torch.optim.Optimizer):
+            pass  # nothing to do
+        else:
+            raise TypeError(
+                f"Expected an optimizer name or a torch optimizer, but got '{type(optimizer)}'.")
+
+        scheduler = kwargs.get('lr_scheduler', None)
+        if scheduler is not None:
+            # No string auto-initialization, the LR scheduler must be pre-configured.
+            if isinstance(scheduler, str):
+                raise ValueError(
+                    f"If you want to use a learning rate scheduler, you must initialize "
+                    f"it on your own and pass it to the `lr_scheduler` argument. ")
+            elif not isinstance(scheduler, torch.optim.lr_scheduler._LRScheduler):
+                raise TypeError(
+                    f"Expected a torch LR scheduler, but got '{type(scheduler)}'.")
+
+        self._optimization_parameters = {
+            'optimizer': optimizer,
+            'lr_scheduler': scheduler
+        }
+
+    def configure_optimizers(self):
+        opt = self._optimization_parameters['optimizer']
+        scheduler = self._optimization_parameters['lr_scheduler']
+        if scheduler is None:
+            return opt
+        return [opt], [scheduler]
+
+
+
+
+
+
 
 
 
