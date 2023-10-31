@@ -189,7 +189,7 @@ class AgMLModelBase(AgMLSerializable, LightningModule):
         raise NotImplementedError
 
     def on_train_epoch_end(self):
-        for _, metric in self._metrics.items():
+        for _, metric in self._metrics:
             metric.reset()
 
     def on_validation_epoch_end(self):

@@ -438,10 +438,9 @@ class ClassificationModel(AgMLModelBase):
 
         # Compute metrics and loss.
         loss = self.loss(y_pred, y)
-        self.log('loss', loss.item(), prog_bar = True)
         for metric_name, metric in self._metrics:
             metric.update(y_pred, y)
-            self.log(metric_name, metric.compute().numpy().item(), prog_bar = True)
+            self.log(metric_name, self._to_out(metric.compute()).item(), prog_bar = True)
 
         return {
             'loss': loss,
@@ -456,7 +455,7 @@ class ClassificationModel(AgMLModelBase):
         self.log('val_loss', val_loss.item(), prog_bar = True)
         for metric_name, metric in self._metrics:
             metric.update(y_pred, y)
-            self.log('val_' + metric_name, metric.compute().numpy().item(), prog_bar = True)
+            self.log('val_' + metric_name, self._to_out(metric.compute()).item(), prog_bar = True)
 
         return {
             'val_loss': val_loss,
@@ -471,7 +470,8 @@ class ClassificationModel(AgMLModelBase):
         self.log('test_loss', test_loss.item(), prog_bar = True)
         for metric_name, metric in self._metrics:
             metric.update(y_pred, y)
-            self.log('test_' + metric_name, metric.compute().numpy().item(), prog_bar = True)
+
+            self.log('test_' + metric_name, self._to_out(metric.compute()).item(), prog_bar = True)
 
         return {
             'test_loss': test_loss,

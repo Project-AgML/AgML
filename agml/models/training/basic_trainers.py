@@ -16,7 +16,11 @@ import os
 import datetime
 
 from pytorch_lightning import Trainer
-from pytorch_lightning.loggers import TensorBoardLogger, Logger
+from pytorch_lightning.loggers import TensorBoardLogger
+try: # newer pytorch versions
+    from pytorch_lightning.loggers import Logger
+except ImportError:
+    from pytorch_lightning.loggers import LightningLoggerBase as Logger
 from pytorch_lightning.callbacks import ModelCheckpoint
 
 import agml
@@ -222,9 +226,21 @@ def train_classification(model,
         loggers = [TensorBoardLogger(save_dir, name = experiment_name)]
     checkpoint_callback = ModelCheckpoint(save_dir, monitor='val_loss', mode='min', save_top_k=1)
 
+    accelerator = get_accelerator(use_cpu = use_cpu)
+    if accelerator == 'cuda':
+        try:  # newer pytorch versions
+            from pytorch_lightning.accelerators import find_usable_cuda_devices
+            devices = find_usable_cuda_devices()
+        except ImportError:
+            accelerator = 'gpu'
+            devices = 'auto'
+    else:
+        devices = 'auto'
+
     trainer = Trainer(
         max_epochs = epochs,
-        accelerator = get_accelerator(use_cpu = use_cpu),
+        accelerator = accelerator,
+        devices = devices,
         logger = loggers,
         callbacks = [checkpoint_callback],
         log_every_n_steps = 2,
