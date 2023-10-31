@@ -207,6 +207,120 @@ class ClassificationModel(AgMLModelBase):
         # Compute the final accuracy.
         return acc.compute().numpy().item()
 
+    def train(self,
+              *,
+              dataset=None,
+              epochs=50,
+              loss=None,
+              metrics=None,
+              optimizer=None,
+              lr_scheduler=None,
+              lr=None,
+              loggers=None,
+              train_dataloader=None,
+              val_dataloader=None,
+              test_dataloader=None,
+              use_cpu=False,
+              save_dir=None,
+              experiment_name=None,
+              **kwargs):
+        """Trains an image classification model.
+
+        This method can be used to train an image classification model on a given
+        dataset (which should be an `AgMLDataLoader`. Alternatively, if you already
+        have separate dataloaders for training, validation, and testing, you can
+        pass them in as keyword arguments). This method will train the model for
+        the given number of epochs, and then return the trained model.
+
+        You can take advantage of keyword arguments to provide additional training
+        parameters, e.g., a custom optimizer or optimizer name. If nothing is provided
+        for these parameters (see below for an extended list), then defaults are used.
+
+        This method provides a simple interface for training models, but it is not
+        a fully-flexible or customizable training loop. If you need more control over
+        the training loop, then you should manually define your arguments. Furthermore,
+        if you need custom control over the training loop, then you should reimplement
+        the training/validation/test loops on your own in the original model class.
+
+        Parameters
+        ----------
+        model : AgMLModelBase
+            The model to train.
+        dataset : AgMLDataLoader
+            The name of the dataset to use for training. This should be an AgMLDataLoader
+            with the data split in the intended splits, and all preprocessing/transforms
+            already applied to the loader. This method will automatically figure out the
+            splits from the dataloader.
+        epochs : int
+            The number of epochs to train for.
+        loss : {str, torch.nn.Module}
+            The loss function to use for training. If none is provided, then the default
+            loss function is used (cross-entropy loss).
+        metrics : {str, List[str]}
+            The metrics to use for training. If none are provided, then the default
+            metrics are used (accuracy).
+        optimizer : torch.optim.Optimizer
+            The optimizer to use for training. If none is provided, then the default
+            optimizer is used (Adam).
+        lr_scheduler : torch.optim.lr_scheduler._LRScheduler
+            The learning rate scheduler to use for training. If none is provided, then
+            no learning rate scheduler is used.
+        lr : float
+            The learning rate to use for training. If none is provided, then the default
+            learning rate is used (1e-3).
+        loggers : Any
+            The loggers to use for training. If none are provided, then the default
+            loggers are used (TensorBoard)
+
+        train_dataloader : torch.utils.data.DataLoader
+            The dataloader to use for training. If none is provided, then the dataloader
+            is loaded from the dataset.
+        val_dataloader : torch.utils.data.DataLoader
+            The dataloader to use for validation. If none is provided, then the dataloader
+            is loaded from the dataset.
+        test_dataloader : torch.utils.data.DataLoader
+            The dataloader to use for testing. If none is provided, then the dataloader
+            is loaded from the dataset.
+
+        use_cpu : bool
+            If True, then the model will be trained on the CPU, even if a GPU is available.
+            This is useful for debugging purposes (or if you are on a Mac, where MPS
+            acceleration may be buggy).
+        save_dir : str
+            The directory to save the model and any logs to. If none is provided, then
+            the model is saved to the current working directory in a folder which is
+            called `agml_training_logs`.
+        experiment_name : str
+            The name of the experiment. If none is provided, then the experiment name
+            is set to a custom format (the task + the dataset + the current date).
+
+        Returns
+        -------
+        AgMLModelBase
+            The trained model with the best loaded weights. This model can be used for
+            inference, or for further training.
+        """
+        from agml.models.training.basic_trainers import train_classification
+
+        return train_classification(
+            self,
+            dataset = dataset,
+            epochs = epochs,
+            loss = loss,
+            metrics = metrics,
+            optimizer = optimizer,
+            lr_scheduler = lr_scheduler,
+            lr = lr,
+            loggers = loggers,
+            train_dataloader = train_dataloader,
+            val_dataloader = val_dataloader,
+            test_dataloader = test_dataloader,
+            use_cpu = use_cpu,
+            save_dir = save_dir,
+            experiment_name = experiment_name,
+            **kwargs
+        )
+
     def _prepare_for_training(self,
                               loss = 'ce',
                               metrics = (),
