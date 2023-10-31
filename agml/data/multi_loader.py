@@ -631,6 +631,7 @@ class AgMLMultiDatasetLoader(AgMLSerializable):
             return self._val_data
         self._val_data = self._generate_split_loader(
             self._loaders.get_attributes('val_data'), split = 'val')
+        self._val_data.eval()
         return self._val_data
 
     @property
@@ -640,6 +641,7 @@ class AgMLMultiDatasetLoader(AgMLSerializable):
             return self._test_data
         self._test_data = self._generate_split_loader(
             self._loaders.get_attributes('test_data'), split = 'test')
+        self._test_data.eval()
         return self._test_data
 
     def eval(self):

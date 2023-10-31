@@ -19,9 +19,9 @@ def get_accelerator(use_cpu=False):
     """Returns the accelerator device to use for training."""
     if not use_cpu:
         if torch.cuda.is_available():
-            return torch.device("cuda")
+            return 'cuda'
         if torch.has_mps:
-            return torch.device("mps")
+            return 'mps'
     else:
-        return torch.device("cpu")
+        return 'cpu'
 

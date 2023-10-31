@@ -27,6 +27,7 @@ except ImportError:
 from agml.models.base import AgMLModelBase
 from agml.models.tools import auto_move_data, imagenet_style_process
 from agml.models.metrics.accuracy import Accuracy
+from agml.utils.general import has_func
 
 
 class EfficientNetB4Transfer(nn.Module):
@@ -207,23 +208,24 @@ class ClassificationModel(AgMLModelBase):
         # Compute the final accuracy.
         return acc.compute().numpy().item()
 
-    def train(self,
-              *,
-              dataset=None,
-              epochs=50,
-              loss=None,
-              metrics=None,
-              optimizer=None,
-              lr_scheduler=None,
-              lr=None,
-              loggers=None,
-              train_dataloader=None,
-              val_dataloader=None,
-              test_dataloader=None,
-              use_cpu=False,
-              save_dir=None,
-              experiment_name=None,
-              **kwargs):
+    def run_training(self,
+                     dataset=None,
+                     *,
+                     epochs=50,
+                     loss=None,
+                     metrics=None,
+                     optimizer=None,
+                     lr_scheduler=None,
+                     lr=None,
+                     batch_size=8,
+                     loggers=None,
+                     train_dataloader=None,
+                     val_dataloader=None,
+                     test_dataloader=None,
+                     use_cpu=False,
+                     save_dir=None,
+                     experiment_name=None,
+                     **kwargs):
         """Trains an image classification model.
 
         This method can be used to train an image classification model on a given
@@ -268,6 +270,9 @@ class ClassificationModel(AgMLModelBase):
         lr : float
             The learning rate to use for training. If none is provided, then the default
             learning rate is used (1e-3).
+        batch_size : int
+            The batch size to use for training. If none is provided, then the default
+            batch size is used (8).
         loggers : Any
             The loggers to use for training. If none are provided, then the default
             loggers are used (TensorBoard)
@@ -294,12 +299,18 @@ class ClassificationModel(AgMLModelBase):
             The name of the experiment. If none is provided, then the experiment name
             is set to a custom format (the task + the dataset + the current date).
 
+        kwargs : dict
+            num_workers : int
+                The number of workers to use for the dataloaders. If none is provided,
+                then the number of workers is set to half of the available CPU cores.
+
         Returns
         -------
         AgMLModelBase
             The trained model with the best loaded weights. This model can be used for
             inference, or for further training.
         """
+
         from agml.models.training.basic_trainers import train_classification
 
         return train_classification(
@@ -311,6 +322,7 @@ class ClassificationModel(AgMLModelBase):
             optimizer = optimizer,
             lr_scheduler = lr_scheduler,
             lr = lr,
+            batch_size=batch_size,
             loggers = loggers,
             train_dataloader = train_dataloader,
             val_dataloader = val_dataloader,
@@ -355,7 +367,7 @@ class ClassificationModel(AgMLModelBase):
                             "You can do this by running `pip install torchmetrics`.")
 
                     # Check if `torchmetrics.classification` has the metric.
-                    if hasattr(class_metrics, metric):
+                    if has_func(class_metrics, metric):
                         # accuracy is a special case, we use our own accuracy
                         if metric == 'accuracy':
                             from agml.models.metrics.accuracy import Accuracy
@@ -384,9 +396,9 @@ class ClassificationModel(AgMLModelBase):
         # Initialize the optimizer/learning rate scheduler.
         if isinstance(optimizer, str):
             optimizer_class = optimizer.capitalize()
-            if not not hasattr(torch.optim, self.optimizer_class):
+            if not has_func(torch.optim, optimizer_class):
                 raise ValueError(
-                    f"Expected a valid optimizer name, but got '{self.optimizer_class}'. "
+                    f"Expected a valid optimizer name, but got '{optimizer_class}'. "
                     f"Check `torch.optim` for a list of valid optimizers.")
 
             optimizer = getattr(torch.optim, optimizer_class)(
@@ -428,10 +440,7 @@ class ClassificationModel(AgMLModelBase):
         loss = self.loss(y_pred, y)
         self.log('loss', loss.item(), prog_bar = True)
         for metric_name, metric in self._metrics:
-            if metric_name == 'accuracy':
-                metric.update(y_pred, torch.argmax(y, 1))
-            else:
-                metric.update(y_pred, y)
+            metric.update(y_pred, y)
             self.log(metric_name, metric.compute().numpy().item(), prog_bar = True)
 
         return {
@@ -440,16 +449,13 @@ class ClassificationModel(AgMLModelBase):
 
     def validation_step(self, batch, *args, **kwargs): # noqa
         x, y = batch
-        y_pred = self(x)
+        y_pred = self.net(x)
 
         # Compute metrics and loss.
         val_loss = self.loss(y_pred, y)
         self.log('val_loss', val_loss.item(), prog_bar = True)
         for metric_name, metric in self._metrics:
-            if metric_name == 'accuracy':
-                metric.update(y_pred, torch.argmax(y, 1))
-            else:
-                metric.update(y_pred, y)
+            metric.update(y_pred, y)
             self.log('val_' + metric_name, metric.compute().numpy().item(), prog_bar = True)
 
         return {
@@ -464,10 +470,7 @@ class ClassificationModel(AgMLModelBase):
         test_loss = self.loss(y_pred, y)
         self.log('test_loss', test_loss.item(), prog_bar = True)
         for metric_name, metric in self._metrics:
-            if metric_name == 'accuracy':
-                metric.update(y_pred, torch.argmax(y, 1))
-            else:
-                metric.update(y_pred, y)
+            metric.update(y_pred, y)
             self.log('test_' + metric_name, metric.compute().numpy().item(), prog_bar = True)
 
         return {

@@ -153,3 +153,11 @@ def is_int(num):
         return False
     return True
 
+
+def has_func(module, func):
+    """Determines if a module has a function."""
+    try:
+        return True
+    except ImportError:
+        return False
+

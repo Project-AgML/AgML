@@ -19,6 +19,8 @@ from pytorch_lightning import Trainer
 from pytorch_lightning.loggers import TensorBoardLogger, Logger
 from pytorch_lightning.callbacks import ModelCheckpoint
 
+import agml
+
 from agml.models.classification import ClassificationModel
 from agml.models.system_utils import get_accelerator
 from agml.utils.logging import log
@@ -33,6 +35,7 @@ def train_classification(model,
                          optimizer=None,
                          lr_scheduler=None,
                          lr=None,
+                         batch_size=8,
                          loggers=None,
                          train_dataloader=None,
                          val_dataloader=None,
@@ -85,6 +88,9 @@ def train_classification(model,
     lr : float
         The learning rate to use for training. If none is provided, then the default
         learning rate is used (1e-3).
+    batch_size : int
+        The batch size to use for training. If none is provided, then the default
+        batch size is used (8).
     loggers : Any
         The loggers to use for training. If none are provided, then the default
         loggers are used (TensorBoard)
@@ -111,6 +117,11 @@ def train_classification(model,
         The name of the experiment. If none is provided, then the experiment name
         is set to a custom format (the task + the dataset + the current date).
 
+    kwargs : dict
+        num_workers : int
+            The number of workers to use for the dataloaders. If none is provided,
+            then the number of workers is set to half of the available CPU cores.
+
     Returns
     -------
     AgMLModelBase
@@ -126,18 +137,33 @@ def train_classification(model,
         raise ValueError("The dataset must be an image classification dataset.")
     dataset_exists, dataloader_exists = \
         dataset is not None, any([train_dataloader, val_dataloader, test_dataloader])
-    if dataset_exists ^ dataloader_exists:
-        raise ValueError("You can only pass one of the dataset/dataloader arguments.")
+    if not (dataset_exists ^ dataloader_exists):
+        raise ValueError("You must pass one and only one of the dataset/dataloader arguments.")
 
     if dataset_exists:
-        if not dataset._is_split:
+        nw = kwargs.get('num_workers', None)
+        if nw is None:
+            nw = os.cpu_count() // 2
+        if not any([dataset.train_data, dataset.val_data, dataset.test_data]):
             raise ValueError("The provided dataset must have split data.")
         if dataset.train_data is not None:
-            train_dataloader = dataset.train_data
+            train_dataloader = dataset.train_data.export_torch(
+                batch_size = batch_size,
+                shuffle = True,
+                num_workers = nw
+            )
         if dataset.val_data is not None:
-            val_dataloader = dataset.val_data
+            val_dataloader = dataset.val_data.export_torch(
+                batch_size = batch_size,
+                shuffle = False,
+                num_workers = nw
+            )
         if dataset.test_data is not None:
-            test_dataloader = dataset.test_data
+            test_dataloader = dataset.test_data.export_torch(
+                batch_size = batch_size,
+                shuffle = False,
+                num_workers = nw
+            )
         dataset_name = dataset.info.name
 
     # Set up the model for training (and choose the default parameters).
@@ -183,10 +209,10 @@ def train_classification(model,
         curr_datetime = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M")
         if dataset_exists:
             experiment_name = '{}_{}_{}'.format(
-                model.info.tasks.ml, dataset_name, curr_datetime)  # noqa
+                'image_classification', dataset_name, curr_datetime)  # noqa
         else:
             experiment_name = '{}_{}_{}'.format(
-                model.info.tasks.ml, 'unknown', curr_datetime)
+                'image_classification', 'unknown', curr_datetime)
     if loggers is not None:
         for _logger in loggers:
             if not isinstance(_logger, Logger):
@@ -198,7 +224,7 @@ def train_classification(model,
 
     trainer = Trainer(
         max_epochs = epochs,
-        devices = get_accelerator(use_cpu = use_cpu),
+        accelerator = get_accelerator(use_cpu = use_cpu),
         logger = loggers,
         callbacks = [checkpoint_callback],
         log_every_n_steps = 2,

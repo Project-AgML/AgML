@@ -24,7 +24,7 @@ def accuracy(output, target):
     pred = pred.t()
     correct = pred.eq(target.view(1, -1).expand_as(pred))
     correct_k = correct[:1].reshape(-1).float().sum(0, keepdim = True)
-    return correct_k.mul_(100.0 / batch_size)
+    return correct_k.div_(batch_size)
 
 
 class Accuracy(nn.Module):
@@ -59,8 +59,8 @@ class Accuracy(nn.Module):
 
     def compute(self):
         """Computes the accuracy between the predictions and ground truths."""
-        return accuracy(torch.tensor(self._prediction_data),
-                        torch.tensor(self._truth_data))
+        return accuracy(torch.stack(self._prediction_data),
+                        torch.stack(self._truth_data))
 
     def reset(self):
         """Resets the accumulator states."""
