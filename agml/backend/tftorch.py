@@ -173,7 +173,7 @@ def _convert_image_to_torch(image):
         if image.shape[0] > image.shape[-1]:
             return torch.from_numpy(image).permute(2, 0, 1).float()
     elif image.ndim == 2:
-        return torch.from_numpy(image).permute(1, 0).float()
+        return torch.from_numpy(image)
     return torch.from_numpy(image).float()
 
 

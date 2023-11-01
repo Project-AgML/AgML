@@ -454,6 +454,7 @@ class ClassificationModel(AgMLModelBase):
         val_loss = self.loss(y_pred, y)
         self.log('val_loss', val_loss.item(), prog_bar = True)
         for metric_name, metric in self._metrics:
+            metric.to(self.device)
             metric.update(y_pred, y)
             self.log('val_' + metric_name, self._to_out(metric.compute()).item(), prog_bar = True)
 

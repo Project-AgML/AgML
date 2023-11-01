@@ -556,6 +556,7 @@ class SegmentationModel(AgMLModelBase):
 
     def training_step(self, batch, *args, **kwargs): # noqa
         x, y = batch
+        y = y.float()
         y_pred = self(x).float().squeeze()
 
         # Compute metrics and loss.
@@ -570,12 +571,14 @@ class SegmentationModel(AgMLModelBase):
 
     def validation_step(self, batch, *args, **kwargs): # noqa
         x, y = batch
+        y = y.float()
         y_pred = self(x).float().squeeze()
 
         # Compute metrics and loss.
         val_loss = self.loss(y_pred, y)
         self.log('val_loss', val_loss.item(), prog_bar = True)
         for metric_name, metric in self._metrics:
+            metric.to(self.device)
             metric.update(y_pred, y)
             self.log('val_' + metric_name, self._to_out(metric.compute()).item(), prog_bar = True)
 
@@ -585,6 +588,7 @@ class SegmentationModel(AgMLModelBase):
 
     def test_step(self, batch, *args, **kwargs):
         x, y = batch
+        y = y.float()
         y_pred = self(x).float().squeeze()
 
         # Compute metrics and loss.

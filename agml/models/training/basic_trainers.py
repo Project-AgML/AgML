@@ -409,7 +409,10 @@ def train_segmentation(model,
                          "classification task, instead got {}.".format(type(model)))
 
     if loss is None:
-        loss = 'ce'
+        if dataset.num_classes > 1:
+            loss = 'dice'
+        else:
+            loss = 'ce'
     if metrics is None:
         metrics = ['miou']
     elif isinstance(metrics, str):
