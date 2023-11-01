@@ -32,9 +32,9 @@ def dice_loss(y_pred, y):
     y = y.float()
 
     # Determine whether this is a multi-class or binary task.
-    try: # Multi-class segmentation
+    try:  # Multi-class segmentation
         c, h, w = y.shape[1:]
-    except: # Binary segmentation
+    except:  # Binary segmentation
         h, w = y.shape[1:]; c = 1 # noqa
 
     # Sigmoid for the outputs (since this is automatically done by binary
@@ -47,8 +47,8 @@ def dice_loss(y_pred, y):
     pred_flat = torch.reshape(y_pred, [-1, c * h * w])
     y_flat = torch.reshape(y, [-1, c * h * w])
     intersection = 2.0 * torch.sum(pred_flat * y_flat, dim = 1) + 1e-6
-    denominator = torch.sum(pred_flat, dim = 1) \
-                  + torch.sum(y_flat, dim = 1) + 1e-6
+    denominator = (torch.sum(pred_flat, dim = 1)
+                   + torch.sum(y_flat, dim = 1) + 1e-6)
     return 1. - torch.mean(intersection / denominator)
 
 

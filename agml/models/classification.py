@@ -416,7 +416,7 @@ class ClassificationModel(AgMLModelBase):
                 raise ValueError(
                     f"If you want to use a learning rate scheduler, you must initialize "
                     f"it on your own and pass it to the `lr_scheduler` argument. ")
-            elif not isinstance(scheduler, torch.optim.lr_scheduler._LRScheduler):
+            elif not isinstance(scheduler, torch.optim.lr_scheduler.LRScheduler):
                 raise TypeError(
                     f"Expected a torch LR scheduler, but got '{type(scheduler)}'.")
 

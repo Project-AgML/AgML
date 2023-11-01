@@ -29,9 +29,11 @@ except ImportError:
 from agml.models.base import AgMLModelBase
 from agml.models.benchmarks import BenchmarkMetadata
 from agml.models.tools import auto_move_data, imagenet_style_process
+from agml.models.losses import DiceLoss
 from agml.data.public import source
-from agml.utils.general import resolve_list_value
+from agml.utils.general import resolve_list_value, has_func
 from agml.utils.image import resolve_image_size
+from agml.utils.logging import log
 from agml.viz.masks import show_image_and_overlaid_mask, show_image_and_mask
 
 # This is last since `agml.models.base` will check for PyTorch Lightning,
@@ -208,7 +210,7 @@ class SegmentationModel(AgMLModelBase):
         out = torch.sigmoid(self.forward(images))
 
         # Post-process the output masks to a valid format.
-        if out.shape[1] == 1: # binary class predictions
+        if out.shape[1] == 1:  # binary class predictions
             out[out >= self._conf_thresh] = 1
             out[out != 1] = 0
             out = torch.squeeze(out, dim = 1)
@@ -320,4 +322,154 @@ class SegmentationModel(AgMLModelBase):
 
         # Compute the final mIoU.
         return iou.compute().numpy().item()
+
+    def _prepare_for_training(self,
+                              loss = 'ce',
+                              metrics = (),
+                              optimizer = None,
+                              **kwargs):
+        """Prepares the model for training."""
+
+        # Initialize the loss
+        if loss == 'ce':
+            # either binary or multiclass, binary is likely never used
+            if self._num_classes == 1:
+                self.loss = nn.BCEWithLogitsLoss()
+            else:
+                self.loss = nn.CrossEntropyLoss()
+        elif loss == 'dice':
+            if self._num_classes == 1:
+                log("Dice loss is not necessarily supported for binary classification.")
+            self.loss = DiceLoss()
+        else:
+            if not isinstance(loss, nn.Module) or not callable(loss):
+                raise TypeError(
+                    f"Expected a callable loss function, but got '{type(loss)}'.")
+
+        # Initialize the metrics.
+        metric_collection = []
+        if len(metrics) > 0:
+            for metric in metrics:
+                # Check if it is a valid torchmetrics metric.
+                if isinstance(metric, str):
+                    try:
+                        from torchmetrics import classification as class_metrics
+                    except ImportError:
+                        raise ImportError(
+                            "Received the name of a metric. If you want to use named "
+                            "metrics, then you need to have `torchmetrics` installed. "
+                            "You can do this by running `pip install torchmetrics`.")
+
+                    # Check if `torchmetrics.classification` has the metric.
+                    if has_func(class_metrics, metric):
+                        # iou/miou is a special case
+                        if metric == 'iou' or metric == 'miou':
+                            metric_collection.append(
+                                [metric, IoU(num_classes = self._num_classes + 1)])
+
+                        # convert to camel case
+                        else:
+                            metric = ''.join([word.capitalize() for word in metric.split('_')])
+                            metric_collection.append([metric, getattr(class_metrics, metric)()])
+                    else:
+                        raise ValueError(
+                            f"Expected a valid metric torchmetrics metric name, "
+                            f"but got '{metric}'. Check `torchmetrics.classification` "
+                            f"for a list of valid image classification metrics.")
+
+                # Check if it is any other class.
+                elif isinstance(metric, nn.Module):
+                    metric_collection.append(metric)
+
+                # Otherwise, raise an error.
+                else:
+                    raise TypeError(
+                        f"Expected a metric name or a metric class, but got '{type(metric)}'.")
+        self._metrics = metric_collection
+
+        # Initialize the optimizer/learning rate scheduler.
+        if isinstance(optimizer, str):
+            optimizer_class = optimizer.capitalize()
+            if not has_func(torch.optim, optimizer_class):
+                raise ValueError(
+                    f"Expected a valid optimizer name, but got '{optimizer_class}'. "
+                    f"Check `torch.optim` for a list of valid optimizers.")
+
+            optimizer = getattr(torch.optim, optimizer_class)(
+                self.parameters(), lr = kwargs.get('lr', 2e-3))
+        elif isinstance(optimizer, torch.optim.Optimizer):
+            pass  # nothing to do
+        else:
+            raise TypeError(
+                f"Expected an optimizer name or a torch optimizer, but got '{type(optimizer)}'.")
+
+        scheduler = kwargs.get('lr_scheduler', None)
+        if scheduler is not None:
+            # No string auto-initialization, the LR scheduler must be pre-configured.
+            if isinstance(scheduler, str):
+                raise ValueError(
+                    f"If you want to use a learning rate scheduler, you must initialize "
+                    f"it on your own and pass it to the `lr_scheduler` argument. ")
+            elif not isinstance(scheduler, torch.optim.lr_scheduler.LRScheduler):
+                raise TypeError(
+                    f"Expected a torch LR scheduler, but got '{type(scheduler)}'.")
+
+        self._optimization_parameters = {
+            'optimizer': optimizer,
+            'lr_scheduler': scheduler
+        }
+
+    def configure_optimizers(self):
+        opt = self._optimization_parameters['optimizer']
+        scheduler = self._optimization_parameters['lr_scheduler']
+        if scheduler is None:
+            return opt
+        return [opt], [scheduler]
+
+
+    def training_step(self, batch, *args, **kwargs): # noqa
+        x, y = batch
+        y_pred = self(x).float().squeeze()
+
+        # Compute metrics and loss.
+        loss = self.loss(y_pred, y)
+        for metric_name, metric in self._metrics:
+            metric.update(y_pred, y)
+            self.log(metric_name, self._to_out(metric.compute()).item(), prog_bar = True)
+
+        return {
+            'loss': loss,
+        }
+
+    def validation_step(self, batch, *args, **kwargs): # noqa
+        x, y = batch
+        y_pred = self(x).float().squeeze()
+
+        # Compute metrics and loss.
+        val_loss = self.loss(y_pred, y)
+        self.log('val_loss', val_loss.item(), prog_bar = True)
+        for metric_name, metric in self._metrics:
+            metric.update(y_pred, y)
+            self.log('val_' + metric_name, self._to_out(metric.compute()).item(), prog_bar = True)
+
+        return {
+            'val_loss': val_loss,
+        }
+
+    def test_step(self, batch, *args, **kwargs):
+        x, y = batch
+        y_pred = self(x).float().squeeze()
+
+        # Compute metrics and loss.
+        test_loss = self.loss(y_pred, y)
+        self.log('test_loss', test_loss.item(), prog_bar = True)
+        for metric_name, metric in self._metrics:
+            metric.update(y_pred, y)
+
+            self.log('test_' + metric_name, self._to_out(metric.compute()).item(), prog_bar = True)
+
+        return {
+            'test_loss': test_loss,
+        }
+
 
