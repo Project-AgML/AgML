@@ -324,9 +324,8 @@ class SegmentationModel(AgMLModelBase):
         return iou.compute().numpy().item()
 
     def run_training(self,
-                     model,
-                     *,
                      dataset=None,
+                     *,
                      epochs=50,
                      loss=None,
                      metrics=None,
@@ -491,7 +490,9 @@ class SegmentationModel(AgMLModelBase):
                         # iou/miou is a special case
                         if metric == 'iou' or metric == 'miou':
                             metric_collection.append(
-                                [metric, IoU(num_classes = self._num_classes + 1)])
+                                [metric, IoU(
+                                    task = 'multiclass' if self._num_classes > 1 else 'binary',  # noqa
+                                    num_classes = self._num_classes + 1)])
 
                         # convert to camel case
                         else:

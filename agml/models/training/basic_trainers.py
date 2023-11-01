@@ -24,9 +24,8 @@ except ImportError:
     from pytorch_lightning.loggers import LightningLoggerBase as Logger
 from pytorch_lightning.callbacks import ModelCheckpoint
 
-import agml
-
 from agml.models.classification import ClassificationModel
+from agml.models.segmentation import SegmentationModel
 from agml.models.system_utils import get_accelerator
 from agml.utils.logging import log
 
@@ -405,14 +404,14 @@ def train_segmentation(model,
         dataset_name = dataset.info.name
 
     # Set up the model for training (and choose the default parameters).
-    if not isinstance(model, ClassificationModel):
+    if not isinstance(model, SegmentationModel):
         raise ValueError("Expected an `agml.models.ClassificationModel` for an image "
                          "classification task, instead got {}.".format(type(model)))
 
     if loss is None:
         loss = 'ce'
     if metrics is None:
-        metrics = ['accuracy']
+        metrics = ['miou']
     elif isinstance(metrics, str):
         metrics = [metrics]
     if lr is None:

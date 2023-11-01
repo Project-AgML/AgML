@@ -169,9 +169,12 @@ def _convert_image_to_torch(image):
         if image.shape[0] == 1 and image.shape[-1] <= 3 and image.ndim == 4:
             return torch.from_numpy(image).permute(0, 3, 1, 2).float()
         return image
-    if image.shape[0] > image.shape[-1]:
-        return torch.from_numpy(image).permute(2, 0, 1).float()
-    return torch.from_numpy(image)
+    if image.ndim == 3:
+        if image.shape[0] > image.shape[-1]:
+            return torch.from_numpy(image).permute(2, 0, 1).float()
+    elif image.ndim == 2:
+        return torch.from_numpy(image).permute(1, 0).float()
+    return torch.from_numpy(image).float()
 
 
 def _postprocess_torch_annotation(image):
