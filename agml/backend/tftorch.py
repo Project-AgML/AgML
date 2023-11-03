@@ -296,3 +296,25 @@ def _add_dataset_to_mro(inst, mode):
         if torch_data.Dataset not in inst.__class__.__bases__:
             inst.__class__.__bases__ += (torch_data.Dataset,)
 
+
+def collate_fn_basic(batch):
+    images = torch.stack([i[0] for i in batch], dim = 0)
+    coco = tuple(zip(*[i[1] for i in batch]))
+    return images, coco
+
+
+def collate_fn_efficientdet(batch):
+    """Collates items together into a batch."""
+    images, targets = tuple(zip(*batch))
+    images = torch.stack(images)
+    images = images.float()
+
+    boxes = [target["bboxes"].float() for target in targets]
+    labels = [target["labels"].float() for target in targets]
+    img_size = torch.stack([target["img_size"] for target in targets]).float()
+    img_scale = torch.stack([target["img_scale"] for target in targets]).float()
+
+    annotations = {
+        "bbox": boxes, "cls": labels,
+        "img_size": img_size, "img_scale": img_scale}
+    return images, annotations, targets
