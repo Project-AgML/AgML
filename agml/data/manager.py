@@ -225,6 +225,13 @@ class DataManager(AgMLSerializable):
             image_size = 'default'
         self._resize_manager.assign(image_size, method)
 
+    def _warn_training_resize(self):
+        """Warn the user if they are not resizing during training."""
+        if self._resize_manager._resize_type == 'default':
+            log(f"Warning: you have not applied any resizing method to the "
+                f"dataset `{self._dataset_name}`. This may cause errors during "
+                f"training if the image aspect ratios are not consistent.")
+
     def push_transforms(self, **transform_dict):
         """Pushes a transformation to the data transform pipeline."""
         # Check if any transforms are being reset and assign them as such.

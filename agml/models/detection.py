@@ -14,9 +14,10 @@
 
 import warnings
 
-import torch
 import numpy as np
 import albumentations as A
+
+import torch
 
 from tqdm import tqdm
 
@@ -48,6 +49,7 @@ from agml.models.tools import auto_move_data
 from agml.models.metrics.map import MeanAveragePrecision
 from agml.data.public import source
 from agml.backend.tftorch import is_array_like
+from agml.utils.general import has_func
 from agml.utils.image import resolve_image_size
 from agml.utils.logging import log
 from agml.viz.boxes import show_image_and_boxes
@@ -108,8 +110,7 @@ class DetectionModel(AgMLModelBase):
             self._image_size = resolve_image_size(image_size)
             self._confidence_threshold = conf_threshold
             self._num_classes = num_classes
-            self.model = self._construct_sub_net(
-                self._num_classes, self._image_size)
+            self.model = self._construct_sub_net(self._num_classes, self._image_size)
 
         # Filter out unnecessary warnings.
         warnings.filterwarnings(
@@ -334,8 +335,7 @@ class DetectionModel(AgMLModelBase):
         return [squeeze(b, l, c)
                 for b, l, c in zip(boxes, labels, confidences)]
 
-    @staticmethod
-    def _to_out(tensor: "torch.Tensor") -> "torch.Tensor":
+    def _to_out(self, tensor: "torch.Tensor") -> "torch.Tensor":
         if isinstance(tensor, dict):
             tensor = tensor['detections']
         return super()._to_out(tensor)
@@ -513,6 +513,137 @@ class DetectionModel(AgMLModelBase):
         else:
             result = mean_ap.compute()
         return result
+
+    def _prepare_for_training(self,
+                              metrics = (),
+                              optimizer = None,
+                              **kwargs):
+        """Prepares the model for training."""
+
+        # Initialize the metrics.
+        self.map = None
+        if len(metrics) > 0:
+            for metric in metrics:
+                # So far, only the mAP metric is supported.
+                if isinstance(metric, str):
+                    if metric.lower() not in ['ap', 'map']:
+                        raise ValueError(
+                            "Unfortunately, the only currently supported metric "
+                            "is mean average precision (use 'ap' or 'map' "
+                            "to enable mean average precision).")
+
+                    self.map = MeanAveragePrecision(
+                        num_classes = self._num_classes,
+                        iou_threshold = kwargs.get('iou_threshold', 0.5)
+                    )
+
+        # Initialize the optimizer/learning rate scheduler.
+        if isinstance(optimizer, str):
+            optimizer_class = optimizer.capitalize()
+            if not has_func(torch.optim, optimizer_class):
+                raise ValueError(
+                    f"Expected a valid optimizer name, but got '{optimizer_class}'. "
+                    f"Check `torch.optim` for a list of valid optimizers.")
+
+            optimizer = getattr(torch.optim, optimizer_class)(
+                self.parameters(), lr = kwargs.get(
+                    'lr', 0.0002 if self._num_classes == 1 else 0.0008))
+        elif isinstance(optimizer, torch.optim.Optimizer):
+            pass  # nothing to do
+        else:
+            raise TypeError(
+                f"Expected an optimizer name or a torch optimizer, but got '{type(optimizer)}'.")
+
+        scheduler = kwargs.get('lr_scheduler', None)
+        if scheduler is not None:
+            # No string auto-initialization, the LR scheduler must be pre-configured.
+            if isinstance(scheduler, str):
+                raise ValueError(
+                    f"If you want to use a learning rate scheduler, you must initialize "
+                    f"it on your own and pass it to the `lr_scheduler` argument. ")
+            elif not isinstance(scheduler, torch.optim.lr_scheduler.LRScheduler):
+                raise TypeError(
+                    f"Expected a torch LR scheduler, but got '{type(scheduler)}'.")
+
+        self._optimization_parameters = {
+            'optimizer': optimizer,
+            'lr_scheduler': scheduler
+        }
+
+    def configure_optimizers(self):
+        opt = self._optimization_parameters['optimizer']
+        scheduler = self._optimization_parameters['lr_scheduler']
+        if scheduler is None:
+            return opt
+        return [opt], [scheduler]
+
+    def training_step(self, batch, batch_idx, *args, **kwargs):
+        images, annotations, _ = batch
+        losses = self.forward(images, annotations)
+        return losses
+
+    def validation_step(self, batch, batch_idx, *args, **kwargs):
+        images, annotations, targets = batch
+        outputs = self.forward(images, annotations)
+        detections = outputs['detections']
+
+        # Calculate the mean average precision.
+        if not self.trainer.sanity_checking and self.map is not None:
+            boxes, confidences, labels = self._process_detections(self._to_out(detections))
+            boxes = self._rescale_bboxes(boxes, [[512, 512]] * len(images))
+            annotations['bbox'] = self._rescale_bboxes_yxyx(
+                annotations['bbox'], [[512, 512, ]] * len(images))
+
+            for pred_box, pred_label, pred_conf, true_box, true_label in zip(
+                    boxes, labels, confidences, annotations['bbox'], annotations['cls']):
+                metric_update_values = (
+                    dict(boxes=self._to_out(torch.tensor(pred_box, dtype=torch.float32)),
+                         labels=self._to_out(torch.tensor(pred_label, dtype=torch.int32)),
+                         scores=self._to_out(torch.tensor(pred_conf))),
+                    dict(boxes=self._to_out(torch.tensor(true_box, dtype=torch.float32)),
+                         labels=self._to_out(torch.tensor(true_label, dtype=torch.int32))))
+                self.map_validation.update(*metric_update_values)
+
+                # Log the MAP values.
+                map_ = self.map_validation.compute().detach().cpu().numpy().item()
+                self.log("val_map", map_, prog_bar=True, logger=True, sync_dist=True)
+
+        self.log("val_loss", outputs['loss'], prog_bar=True, logger=True, sync_dist=True)
+        return outputs['loss']
+
+    def on_validation_epoch_end(self):
+        if self.map is not None:
+            self.map_validation.reset()
+
+    def test_step(self, batch, batch_idx, *args, **kwargs):
+        images, annotations, targets = batch
+        outputs = self.forward(images, annotations)
+
+        # Calculate the mean average precision.
+        if not self.trainer.sanity_checking and self.map is not None:
+            boxes, confidences, labels = self._process_detections(self._to_out(outputs['detections']))
+            boxes = self._rescale_bboxes(boxes, [[512, 512]] * len(images))
+            annotations['bbox'] = self._rescale_bboxes_yxyx(
+                annotations['bbox'], [[512, 512, ]] * len(images))
+
+            for pred_box, pred_label, pred_conf, true_box, true_label in zip(
+                    boxes, labels, confidences, annotations['bbox'], annotations['cls']):
+                metric_update_values = (
+                    dict(boxes=self._to_out(torch.tensor(pred_box, dtype=torch.float32)),
+                         labels=self._to_out(torch.tensor(pred_label, dtype=torch.int32)),
+                         scores=self._to_out(torch.tensor(pred_conf))),
+                    dict(boxes=self._to_out(torch.tensor(true_box, dtype=torch.float32)),
+                         labels=self._to_out(torch.tensor(true_label, dtype=torch.int32))))
+                self.map_test.update(*metric_update_values)
+
+                # Log the MAP values.
+                map_ = self.map_test.compute().detach().cpu().numpy().item()
+                self.log("test_map", map_, prog_bar=True, logger=True, sync_dist=True)
+
+        self.log("test_loss", outputs['loss'], prog_bar=True, logger=True, sync_dist=True)
+        return outputs['loss']
+
+
 
 
 

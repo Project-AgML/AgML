@@ -141,6 +141,10 @@ class TransformManager(AgMLSerializable):
                             kind = 'dual_transform'
                     if self._task == 'semantic_segmentation':
                         kind = 'dual_transform'
+                elif 'agml.models' in transform.__module__:
+                    from agml.models.preprocessing import EfficientDetPreprocessor
+                    if isinstance(transform, EfficientDetPreprocessor):
+                        kind = 'dual_transform'
             except AttributeError:
                 # Some type of object that doesn't have `__module__`.
                 pass
@@ -154,9 +158,9 @@ class TransformManager(AgMLSerializable):
             if t_(kind) == TransformKind.Transform:
                 transform = self._maybe_normalization_or_regular_transform(transform)
             elif t_(kind) == TransformKind.TargetTransform:
-                if isinstance(transform, tuple): # a special convenience case
+                if isinstance(transform, tuple):  # a special convenience case
                     if transform[0] == 'one_hot':
-                        if transform[2] is not True: # removing the transform
+                        if transform[2] is not True:  # removing the transform
                             self._pop_transform(OneHotLabelTransform, kind)
                             return
                         transform = OneHotLabelTransform(transform[1])
@@ -168,9 +172,9 @@ class TransformManager(AgMLSerializable):
             if t_(kind) == TransformKind.Transform:
                 transform = self._maybe_normalization_or_regular_transform(transform)
             elif t_(kind) == TransformKind.TargetTransform:
-                if isinstance(transform, tuple): # a special convenience case
+                if isinstance(transform, tuple):  # a special convenience case
                     if transform[0] == 'one_hot':
-                        if transform[2] is not True: # removing the transform
+                        if transform[2] is not True:  # removing the transform
                             self._pop_transform(OneHotLabelTransform, kind)
                             return
                         transform = OneHotLabelTransform(transform[1])
@@ -180,9 +184,9 @@ class TransformManager(AgMLSerializable):
             if t_(kind) == TransformKind.Transform:
                 transform = self._maybe_normalization_or_regular_transform(transform)
             elif t_(kind) == TransformKind.TargetTransform:
-                if isinstance(transform, tuple): # a special convenience case
+                if isinstance(transform, tuple):  # a special convenience case
                     if transform[0] == 'channel_basis':
-                        if transform[2] is not True: # removing the transform
+                        if transform[2] is not True:  # removing the transform
                             self._pop_transform(MaskToChannelBasisTransform, kind)
                         transform = MaskToChannelBasisTransform(transform[1])
                 else:

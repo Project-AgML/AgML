@@ -553,7 +553,6 @@ class SegmentationModel(AgMLModelBase):
             return opt
         return [opt], [scheduler]
 
-
     def training_step(self, batch, *args, **kwargs): # noqa
         x, y = batch
         y = y.float()
