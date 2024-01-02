@@ -38,6 +38,8 @@ class AgMLModelBase(AgMLSerializable, LightningModule):
     and image input preprocessing, as well as other stubs for common methods.
     """
 
+    _ml_task: str
+
     def __init__(self):
         self._benchmark = BenchmarkMetadata(None)
         super(AgMLModelBase, self).__init__()
@@ -189,12 +191,14 @@ class AgMLModelBase(AgMLSerializable, LightningModule):
         raise NotImplementedError
 
     def on_train_epoch_end(self):
-        for _, metric in self._metrics:
-            metric.reset()
+        if self._ml_task != 'object_detection':
+            for _, metric in self._metrics:
+                metric.reset()
 
     def on_validation_epoch_end(self):
-        for _, metric in self._metrics:
-            metric.reset()
+        if self._ml_task != 'object_detection':
+            for _, metric in self._metrics:
+                metric.reset()
 
     def get_progress_bar_dict(self):
         if not hasattr(super(), 'get_progress_bar_dict'):

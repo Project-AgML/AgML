@@ -72,6 +72,8 @@ class ClassificationModel(AgMLModelBase):
     serializable = frozenset(("model", "regression"))
     state_override = frozenset(("model",))
 
+    _ml_task = 'image_classification'
+
     def __init__(self, num_classes = None, regression = False, **kwargs):
         # Construct the network and load in pretrained weights.
         super(ClassificationModel, self).__init__()

@@ -95,6 +95,8 @@ class DetectionModel(AgMLModelBase):
         "model", "num_classes", "conf_thresh", "image_size"))
     state_override = frozenset(("model",))
 
+    _ml_task = 'object_detection'
+
     def __init__(self,
                  num_classes = 1,
                  image_size = 512,
@@ -288,18 +290,25 @@ class DetectionModel(AgMLModelBase):
         return predicted_bboxes, predicted_class_confidences, predicted_class_labels
 
     @staticmethod
-    def _rescale_bboxes(predicted_bboxes, image_sizes):
+    def _rescale_bboxes(predicted_bboxes, image_sizes, yxyx=False):
         """Re-scales output bounding boxes to the original image sizes."""
         scaled_boxes = []
         for bboxes, img_dims in zip(predicted_bboxes, image_sizes):
             h, w = img_dims
             if len(bboxes) > 0:
+                # Move the device to the CPU.
+                if hasattr(bboxes, 'cpu'):
+                    bboxes = bboxes.cpu()
+
                 # Re-scale the bounding box to the appropriate format.
                 scale_ratio = [w / 512, h / 512, w / 512, h / 512]
                 scaled = (np.array(bboxes) * scale_ratio).astype(np.int32)
 
                 # Convert the Pascal-VOC (xyxy) format to COCO (xywh).
-                x, y = scaled[:, 0], scaled[:, 1]
+                if yxyx:
+                    y, x = scaled[:, 0], scaled[:, 1]
+                else:
+                    x, y = scaled[:, 0], scaled[:, 1]
                 w, h = scaled[:, 2] - x, scaled[:, 3] - y
                 scaled_boxes.append(np.dstack((x, y, w, h)))
                 continue
@@ -714,9 +723,13 @@ class DetectionModel(AgMLModelBase):
         # Calculate the mean average precision.
         if not self.trainer.sanity_checking and self.map is not None:
             boxes, confidences, labels = self._process_detections(self._to_out(detections))
+            if hasattr(boxes, 'cpu'):
+                boxes = boxes.cpu()
+            if hasattr(annotations['bbox'], 'cpu'):
+                annotations['bbox'] = annotations['bbox'].cpu()
             boxes = self._rescale_bboxes(boxes, [[512, 512]] * len(images))
-            annotations['bbox'] = self._rescale_bboxes_yxyx(
-                annotations['bbox'], [[512, 512, ]] * len(images))
+            annotations['bbox'] = self._rescale_bboxes(
+                annotations['bbox'], [[512, 512, ]] * len(images), yxyx=True)
 
             for pred_box, pred_label, pred_conf, true_box, true_label in zip(
                     boxes, labels, confidences, annotations['bbox'], annotations['cls']):
@@ -726,10 +739,10 @@ class DetectionModel(AgMLModelBase):
                          scores=self._to_out(torch.tensor(pred_conf))),
                     dict(boxes=self._to_out(torch.tensor(true_box, dtype=torch.float32)),
                          labels=self._to_out(torch.tensor(true_label, dtype=torch.int32))))
-                self.map_validation.update(*metric_update_values)
+                self.map.update(*metric_update_values)
 
                 # Log the MAP values.
-                map_ = self.map_validation.compute().detach().cpu().numpy().item()
+                map_ = self.map.compute().detach().cpu().numpy().item()
                 self.log("val_map", map_, prog_bar=True, logger=True, sync_dist=True)
 
         self.log("val_loss", outputs['loss'], prog_bar=True, logger=True, sync_dist=True)
@@ -737,7 +750,7 @@ class DetectionModel(AgMLModelBase):
 
     def on_validation_epoch_end(self):
         if self.map is not None:
-            self.map_validation.reset()
+            self.map.reset()
 
     def test_step(self, batch, batch_idx, *args, **kwargs):
         images, annotations, targets = batch
@@ -746,9 +759,13 @@ class DetectionModel(AgMLModelBase):
         # Calculate the mean average precision.
         if not self.trainer.sanity_checking and self.map is not None:
             boxes, confidences, labels = self._process_detections(self._to_out(outputs['detections']))
+            if hasattr(boxes, 'cpu'):
+                boxes = boxes.cpu()
+            if hasattr(annotations['bbox'], 'cpu'):
+                annotations['bbox'] = annotations['bbox'].cpu()
             boxes = self._rescale_bboxes(boxes, [[512, 512]] * len(images))
-            annotations['bbox'] = self._rescale_bboxes_yxyx(
-                annotations['bbox'], [[512, 512, ]] * len(images))
+            annotations['bbox'] = self._rescale_bboxes(
+                annotations['bbox'], [[512, 512, ]] * len(images), yxyx=True)
 
             for pred_box, pred_label, pred_conf, true_box, true_label in zip(
                     boxes, labels, confidences, annotations['bbox'], annotations['cls']):
@@ -758,10 +775,10 @@ class DetectionModel(AgMLModelBase):
                          scores=self._to_out(torch.tensor(pred_conf))),
                     dict(boxes=self._to_out(torch.tensor(true_box, dtype=torch.float32)),
                          labels=self._to_out(torch.tensor(true_label, dtype=torch.int32))))
-                self.map_test.update(*metric_update_values)
+                self.map.update(*metric_update_values)
 
                 # Log the MAP values.
-                map_ = self.map_test.compute().detach().cpu().numpy().item()
+                map_ = self.map.compute().detach().cpu().numpy().item()
                 self.log("test_map", map_, prog_bar=True, logger=True, sync_dist=True)
 
         self.log("test_loss", outputs['loss'], prog_bar=True, logger=True, sync_dist=True)

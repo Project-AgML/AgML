@@ -79,6 +79,8 @@ class SegmentationModel(AgMLModelBase):
         "net", "num_classes", "conf_thresh", "image_size"))
     state_override = frozenset(("net",))
 
+    _ml_task = 'semantic_segmentation'
+
     def __init__(self,
                  num_classes = 1,
                  image_size = 512,
