@@ -112,7 +112,10 @@ class DetectionModel(AgMLModelBase):
             self._image_size = resolve_image_size(image_size)
             self._confidence_threshold = conf_threshold
             self._num_classes = num_classes
-            self.model = self._construct_sub_net(self._num_classes, self._image_size)
+            self.model = self._construct_sub_net(
+                self._num_classes,
+                self._image_size,
+                pretrained = kwargs.get('pretrained', True))
 
         # Filter out unnecessary warnings.
         warnings.filterwarnings(
@@ -128,12 +131,11 @@ class DetectionModel(AgMLModelBase):
         return self.model(batch[0])
 
     @staticmethod
-    def _construct_sub_net(num_classes, image_size):
+    def _construct_sub_net(num_classes, image_size, pretrained = False):
         cfg = get_efficientdet_config('tf_efficientdet_d4')
         cfg.update({"image_size": image_size})
         model = create_model_from_config(
-            cfg, pretrained = False,
-            num_classes = num_classes)
+            cfg, pretrained = pretrained, num_classes = num_classes)
         return DetBenchPredict(model)
 
     def switch_predict(self):

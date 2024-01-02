@@ -182,7 +182,9 @@ class ClassificationModel(AgMLModelBase):
         out = self.forward(images)
         if not self._regression: # standard classification
             out = torch.argmax(out, 1)
-        return self._to_out(torch.squeeze(out))
+        if not kwargs.get('return_tensor_output', False):
+            return self._to_out(torch.squeeze(out))
+        return out
 
     def evaluate(self, loader, **kwargs):
         """Runs an accuracy evaluation on the given loader.
@@ -203,8 +205,8 @@ class ClassificationModel(AgMLModelBase):
         bar = tqdm(loader, desc = "Calculating Accuracy")
         for sample in bar:
             image, truth = sample
-            pred_label = self.predict(image, **kwargs)
-            acc.update([pred_label], [truth])
+            pred_label = self.predict(image, return_tensor_out = True, **kwargs)
+            acc.update(pred_label, truth)
             bar.set_postfix({'accuracy': acc.compute().numpy().item()})
 
         # Compute the final accuracy.

@@ -225,6 +225,7 @@ def train_classification(model,
                                  "logger, instead got {}.".format(type(_logger)))
     else:
         loggers = [TensorBoardLogger(save_dir, name = experiment_name)]
+    save_dir = os.path.join(save_dir, experiment_name)
     checkpoint_callback = ModelCheckpoint(save_dir, monitor='val_loss', mode='min', save_top_k=1)
 
     accelerator = get_accelerator(use_cpu = use_cpu)
@@ -454,6 +455,7 @@ def train_segmentation(model,
         else:
             experiment_name = '{}_{}_{}'.format(
                 'semantic_segmentation', 'unknown', curr_datetime)
+    save_dir = os.path.join(save_dir, experiment_name)
     if loggers is not None:
         for _logger in loggers:
             if not isinstance(_logger, Logger):
@@ -681,6 +683,7 @@ def train_detection(model,
         else:
             experiment_name = '{}_{}_{}'.format(
                 'object_detection', 'unknown', curr_datetime)
+    save_dir = os.path.join(save_dir, experiment_name)
     if loggers is not None:
         for _logger in loggers:
             if not isinstance(_logger, Logger):
@@ -688,7 +691,7 @@ def train_detection(model,
                                  "logger, instead got {}.".format(type(_logger)))
     else:
         loggers = [TensorBoardLogger(save_dir, name = experiment_name)]
-    checkpoint_callback = ModelCheckpoint(save_dir, monitor='val_loss', mode='min', save_top_k=1)
+    checkpoint_callback = ModelCheckpoint(save_dir, monitor='val_map', mode='max', save_top_k=1)
 
     accelerator = get_accelerator(use_cpu = use_cpu)
     if accelerator == 'cuda':

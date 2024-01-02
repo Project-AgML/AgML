@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import numpy as np
+
 import torch
 import torch.nn as nn
 
@@ -54,6 +56,10 @@ class Accuracy(nn.Module):
         """
         if not len(pred_data) == len(gt_data):
             raise ValueError("Predictions and truths should be the same length.")
+        if isinstance(pred_data, np.ndarray):
+            pred_data = torch.from_numpy(pred_data)
+        if isinstance(gt_data, np.ndarray):
+            gt_data = torch.from_numpy(gt_data)
         self._prediction_data.extend(pred_data)
         self._truth_data.extend(gt_data)
 
