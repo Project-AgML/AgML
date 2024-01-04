@@ -96,7 +96,25 @@ train_ds = loader.train_data
 train_ds.as_torch_dataset()
 ```
 
-You're now ready to use AgML for training your own models!
+You're now ready to use AgML for training your own models! Luckily, AgML comes with a training module that enables quick-start training of standard deep learning models on agricultural datasets. Training a grape detection model is as simple as the following code:
+
+```
+import agml
+import agml.models
+
+import albumentations as A
+
+loader = agml.data.AgMLDataLoader('grape_detection_californiaday')
+loader.split(train = 0.8, val = 0.1, test = 0.1)
+processor = agml.models.preprocessing.EfficientDetPreprocessor(
+    image_size = 512, augmentation = [A.HorizontalFlip(p=0.5)]
+)
+loader.transform(processor)
+
+model = agml.models.DetectionModel(num_classes=loader.num_classes)
+
+model.run_training(loader)
+```
 
 ## Public Dataset Listing
 
