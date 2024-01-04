@@ -169,9 +169,12 @@ def _convert_image_to_torch(image):
         if image.shape[0] == 1 and image.shape[-1] <= 3 and image.ndim == 4:
             return torch.from_numpy(image).permute(0, 3, 1, 2).float()
         return image
-    if image.shape[0] > image.shape[-1]:
-        return torch.from_numpy(image).permute(2, 0, 1).float()
-    return torch.from_numpy(image)
+    if image.ndim == 3:
+        if image.shape[0] > image.shape[-1]:
+            return torch.from_numpy(image).permute(2, 0, 1).float()
+    elif image.ndim == 2:
+        return torch.from_numpy(image)
+    return torch.from_numpy(image).float()
 
 
 def _postprocess_torch_annotation(image):
@@ -293,3 +296,25 @@ def _add_dataset_to_mro(inst, mode):
         if torch_data.Dataset not in inst.__class__.__bases__:
             inst.__class__.__bases__ += (torch_data.Dataset,)
 
+
+def collate_fn_basic(batch):
+    images = torch.stack([i[0] for i in batch], dim = 0)
+    coco = tuple(zip(*[i[1] for i in batch]))
+    return images, coco
+
+
+def collate_fn_efficientdet(batch):
+    """Collates items together into a batch."""
+    images, targets = tuple(zip(*batch))
+    images = torch.stack(images)
+    images = images.float()
+
+    boxes = [target["bboxes"].float() for target in targets]
+    labels = [target["labels"].float() for target in targets]
+    img_size = torch.stack([target["img_size"] for target in targets]).float()
+    img_scale = torch.stack([target["img_scale"] for target in targets]).float()
+
+    annotations = {
+        "bbox": boxes, "cls": labels,
+        "img_size": img_size, "img_scale": img_scale}
+    return images, annotations, targets

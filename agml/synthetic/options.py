@@ -289,6 +289,7 @@ class HeliosOptions(AgMLSerializable):
                               'camera_parameters', 'lidar_parameters',
                               'annotation_type', 'simulation_type', 'labels'))
 
+    @verify_helios
     def __new__(cls, *args, **kwargs):
         # The default configuration parameters are loaded directly from
         # the `helios_config.json` file which is constructed each time
@@ -296,7 +297,6 @@ class HeliosOptions(AgMLSerializable):
         cls._default_config = load_default_helios_configuration()
         return super(HeliosOptions, cls).__new__(cls)
 
-    @verify_helios
     def __init__(self, canopy = None):
         # Check that the provided canopy is valid.
         self._initialize_canopy(canopy)

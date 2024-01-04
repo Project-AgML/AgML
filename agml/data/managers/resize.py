@@ -105,9 +105,9 @@ class ImageResizeManager(AgMLSerializable):
         return np.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2)
 
     def _method_resize(self, image, size):
-        return cv2.resize(image, size, interpolation = self._interpolation)
+        return cv2.resize(image, size, interpolation=self._interpolation)
 
-    def assign(self, kind, method = None):
+    def assign(self, kind, method=None):
         """Assigns the resize parameter (and does necessary calculations)."""
         if kind == 'default':
             self._resize_type = 'default'
@@ -157,14 +157,11 @@ class ImageResizeManager(AgMLSerializable):
     def apply(self, contents):
         """Applies the resizing operation to the input data."""
         if self._task in ['image_classification', 'image_regression']:
-            return self._resize_image_input(
-                contents, self._image_size)
+            return self._resize_image_input(contents, self._image_size)
         elif self._task == 'object_detection':
-            return self._resize_image_and_coco(
-                contents, self._image_size)
+            return self._resize_image_and_coco(contents, self._image_size)
         elif self._task == 'semantic_segmentation':
-            return self._resize_image_and_mask(
-                contents, self._image_size)
+            return self._resize_image_and_mask(contents, self._image_size)
 
     def _inference_shape(self, info):
         """Attempts to inference a shape for the `auto` method.
@@ -231,7 +228,7 @@ class ImageResizeManager(AgMLSerializable):
             f"Attempting to randomly inference the dataset shape.")
 
         image_path = os.path.join(self._dataset_root, 'images')
-        images = np.random.choice(os.listdir(image_path), size = 25)
+        images = np.random.choice(os.listdir(image_path), size=25)
 
         # Get all of the shapes from the random sample of images.
         shapes = []
@@ -242,7 +239,7 @@ class ImageResizeManager(AgMLSerializable):
 
         # Inference a valid shape from the shapes. We dispatch to the
         # regular inferencing method once we have the shapes and counts.
-        unique_shapes, counts = np.unique(shapes, return_counts = True, axis = 0)
+        unique_shapes, counts = np.unique(shapes, return_counts=True, axis=0)
         return self._inference_shape((unique_shapes, counts))
 
     def _maybe_load_shape_info(self):
@@ -275,8 +272,7 @@ class ImageResizeManager(AgMLSerializable):
             return self._resize_single_image(contents, image_size)
         if image_size is not None:
             return {
-                k: self._method_resize(
-                    i.astype(np.uint16), image_size).astype(np.int32)
+                k: self._method_resize(i.astype(np.uint16), image_size).astype(np.int32)
                 for k, i in image.items()}, label
         return image, label
 

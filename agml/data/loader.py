@@ -658,6 +658,7 @@ class AgMLDataLoader(AgMLSerializable, metaclass = AgMLDataLoaderMeta):
             return self._val_data
         self._val_data = self._generate_split_loader(
             self._val_content, split = 'val')
+        self._val_data.eval()
         return self._val_data
 
     @property
@@ -667,6 +668,7 @@ class AgMLDataLoader(AgMLSerializable, metaclass = AgMLDataLoaderMeta):
             return self._test_data
         self._test_data = self._generate_split_loader(
             self._test_content, split = 'test')
+        self._test_data.eval()
         return self._test_data
 
     def eval(self) -> "AgMLDataLoader":
@@ -1714,13 +1716,15 @@ class AgMLDataLoader(AgMLSerializable, metaclass = AgMLDataLoaderMeta):
         # The `collate_fn` for object detection is different because
         # the COCO JSON dictionaries each have different formats. So,
         # we need to replace it with a custom function.
-        collate_fn = loader_kwargs.pop('collate_fn')
+        collate_fn = loader_kwargs.pop('collate_fn', None)
         if obj.task == 'object_detection' and collate_fn is None:
-            def collate_fn(batch):
-                images = torch.stack(
-                    [i[0] for i in batch], dim = 0)
-                coco = tuple(zip(*[i[1] for i in batch]))
-                return images, coco
+            if any('efficientdet' in i.__class__.__name__.lower() for i in
+                   self._manager._transform_manager.get_transform_states()['dual_transform']):
+                from agml.backend.tftorch import collate_fn_efficientdet
+                collate_fn = collate_fn_efficientdet
+            else:
+                from agml.backend.tftorch import collate_fn_basic
+                collate_fn = collate_fn_basic
 
         # Return the DataLoader with a copy of this AgMLDataLoader, so
         # that changes to this will not affect the returned loader.

@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import numpy as np
+
 import torch
 import torch.nn as nn
 
@@ -24,7 +26,7 @@ def accuracy(output, target):
     pred = pred.t()
     correct = pred.eq(target.view(1, -1).expand_as(pred))
     correct_k = correct[:1].reshape(-1).float().sum(0, keepdim = True)
-    return correct_k.mul_(100.0 / batch_size)
+    return correct_k.div_(batch_size)
 
 
 class Accuracy(nn.Module):
@@ -41,6 +43,9 @@ class Accuracy(nn.Module):
         super(Accuracy, self).__init__()
         self._prediction_data, self._truth_data = [], []
 
+    def __call__(self, pred_data, gt_data):
+        self.update(pred_data, gt_data)
+
     def update(self, pred_data, gt_data):
         """Updates the state of the accuracy metric.
 
@@ -51,13 +56,17 @@ class Accuracy(nn.Module):
         """
         if not len(pred_data) == len(gt_data):
             raise ValueError("Predictions and truths should be the same length.")
+        if isinstance(pred_data, np.ndarray):
+            pred_data = torch.from_numpy(pred_data)
+        if isinstance(gt_data, np.ndarray):
+            gt_data = torch.from_numpy(gt_data)
         self._prediction_data.extend(pred_data)
         self._truth_data.extend(gt_data)
 
     def compute(self):
         """Computes the accuracy between the predictions and ground truths."""
-        return accuracy(torch.tensor(self._prediction_data),
-                        torch.tensor(self._truth_data))
+        return accuracy(torch.stack(self._prediction_data),
+                        torch.stack(self._truth_data))
 
     def reset(self):
         """Resets the accumulator states."""

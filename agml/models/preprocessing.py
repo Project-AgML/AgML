@@ -180,6 +180,7 @@ class EfficientDetPreprocessor(object):
         # Scale the image from [0, 255] to [0, 1] if necessary.
         if image.max() > 1.0:
             image /= 255.0
+        image = image.contiguous()
 
         # Convert to yxyx from xyxy.
         _, new_h, new_w = image.shape
@@ -190,10 +191,10 @@ class EfficientDetPreprocessor(object):
         # Create the target from the annotations.
         target = {
             "bboxes": torch.as_tensor(
-                bboxes, dtype = torch.float32),
-            "labels": torch.as_tensor(labels),
-            "img_size": torch.tensor([new_h, new_w]),
-            "img_scale": torch.tensor([1.0])}
+                bboxes, dtype = torch.float32).contiguous(),
+            "labels": torch.as_tensor(labels).contiguous(),
+            "img_size": torch.tensor([new_h, new_w]).contiguous(),
+            "img_scale": torch.tensor([1.0]).contiguous()}
         return image, target
 
 

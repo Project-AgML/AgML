@@ -45,8 +45,9 @@ def show_sample(loader, image_only = False, **kwargs):
         sample = kwargs['sample']
     else:
         sample = loader[0]
-        if image_only:
-            return show_images(sample[0])
+
+    if image_only:
+        return show_images(sample[0])
 
     if loader.task == 'object_detection':
         return show_image_and_boxes(

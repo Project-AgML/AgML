@@ -14,9 +14,10 @@
 
 import warnings
 
-import torch
 import numpy as np
 import albumentations as A
+
+import torch
 
 from tqdm import tqdm
 
@@ -48,6 +49,7 @@ from agml.models.tools import auto_move_data
 from agml.models.metrics.map import MeanAveragePrecision
 from agml.data.public import source
 from agml.backend.tftorch import is_array_like
+from agml.utils.general import has_func
 from agml.utils.image import resolve_image_size
 from agml.utils.logging import log
 from agml.viz.boxes import show_image_and_boxes
@@ -93,6 +95,8 @@ class DetectionModel(AgMLModelBase):
         "model", "num_classes", "conf_thresh", "image_size"))
     state_override = frozenset(("model",))
 
+    _ml_task = 'object_detection'
+
     def __init__(self,
                  num_classes = 1,
                  image_size = 512,
@@ -109,7 +113,9 @@ class DetectionModel(AgMLModelBase):
             self._confidence_threshold = conf_threshold
             self._num_classes = num_classes
             self.model = self._construct_sub_net(
-                self._num_classes, self._image_size)
+                self._num_classes,
+                self._image_size,
+                pretrained = kwargs.get('pretrained', True))
 
         # Filter out unnecessary warnings.
         warnings.filterwarnings(
@@ -118,17 +124,18 @@ class DetectionModel(AgMLModelBase):
             'ignore', category = UserWarning, module = 'effdet.bench')  # noqa
 
     @auto_move_data
-    def forward(self, batch):
+    def forward(self, *batch):
         """Ensures that the input is valid for the model."""
-        return self.model(batch)
+        if len(batch) == 2:
+            return self.model(*batch)
+        return self.model(batch[0])
 
     @staticmethod
-    def _construct_sub_net(num_classes, image_size):
+    def _construct_sub_net(num_classes, image_size, pretrained = False):
         cfg = get_efficientdet_config('tf_efficientdet_d4')
         cfg.update({"image_size": image_size})
         model = create_model_from_config(
-            cfg, pretrained = False,
-            num_classes = num_classes)
+            cfg, pretrained = pretrained, num_classes = num_classes)
         return DetBenchPredict(model)
 
     def switch_predict(self):
@@ -285,18 +292,25 @@ class DetectionModel(AgMLModelBase):
         return predicted_bboxes, predicted_class_confidences, predicted_class_labels
 
     @staticmethod
-    def _rescale_bboxes(predicted_bboxes, image_sizes):
+    def _rescale_bboxes(predicted_bboxes, image_sizes, yxyx=False):
         """Re-scales output bounding boxes to the original image sizes."""
         scaled_boxes = []
         for bboxes, img_dims in zip(predicted_bboxes, image_sizes):
             h, w = img_dims
             if len(bboxes) > 0:
+                # Move the device to the CPU.
+                if hasattr(bboxes, 'cpu'):
+                    bboxes = bboxes.cpu()
+
                 # Re-scale the bounding box to the appropriate format.
                 scale_ratio = [w / 512, h / 512, w / 512, h / 512]
                 scaled = (np.array(bboxes) * scale_ratio).astype(np.int32)
 
                 # Convert the Pascal-VOC (xyxy) format to COCO (xywh).
-                x, y = scaled[:, 0], scaled[:, 1]
+                if yxyx:
+                    y, x = scaled[:, 0], scaled[:, 1]
+                else:
+                    x, y = scaled[:, 0], scaled[:, 1]
                 w, h = scaled[:, 2] - x, scaled[:, 3] - y
                 scaled_boxes.append(np.dstack((x, y, w, h)))
                 continue
@@ -334,8 +348,7 @@ class DetectionModel(AgMLModelBase):
         return [squeeze(b, l, c)
                 for b, l, c in zip(boxes, labels, confidences)]
 
-    @staticmethod
-    def _to_out(tensor: "torch.Tensor") -> "torch.Tensor":
+    def _to_out(self, tensor: "torch.Tensor") -> "torch.Tensor":
         if isinstance(tensor, dict):
             tensor = tensor['detections']
         return super()._to_out(tensor)
@@ -513,6 +526,267 @@ class DetectionModel(AgMLModelBase):
         else:
             result = mean_ap.compute()
         return result
+
+    def run_training(self,
+                     dataset=None,
+                     *,
+                     epochs=50,
+                     metrics=None,
+                     optimizer=None,
+                     lr_scheduler=None,
+                     lr=None,
+                     batch_size=8,
+                     loggers=None,
+                     train_dataloader=None,
+                     val_dataloader=None,
+                     test_dataloader=None,
+                     use_cpu=False,
+                     save_dir=None,
+                     experiment_name=None,
+                     **kwargs):
+        """Trains an object detection model.
+
+        This method can be used to train an object detection model on a given
+        dataset (which should be an `AgMLDataLoader`. Alternatively, if you already
+        have separate dataloaders for training, validation, and testing, you can
+        pass them in as keyword arguments). This method will train the model for
+        the given number of epochs, and then return the trained model.
+
+        You can take advantage of keyword arguments to provide additional training
+        parameters, e.g., a custom optimizer or optimizer name. If nothing is provided
+        for these parameters (see below for an extended list), then defaults are used.
+
+        This method provides a simple interface for training models, but it is not
+        a fully-flexible or customizable training loop. If you need more control over
+        the training loop, then you should manually define your arguments. Furthermore,
+        if you need custom control over the training loop, then you should reimplement
+        the training/validation/test loops on your own in the original model class.
+
+        Parameters
+        ----------
+        model : AgMLModelBase
+            The model to train.
+        dataset : AgMLDataLoader
+            The name of the dataset to use for training. This should be an AgMLDataLoader
+            with the data split in the intended splits, and all preprocessing/transforms
+            already applied to the loader. This method will automatically figure out the
+            splits from the dataloader.
+        epochs : int
+            The number of epochs to train for.
+        metrics : {str, List[str]}
+            The metrics to use for training. If none are provided, then the default
+            metrics are used (mean average precision). This also happens to be the only
+            currently supported metric.
+        optimizer : torch.optim.Optimizer
+            The optimizer to use for training. If none is provided, then the default
+            optimizer is used (AdamW).
+        lr_scheduler : torch.optim.lr_scheduler._LRScheduler
+            The learning rate scheduler to use for training. If none is provided, then
+            no learning rate scheduler is used.
+        lr : float
+            The learning rate to use for training. If none is provided, then the default
+            learning rate is used (0.0002 if num_classes is 1 else 0.0008).
+        batch_size : int
+            The batch size to use for training. If none is provided, then the default
+            batch size is used (8).
+        loggers : Any
+            The loggers to use for training. If none are provided, then the default
+            loggers are used (TensorBoard)
+
+        train_dataloader : torch.utils.data.DataLoader
+            The dataloader to use for training. If none is provided, then the dataloader
+            is loaded from the dataset.
+        val_dataloader : torch.utils.data.DataLoader
+            The dataloader to use for validation. If none is provided, then the dataloader
+            is loaded from the dataset.
+        test_dataloader : torch.utils.data.DataLoader
+            The dataloader to use for testing. If none is provided, then the dataloader
+            is loaded from the dataset.
+
+        use_cpu : bool
+            If True, then the model will be trained on the CPU, even if a GPU is available.
+            This is useful for debugging purposes (or if you are on a Mac, where MPS
+            acceleration may be buggy).
+        save_dir : str
+            The directory to save the model and any logs to. If none is provided, then
+            the model is saved to the current working directory in a folder which is
+            called `agml_training_logs`.
+        experiment_name : str
+            The name of the experiment. If none is provided, then the experiment name
+            is set to a custom format (the task + the dataset + the current date).
+
+        kwargs : dict
+            num_workers : int
+                The number of workers to use for the dataloaders. If none is provided,
+                then the number of workers is set to half of the available CPU cores.
+
+        Returns
+        -------
+        AgMLModelBase
+            The trained model with the best loaded weights. This model can be used for
+            inference, or for further training.
+        """
+        self.switch_train()
+
+        from agml.models.training.basic_trainers import train_detection
+
+        return train_detection(
+            self,
+            dataset = dataset,
+            epochs = epochs,
+            metrics = metrics,
+            optimizer = optimizer,
+            lr_scheduler = lr_scheduler,
+            lr = lr,
+            batch_size=batch_size,
+            loggers = loggers,
+            train_dataloader = train_dataloader,
+            val_dataloader = val_dataloader,
+            test_dataloader = test_dataloader,
+            use_cpu = use_cpu,
+            save_dir = save_dir,
+            experiment_name = experiment_name,
+            **kwargs
+        )
+
+    def _prepare_for_training(self,
+                              metrics = (),
+                              optimizer = None,
+                              **kwargs):
+        """Prepares the model for training."""
+
+        # Initialize the metrics.
+        self.map = None
+        if len(metrics) > 0:
+            for metric in metrics:
+                # So far, only the mAP metric is supported.
+                if isinstance(metric, str):
+                    if metric.lower() not in ['ap', 'map']:
+                        raise ValueError(
+                            "Unfortunately, the only currently supported metric "
+                            "is mean average precision (use 'ap' or 'map' "
+                            "to enable mean average precision).")
+
+                    self.map = MeanAveragePrecision(
+                        num_classes = self._num_classes,
+                        iou_threshold = kwargs.get('iou_threshold', 0.5)
+                    )
+
+        # Initialize the optimizer/learning rate scheduler.
+        if isinstance(optimizer, str):
+            optimizer_class = optimizer.capitalize()
+            if not has_func(torch.optim, optimizer_class):
+                raise ValueError(
+                    f"Expected a valid optimizer name, but got '{optimizer_class}'. "
+                    f"Check `torch.optim` for a list of valid optimizers.")
+
+            optimizer = getattr(torch.optim, optimizer_class)(
+                self.parameters(), lr = kwargs.get(
+                    'lr', 0.0002 if self._num_classes == 1 else 0.0008))
+        elif isinstance(optimizer, torch.optim.Optimizer):
+            pass  # nothing to do
+        else:
+            raise TypeError(
+                f"Expected an optimizer name or a torch optimizer, but got '{type(optimizer)}'.")
+
+        scheduler = kwargs.get('lr_scheduler', None)
+        if scheduler is not None:
+            # No string auto-initialization, the LR scheduler must be pre-configured.
+            if isinstance(scheduler, str):
+                raise ValueError(
+                    f"If you want to use a learning rate scheduler, you must initialize "
+                    f"it on your own and pass it to the `lr_scheduler` argument. ")
+            elif not isinstance(scheduler, torch.optim.lr_scheduler.LRScheduler):
+                raise TypeError(
+                    f"Expected a torch LR scheduler, but got '{type(scheduler)}'.")
+
+        self._optimization_parameters = {
+            'optimizer': optimizer,
+            'lr_scheduler': scheduler
+        }
+
+    def configure_optimizers(self):
+        opt = self._optimization_parameters['optimizer']
+        scheduler = self._optimization_parameters['lr_scheduler']
+        if scheduler is None:
+            return opt
+        return [opt], [scheduler]
+
+    def training_step(self, batch, batch_idx, *args, **kwargs):
+        images, annotations, _ = batch
+        losses = self(images, annotations)
+        return losses
+
+    def validation_step(self, batch, batch_idx, *args, **kwargs):
+        images, annotations, targets = batch
+        outputs = self(images, annotations)
+        detections = outputs['detections']
+
+        # Calculate the mean average precision.
+        if not self.trainer.sanity_checking and self.map is not None:
+            boxes, confidences, labels = self._process_detections(self._to_out(detections))
+            if hasattr(boxes, 'cpu'):
+                boxes = boxes.cpu()
+            if hasattr(annotations['bbox'], 'cpu'):
+                annotations['bbox'] = annotations['bbox'].cpu()
+            boxes = self._rescale_bboxes(boxes, [[512, 512]] * len(images))
+            annotations['bbox'] = self._rescale_bboxes(
+                annotations['bbox'], [[512, 512, ]] * len(images), yxyx=True)
+
+            for pred_box, pred_label, pred_conf, true_box, true_label in zip(
+                    boxes, labels, confidences, annotations['bbox'], annotations['cls']):
+                metric_update_values = (
+                    dict(boxes=self._to_out(torch.tensor(pred_box, dtype=torch.float32)),
+                         labels=self._to_out(torch.tensor(pred_label, dtype=torch.int32)),
+                         scores=self._to_out(torch.tensor(pred_conf))),
+                    dict(boxes=self._to_out(torch.tensor(true_box, dtype=torch.float32)),
+                         labels=self._to_out(torch.tensor(true_label, dtype=torch.int32))))
+                self.map.update(*metric_update_values)
+
+                # Log the MAP values.
+                map_ = self.map.compute().detach().cpu().numpy().item()
+                self.log("val_map", map_, prog_bar=True, logger=True, sync_dist=True)
+
+        self.log("val_loss", outputs['loss'], prog_bar=True, logger=True, sync_dist=True)
+        return outputs['loss']
+
+    def on_validation_epoch_end(self):
+        if self.map is not None:
+            self.map.reset()
+
+    def test_step(self, batch, batch_idx, *args, **kwargs):
+        images, annotations, targets = batch
+        outputs = self(images, annotations)
+
+        # Calculate the mean average precision.
+        if not self.trainer.sanity_checking and self.map is not None:
+            boxes, confidences, labels = self._process_detections(self._to_out(outputs['detections']))
+            if hasattr(boxes, 'cpu'):
+                boxes = boxes.cpu()
+            if hasattr(annotations['bbox'], 'cpu'):
+                annotations['bbox'] = annotations['bbox'].cpu()
+            boxes = self._rescale_bboxes(boxes, [[512, 512]] * len(images))
+            annotations['bbox'] = self._rescale_bboxes(
+                annotations['bbox'], [[512, 512, ]] * len(images), yxyx=True)
+
+            for pred_box, pred_label, pred_conf, true_box, true_label in zip(
+                    boxes, labels, confidences, annotations['bbox'], annotations['cls']):
+                metric_update_values = (
+                    dict(boxes=self._to_out(torch.tensor(pred_box, dtype=torch.float32)),
+                         labels=self._to_out(torch.tensor(pred_label, dtype=torch.int32)),
+                         scores=self._to_out(torch.tensor(pred_conf))),
+                    dict(boxes=self._to_out(torch.tensor(true_box, dtype=torch.float32)),
+                         labels=self._to_out(torch.tensor(true_label, dtype=torch.int32))))
+                self.map.update(*metric_update_values)
+
+                # Log the MAP values.
+                map_ = self.map.compute().detach().cpu().numpy().item()
+                self.log("test_map", map_, prog_bar=True, logger=True, sync_dist=True)
+
+        self.log("test_loss", outputs['loss'], prog_bar=True, logger=True, sync_dist=True)
+        return outputs['loss']
+
+
 
 
 

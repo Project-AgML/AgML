@@ -29,9 +29,11 @@ except ImportError:
 from agml.models.base import AgMLModelBase
 from agml.models.benchmarks import BenchmarkMetadata
 from agml.models.tools import auto_move_data, imagenet_style_process
+from agml.models.losses import DiceLoss
 from agml.data.public import source
-from agml.utils.general import resolve_list_value
+from agml.utils.general import resolve_list_value, has_func
 from agml.utils.image import resolve_image_size
+from agml.utils.logging import log
 from agml.viz.masks import show_image_and_overlaid_mask, show_image_and_mask
 
 # This is last since `agml.models.base` will check for PyTorch Lightning,
@@ -76,6 +78,8 @@ class SegmentationModel(AgMLModelBase):
     serializable = frozenset((
         "net", "num_classes", "conf_thresh", "image_size"))
     state_override = frozenset(("net",))
+
+    _ml_task = 'semantic_segmentation'
 
     def __init__(self,
                  num_classes = 1,
@@ -208,7 +212,7 @@ class SegmentationModel(AgMLModelBase):
         out = torch.sigmoid(self.forward(images))
 
         # Post-process the output masks to a valid format.
-        if out.shape[1] == 1: # binary class predictions
+        if out.shape[1] == 1:  # binary class predictions
             out[out >= self._conf_thresh] = 1
             out[out != 1] = 0
             out = torch.squeeze(out, dim = 1)
@@ -320,4 +324,284 @@ class SegmentationModel(AgMLModelBase):
 
         # Compute the final mIoU.
         return iou.compute().numpy().item()
+
+    def run_training(self,
+                     dataset=None,
+                     *,
+                     epochs=50,
+                     loss=None,
+                     metrics=None,
+                     optimizer=None,
+                     lr_scheduler=None,
+                     lr=None,
+                     batch_size=8,
+                     loggers=None,
+                     train_dataloader=None,
+                     val_dataloader=None,
+                     test_dataloader=None,
+                     use_cpu=False,
+                     save_dir=None,
+                     experiment_name=None,
+                     **kwargs):
+        """Trains a semantic segmentation model.
+
+        This method can be used to train a semantic segmentation model on a given
+        dataset (which should be an `AgMLDataLoader`. Alternatively, if you already
+        have separate dataloaders for training, validation, and testing, you can
+        pass them in as keyword arguments). This method will train the model for
+        the given number of epochs, and then return the trained model.
+
+        You can take advantage of keyword arguments to provide additional training
+        parameters, e.g., a custom optimizer or optimizer name. If nothing is provided
+        for these parameters (see below for an extended list), then defaults are used.
+
+        This method provides a simple interface for training models, but it is not
+        a fully-flexible or customizable training loop. If you need more control over
+        the training loop, then you should manually define your arguments. Furthermore,
+        if you need custom control over the training loop, then you should reimplement
+        the training/validation/test loops on your own in the original model class.
+
+        Parameters
+        ----------
+        model : AgMLModelBase
+            The model to train.
+        dataset : AgMLDataLoader
+            The name of the dataset to use for training. This should be an AgMLDataLoader
+            with the data split in the intended splits, and all preprocessing/transforms
+            already applied to the loader. This method will automatically figure out the
+            splits from the dataloader.
+        epochs : int
+            The number of epochs to train for.
+        loss : {str, torch.nn.Module}
+            The loss function to use for training. If none is provided, then the default
+            loss function is used (cross-entropy loss).
+        metrics : {str, List[str]}
+            The metrics to use for training. If none are provided, then the default
+            metrics are used (accuracy).
+        optimizer : torch.optim.Optimizer
+            The optimizer to use for training. If none is provided, then the default
+            optimizer is used (NAdam).
+        lr_scheduler : torch.optim.lr_scheduler._LRScheduler
+            The learning rate scheduler to use for training. If none is provided, then
+            no learning rate scheduler is used.
+        lr : float
+            The learning rate to use for training. If none is provided, then the default
+            learning rate is used (5e-3).
+        batch_size : int
+            The batch size to use for training. If none is provided, then the default
+            batch size is used (8).
+        loggers : Any
+            The loggers to use for training. If none are provided, then the default
+            loggers are used (TensorBoard)
+
+        train_dataloader : torch.utils.data.DataLoader
+            The dataloader to use for training. If none is provided, then the dataloader
+            is loaded from the dataset.
+        val_dataloader : torch.utils.data.DataLoader
+            The dataloader to use for validation. If none is provided, then the dataloader
+            is loaded from the dataset.
+        test_dataloader : torch.utils.data.DataLoader
+            The dataloader to use for testing. If none is provided, then the dataloader
+            is loaded from the dataset.
+
+        use_cpu : bool
+            If True, then the model will be trained on the CPU, even if a GPU is available.
+            This is useful for debugging purposes (or if you are on a Mac, where MPS
+            acceleration may be buggy).
+        save_dir : str
+            The directory to save the model and any logs to. If none is provided, then
+            the model is saved to the current working directory in a folder which is
+            called `agml_training_logs`.
+        experiment_name : str
+            The name of the experiment. If none is provided, then the experiment name
+            is set to a custom format (the task + the dataset + the current date).
+
+        kwargs : dict
+            num_workers : int
+                The number of workers to use for the dataloaders. If none is provided,
+                then the number of workers is set to half of the available CPU cores.
+
+        Returns
+        -------
+        AgMLModelBase
+            The trained model with the best loaded weights. This model can be used for
+            inference, or for further training.
+        """
+
+        from agml.models.training.basic_trainers import train_segmentation
+
+        return train_segmentation(
+            self,
+            dataset = dataset,
+            epochs = epochs,
+            loss = loss,
+            metrics = metrics,
+            optimizer = optimizer,
+            lr_scheduler = lr_scheduler,
+            lr = lr,
+            batch_size=batch_size,
+            loggers = loggers,
+            train_dataloader = train_dataloader,
+            val_dataloader = val_dataloader,
+            test_dataloader = test_dataloader,
+            use_cpu = use_cpu,
+            save_dir = save_dir,
+            experiment_name = experiment_name,
+            **kwargs
+        )
+
+    def _prepare_for_training(self,
+                              loss = 'ce',
+                              metrics = (),
+                              optimizer = None,
+                              **kwargs):
+        """Prepares the model for training."""
+
+        # Initialize the loss
+        if loss == 'ce':
+            # either binary or multiclass, binary is likely never used
+            if self._num_classes == 1:
+                self.loss = nn.BCEWithLogitsLoss()
+            else:
+                self.loss = nn.CrossEntropyLoss()
+        elif loss == 'dice':
+            if self._num_classes == 1:
+                log("Dice loss is not necessarily supported for binary classification.")
+            self.loss = DiceLoss()
+        else:
+            if not isinstance(loss, nn.Module) or not callable(loss):
+                raise TypeError(
+                    f"Expected a callable loss function, but got '{type(loss)}'.")
+
+        # Initialize the metrics.
+        metric_collection = []
+        if len(metrics) > 0:
+            for metric in metrics:
+                # Check if it is a valid torchmetrics metric.
+                if isinstance(metric, str):
+                    try:
+                        from torchmetrics import classification as class_metrics
+                    except ImportError:
+                        raise ImportError(
+                            "Received the name of a metric. If you want to use named "
+                            "metrics, then you need to have `torchmetrics` installed. "
+                            "You can do this by running `pip install torchmetrics`.")
+
+                    # Check if `torchmetrics.classification` has the metric.
+                    if has_func(class_metrics, metric):
+                        # iou/miou is a special case
+                        if metric == 'iou' or metric == 'miou':
+                            metric_collection.append(
+                                [metric, IoU(
+                                    task = 'multiclass' if self._num_classes > 1 else 'binary',  # noqa
+                                    num_classes = self._num_classes + 1)])
+
+                        # convert to camel case
+                        else:
+                            metric = ''.join([word.capitalize() for word in metric.split('_')])
+                            metric_collection.append([metric, getattr(class_metrics, metric)()])
+                    else:
+                        raise ValueError(
+                            f"Expected a valid metric torchmetrics metric name, "
+                            f"but got '{metric}'. Check `torchmetrics.classification` "
+                            f"for a list of valid image classification metrics.")
+
+                # Check if it is any other class.
+                elif isinstance(metric, nn.Module):
+                    metric_collection.append(metric)
+
+                # Otherwise, raise an error.
+                else:
+                    raise TypeError(
+                        f"Expected a metric name or a metric class, but got '{type(metric)}'.")
+        self._metrics = metric_collection
+
+        # Initialize the optimizer/learning rate scheduler.
+        if isinstance(optimizer, str):
+            optimizer_class = optimizer.capitalize()
+            if not has_func(torch.optim, optimizer_class):
+                raise ValueError(
+                    f"Expected a valid optimizer name, but got '{optimizer_class}'. "
+                    f"Check `torch.optim` for a list of valid optimizers.")
+
+            optimizer = getattr(torch.optim, optimizer_class)(
+                self.parameters(), lr = kwargs.get('lr', 2e-3))
+        elif isinstance(optimizer, torch.optim.Optimizer):
+            pass  # nothing to do
+        else:
+            raise TypeError(
+                f"Expected an optimizer name or a torch optimizer, but got '{type(optimizer)}'.")
+
+        scheduler = kwargs.get('lr_scheduler', None)
+        if scheduler is not None:
+            # No string auto-initialization, the LR scheduler must be pre-configured.
+            if isinstance(scheduler, str):
+                raise ValueError(
+                    f"If you want to use a learning rate scheduler, you must initialize "
+                    f"it on your own and pass it to the `lr_scheduler` argument. ")
+            elif not isinstance(scheduler, torch.optim.lr_scheduler.LRScheduler):
+                raise TypeError(
+                    f"Expected a torch LR scheduler, but got '{type(scheduler)}'.")
+
+        self._optimization_parameters = {
+            'optimizer': optimizer,
+            'lr_scheduler': scheduler
+        }
+
+    def configure_optimizers(self):
+        opt = self._optimization_parameters['optimizer']
+        scheduler = self._optimization_parameters['lr_scheduler']
+        if scheduler is None:
+            return opt
+        return [opt], [scheduler]
+
+    def training_step(self, batch, *args, **kwargs): # noqa
+        x, y = batch
+        y = y.float()
+        y_pred = self(x).float().squeeze()
+
+        # Compute metrics and loss.
+        loss = self.loss(y_pred, y)
+        for metric_name, metric in self._metrics:
+            metric.update(y_pred, y)
+            self.log(metric_name, self._to_out(metric.compute()).item(), prog_bar = True)
+
+        return {
+            'loss': loss,
+        }
+
+    def validation_step(self, batch, *args, **kwargs): # noqa
+        x, y = batch
+        y = y.float()
+        y_pred = self(x).float().squeeze()
+
+        # Compute metrics and loss.
+        val_loss = self.loss(y_pred, y)
+        self.log('val_loss', val_loss.item(), prog_bar = True)
+        for metric_name, metric in self._metrics:
+            metric.to(self.device)
+            metric.update(y_pred, y)
+            self.log('val_' + metric_name, self._to_out(metric.compute()).item(), prog_bar = True)
+
+        return {
+            'val_loss': val_loss,
+        }
+
+    def test_step(self, batch, *args, **kwargs):
+        x, y = batch
+        y = y.float()
+        y_pred = self(x).float().squeeze()
+
+        # Compute metrics and loss.
+        test_loss = self.loss(y_pred, y)
+        self.log('test_loss', test_loss.item(), prog_bar = True)
+        for metric_name, metric in self._metrics:
+            metric.update(y_pred, y)
+
+            self.log('test_' + metric_name, self._to_out(metric.compute()).item(), prog_bar = True)
+
+        return {
+            'test_loss': test_loss,
+        }
+
 
