@@ -1287,6 +1287,18 @@
         "input_data_format": "png",
         "annotation_format": "image",
         "n_images": "3775",
-        "docs_url": "https://zenodo.org/records/7636408"
+        "docs_url": "https://zenodo.org/records/7636408",
+        "stats": {
+            "mean": [
+                16.39170265197754,
+                18.68538475036621,
+                14.235136985778809
+            ],
+            "std": [
+                4.590310573577881,
+                5.818269729614258,
+                4.1895012855529785
+            ]
+        }
     }
 }
