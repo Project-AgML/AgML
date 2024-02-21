@@ -1270,5 +1270,23 @@
                 0.18042609095573425
             ]
         }
+    },
+    "vegann_multicrop_presence_segmentation": {
+        "classes": {
+            "1": "plant"
+        },
+        "ml_task": "semantic_segmentation",
+        "ag_task": "vegetation_segmentation",
+        "location": {
+            "continent": "worldwide",
+            "country": "worldwide"
+        },
+        "sensor_modality": "rgb",
+        "real_synthetic": "real",
+        "platform": "aerial",
+        "input_data_format": "png",
+        "annotation_format": "image",
+        "n_images": "3775",
+        "docs_url": "https://zenodo.org/records/7636408"
     }
 }
