@@ -1234,10 +1234,27 @@ class AgMLDataLoader(AgMLSerializable, metaclass = AgMLDataLoaderMeta):
             raise NotImplementedError("Cannot save a split of data when no "
                                       "split has been generated.")
 
-        # Get each of the individual splits.
-        splits = {'train': self._train_content,
-                  'val': self._val_content,
-                  'test': self._test_content}
+        # Get each of the individual splits, and for semantic segmentation/image
+        # classification, remove the full paths and only save the path relative
+        # to the dataset root (so only the file and its directory are saved).
+        splits = {}
+        if self._info.tasks.ml == 'image_classification':
+            for split in ['train', 'val', 'test']:
+                contents = getattr(self, f'_{split}_content')
+                if contents is not None:
+                    contents = {
+                        os.path.relpath(c, self.dataset_root): v for c, v in contents.items()
+                    }
+                splits[split] = contents
+        elif self._info.tasks.ml == 'semantic_segmentation':
+            for split in ['train', 'val', 'test']:
+                contents = getattr(self, f'_{split}_content')
+                if contents is not None:
+                    contents = {
+                        os.path.relpath(c, self.dataset_root):
+                            os.path.relpath(v, self.dataset_root) for c, v in contents.items()
+                    }
+                splits[split] = contents
 
         # Save the split to the internal location.
         split_dir = os.path.join(SUPER_BASE_DIR, 'splits', self.name)
@@ -1279,6 +1296,20 @@ class AgMLDataLoader(AgMLSerializable, metaclass = AgMLDataLoaderMeta):
 
         # Set the split contents.
         for split, content in splits.items():
+            # If the data is for image classification or semantic segmentation,
+            # then we need to re-construct the full paths to the images.
+            first_item = list(content.items())[0]
+            if not os.path.isabs(first_item[0]):  # backwards compatibility
+                if self._info.tasks.ml == 'image_classification':
+                    content = {
+                        os.path.join(self.dataset_root, c): v for c, v in content.items()
+                    }
+                elif self._info.tasks.ml == 'semantic_segmentation':
+                    content = {
+                        os.path.join(self.dataset_root, c): os.path.join(self.dataset_root, v)
+                        for c, v in content.items()
+                    }
+
             setattr(self, f'_{split}_content', content)
 
     def batch(self, batch_size = None):
