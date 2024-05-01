@@ -116,7 +116,11 @@ def show_images_and_labels(images,
         plt.setp(ax.spines.values(), visible = False)
         ax.set_xlabel(label)
 
+        # decrease the label size (if it's too big)
+        ax.xaxis.label.set_size(8)
+
     # Display and return the image.
+    fig.tight_layout()
     image = convert_figure_to_image()
     if not kwargs.get('no_show', False):
         _ = display_image(image)

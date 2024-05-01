@@ -254,18 +254,6 @@
         "annotation_format": "directory_names",
         "n_images": "17509",
         "docs_url": "https://github.com/AlexOlsen/DeepWeeds",
-        "stats": {
-            "mean": [
-                0.3785816431045532,
-                0.38957422971725464,
-                0.3797682821750641
-            ],
-            "std": [
-                0.22421954572200775,
-                0.22450360655784607,
-                0.22274591028690338
-            ]
-        },
         "classes": {
             "0": "Chinee Apple",
             "1": "Lantana",
