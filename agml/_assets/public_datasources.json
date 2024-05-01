@@ -267,16 +267,15 @@
             ]
         },
         "classes": {
-            "0": "no_weeds",
-            "1": "chinee_apple",
-            "2": "lantana",
-            "3": "parkinsonia",
-            "4": "parthenium",
-            "5": "prickly_acacia",
-            "6": "rubber_vine",
-            "7": "siam_weed",
-            "8": "snake_weed",
-            "9": "negative"
+            "0": "Chinee Apple",
+            "1": "Lantana",
+            "2": "Parkinsonia",
+            "3": "Parthenium",
+            "4": "Prickly Acacia",
+            "5": "Rubber Vine",
+            "6": "Siam Weed",
+            "7": "Snake Weed",
+            "8": "Negative"
         },
         "external_image_sources": []
     },

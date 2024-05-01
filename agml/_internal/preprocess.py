@@ -112,10 +112,10 @@ class PublicDataPreprocessor(object):
             os.makedirs(os.path.join(
                 processed_dir, unique_label.title()), exist_ok = True)
         for file in tqdm(images, desc = "Moving Images", file = sys.stdout):
-            save_dir = df.loc[df['Filename'] == file]['Species'].values[0].title()
+            save_dir = df.loc[df['Filename'] == os.path.basename(file)]['Species'].values[0].title()
             shutil.copyfile(
                 os.path.join(dataset_dir, 'images', file),
-                os.path.join(processed_dir, save_dir, file)
+                os.path.join(processed_dir, save_dir, os.path.basename(file))
             )
 
     def fruit_detection_worldwide(self, dataset_name):
