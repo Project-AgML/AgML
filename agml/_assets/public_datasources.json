@@ -265,7 +265,19 @@
             "7": "Snake Weed",
             "8": "Negative"
         },
-        "external_image_sources": []
+        "external_image_sources": [],
+        "stats": {
+            "mean": [
+                0.3785804808139801,
+                0.3895738422870636,
+                0.37976858019828796
+            ],
+            "std": [
+                0.22421938180923462,
+                0.2245042622089386,
+                0.22274629771709442
+            ]
+        }
     },
     "fruit_detection_worldwide": {
         "ml_task": "object_detection",
