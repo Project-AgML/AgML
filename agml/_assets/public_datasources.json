@@ -254,31 +254,30 @@
         "annotation_format": "directory_names",
         "n_images": "17509",
         "docs_url": "https://github.com/AlexOlsen/DeepWeeds",
+        "classes": {
+            "0": "Chinee Apple",
+            "1": "Lantana",
+            "2": "Parkinsonia",
+            "3": "Parthenium",
+            "4": "Prickly Acacia",
+            "5": "Rubber Vine",
+            "6": "Siam Weed",
+            "7": "Snake Weed",
+            "8": "Negative"
+        },
+        "external_image_sources": [],
         "stats": {
             "mean": [
-                0.3785816431045532,
-                0.38957422971725464,
-                0.3797682821750641
+                0.3785804808139801,
+                0.3895738422870636,
+                0.37976858019828796
             ],
             "std": [
-                0.22421954572200775,
-                0.22450360655784607,
-                0.22274591028690338
+                0.22421938180923462,
+                0.2245042622089386,
+                0.22274629771709442
             ]
-        },
-        "classes": {
-            "0": "no_weeds",
-            "1": "chinee_apple",
-            "2": "lantana",
-            "3": "parkinsonia",
-            "4": "parthenium",
-            "5": "prickly_acacia",
-            "6": "rubber_vine",
-            "7": "siam_weed",
-            "8": "snake_weed",
-            "9": "negative"
-        },
-        "external_image_sources": []
+        }
     },
     "fruit_detection_worldwide": {
         "ml_task": "object_detection",
@@ -1268,6 +1267,36 @@
                 0.18163496255874634,
                 0.16137710213661194,
                 0.18042609095573425
+            ]
+        }
+    },
+    "vegann_multicrop_presence_segmentation": {
+        "classes": {
+            "1": "plant"
+        },
+        "ml_task": "semantic_segmentation",
+        "ag_task": "vegetation_segmentation",
+        "location": {
+            "continent": "worldwide",
+            "country": "worldwide"
+        },
+        "sensor_modality": "rgb",
+        "real_synthetic": "real",
+        "platform": "aerial",
+        "input_data_format": "png",
+        "annotation_format": "image",
+        "n_images": "3775",
+        "docs_url": "https://zenodo.org/records/7636408",
+        "stats": {
+            "mean": [
+                16.39170265197754,
+                18.68538475036621,
+                14.235136985778809
+            ],
+            "std": [
+                4.590310573577881,
+                5.818269729614258,
+                4.1895012855529785
             ]
         }
     }

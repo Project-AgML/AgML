@@ -112,10 +112,10 @@ class PublicDataPreprocessor(object):
             os.makedirs(os.path.join(
                 processed_dir, unique_label.title()), exist_ok = True)
         for file in tqdm(images, desc = "Moving Images", file = sys.stdout):
-            save_dir = df.loc[df['Filename'] == file]['Species'].values[0].title()
+            save_dir = df.loc[df['Filename'] == os.path.basename(file)]['Species'].values[0].title()
             shutil.copyfile(
                 os.path.join(dataset_dir, 'images', file),
-                os.path.join(processed_dir, save_dir, file)
+                os.path.join(processed_dir, save_dir, os.path.basename(file))
             )
 
     def fruit_detection_worldwide(self, dataset_name):
@@ -1029,6 +1029,62 @@ class PublicDataPreprocessor(object):
         shutil.move(os.path.join(original_dir, 'coco.json'),
                     os.path.join(processed_dir, 'annotations.json'))
 
+    def vegann_multicrop_presence_segmentation(self, dataset_name):
+        # Create processed directories
+        original_dir = os.path.join(self.data_original_dir, dataset_name)
+        processed_dir = os.path.join(self.data_processed_dir, dataset_name)
+        processed_image_dir = os.path.join(processed_dir, 'images')
+        os.makedirs(processed_image_dir, exist_ok = True)
+        processed_annotation_dir = os.path.join(processed_dir, 'annotations')
+        os.makedirs(processed_annotation_dir, exist_ok = True)
+
+        # Move images
+        for image in tqdm(glob.glob(os.path.join(original_dir, 'images', '*.png'))):
+            shutil.copyfile(image, os.path.join(processed_image_dir, os.path.basename(image)))
+
+        # Read annotations
+        for annotation_file in tqdm(glob.glob(os.path.join(original_dir, 'annotations', '*.png'))):
+            annotation = cv2.imread(annotation_file, cv2.IMREAD_UNCHANGED)
+            annotation = np.where(annotation == 255, 1, 0)
+            cv2.imwrite(os.path.join(processed_annotation_dir,
+                                     os.path.basename(annotation_file)), annotation)
+
+        # Read the CSV file containing the splits
+        split_csv = pd.read_csv(os.path.join(original_dir, 'VegAnn_dataset.csv'), sep=';')
+
+        # Get the `Name` and `TVT-split{n}` columns for each n, and save the splits to a folder
+        splits_folder = os.path.join(processed_dir, '.splits')
+        os.makedirs(splits_folder, exist_ok = True)
+        column_pairs = [['Name', f'TVT-split{i}'] for i in range(1, 5 + 1)]
+
+        splits = {}
+        for column_pair in column_pairs:
+            columns = split_csv[column_pair]
+            train_images = columns[columns[column_pair[1]] == 'Training']['Name']
+            test_images = columns[columns[column_pair[1]] == 'Test']['Name']
+            splits[column_pair[1]] = {
+                'train': {os.path.join('images', i): os.path.join('annotations', i) for i in train_images},
+                'val': {},
+                'test': {os.path.join('images', i): os.path.join('annotations', i) for i in test_images}
+            }
+
+        # Save each split to a JSON file
+        for split_name, split in splits.items():
+            with open(os.path.join(splits_folder, f'{split_name}.json'), 'w') as f:
+                json.dump(split, f)
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 if __name__ == '__main__':
     # Initialize program arguments.
@@ -1045,7 +1101,7 @@ if __name__ == '__main__':
     print("Processing dataset")
     p.preprocess(args.dataset)
     print("Converting dataset")
-    os.chdir(f'{args.data_dir}/processed')
-    os.system(f'zip -r {args.dataset}.zip {args.dataset} -x ".*" -x "__MACOSX"')
+    # os.chdir(f'{args.data_dir}/processed')
+    # os.system(f'zip -r {args.dataset}.zip {args.dataset} -x ".*" -x "__MACOSX"')
 
 
