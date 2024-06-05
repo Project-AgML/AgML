@@ -219,6 +219,8 @@ class AgMLMultiDatasetLoader(AgMLSerializable):
     `AgMLDataLoader` objects, and draws upon similar functionality
     to the `DataManager` in order to access data from multiple objects.
     """
+    IS_MULTI_DATASET: bool = True
+
     serializable = frozenset(
         ('info', 'loaders', 'loader_accessors', 'class_meta',
          'set_to_keys', 'bounds', 'batch_size', 'shuffle_data',
@@ -993,6 +995,11 @@ class AgMLMultiDatasetLoader(AgMLSerializable):
         self._train_content = self._loaders.get_attributes('_train_content', include_names=True)
         self._val_content = self._loaders.get_attributes('_val_content', include_names=True)
         self._test_content = self._loaders.get_attributes('_test_content', include_names=True)
+
+    def _is_split_generated(self):
+        """Check if a data split has been generated (not necessarily accessed)"""
+        return all(i is not None for i in [
+            self._train_content, self._val_content, self._test_content])
 
     def save_split(self, name, overwrite = False):
         """Saves the current split of data to an internal location.
