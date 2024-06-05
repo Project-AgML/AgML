@@ -63,7 +63,9 @@ class CollectionWrapper(AgMLSerializable):
     def keys(self):
         return self._keys
 
-    def get_attributes(self, attr):
+    def get_attributes(self, attr, include_names=False):
+        if include_names:
+            return {c.name: getattr(c, attr) for c in self._collection}
         return [getattr(c, attr) for c in self._collection]
 
     def call_method(self, method, args = None, kwargs = None):
@@ -152,7 +154,7 @@ class MultiDatasetMetadata(AgMLSerializable):
             # If it is a method, then it is just printing.
             if isinstance(obj, types.FunctionType):
                 self._metas.call_method(attr)
-                return lambda: None # To act like a function.
+                return lambda: None  # To act like a function.
 
         # Otherwise, raise an error for an invalid argument.
         else:
@@ -308,8 +310,11 @@ class AgMLMultiDatasetLoader(AgMLSerializable):
         # as empty variables (which will be updated if and when it is split).
         self._is_split = False
         self._train_data = None
+        self._train_content = None
         self._val_data = None
+        self._val_content = None
         self._test_data = None
+        self._test_content = None
 
         # Calculate the distribution of the data.
         self._data_distributions = self._info.num_images
@@ -359,7 +364,7 @@ class AgMLMultiDatasetLoader(AgMLSerializable):
         obj._shuffle_data = loaders[0].shuffle_data
         if obj._shuffle_data:
             obj.shuffle(obj._shuffle_data)
-            
+
         # Transform annotations and resizing.
         obj._loaders.apply(
             lambda x: x._manager._train_manager._set_annotation_remap_hook(
@@ -371,8 +376,11 @@ class AgMLMultiDatasetLoader(AgMLSerializable):
         # Finalize parameters.
         obj._is_split = False
         obj._train_data = None
+        obj._train_content = None
         obj._val_data = None
+        obj._val_content = None
         obj._test_data = None
+        obj._test_content = None
         obj._data_distributions = obj._info.num_images
         obj._num_images = sum(obj._info.num_images.values())
 
@@ -403,7 +411,7 @@ class AgMLMultiDatasetLoader(AgMLSerializable):
 
     def __repr__(self):
         dsp = ", "
-        out = f"<AgMLDataLoader: (datasets=[{dsp.join(self._info.name)}]"
+        out = f"<AgMLDataLoader: (datasets=[{dsp.join(self._info.name.split('-'))}]"
         out += f", task={self.task}"
         out += f") at {hex(id(self))}>"
         return out
@@ -611,7 +619,7 @@ class AgMLMultiDatasetLoader(AgMLSerializable):
         # loader and set the `_is_split` attribute to True,
         # preventing future splits, and return.
         for attr in ['train', 'val', 'test']:
-            setattr(new_loader, f'_{attr}_data', None)
+            setattr(new_loader, f'_{attr}_content', None)
         new_loader._is_split = True
         return new_loader
 
@@ -976,6 +984,15 @@ class AgMLMultiDatasetLoader(AgMLSerializable):
         self._loaders.apply(
             lambda x: x.split(
                 train = train, val = val, test = test, shuffle = shuffle))
+
+        # However, since we are only working off of the accessed data splits
+        # for all the sub-loaders, this wrapper loader would otherwise not retain
+        # the raw split content (e.g., the `_{train/val/test}_content` attribute
+        # for all of the sub-loaders). So, we store this content in the wrapper
+        # loader itself, such that it can be accessed later.
+        self._train_content = self._loaders.get_attributes('_train_content', include_names=True)
+        self._val_content = self._loaders.get_attributes('_val_content', include_names=True)
+        self._test_content = self._loaders.get_attributes('_test_content', include_names=True)
 
     def save_split(self, name, overwrite = False):
         """Saves the current split of data to an internal location.
