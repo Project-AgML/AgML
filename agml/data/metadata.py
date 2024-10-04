@@ -359,14 +359,14 @@ class CustomDatasetMetadata(DatasetMetadata):
 
     @property
     def license(self):
-        raise ValueError("There is no citation information for custom datasets.")
+        return "Custom Dataset: No License Information Available."
 
     @property
     def citation(self):
-        raise ValueError("There is no citation information for custom datasets.")
+        return "Custom Dataset: No Citation Information Available."
 
-    def citation_summary(self): # no citations for custom datasets.
-        raise ValueError("There is no citation information for custom datasets.")
+    def citation_summary(self):  # no citations for custom datasets.
+        print("Custom Dataset: No Citation Information Available.")
 
 
 

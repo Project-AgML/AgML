@@ -103,6 +103,8 @@ class AgMLDataLoader(AgMLSerializable, metaclass = AgMLDataLoaderMeta):
     -----
     See the methods for examples on how to use an `AgMLDataLoader` effectively.
     """
+    IS_MULTI_DATASET: bool = False
+
     serializable = frozenset((
         'info', 'builder', 'manager', 'train_data', 'train_content', 'val_data',
         'val_content', 'test_data', 'test_content', 'is_split', 'meta_properties'))
@@ -1207,6 +1209,11 @@ class AgMLDataLoader(AgMLSerializable, metaclass = AgMLDataLoaderMeta):
             raise TypeError(
                 "Expected either only ints or only floats when generating "
                 f"a data split, got {[type(i) for i in arg_dict.values()]}.")
+
+    def _is_split_generated(self):
+        """Check if a data split has been generated (not necessarily accessed)"""
+        return any(getattr(self, f'_{split}_content')
+                   is not None for split in ['train', 'val', 'test'])
 
     def save_split(self, name, overwrite = False):
         """Saves the current split of data to an internal location.

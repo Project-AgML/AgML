@@ -161,3 +161,7 @@ def has_func(module, func):
     except ImportError:
         return False
 
+
+def flatten(xss):
+    """Flatten a list of lists"""
+    return [x for xs in xss for x in xs]

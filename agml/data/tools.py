@@ -76,7 +76,7 @@ def coco_to_bboxes(annotations):
     Two arrays consisting of the bounding boxes and labels.
     """
     annotations = _resolve_coco_annotations(annotations)
-    return annotations['bboxes'], annotations['labels']
+    return annotations['bbox'], annotations['category_id']
 
 
 def convert_bbox_format(annotations_or_bboxes, fmt):
