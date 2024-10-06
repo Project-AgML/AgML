@@ -201,7 +201,8 @@ def show_image_and_boxes(image,
                                       **kwargs)
 
     # Display the image.
-    _ = display_image(image, matplotlib_figure = False)
+    if not kwargs.get('no_show', False):
+        _ = display_image(image, force_show=True)
     return image
 
 

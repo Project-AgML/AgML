@@ -22,6 +22,14 @@ from agml.viz.tools import get_viz_backend
 
 def display_image(image, **kwargs):
     """Displays an image using the appropriate backend."""
+    notebook = False
+    try:
+        shell = eval("get_ipython().__class__.__name__")
+        if shell == 'ZMQInteractiveShell':
+            notebook = True
+    except NameError:
+        pass
+
     if get_viz_backend() == 'cv2':
         # If running in Colab, then use a separate procedure.
         if 'google.colab' in sys.modules:
@@ -36,13 +44,6 @@ def display_image(image, **kwargs):
 
         # If running in a Jupyter notebook, then for some weird reason it automatically
         # displays images in the background, so don't actually do anything here.
-        notebook = False
-        try:
-            shell = eval("get_ipython().__class__.__name__")
-            if shell == 'ZMQInteractiveShell':
-                notebook = True
-        except NameError:
-            pass
         if notebook:
             # If the input content is not a figure, then we can display it.
             if kwargs.get('matplotlib_figure', True):
@@ -54,6 +55,15 @@ def display_image(image, **kwargs):
             cv2.imshow('image', image)
             cv2.waitKey(0)
             cv2.destroyWindow('image')
+            return
+
+    if get_viz_backend() == 'matplotlib':
+        # If we are in a notebook or Colab, then don't show anything (since
+        # it will be displayed automatically due to the way notebooks are).
+        #
+        # But also, some methods don't have any Matplotlib functions - so
+        # for those we bypass this skip just to show the result.
+        if 'google.colab' in sys.modules or notebook and not kwargs.get('force_show', False):
             return
 
     # Default case is matplotlib, since it is the most modular.

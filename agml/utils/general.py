@@ -129,6 +129,9 @@ def weak_squeeze(arr, ndims = 2):
         arr = np.squeeze(arr)
         while arr.ndim < ndims:
             arr = np.expand_dims(arr, axis = 0)
+    if isinstance(arr, list):
+        while len(arr) < ndims:
+            arr = [arr]
     return arr
 
 
