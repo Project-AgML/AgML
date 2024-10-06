@@ -310,7 +310,8 @@ class SegmentationModel(AgMLModelBase):
         The final calculated mIoU.
         """
         # Construct the metric and run the calculations.
-        iou = IoU(num_classes = self._num_classes + 1)
+        #iou = IoU(num_classes = self._num_classes + 1)
+        iou = IoU(num_classes = self._num_classes + 1, task="binary")
         bar = tqdm(loader, desc = "Calculating Mean Intersection Over Union")
         for sample in bar:
             image, truth = sample
