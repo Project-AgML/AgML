@@ -26,10 +26,6 @@ def _resolve_coco_annotations(annotations):
     e.g. multiple bounding boxes and areas, or a list of multiple COCO
     dictionaries. This method resolves it into the former case.
     """
-    if is_array_like(annotations) and not isinstance(annotations, np.ndarray):
-        return annotations.numpy()
-    if isinstance(annotations, np.ndarray):
-        return annotations
     if isinstance(annotations, list):
         if not isinstance(annotations[0], dict):
             return annotations
@@ -51,6 +47,10 @@ def _resolve_coco_annotations(annotations):
             annotation[key] = out
         return annotation
     elif isinstance(annotations, dict):
+        return annotations
+    elif is_array_like(annotations) and not isinstance(annotations, np.ndarray):
+        return annotations.numpy()
+    elif isinstance(annotations, np.ndarray):
         return annotations
     else:
         raise TypeError(
