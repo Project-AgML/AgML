@@ -108,6 +108,11 @@ def export_yolo(dataset, yolo_path=None):
             split_images = flatten([[f'{curr_name}_{os.path.basename(image)}' for image in curr_split]
                                     for curr_name, curr_split in split_content.items()])
             all_split_images[split_name] = split_images
+    else:
+        # if no split generated, put all in `train`
+        all_split_images['train'] = flatten([[f'{loader.name}_{os.path.basename(image)}'
+                                                for image in curr_split]
+                                                for curr_split in loader_contents.values()])
 
     # write the text files containing the split contents
     for split_name, split_images in all_split_images.items():
@@ -116,7 +121,7 @@ def export_yolo(dataset, yolo_path=None):
             f.write("\n".join(split_images))
 
         # update the YAML file with the corresponding locs of train/val/test
-        yaml_dump[split_name] = output_image_dir
+        yaml_dump[split_name] = os.path.join(yolo_data_path, f'{split_name}.txt')
 
     for loader_name, loader_content in loader_contents.items():
         for image, annotation_set in loader_content.items():
