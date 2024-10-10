@@ -27,6 +27,7 @@ from agml.framework import AgMLSerializable
 from agml.data.manager import DataManager
 from agml.data.builder import DataBuilder
 from agml.data.metadata import DatasetMetadata, make_metadata
+from agml.data.exporters.yolo import export_yolo
 from agml.utils.logging import log
 from agml.utils.io import get_file_list, get_dir_list
 from agml.utils.data import load_public_sources
@@ -1782,6 +1783,28 @@ class AgMLDataLoader(AgMLSerializable, metaclass = AgMLDataLoaderMeta):
             collate_fn = collate_fn,
             **loader_kwargs
         )
+
+    def export_yolo(self, yolo_path=None):
+        """Exports the contents of the loader to the YOLO format, ready for training.
+
+        This method exports the contents of the loader to the YOLO format, and saves
+        these contents to a file structure that is ready and compatible for training
+        with Ultralytics YOLO models. This method is intended for object detection
+        datasets, and raises an error if used with non-object detection datasets.
+
+        Parameters
+        ----------
+        yolo_path : str
+            The path to save the YOLO-formatted dataset to.
+
+        Returns
+        -------
+        The path to the saved YOLO-formatted dataset.
+        """
+        if self._info.tasks.ml != 'object_detection':
+            raise ValueError("The `export_yolo` method can only be used for "
+                             "object detection tasks.")
+        return export_yolo(self, yolo_path=yolo_path)
 
     def show_sample(self, image_only = False, no_show = False):
         """Shows a single data sample from the dataset.

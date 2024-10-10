@@ -24,6 +24,7 @@ import numpy as np
 from agml.framework import AgMLSerializable
 from agml.data.metadata import DatasetMetadata
 from agml.data.loader import AgMLDataLoader
+from agml.data.exporters.yolo import export_yolo
 from agml.utils.general import (
     resolve_list_value, NoArgument
 )
@@ -1619,6 +1620,87 @@ class AgMLMultiDatasetLoader(AgMLSerializable):
             **loader_kwargs
         )
 
+    def export_tensorflow(self, **loader_kwargs):
+        """Exports the contents of the loader in a native TensorFlow loader.
+
+        This method wraps the contents of this data loader inside of a
+        `tf.data.Dataset`. This method differs from the `export_torch()`
+        method in that there is no need to convert directly to a
+        `torch.utils.data.DataLoader`, rather if this `AgMLDataLoader`
+        inherits from `tf.data.Dataset`, it can just be directly wrapped
+        into a `tf.data.Dataset`.
+
+        The returned `Dataset` is functionally similar to the `AgMLDataLoader`
+        in terms of preprocessing and transforming. You can pass arguments
+        to the `Dataset` instantiation as keyword arguments to this method.
+
+        Note that the `AgMLDataLoader` which this method encloses is instead
+        a copy of the instance the method is run on, so that any changes to
+        the loader afterwards don't affect the exported loader.
+
+        Parameters
+        ----------
+        loader_kwargs : optional
+            A set of keyword arguments for the `tf.data.Dataset`. See the
+            documentation for the loader for more information.
+
+        Returns
+        -------
+        A `tf.data.Dataset` enclosing a copy of this loader.
+        """
+        from agml.backend.tftorch import tf
+        if get_backend() != 'tensorflow':
+            if user_changed_backend():
+                raise StrictBackendError(
+                    change = 'tensorflow', obj = self.export_tensorflow)
+            set_backend('tensorflow')
+
+        # Make a copy of the `AgMLDataLoader` so the following changes
+        # don't affect the original loader, just the new one.
+        obj = self.copy()
+
+        # Convert to a TensorFlow dataset.
+        obj.as_tensorflow_dataset()
+
+        # The `tf.data.Dataset` automatically batches objects using its
+        # own mechanism, so we remove batching from this DataLoader.
+        batch_size = loader_kwargs.pop(
+            'batch_size', obj._batch_size)
+        obj.batch(None)
+        shuffle = loader_kwargs.pop(
+            'shuffle', obj._shuffle_data)
+
+        # Return the DataLoader with a copy of this AgMLDataLoader, so
+        # that changes to this will not affect the returned loader.
+        return tf.data.Dataset.from_generator(
+            obj,
+            output_signature = obj._output_signature,
+            batch_size = batch_size,
+            shuffle = shuffle,
+            **loader_kwargs
+        )
+
+    def export_yolo(self, yolo_path=None):
+        """Exports the contents of the loader to the YOLO format, ready for training.
+
+        This method exports the contents of the loader to the YOLO format, and saves
+        these contents to a file structure that is ready and compatible for training
+        with Ultralytics YOLO models. This method is intended for object detection
+        datasets, and raises an error if used with non-object detection datasets.
+
+        Parameters
+        ----------
+        yolo_path : str
+            The path to save the YOLO-formatted dataset to.
+
+        Returns
+        -------
+        The path to the saved YOLO-formatted dataset.
+        """
+        if self._info.tasks.ml != 'object_detection':
+            raise ValueError("The `export_yolo` method can only be used for "
+                             "object detection tasks.")
+        return export_yolo(self, yolo_path=yolo_path)
 
 
 

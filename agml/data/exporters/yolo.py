@@ -22,7 +22,7 @@ def convert_annotations_to_yolo_list(annotation_dict, image_shape, annotation_re
     return yolo_list
 
 
-def export_dataset_to_yolo_format(dataset, yolo_path):
+def export_yolo(dataset, yolo_path=None):
     """Exports an object detection dataset to YOLO format, ready-to-use for YOLO training.
 
     This method will export an AgML dataset to the YOLO format, given its name and the
@@ -46,7 +46,7 @@ def export_dataset_to_yolo_format(dataset, yolo_path):
 
     Parameters
     ----------
-    dataset : str
+    dataset : {str, AgMLDataLoader}
         The name of the dataset to export to YOLO format, or an AgMLDataLoader object.
     yolo_path : str
         The path to the directory where the YOLO-formatted dataset will be saved.
@@ -61,7 +61,7 @@ def export_dataset_to_yolo_format(dataset, yolo_path):
     if yolo_path is None:
         yolo_path = os.path.join(os.getcwd(), f'{loader.name}_yolo_export')
     if not os.path.exists(os.path.join(yolo_path, 'data')):
-        log("YOLO Export Tool did not recieve a valid YOLO path. Creating a new directory for the export.")
+        log("YOLO Export Tool did not receive a valid YOLO path. Creating a new directory for the export.")
 
     yolo_data_path = os.path.join(yolo_path, 'datasets', loader.name)
     output_image_dir = os.path.join(yolo_data_path, 'images')
@@ -148,6 +148,8 @@ def export_dataset_to_yolo_format(dataset, yolo_path):
     The dataset metadata is stored at {1}
     """.format(yolo_data_path, os.path.join(yolo_path, 'data', 'dataset.yaml'))
     log(information)
+
+    return yolo_data_path
 
 
 
