@@ -121,7 +121,7 @@ def export_yolo(dataset, yolo_path=None):
             f.write("\n".join(split_images))
 
         # update the YAML file with the corresponding locs of train/val/test
-        yaml_dump[split_name] = os.path.join(yolo_data_path, f'{split_name}.txt')
+        yaml_dump[split_name] = f'{split_name}.txt'
 
     for loader_name, loader_content in loader_contents.items():
         for image, annotation_set in loader_content.items():
