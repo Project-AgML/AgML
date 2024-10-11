@@ -1299,5 +1299,26 @@
                 4.1895012855529785
             ]
         }
+    },
+    "corn_maize_leaf_disease": {
+        "classes": {
+            "1": "Blight",
+            "2": "Common_Rust",
+            "3": "Gray_Leaf_Spot",
+            "4": "Healthy"
+        },
+        "ml_task": "image_classification",
+        "ag_task": "disease_classification",
+        "location": {
+            "continent": "worldwide",
+            "country": "worldwide"
+        },
+        "sensor_modality": "rgb",
+        "real_synthetic": "real",
+        "platform": "handheld",
+        "input_data_format": ["jpg", "png", "jpeg", "JPG"],
+        "annotation_format": "directory_names",
+        "n_images": "4188",  
+        "docs_url": "https://www.kaggle.com/datasets/smaranjitghose/corn-or-maize-leaf-disease-dataset/data"
     }
 }
