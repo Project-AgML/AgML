@@ -1320,5 +1320,26 @@
         "annotation_format": "directory_names",
         "n_images": "4188",  
         "docs_url": "https://www.kaggle.com/datasets/smaranjitghose/corn-or-maize-leaf-disease-dataset/data"
+    },
+    "vine_virus_photo_dataset": {
+        "classes": {
+            "1": "Leafroll 3",
+            "2": "No Virus",
+            "3": "Other Red",
+            "4": "Red Blotch"
+        },
+        "ml_task": "image_classification",
+        "ag_task": "vine_virus_photo",
+        "location": {
+            "continent": "worldwide",
+            "country": "worldwide"
+        },
+        "sensor_modality": "rgb",
+        "real_synthetic": "real",
+        "platform": "handheld/ground",
+        "input_data_format": ["jpg", "png", "jpeg", "JPG"],
+        "annotation_format": "directory_names",
+        "n_images": "3866",  
+        "docs_url": ""
     }
 }

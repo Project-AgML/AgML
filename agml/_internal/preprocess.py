@@ -69,6 +69,33 @@ class PublicDataPreprocessor(object):
         """
         getattr(self, dataset_name)(dataset_name)
 
+    def vine_virus_photo_dataset(self, dataset_name):
+        """Preprocesses the Vine Virus Photo Dataset."""
+        # Get the dataset directory directly (no need for 'original' directory)
+        base_path = self.data_dir
+        classes = sorted([d for d in os.listdir(base_path) if os.path.isdir(os.path.join(base_path, d))])
+
+        # Create output directory
+        output_path = os.path.join(self.data_processed_dir, dataset_name)
+        if not os.path.exists(output_path):
+            os.makedirs(output_path)
+
+        # Create subdirectories for each class inside the output directory
+        for cls in classes:
+            class_output_path = os.path.join(output_path, cls)
+            if not os.path.exists(class_output_path):
+                os.makedirs(class_output_path)
+
+        # Process and copy the dataset images to the processed directory
+        for cls in classes:
+            class_path = os.path.join(base_path, cls)
+            for img in os.listdir(class_path):
+                if img.endswith(('jpg', 'png', 'jpeg', 'JPG')):
+                    img_path = os.path.join(class_path, img)
+                    shutil.copyfile(img_path, os.path.join(output_path, cls, img))
+
+        print(f"Dataset {dataset_name} has been preprocessed and saved to {output_path}")
+
     def corn_maize_leaf_disease(self, dataset_name):
         """Preprocesses the Corn or Maize Leaf Disease Dataset."""
         # Get the dataset directory directly (no need for 'original' directory)
