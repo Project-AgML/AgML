@@ -1316,9 +1316,26 @@
         "sensor_modality": "rgb",
         "real_synthetic": "real",
         "platform": "handheld",
-        "input_data_format": ["jpg", "png", "jpeg", "JPG"],
+        "input_data_format": [
+            "jpg",
+            "png",
+            "jpeg",
+            "JPG"
+        ],
         "annotation_format": "directory_names",
-        "n_images": "4188",  
-        "docs_url": "https://www.kaggle.com/datasets/smaranjitghose/corn-or-maize-leaf-disease-dataset/data"
+        "n_images": "4188",
+        "docs_url": "https://www.kaggle.com/datasets/smaranjitghose/corn-or-maize-leaf-disease-dataset/data",
+        "stats": {
+            "mean": [
+                0.43759748339653015,
+                0.49800169467926025,
+                0.3756123483181
+            ],
+            "std": [
+                0.17942136526107788,
+                0.16718941926956177,
+                0.1742253303527832
+            ]
+        }
     }
 }
