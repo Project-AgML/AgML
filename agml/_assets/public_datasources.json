@@ -1338,6 +1338,35 @@
             ]
         }
     },
+    "tomato_leaf_disease": {
+        "classes": {
+            "1": "Bacterial Spot",
+            "2": "Early Blight",
+            "3": "Healthy",
+            "4": "Late Blight",
+            "5": "Leaf Mold",
+            "6": "Septoria Leaf Spot",
+            "7": "Spider Mites Two-spotted Spider Mite",
+            "8": "Target Spot",
+            "9": "Tomato Mosaic Virus",
+            "10": "Tomato Yellow Leaf Curl Virus"
+        },
+        "ml_task": "image_classification",
+        "ag_task": "disease_classification",
+        "location": {
+            "continent": "worldwide",
+            "country": "worldwide"
+        },
+        "sensor_modality": "rgb",
+        "real_synthetic": "real",
+        "platform": "handheld",
+        "input_data_format": [
+            "jpeg"
+        ],
+        "annotation_format": "directory_names",
+        "n_images": "11000",
+        "docs_url": "https://www.kaggle.com/datasets/kaustubhb999/tomatoleaf?resource=download"
+    },
     "vine_virus_photo_dataset": {
         "classes": {
             "1": "Leafroll 3",

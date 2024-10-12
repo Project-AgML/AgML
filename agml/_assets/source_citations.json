@@ -151,6 +151,10 @@
         "license": "",
         "citation": "Singh D, Jain N, Jain P, Kayal P, Kumawat S, Batra N. PlantDoc: a dataset for visual plant disease detection. InProceedings of the 7th ACM IKDD CoDS and 25th COMAD 2020 Jan 5 (pp. 249-253)."
     },
+    "tomato_leaf_disease": {
+        "license": "CC0: Public Domain",
+        "citation": ""
+    },
     "vine_virus_photo_dataset": {
         "license": "Apache 2.0",
         "citation": ""

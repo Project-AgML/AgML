@@ -140,6 +140,51 @@ class PublicDataPreprocessor(object):
                         processed_image.save(os.path.join(output_path, cls, img))
 
         print(f"Dataset {dataset_name} has been preprocessed and saved to {output_path}")
+    
+    def tomato_leaf_disease(self, dataset_name):
+        """Preprocesses the Tomato Leaf Disease Dataset."""
+        # Get the dataset directory directly (no need for 'original' directory)
+        base_path = self.data_dir
+        classes = sorted([d for d in os.listdir(base_path) if os.path.isdir(os.path.join(base_path, d))])
+
+        # Create output directory
+        output_path = os.path.join(self.data_processed_dir, dataset_name)
+        if not os.path.exists(output_path):
+            os.makedirs(output_path)
+
+        # Create subdirectories for each class inside the output directory
+        for cls in classes:
+            class_output_path = os.path.join(output_path, cls)
+            if not os.path.exists(class_output_path):
+                os.makedirs(class_output_path)
+
+        # Process and copy the dataset images to the processed directory
+        for cls in classes:
+            class_path = os.path.join(base_path, cls)
+            for img in os.listdir(class_path):
+                if img.endswith(('jpg', 'png', 'jpeg', 'JPG')):
+                    img_path = os.path.join(class_path, img)
+
+                    # Open the image using Pillow
+                    with Image.open(img_path) as image:
+                        # Convert image to a NumPy array
+                        img_array = np.array(image)
+
+                        # Ensure the image is in range [0, 255] and dtype is uint8
+                        if img_array.dtype != np.uint8:
+                            # If the image is in float [0-1], scale it to [0-255]
+                            img_array = (img_array * 255).astype(np.uint8)
+
+                        # Convert back to PIL Image to save
+                        processed_image = Image.fromarray(img_array)
+
+                        if processed_image.mode == 'RGBA':
+                            processed_image = processed_image.convert('RGB')
+
+                        # Save the processed image to the output directory
+                        processed_image.save(os.path.join(output_path, cls, img))
+
+        print(f"Dataset {dataset_name} has been preprocessed and saved to {output_path}")
 
     def bean_disease_uganda(self, dataset_name):
         # Get the dataset classes and paths
