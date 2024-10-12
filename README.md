@@ -157,6 +157,9 @@ model.run_training(loader)
 [bean_synthetic_earlygrowth_aerial](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/bean_synthetic_earlygrowth_aerial.md) | Semantic Segmentation | 2500 |
 [ghai_strawberry_fruit_detection](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/ghai_strawberry_fruit_detection.md) | Object Detection | 500 |
 [vegann_multicrop_presence_segmentation](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/vegann_multicrop_presence_segmentation.md) | Semantic Segmentation | 3775 |
+[corn_maize_leaf_disease](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/corn_maize_leaf_disease.md) | Image Classification | 4188 |
+[tomato_leaf_disease](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/tomato_leaf_disease.md) | Image Classification | 11000 |
+[vine_virus_photo_dataset](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/vine_virus_photo_dataset.md) | Image Classification | 3866 |
 
 ## Usage Information
 
@@ -187,4 +190,4 @@ a bug or feature that you would like to see implemented, please don't hesitate t
 See the [contributing guidelines](/CONTRIBUTING.md) for more information.
 
 ## Funding
-This project is partly funded by the [National AI Institute for Food Systems (AIFS)](https://aifs.ucdavis.edu).
+This project is partly funded by the [National AI Institute for Food Systems (AIFS)](https://aifs.ucdavis.edu)

@@ -74,6 +74,8 @@ class TableFormat(object):
         method = getattr(TableFormat, key, None)
         if method is not None:
             return method(value)
+        if isinstance(value, list):
+            value = ", ".join(value)
         if value == '': value = "None"
         return f'| **{substitutions[to_title(key)]}** | {substitutions[value]} |\n'
     

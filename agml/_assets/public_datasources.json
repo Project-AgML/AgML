@@ -1365,7 +1365,19 @@
         ],
         "annotation_format": "directory_names",
         "n_images": "11000",
-        "docs_url": "https://www.kaggle.com/datasets/kaustubhb999/tomatoleaf?resource=download"
+        "docs_url": "https://www.kaggle.com/datasets/kaustubhb999/tomatoleaf?resource=download",
+        "stats": {
+            "mean": [
+                0.45274582505226135,
+                0.46330446004867554,
+                0.41868868470191956
+            ],
+            "std": [
+                0.16920873522758484,
+                0.14771881699562073,
+                0.18538568913936615
+            ]
+        }
     },
     "vine_virus_photo_dataset": {
         "classes": {
@@ -1383,9 +1395,26 @@
         "sensor_modality": "rgb",
         "real_synthetic": "real",
         "platform": "handheld/ground",
-        "input_data_format": ["jpg", "png", "jpeg", "JPG"],
+        "input_data_format": [
+            "jpg",
+            "png",
+            "jpeg",
+            "JPG"
+        ],
         "annotation_format": "directory_names",
         "n_images": "3866",
-        "docs_url": ""
+        "docs_url": "",
+        "stats": {
+            "mean": [
+                0.44989293813705444,
+                0.44891005754470825,
+                0.2950020432472229
+            ],
+            "std": [
+                0.2310590147972107,
+                0.2280452400445938,
+                0.23016883432865143
+            ]
+        }
     }
 }
