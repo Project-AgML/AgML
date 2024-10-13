@@ -16,6 +16,8 @@
 | **Annotation Format** | directory_names |
 | **Number of Images** | 3866 |
 | **Documentation** | None |
+| **Stats/Mean** | [0.45, 0.449, 0.295] |
+| **Stats/Standard Deviation** | [0.231, 0.228, 0.23] |
 
 
 ## Examples

@@ -16,5 +16,10 @@
 | **Annotation Format** | directory_names |
 | **Number of Images** | 4188 |
 | **Documentation** | https://www.kaggle.com/datasets/smaranjitghose/corn-or-maize-leaf-disease-dataset/data |
-| **Stats/Mean** | [0.4375976324081421, 0.49800223112106323, 0.37561240792274475] |
-| **Stats/Standard Deviation** | [0.17942127585411072, 0.16718918085098267, 0.17422522604465485] |
+| **Stats/Mean** | [0.438, 0.498, 0.376] |
+| **Stats/Standard Deviation** | [0.179, 0.167, 0.174] |
+
+
+## Examples
+
+![Example Images for corn_maize_leaf_disease](https://github.com/Project-AgML/AgML/blob/dev/docs/sample_images/corn_maize_leaf_disease_examples.png)

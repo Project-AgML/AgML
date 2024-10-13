@@ -116,11 +116,17 @@ def build_table(json):
     return table
 
 
+# def generate_example_images(name):
+#     """Generates the example images for the given dataset."""
+#     agml.backend.set_seed(189)
+#     loader = agml.data.AgMLDataLoader(name)
+#     return agml.viz.show_sample(loader, no_show = True)
+
 def generate_example_images(name):
-    """Generates the example images for the given dataset."""
+    """Generates multiple example images for the given dataset."""
     agml.backend.set_seed(189)
-    loader = agml.data.AgMLDataLoader(name)
-    return agml.viz.show_sample(loader, no_show = True)
+    loader = agml.data.AgMLDataLoader(name, batch_size=4)  # Ensure the batch size is correct
+    return agml.viz.show_sample(loader, num_images=4, no_show=True)
 
 
 def build_examples(name):

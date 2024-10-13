@@ -21,43 +21,81 @@ from agml.viz.labels import show_images_and_labels
 from agml.viz.tools import format_image, _inference_best_shape, convert_figure_to_image
 from agml.viz.display import display_image
 
+def show_sample(loader, image_only=False, num_images=1, **kwargs):
+    """A simplified convenience method that visualizes multiple samples from a loader.
 
-def show_sample(loader, image_only = False, **kwargs):
-    """A simplified convenience method that visualizes a sample from a loader.
-
-    This method works for all kind of annotations; it picks the appropriate
-    visualization method and then calls it with a sample from the loader.
-    If you want to customize the way the output looks, then you need to use
-    the actual methods directly.
+    This method works for all types of annotations and visualizes multiple
+    images based on the specified `num_images` parameter.
 
     Parameters
     ----------
     loader : AgMLDataLoader
         An AgMLDataLoader of any annotation type.
     image_only : bool
-        Whether to only display the image.
+        Whether to only display the images.
+    num_images : int
+        The number of images to display (default is 1).
 
     Returns
     -------
-    The matplotlib figure.
+    The matplotlib figure showing the requested number of images.
     """
-    if kwargs.get('sample', None) is not None:
-        sample = kwargs['sample']
-    else:
-        sample = loader[0]
+    # Fetch the requested number of samples from the loader.
+    samples = [loader[i] for i in range(num_images)]
 
+    # Visualize the images based on the task.
     if image_only:
-        return show_images(sample[0])
+        return show_images([sample[0] for sample in samples])
 
     if loader.task == 'object_detection':
-        return show_image_and_boxes(
-            sample, info = loader.info, no_show = kwargs.get('no_show', False))
+        return [show_image_and_boxes(
+            sample, info=loader.info, no_show=kwargs.get('no_show', False))
+            for sample in samples]
     elif loader.task == 'semantic_segmentation':
-        return show_image_and_overlaid_mask(
-            sample, no_show = kwargs.get('no_show', False))
+        return [show_image_and_overlaid_mask(
+            sample, no_show=kwargs.get('no_show', False))
+            for sample in samples]
     elif loader.task == 'image_classification':
         return show_images_and_labels(
-            sample, info = loader.info, no_show = kwargs.get('no_show', False))
+            samples, info=loader.info, no_show=kwargs.get('no_show', False))
+
+
+# def show_sample(loader, image_only = False, **kwargs):
+#     """A simplified convenience method that visualizes a sample from a loader.
+
+#     This method works for all kind of annotations; it picks the appropriate
+#     visualization method and then calls it with a sample from the loader.
+#     If you want to customize the way the output looks, then you need to use
+#     the actual methods directly.
+
+#     Parameters
+#     ----------
+#     loader : AgMLDataLoader
+#         An AgMLDataLoader of any annotation type.
+#     image_only : bool
+#         Whether to only display the image.
+
+#     Returns
+#     -------
+#     The matplotlib figure.
+#     """
+#     if kwargs.get('sample', None) is not None:
+#         sample = kwargs['sample']
+#     else:
+#         sample = loader[0]
+
+#     if image_only:
+#         return show_images(sample[0])
+
+#     if loader.task == 'object_detection':
+#         return show_image_and_boxes(
+#             sample, info = loader.info, no_show = kwargs.get('no_show', False))
+#     elif loader.task == 'semantic_segmentation':
+#         return show_image_and_overlaid_mask(
+#             sample, no_show = kwargs.get('no_show', False))
+#     elif loader.task == 'image_classification':
+#         return show_images_and_labels(
+#             sample, info = loader.info, no_show = kwargs.get('no_show', False))
 
 
 def show_images(images,
