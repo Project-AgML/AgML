@@ -22,4 +22,4 @@
 
 ## Examples
 
-![Example Images for tomato_leaf_disease](https://github.com/Project-AgML/AgML/blob/main/docs/sample_images/tomato_leaf_disease_examples.png)
+![Example Images for tomato_leaf_disease](https://github.com/Project-AgML/AgML/blob/dev/docs/sample_images/tomato_leaf_disease_examples.png)

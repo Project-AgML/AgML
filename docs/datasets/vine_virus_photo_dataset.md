@@ -20,4 +20,4 @@
 
 ## Examples
 
-![Example Images for vine_virus_photo_dataset](https://github.com/Project-AgML/AgML/blob/main/docs/sample_images/vine_virus_photo_dataset_examples.png)
+![Example Images for vine_virus_photo_dataset](https://github.com/Project-AgML/AgML/blob/dev/docs/sample_images/vine_virus_photo_dataset_examples.png)
