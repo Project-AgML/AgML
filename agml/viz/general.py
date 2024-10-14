@@ -20,7 +20,16 @@ from agml.viz.masks import show_image_and_overlaid_mask
 from agml.viz.labels import show_images_and_labels
 from agml.viz.tools import format_image, _inference_best_shape, convert_figure_to_image
 from agml.viz.display import display_image
+import numpy as np
+import random
 
+import numpy as np
+import random
+
+import numpy as np
+import random
+
+#   Works best - for classes starting from 1
 def show_sample(loader, image_only=False, num_images=1, **kwargs):
     """A simplified convenience method that visualizes multiple samples from a loader.
 
@@ -40,8 +49,41 @@ def show_sample(loader, image_only=False, num_images=1, **kwargs):
     -------
     The matplotlib figure showing the requested number of images.
     """
-    # Fetch the requested number of samples from the loader.
-    samples = [loader[i] for i in range(num_images)]
+    # Fetch all available classes and initialize an empty list for samples.
+    classes = loader.classes
+    num_classes = len(classes)
+    samples = []
+
+    # Adjust the dictionary to store samples per class, starting from class 1.
+    class_to_sample = {cls: None for cls in range(1, num_classes + 1)}
+
+    # Ensure one image from each class first (without duplication).
+    for i in range(len(loader)):
+        sample = loader[i]
+        label = sample[1]
+
+        # Map label to its class index (if necessary)
+        if isinstance(label, (list, np.ndarray)):  # Handle one-hot encoding case
+            label = np.argmax(label) + 1  # Adjust indexing to start from 1
+
+        if label in class_to_sample and class_to_sample[label] is None:
+            class_to_sample[label] = sample
+
+        # Stop once we have at least one image per class
+        if all(v is not None for v in class_to_sample.values()):
+            break
+
+    # Collect samples ensuring uniqueness per class until we hit num_classes.
+    samples = [class_to_sample[cls] for cls in range(1, num_classes + 1) if class_to_sample[cls] is not None]
+
+    # If more images are required, duplicate randomly from the collected samples.
+    if num_images > num_classes:
+        additional_samples = random.choices(samples, k=num_images - num_classes)
+        samples.extend(additional_samples)
+    
+    # If fewer images are requested, truncate the sample list.
+    if num_images <= num_classes:
+        samples = samples[:num_images]
 
     # Visualize the images based on the task.
     if image_only:
@@ -58,6 +100,46 @@ def show_sample(loader, image_only=False, num_images=1, **kwargs):
     elif loader.task == 'image_classification':
         return show_images_and_labels(
             samples, info=loader.info, no_show=kwargs.get('no_show', False))
+
+
+# Working fine
+# def show_sample(loader, image_only=False, num_images=1, **kwargs):
+#     """A simplified convenience method that visualizes multiple samples from a loader.
+
+#     This method works for all types of annotations and visualizes multiple
+#     images based on the specified `num_images` parameter.
+
+#     Parameters
+#     ----------
+#     loader : AgMLDataLoader
+#         An AgMLDataLoader of any annotation type.
+#     image_only : bool
+#         Whether to only display the images.
+#     num_images : int
+#         The number of images to display (default is 1).
+
+#     Returns
+#     -------
+#     The matplotlib figure showing the requested number of images.
+#     """
+#     # Fetch the requested number of samples from the loader.
+#     samples = [loader[i] for i in range(num_images)]
+
+#     # Visualize the images based on the task.
+#     if image_only:
+#         return show_images([sample[0] for sample in samples])
+
+#     if loader.task == 'object_detection':
+#         return [show_image_and_boxes(
+#             sample, info=loader.info, no_show=kwargs.get('no_show', False))
+#             for sample in samples]
+#     elif loader.task == 'semantic_segmentation':
+#         return [show_image_and_overlaid_mask(
+#             sample, no_show=kwargs.get('no_show', False))
+#             for sample in samples]
+#     elif loader.task == 'image_classification':
+#         return show_images_and_labels(
+#             samples, info=loader.info, no_show=kwargs.get('no_show', False))
 
 
 # def show_sample(loader, image_only = False, **kwargs):
