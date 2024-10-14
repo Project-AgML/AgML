@@ -13,24 +13,24 @@
         "annotation_format": "directory_names",
         "n_images": "1295",
         "docs_url": "https://github.com/AI-Lab-Makerere/ibean/",
-        "stats": {
-            "mean": [
-                0.48483240604400635,
-                0.5186856389045715,
-                0.3107088804244995
-            ],
-            "std": [
-                0.18201091885566711,
-                0.19948190450668335,
-                0.16856084764003754
-            ]
-        },
         "classes": {
             "0": "angular_leaf_spot",
             "1": "bean_rust",
             "2": "healthy"
         },
-        "external_image_sources": []
+        "external_image_sources": [],
+        "stats": {
+            "mean": [
+                0.4848317503929138,
+                0.5186859369277954,
+                0.31070852279663086
+            ],
+            "std": [
+                0.18201085925102234,
+                0.19948194921016693,
+                0.16856086254119873
+            ]
+        }
     },
     "carrot_weeds_germany": {
         "ml_task": "semantic_segmentation",
@@ -78,18 +78,6 @@
         "annotation_format": "directory_names",
         "n_images": "5539",
         "docs_url": "https://vision.eng.au.dk/plant-seedlings-dataset/",
-        "stats": {
-            "mean": [
-                0.32876914739608765,
-                0.28884443640708923,
-                0.20677326619625092
-            ],
-            "std": [
-                0.09281565248966217,
-                0.09644084423780441,
-                0.10552656650543213
-            ]
-        },
         "classes": {
             "0": "maize",
             "1": "common_wheat",
@@ -104,7 +92,19 @@
             "10": "black_grass",
             "11": "loose_silkybent"
         },
-        "external_image_sources": []
+        "external_image_sources": [],
+        "stats": {
+            "mean": [
+                0.3287692368030548,
+                0.28884512186050415,
+                0.20677343010902405
+            ],
+            "std": [
+                0.09281572699546814,
+                0.09644099324941635,
+                0.10552676767110825
+            ]
+        }
     },
     "soybean_weed_uav_brazil": {
         "ml_task": "image_classification",
@@ -120,25 +120,25 @@
         "annotation_format": "directory_names",
         "n_images": "15336",
         "docs_url": "https://data.mendeley.com/datasets/3fmjm7ncc6/2",
-        "stats": {
-            "mean": [
-                0.32902148365974426,
-                0.33378347754478455,
-                0.18654650449752808
-            ],
-            "std": [
-                0.24514101445674896,
-                0.24915193021297455,
-                0.1570599228143692
-            ]
-        },
         "classes": {
             "0": "broadleaf",
             "1": "grass",
-            "2": "soybean",
-            "3": "soil"
+            "2": "soil",
+            "3": "soybean"
         },
-        "external_image_sources": []
+        "external_image_sources": [],
+        "stats": {
+            "mean": [
+                0.32902154326438904,
+                0.33378341794013977,
+                0.1865464597940445
+            ],
+            "std": [
+                0.24514122307300568,
+                0.2491522580385208,
+                0.1570599377155304
+            ]
+        }
     },
     "sugarcane_damage_usa": {
         "ml_task": "image_classification",
@@ -153,18 +153,6 @@
         "annotation_format": "directory_names",
         "n_images": "153",
         "docs_url": "https://github.com/The77Lab/SugarcaneBilletsDataset",
-        "stats": {
-            "mean": [
-                0.24388396739959717,
-                0.24691258370876312,
-                0.26203399896621704
-            ],
-            "std": [
-                0.2236362099647522,
-                0.21735337376594543,
-                0.1923859417438507
-            ]
-        },
         "classes": {
             "0": "cracked",
             "1": "crushed",
@@ -173,7 +161,19 @@
             "4": "single_damaged_buds",
             "5": "no_damage"
         },
-        "external_image_sources": []
+        "external_image_sources": [],
+        "stats": {
+            "mean": [
+                0.24388393759727478,
+                0.24691258370876312,
+                0.26203399896621704
+            ],
+            "std": [
+                0.22363615036010742,
+                0.21735334396362305,
+                0.1923859715461731
+            ]
+        }
     },
     "crop_weeds_greece": {
         "ml_task": "image_classification",
@@ -188,25 +188,25 @@
         "annotation_format": "directory_names",
         "n_images": "508",
         "docs_url": "https://github.com/AUAgroup/early-crop-weed",
-        "stats": {
-            "mean": [
-                0.7246999740600586,
-                0.6694438457489014,
-                0.5436030626296997
-            ],
-            "std": [
-                0.16351650655269623,
-                0.1530727595090866,
-                0.13750973343849182
-            ]
-        },
         "classes": {
             "0": "black_nightshade",
             "1": "velvet_leaf",
             "2": "cotton",
             "3": "tomato"
         },
-        "external_image_sources": []
+        "external_image_sources": [],
+        "stats": {
+            "mean": [
+                0.7247000336647034,
+                0.6694437265396118,
+                0.5436030030250549
+            ],
+            "std": [
+                0.16351649165153503,
+                0.15307274460792542,
+                0.13750970363616943
+            ]
+        }
     },
     "sugarbeet_weed_segmentation": {
         "ml_task": "semantic_segmentation",
@@ -255,27 +255,27 @@
         "n_images": "17509",
         "docs_url": "https://github.com/AlexOlsen/DeepWeeds",
         "classes": {
-            "0": "Chinee Apple",
-            "1": "Lantana",
-            "2": "Parkinsonia",
-            "3": "Parthenium",
-            "4": "Prickly Acacia",
-            "5": "Rubber Vine",
-            "6": "Siam Weed",
-            "7": "Snake Weed",
-            "8": "Negative"
+            "0": "chinee_apple",
+            "1": "lantana",
+            "2": "negative",
+            "3": "parkinsonia",
+            "4": "parthenium",
+            "5": "prickly_acacia",
+            "6": "rubber_vine",
+            "7": "siam_weed",
+            "8": "snake_weed"
         },
         "external_image_sources": [],
         "stats": {
             "mean": [
-                0.3785804808139801,
-                0.3895738422870636,
-                0.37976858019828796
+                0.3785800635814667,
+                0.38957375288009644,
+                0.3797687590122223
             ],
             "std": [
-                0.22421938180923462,
-                0.2245042622089386,
-                0.22274629771709442
+                0.22421929240226746,
+                0.22450383007526398,
+                0.22274655103683472
             ]
         }
     },
@@ -328,18 +328,6 @@
         "annotation_format": "directory_names",
         "n_images": "9372",
         "docs_url": "https://vision.eng.au.dk/leaf-counting-dataset/",
-        "stats": {
-            "mean": [
-                0.42661601305007935,
-                0.42741888761520386,
-                0.341794490814209
-            ],
-            "std": [
-                0.12296481430530548,
-                0.1434885710477829,
-                0.11489786207675934
-            ]
-        },
         "classes": {
             "0": "1",
             "1": "2",
@@ -351,7 +339,19 @@
             "7": "8",
             "8": "9+"
         },
-        "external_image_sources": []
+        "external_image_sources": [],
+        "stats": {
+            "mean": [
+                0.42661556601524353,
+                0.427418053150177,
+                0.3417948782444
+            ],
+            "std": [
+                0.12296482920646667,
+                0.14348869025707245,
+                0.1148977279663086
+            ]
+        }
     },
     "apple_detection_usa": {
         "ml_task": "object_detection",
@@ -523,18 +523,6 @@
         "annotation_format": "directory_names",
         "n_images": "55448",
         "docs_url": "https://github.com/spMohanty/PlantVillage-Dataset",
-        "stats": {
-            "mean": [
-                0.4667864739894867,
-                0.4892069697380066,
-                0.41197869181632996
-            ],
-            "std": [
-                0.17720915377140045,
-                0.15169815719127655,
-                0.19375969469547272
-            ]
-        },
         "classes": {
             "0": "Apple___Apple_scab",
             "1": "Apple___Black_rot",
@@ -576,7 +564,19 @@
             "37": "Tomato___Tomato_mosaic_virus",
             "38": "Tomato___healthy"
         },
-        "external_image_sources": []
+        "external_image_sources": [],
+        "stats": {
+            "mean": [
+                0.46678444743156433,
+                0.4892062544822693,
+                0.4119776785373688
+            ],
+            "std": [
+                0.17720915377140045,
+                0.15169931948184967,
+                0.19375933706760406
+            ]
+        }
     },
     "autonomous_greenhouse_regression": {
         "ml_task": "image_regression",
@@ -714,10 +714,10 @@
     },
     "guava_disease_pakistan": {
         "classes": {
-            "1": "Canker",
-            "2": "Dot",
-            "3": "Mummification",
-            "4": "Rust"
+            "0": "Canker",
+            "1": "Dot",
+            "2": "Mummification",
+            "3": "Rust"
         },
         "ml_task": "image_classification",
         "ag_task": "disease_classification",
@@ -734,14 +734,14 @@
         "external_image_sources": [],
         "stats": {
             "mean": [
-                0.44554805755615234,
-                0.4508753716945648,
-                0.3228892683982849
+                0.44554802775382996,
+                0.45087501406669617,
+                0.32288917899131775
             ],
             "std": [
-                0.18661099672317505,
-                0.18359656631946564,
-                0.18744423985481262
+                0.18661096692085266,
+                0.18359650671482086,
+                0.18744416534900665
             ]
         }
     },
@@ -807,34 +807,34 @@
     },
     "plant_doc_classification": {
         "classes": {
-            "1": "Corn leaf blight",
-            "2": "Tomato Early blight leaf",
-            "3": "Potato leaf early blight",
-            "4": "Potato leaf late blight",
-            "5": "Blueberry leaf",
-            "6": "grape leaf black rot",
-            "7": "Bell_pepper leaf spot",
-            "8": "Cherry leaf",
-            "9": "Peach leaf",
-            "10": "Soyabean leaf",
-            "11": "Strawberry leaf",
-            "12": "Apple Scab Leaf",
-            "13": "Corn rust leaf",
-            "14": "Apple leaf",
-            "15": "Corn Gray leaf spot",
-            "16": "Tomato leaf mosaic virus",
-            "17": "Tomato mold leaf",
-            "18": "Tomato leaf yellow virus",
-            "19": "Tomato leaf bacterial spot",
-            "20": "Tomato leaf late blight",
-            "21": "Squash Powdery mildew leaf",
-            "22": "Bell_pepper leaf",
-            "23": "grape leaf",
-            "24": "Apple rust leaf",
-            "25": "Tomato Septoria leaf spot",
-            "26": "Tomato leaf",
-            "27": "Raspberry leaf",
-            "28": "Tomato two spotted spider mites leaf"
+            "0": "Corn leaf blight",
+            "1": "Tomato Early blight leaf",
+            "2": "Potato leaf early blight",
+            "3": "Potato leaf late blight",
+            "4": "Blueberry leaf",
+            "5": "grape leaf black rot",
+            "6": "Bell_pepper leaf spot",
+            "7": "Cherry leaf",
+            "8": "Peach leaf",
+            "9": "Soyabean leaf",
+            "10": "Strawberry leaf",
+            "11": "Apple Scab Leaf",
+            "12": "Corn rust leaf",
+            "13": "Apple leaf",
+            "14": "Corn Gray leaf spot",
+            "15": "Tomato leaf mosaic virus",
+            "16": "Tomato mold leaf",
+            "17": "Tomato leaf yellow virus",
+            "18": "Tomato leaf bacterial spot",
+            "19": "Tomato leaf late blight",
+            "20": "Squash Powdery mildew leaf",
+            "21": "Bell_pepper leaf",
+            "22": "grape leaf",
+            "23": "Apple rust leaf",
+            "24": "Tomato Septoria leaf spot",
+            "25": "Tomato leaf",
+            "26": "Raspberry leaf",
+            "27": "Tomato two spotted spider mites leaf"
         },
         "ml_task": "image_classification",
         "ag_task": "disease_classification",
@@ -852,14 +852,14 @@
         "external_image_sources": [],
         "stats": {
             "mean": [
-                0.4822138547897339,
-                0.5498747229576111,
-                0.3833077549934387
+                0.48221418261528015,
+                0.549874484539032,
+                0.3833079934120178
             ],
             "std": [
-                0.2124069482088089,
-                0.20360232889652252,
-                0.2210727334022522
+                0.21240688860416412,
+                0.2036021202802658,
+                0.22107268869876862
             ]
         }
     },
@@ -1155,13 +1155,13 @@
         "external_image_sources": [],
         "stats": {
             "mean": [
-                0.5753855109214783,
-                0.4637872874736786,
-                0.3637043833732605
+                0.5753851532936096,
+                0.46378713846206665,
+                0.36370429396629333
             ],
             "std": [
-                0.1983788013458252,
-                0.19222092628479004,
+                0.19837889075279236,
+                0.19222107529640198,
                 0.1773509532213211
             ]
         }
@@ -1302,10 +1302,10 @@
     },
     "corn_maize_leaf_disease": {
         "classes": {
-            "1": "Blight",
-            "2": "Common_Rust",
-            "3": "Gray_Leaf_Spot",
-            "4": "Healthy"
+            "0": "Blight",
+            "1": "Common_Rust",
+            "2": "Gray_Leaf_Spot",
+            "3": "Healthy"
         },
         "ml_task": "image_classification",
         "ag_task": "disease_classification",
@@ -1327,29 +1327,29 @@
         "docs_url": "https://www.kaggle.com/datasets/smaranjitghose/corn-or-maize-leaf-disease-dataset/data",
         "stats": {
             "mean": [
-                0.43759819865226746,
-                0.49800193309783936,
-                0.3756127655506134
+                0.4375976622104645,
+                0.49800175428390503,
+                0.3756123483181
             ],
             "std": [
-                0.17942138016223907,
-                0.16718900203704834,
-                0.17422518134117126
+                0.17942173779010773,
+                0.1671891063451767,
+                0.17422494292259216
             ]
         }
     },
     "tomato_leaf_disease": {
         "classes": {
-            "1": "Bacterial Spot",
-            "2": "Early Blight",
-            "3": "Healthy",
-            "4": "Late Blight",
-            "5": "Leaf Mold",
-            "6": "Septoria Leaf Spot",
-            "7": "Spider Mites Two-spotted Spider Mite",
-            "8": "Target Spot",
-            "9": "Tomato Mosaic Virus",
-            "10": "Tomato Yellow Leaf Curl Virus"
+            "0": "Bacterial Spot",
+            "1": "Early Blight",
+            "2": "Healthy",
+            "3": "Late Blight",
+            "4": "Leaf Mold",
+            "5": "Septoria Leaf Spot",
+            "6": "Spider Mites Two-spotted Spider Mite",
+            "7": "Target Spot",
+            "8": "Tomato Mosaic Virus",
+            "9": "Tomato Yellow Leaf Curl Virus"
         },
         "ml_task": "image_classification",
         "ag_task": "disease_classification",
@@ -1368,23 +1368,23 @@
         "docs_url": "https://www.kaggle.com/datasets/kaustubhb999/tomatoleaf?resource=download",
         "stats": {
             "mean": [
-                0.45274674892425537,
-                0.46330589056015015,
-                0.41868847608566284
+                0.4527469873428345,
+                0.463305801153183,
+                0.41868722438812256
             ],
             "std": [
-                0.16920864582061768,
-                0.14771844446659088,
-                0.18538570404052734
+                0.16920898854732513,
+                0.1477184295654297,
+                0.1853858381509781
             ]
         }
     },
     "vine_virus_photo_dataset": {
         "classes": {
-            "1": "Leafroll 3",
-            "2": "No Virus",
-            "3": "Other Red",
-            "4": "Red Blotch"
+            "0": "Leafroll 3",
+            "1": "No Virus",
+            "2": "Other Red",
+            "3": "Red Blotch"
         },
         "ml_task": "image_classification",
         "ag_task": "vine_virus_photo",
@@ -1406,14 +1406,14 @@
         "docs_url": "",
         "stats": {
             "mean": [
-                0.4498930275440216,
-                0.4489099979400635,
-                0.29500266909599304
+                0.44989314675331116,
+                0.4489104151725769,
+                0.29500243067741394
             ],
             "std": [
-                0.23105934262275696,
-                0.22804522514343262,
-                0.23016908764839172
+                0.2310592532157898,
+                0.2280450314283371,
+                0.23016904294490814
             ]
         }
     }

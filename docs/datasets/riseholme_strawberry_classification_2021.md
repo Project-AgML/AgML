@@ -21,4 +21,4 @@
 
 ## Examples
 
-![Example Images for riseholme_strawberry_classification_2021](https://github.com/Project-AgML/AgML/blob/main/docs/sample_images/riseholme_strawberry_classification_2021_examples.png)
+![Example Images for riseholme_strawberry_classification_2021](https://github.com/Project-AgML/AgML/blob/dev/docs/sample_images/riseholme_strawberry_classification_2021_examples.png)

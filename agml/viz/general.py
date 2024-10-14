@@ -55,7 +55,7 @@ def show_sample(loader, image_only=False, num_images=1, **kwargs):
     samples = []
 
     # Adjust the dictionary to store samples per class, starting from class 1.
-    class_to_sample = {cls: None for cls in range(1, num_classes + 1)}
+    class_to_sample = {cls: None for cls in range(num_classes)}
 
     # Ensure one image from each class first (without duplication).
     for i in range(len(loader)):
@@ -64,7 +64,7 @@ def show_sample(loader, image_only=False, num_images=1, **kwargs):
 
         # Map label to its class index (if necessary)
         if isinstance(label, (list, np.ndarray)):  # Handle one-hot encoding case
-            label = np.argmax(label) + 1  # Adjust indexing to start from 1
+            label = np.argmax(label) # Adjust indexing to start from 1
 
         if label in class_to_sample and class_to_sample[label] is None:
             class_to_sample[label] = sample
@@ -74,7 +74,7 @@ def show_sample(loader, image_only=False, num_images=1, **kwargs):
             break
 
     # Collect samples ensuring uniqueness per class until we hit num_classes.
-    samples = [class_to_sample[cls] for cls in range(1, num_classes + 1) if class_to_sample[cls] is not None]
+    samples = [class_to_sample[cls] for cls in range(num_classes) if class_to_sample[cls] is not None]
 
     # If more images are required, duplicate randomly from the collected samples.
     if num_images > num_classes:

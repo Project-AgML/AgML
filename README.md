@@ -190,4 +190,4 @@ a bug or feature that you would like to see implemented, please don't hesitate t
 See the [contributing guidelines](/CONTRIBUTING.md) for more information.
 
 ## Funding
-This project is partly funded by the [National AI Institute for Food Systems (AIFS)]
+This project is partly funded by the [National AI Institute for 
