@@ -415,6 +415,30 @@
         },
         "external_image_sources": []
     },
+    "tomato_ripeness_detection": {
+        "ml_task": "object_detection",
+        "ag_task": "fruit_ripeness_detection",
+        "location": {
+            "continent": "worldwide",
+            "country": "worldwide"
+        },
+        "sensor_modality": "rgb",
+        "real_synthetic": "real",
+        "platform": "ground",
+        "input_data_format": "jpg",
+        "annotation_format": "coco_json",
+        "n_images": "804",
+        "docs_url": "https://www.kaggle.com/datasets/nexuswho/laboro-tomato",
+        "classes": {
+            "1": "b_fully_ripened",
+            "2": "b_half_ripened",
+            "3": "b_green",
+            "4": "l_fully_ripened",
+            "5": "l_half_ripened",
+            "6": "l_green"
+        },
+        "external_image_sources": []
+    },
     "apple_flower_segmentation": {
         "ml_task": "semantic_segmentation",
         "ag_task": "flower_segmentation",
