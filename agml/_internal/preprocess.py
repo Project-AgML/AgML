@@ -461,6 +461,9 @@ class PublicDataPreprocessor(object):
             output_imgpath = output_img_path,
             extract_num_from_imgid = True
         )
+    
+    def tomato_ripeness_detection(self, dataset_name):
+        pass
 
     def cotton_seedling_counting(self, dataset_name):
         # Get all of the relevant data
