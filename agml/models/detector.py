@@ -18,6 +18,8 @@ import warnings
 import datetime
 import importlib
 
+import numpy as np
+
 from agml.framework import AgMLSerializable
 from agml.backend.config import model_save_path
 from agml.utils.logging import log
@@ -25,6 +27,7 @@ from agml.utils.logging import log
 from agml.models.extensions.ultralytics import install_and_configure_ultralytics
 
 try:
+    warnings.filterwarnings("ignore", message='.*Python>=3.10 is required')
     import ultralytics
     from ultralytics import YOLO
 except ImportError:
@@ -37,7 +40,29 @@ YOLO11_MODELS_TO_PATH = {k.upper(): f'{k.lower()}.pt' for k in VALID_YOLO11_MODE
 
 
 class Detector(AgMLSerializable):
-    def __new__(cls, model_name: str = "yolov5s", *args, **kwargs):
+    """A class for object detection using the Ultralytics YOLO models.
+
+    The `agml.models.Detector` is a simplified wrapper around an Ultralytics
+    YOLO11 model, which enables easy loading and training of YOLO models, and
+    use in inference pipelines and other AgML pipelines. You can train a model
+    quickly using the following code:
+
+    loader = agml.data.AgMLDataLoader('grape_detection_californiaday')
+    agml.models.Detector.train(loader, model, run_name='grape_exp', epochs=100)
+
+    You can then load the model and run inference as follows:
+
+    grape_images = loader.take_images()
+    model = agml.models.Detector.load('grape_exp')
+    bboxes, classes, confidences = model(grape_images[0])
+
+    You should use the methods `Detector.train` for training, and `Detector.load`
+    and `Detector.load_benchmark` for loading models. The `Detector` class is
+    designed to be a simple and easy-to-use interface for YOLO object detection.
+    """
+    serializable = frozenset(('net', '_verbose'))
+
+    def __new__(cls, net, *args, **kwargs):
         # only setup Ultralytics when the class is initialized
         if importlib.util.find_spec("ultralytics") is None:
             install_and_configure_ultralytics()
@@ -45,7 +70,7 @@ class Detector(AgMLSerializable):
             import ultralytics
             from ultralytics import YOLO
 
-        return cls(model_name, *args, **kwargs)
+        return super().__new__(cls)
 
     def __init__(self, net, *args, **kwargs):
         if not kwargs.get("_internally_instantiated", False):
@@ -54,6 +79,90 @@ class Detector(AgMLSerializable):
                             "`Detector.load_benchmark(<name>)` method.")
 
         self.net = net
+
+        self._verbose = kwargs.get('verbose', False)
+
+    def __call__(self, image, return_full=False, **kwargs):
+        if isinstance(image, list) or (isinstance(image, np.ndarray) and len(image.shape) == 4):
+            if return_full:
+                return [self._single_input_inference(img, return_full, **kwargs) for img in image]
+            bboxes, classes, confidences = [], [], []
+            for img in image:
+                bbox, cls, conf = self._single_input_inference(img, return_full, **kwargs)
+                bboxes.append(bbox)
+                classes.append(cls)
+                confidences.append(conf)
+            return bboxes, classes, confidences
+        return self._single_input_inference(image, return_full, **kwargs)
+
+    def _single_input_inference(self, image, return_full, **kwargs):
+        # run inference on a single image
+        # by default, return the predicted bboxes/classes/confidence. if
+        # `return_full` is set to True, return the full result dictionary
+        result_dict = self.net(image, stream=False, verbose=self._verbose)[0]
+        if return_full:
+            return result_dict
+        result_dict = result_dict.cpu().numpy()
+        boxes = result_dict.boxes
+        bboxes = boxes.xywh.astype(np.int32)
+        classes = boxes.cls.astype(np.int32)
+        confidences = boxes.conf.astype(np.float32)
+        return bboxes, classes, confidences
+
+    def predict(self, image, return_full=False, **kwargs):
+        """Runs inference on an image using the YOLO model.
+
+        This method runs inference and returns the bounding boxes, classes,
+        and confidences for the detected objects in the image. This method
+        is a wrapper around the `__call__` method, which allows for easy
+        inference on a single image or a list of images.
+
+        Parameters
+        ----------
+        image : np.ndarray
+            The image(s) to run inference on. This can accept anything
+            that is valid with the Ultralytics YOLO inference format.
+        return_full : bool, optional
+            Whether to return the full result dictionary from the model.
+            Default is False.
+
+        Returns
+        -------
+        The desired output.
+        """
+        return self(image, return_full, **kwargs)
+
+    def show_prediction(self, image):
+        """Shows the output predictions for one input image.
+
+        This method is useful for instantly visualizing the predictions
+        for a single input image. It accepts a single input image (or
+        any type of valid 'image' input, as described in the Ultralytics
+        YOLO format), and then runs inference on that input image and
+        displays its predictions in a matplotlib window.
+
+        Parameters
+        ----------
+        image : Any
+            See the Ultralytics YOLO format for allowed input types.
+
+        Returns
+        -------
+        The matplotlib figure containing the image.
+        """
+        bboxes, labels, _ = self.predict(image)
+        if isinstance(labels, int):
+            bboxes, labels = [bboxes], [labels]
+        return show_image_and_boxes(image, bboxes, labels)
+
+    @property
+    def verbose(self):
+        return self._verbose
+
+    @verbose.setter
+    def verbose(self, value):
+        if not isinstance(verbose, bool): raise ValueError("Verbose must be True/False.")
+        self._verbose = value
 
     @staticmethod
     def train(loader, model, run_name=None, epochs=100, overwrite=False):
@@ -96,6 +205,7 @@ class Detector(AgMLSerializable):
             if os.listdir(model_save_dir) and not overwrite:
                 raise ValueError(f"Model with name {run_name} already exists. "
                                  f"Set `overwrite=True` to overwrite.")
+        os.makedirs(model_save_dir, exist_ok=True)
 
         # export the YOLO dataset in the Ultralytics package directory
         ultralytics_dir = os.path.dirname(ultralytics.__file__)
@@ -135,7 +245,32 @@ class Detector(AgMLSerializable):
         return run_name
 
     @classmethod
-    def load(cls, name: str = None, weights: str = None):
+    def load(cls, name: str = None, weights: str = None, **kwargs):
+        """Loads a trained YOLO model from the AgML internal model repository.
+
+        This method can be used to load a trained YOLO model from the AgML internal
+        model repository. The model can be loaded either by providing the `name` of
+        the model, which will be used to search for the model in the internal model
+        repository, or by providing the `weights` path directly.
+
+        You should use this method after training a model using the `Detector.train`
+        method, which will train a model and save it to the `name` that is either
+        provided or generated from the run.
+
+        Parameters
+        ----------
+        name : str, optional
+            The name of the model to load from the internal AgML model repository.
+        weights : str, optional
+            The path to the weights file to load directly.
+        **kwargs : dict
+            verbose : bool, optional
+                Whether to enable verbose mode for the model. Default is False.
+
+        Returns
+        -------
+        The loaded YOLO model.
+        """
         # get the path to the model based on the input arguments
         if name is not None and weights is not None:
             raise ValueError("You can only provide either a `name` or `weights` argument, not both.")
@@ -153,7 +288,7 @@ class Detector(AgMLSerializable):
 
         # load the model using the Ultralytics package
         net = YOLO(model_path)  # noqa
-        return cls(net=net, _internally_instantiated=True)
+        return cls(net=net, _internally_instantiated=True, **kwargs)
 
 
 

@@ -59,6 +59,9 @@ class ImageLoader(AgMLSerializable):
         self._transforms = []
 
     def __getitem__(self, index):
+        if isinstance(index, slice):
+            return [self[i] for i in range(*index.indices(len(self)))]
+
         # Load the image and convert it to RGB format.
         accessor_value = self._accessor_list[index]
         image_file = self._image_files[accessor_value]
