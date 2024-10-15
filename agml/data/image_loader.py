@@ -122,11 +122,14 @@ class ImageLoader(AgMLSerializable):
         # If the input is an AgML dataset, then all the images will be either
         # contained within a single folder `images`, or in sub-directories which
         # are named after the class (for image classification datasets only).
-        if location in public_data_sources():
+        if isinstance(location, AgMLDataLoader):
+            self._root_path = location.dataset_root
+            self._image_files = sorted(nested_file_list(self._root_path, ext='image'))
+        elif location in public_data_sources():
             # This is a quick way to run all of the checks regarding the location
             # of the dataset, and download it if it isn't already downloaded.
             self._root_path = AgMLDataLoader(location, **kwargs).dataset_root
-            self._image_files = sorted(nested_file_list(self._root_path))
+            self._image_files = sorted(nested_file_list(self._root_path, ext='image'))
 
         # If the folder itself is a directory of images, then we can just use
         # the directory as the root path.
@@ -134,7 +137,7 @@ class ImageLoader(AgMLSerializable):
             self._root_path = os.path.abspath(location)
 
             # Get all of the image files.
-            self._image_files = sorted(nested_file_list(self._root_path))
+            self._image_files = sorted(nested_file_list(self._root_path, ext='image'))
 
         # Otherwise, the given path is invalid.
         else:

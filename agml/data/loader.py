@@ -855,6 +855,21 @@ class AgMLDataLoader(AgMLSerializable, metaclass = AgMLDataLoaderMeta):
         self._manager.shuffle(seed = seed)
         return self
 
+    def take_images(self):
+        """Returns a mini-loader over all of the images in the dataset.
+
+        This method returns a mini-loader over all of the images in the dataset,
+        without any annotations. This is useful for running inference over just
+        the images in a dataset, or in general any operations in which you just
+        want the raw image data from a loader, without any corresponding labels.
+
+        Returns
+        -------
+        An `agml.data.ImageLoader` with the dataset images.
+        """
+        from agml.data.image_loader import ImageLoader
+        return ImageLoader(self)
+
     def take_dataset(self, name) -> "AgMLDataLoader":
         """Takes one of the datasets in a multi-dataset loader.
 
