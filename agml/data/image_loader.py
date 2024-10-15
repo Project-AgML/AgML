@@ -124,7 +124,13 @@ class ImageLoader(AgMLSerializable):
         # are named after the class (for image classification datasets only).
         if isinstance(location, AgMLDataLoader):
             self._root_path = location.dataset_root
-            self._image_files = sorted(nested_file_list(self._root_path, ext='image'))
+            if isinstance(self._root_path, list):
+                image_files = []
+                for root_path in self._root_path:
+                    image_files.extend(nested_file_list(root_path, ext='image'))
+                self._image_files = sorted(image_files)
+            else:
+                self._image_files = sorted(nested_file_list(self._root_path, ext='image'))
         elif location in public_data_sources():
             # This is a quick way to run all of the checks regarding the location
             # of the dataset, and download it if it isn't already downloaded.

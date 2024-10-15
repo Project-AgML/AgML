@@ -513,6 +513,11 @@ class AgMLMultiDatasetLoader(AgMLSerializable):
         return len(self._loader_accessors)
 
     @property
+    def dataset_root(self):
+        """Returns a list of paths to the datasets in use."""
+        return self._loaders.get_attributes('dataset_root')
+
+    @property
     def info(self):
         """Returns a `DatasetMetadata` object containing dataset info.
 
@@ -835,6 +840,21 @@ class AgMLMultiDatasetLoader(AgMLSerializable):
             with seed_context(seed):
                 np.random.shuffle(self._loader_accessors)
         return self
+
+    def take_images(self):
+        """Returns a mini-loader over all of the images in the dataset.
+
+        This method returns a mini-loader over all of the images in the dataset,
+        without any annotations. This is useful for running inference over just
+        the images in a dataset, or in general any operations in which you just
+        want the raw image data from a loader, without any corresponding labels.
+
+        Returns
+        -------
+        An `agml.data.ImageLoader` with the dataset images.
+        """
+        from agml.data.image_loader import ImageLoader
+        return ImageLoader(self)
 
     def take_dataset(self, name) -> "AgMLDataLoader":
         """Takes one of the datasets in the multi-dataset collection.
