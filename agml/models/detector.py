@@ -221,15 +221,18 @@ class Detector(AgMLSerializable):
             train_result = net.train(
                 epochs=epochs,
                 data=export_path_dict['metadata_path'],
+                save_dir=f'runs/train/{run_name}'
             )
 
             model_save_path = train_result.save_dir / 'weights' / 'best.pt'
             model_results_csv = train_result.save_dir / 'results.csv'
+            model_args_path = train_result.save_dir / 'args.yaml'
 
         # move the trained model to the `~/.agml/models` directory where it
         # will sit under the name `run_name` for easy loading in the future
         shutil.move(model_save_path, os.path.join(model_save_dir, 'best.pt'))
         shutil.move(model_results_csv, os.path.join(model_save_dir, 'results.csv'))
+        shutil.move(model_args_path, os.path.join(model_save_dir, 'args.yaml'))
         log(f"""Model training complete. Model saved to: {model_save_dir}
 
         For full Ultralytics training logs and outputs, see: {train_result.save_dir}
