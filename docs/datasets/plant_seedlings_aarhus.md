@@ -15,11 +15,11 @@
 | **Annotation Format** | directory_names |
 | **Number of Images** | 5539 |
 | **Documentation** | https://vision.eng.au.dk/plant-seedlings-dataset/ |
+| **Classes** | maize, common_wheat, sugar_beet, scentless_mayweed, common_chickweed, shepherds_purse, cleavers, charlock, fat_hen, smallflowered_cranesbill, black_grass, loose_silkybent |
 | **Stats/Mean** | [0.329, 0.289, 0.207] |
 | **Stats/Standard Deviation** | [0.093, 0.096, 0.106] |
-| **Classes** | maize, common_wheat, sugar_beet, scentless_mayweed, common_chickweed, shepherds_purse, cleavers, charlock, fat_hen, smallflowered_cranesbill, black_grass, loose_silkybent |
 
 
 ## Examples
 
-![Example Images for plant_seedlings_aarhus](https://github.com/Project-AgML/AgML/blob/main/docs/sample_images/plant_seedlings_aarhus_examples.png)
+![Example Images for plant_seedlings_aarhus](https://github.com/Project-AgML/AgML/blob/dev/docs/sample_images/plant_seedlings_aarhus_examples.png)

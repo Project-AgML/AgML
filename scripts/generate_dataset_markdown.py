@@ -24,7 +24,7 @@ from tqdm import tqdm
 import agml
 from agml.utils.data import load_public_sources
 from agml.utils.io import recursive_dirname
-
+import random
 
 class DefaultDict(dict):
     __missing__ = lambda self, key: key
@@ -74,6 +74,8 @@ class TableFormat(object):
         method = getattr(TableFormat, key, None)
         if method is not None:
             return method(value)
+        if isinstance(value, list):
+            value = ", ".join(value)
         if value == '': value = "None"
         return f'| **{substitutions[to_title(key)]}** | {substitutions[value]} |\n'
     
@@ -113,24 +115,27 @@ def build_table(json):
         table += TableFormat.handle(key, value)
     return table
 
+# def generate_example_images(name):
+#     """Generates the example images for the given dataset."""
+#     agml.backend.set_seed(189)
+#     loader = agml.data.AgMLDataLoader(name)
+#     return agml.viz.show_sample(loader, no_show = True)
 
 def generate_example_images(name):
-    """Generates the example images for the given dataset."""
+    """Generates multiple example images for the given dataset."""
     agml.backend.set_seed(189)
-    loader = agml.data.AgMLDataLoader(name)
-    return agml.viz.show_sample(loader, no_show = True)
-
+    loader = agml.data.AgMLDataLoader(name)  # Ensure the batch size is correct
+    return agml.viz.show_sample(loader, num_images=max(4,len(loader.classes)), no_show=True)
 
 def build_examples(name):
     """Builds the example images for the given dataset."""
-    sample = generate_example_images(name)
+    sample = generate_example_images(name)  
     save_path_local = os.path.join(
         LOCAL_AGML_REPO, 'docs/sample_images', f'{name}_examples.png')
     save_path_remote = os.path.join(
         AGML_REPO, 'docs/sample_images', f'{name}_examples.png')
     cv2.imwrite(save_path_local, sample)
     return f'![Example Images for {name}]({save_path_remote})'
-
 
 def generate_markdown(name):
     with open(os.path.join(LOCAL_AGML_REPO, 'docs/datasets', f'{name}.md'), 'w') as f:
