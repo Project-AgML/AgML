@@ -80,7 +80,9 @@ def copyright_print(name, location = None):
         'GPL-3.0': 'https://opensource.org/licenses/GPL-3.0',
         'US Public Domain': 'https://www.usa.gov/government-works',
         'CC0: Public Domain': 'https://creativecommons.org/publicdomain/zero/1.0/',
-        'Apache 2.0': 'https://www.apache.org/licenses/LICENSE-2.0'}
+        'Apache 2.0': 'https://www.apache.org/licenses/LICENSE-2.0',
+        'CC BY-NC 4.0': 'https://creativecommons.org/licenses/by-nc/4.0/',
+        'CC BY-NC-SA 4.0': 'https://creativecommons.org/licenses/by-nc-sa/4.0/'}
     if license == '':
         license_msg = "This dataset has " \
                       + _bold("no license") + ".\n"

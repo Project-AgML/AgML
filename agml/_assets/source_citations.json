@@ -162,5 +162,9 @@
     "vine_virus_photo_dataset": {
         "license": "Apache 2.0",
         "citation": ""
+    },
+    "grape_bunch_detection": {
+        "license": "CC BY-NC 4.0",
+        "citation": ""
     }
 }

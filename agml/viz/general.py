@@ -49,55 +49,68 @@ def show_sample(loader, image_only=False, num_images=1, **kwargs):
     -------
     The matplotlib figure showing the requested number of images.
     """
-    # Fetch all available classes and initialize an empty list for samples.
-    classes = loader.classes
-    num_classes = len(classes)
-    samples = []
+    if kwargs.get('sample', None) is not None:
+        sample = kwargs['sample']
+    else:
+        sample = loader[0]
 
-    # Adjust the dictionary to store samples per class, starting from class 1.
-    class_to_sample = {cls: None for cls in range(num_classes)}
-
-    # Ensure one image from each class first (without duplication).
-    for i in range(len(loader)):
-        sample = loader[i]
-        label = sample[1]
-
-        # Map label to its class index (if necessary)
-        if isinstance(label, (list, np.ndarray)):  # Handle one-hot encoding case
-            label = np.argmax(label) # Adjust indexing to start from 1
-
-        if label in class_to_sample and class_to_sample[label] is None:
-            class_to_sample[label] = sample
-
-        # Stop once we have at least one image per class
-        if all(v is not None for v in class_to_sample.values()):
-            break
-
-    # Collect samples ensuring uniqueness per class until we hit num_classes.
-    samples = [class_to_sample[cls] for cls in range(num_classes) if class_to_sample[cls] is not None]
-
-    # If more images are required, duplicate randomly from the collected samples.
-    if num_images > num_classes:
-        additional_samples = random.choices(samples, k=num_images - num_classes)
-        samples.extend(additional_samples)
-    
-    # If fewer images are requested, truncate the sample list.
-    if num_images <= num_classes:
-        samples = samples[:num_images]
-
-    # Visualize the images based on the task.
     if image_only:
-        return show_images([sample[0] for sample in samples])
+        return show_images(sample[0])
+
+    # if loader.task == 'object_detection':
+    #     classes = loader.classes
+    #     num_classes = len(classes)
+    #     print("Number of classes", num_classes)
+    #     return show_image_and_boxes(
+    #         sample, info = loader.info, no_show = kwargs.get('no_show', False))
 
     if loader.task == 'object_detection':
-        return [show_image_and_boxes(
-            sample, info=loader.info, no_show=kwargs.get('no_show', False))
-            for sample in samples]
+    # Collect 4 images (or as many as available if fewer)
+        samples = [loader[i] for i in range(min(len(loader), 4))]
+        return [show_image_and_boxes(sample, info=loader.info, no_show=kwargs.get('no_show', False)) for sample in samples]
+
     elif loader.task == 'semantic_segmentation':
-        return [show_image_and_overlaid_mask(
-            sample, no_show=kwargs.get('no_show', False))
-            for sample in samples]
+        return show_image_and_overlaid_mask(
+            sample, no_show = kwargs.get('no_show', False))
     elif loader.task == 'image_classification':
+            # Fetch all available classes and initialize an empty list for samples.
+        classes = loader.classes
+        num_classes = len(classes)
+        samples = []
+
+        # Adjust the dictionary to store samples per class, starting from class 1.
+        class_to_sample = {cls: None for cls in range(num_classes)}
+
+        # Ensure one image from each class first (without duplication).
+        for i in range(len(loader)):
+            sample = loader[i]
+            label = sample[1]
+
+            # Map label to its class index (if necessary)
+            if isinstance(label, (list, np.ndarray)):  # Handle one-hot encoding case
+                label = np.argmax(label) # Adjust indexing to start from 1
+            
+            if isinstance(label, dict):
+                label = label.get('label', None) 
+
+            if label in class_to_sample and class_to_sample[label] is None:
+                class_to_sample[label] = sample
+
+            # Stop once we have at least one image per class
+            if all(v is not None for v in class_to_sample.values()):
+                break
+
+        # Collect samples ensuring uniqueness per class until we hit num_classes.
+        samples = [class_to_sample[cls] for cls in range(num_classes) if class_to_sample[cls] is not None]
+
+        # If more images are required, duplicate randomly from the collected samples.
+        if num_images > num_classes:
+            additional_samples = random.choices(samples, k=num_images - num_classes)
+            samples.extend(additional_samples)
+        
+        # If fewer images are requested, truncate the sample list.
+        if num_images <= num_classes:
+            samples = samples[:num_images]
         return show_images_and_labels(
             samples, info=loader.info, no_show=kwargs.get('no_show', False))
 

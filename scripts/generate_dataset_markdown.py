@@ -25,7 +25,7 @@ import agml
 from agml.utils.data import load_public_sources
 from agml.utils.io import recursive_dirname
 import random
-
+import numpy as np
 class DefaultDict(dict):
     __missing__ = lambda self, key: key
 
@@ -127,15 +127,63 @@ def generate_example_images(name):
     loader = agml.data.AgMLDataLoader(name)  # Ensure the batch size is correct
     return agml.viz.show_sample(loader, num_images=max(4,len(loader.classes)), no_show=True)
 
+# def build_examples(name):
+#     """Builds the example images for the given dataset."""
+#     sample = generate_example_images(name)  
+#     save_path_local = os.path.join(
+#         LOCAL_AGML_REPO, 'docs/sample_images', f'{name}_examples.png')
+#     save_path_remote = os.path.join(
+#         AGML_REPO, 'docs/sample_images', f'{name}_examples.png')
+#     cv2.imwrite(save_path_local, sample)
+#     return f'![Example Images for {name}]({save_path_remote})'
+
+
+import matplotlib.pyplot as plt
 def build_examples(name):
-    """Builds the example images for the given dataset."""
-    sample = generate_example_images(name)  
-    save_path_local = os.path.join(
-        LOCAL_AGML_REPO, 'docs/sample_images', f'{name}_examples.png')
-    save_path_remote = os.path.join(
-        AGML_REPO, 'docs/sample_images', f'{name}_examples.png')
-    cv2.imwrite(save_path_local, sample)
-    return f'![Example Images for {name}]({save_path_remote})'
+    """Builds the example images for the given dataset and combines them into one image."""
+    samples = generate_example_images(name)  
+    if isinstance(samples, list):
+        images = []
+        for idx, sample in enumerate(samples):
+            # Extract the image part if the sample contains other data (like bounding boxes)
+            if isinstance(sample, tuple) and isinstance(sample[0], np.ndarray):
+                image = sample[0]  # The first part of the tuple is the image
+            elif isinstance(sample, np.ndarray):
+                image = sample  # If it's directly an image
+            else:
+                print(f"Error: Sample {idx} is not a valid image format. Type: {type(sample)}")
+                continue
+
+            images.append(image)
+        
+        # Limit to 4 images for the grid (2x2 layout)
+        images = images[:4]
+        
+        # Create a 2x2 grid of subplots for the images
+        fig, axes = plt.subplots(2, 2)
+        
+        for i, ax in enumerate(axes.flat):
+            if i < len(images):
+                ax.imshow(images[i])
+                ax.axis('off')
+            else:
+                ax.axis('off')
+        # Save the combined image
+        save_path_local = os.path.join(LOCAL_AGML_REPO, 'docs/sample_images', f'{name}_examples.png')
+        plt.savefig(save_path_local, bbox_inches='tight')
+        plt.close()
+        print(f"Combined image saved to {save_path_local}")
+
+        save_path_remote = os.path.join(AGML_REPO, 'docs/sample_images', f'{name}_examples.png')
+        return f'![Example Images for {name}]({save_path_remote})'
+    
+    else:
+        save_path_local = os.path.join(
+            LOCAL_AGML_REPO, 'docs/sample_images', f'{name}_examples.png')
+        save_path_remote = os.path.join(
+            AGML_REPO, 'docs/sample_images', f'{name}_examples.png')
+        cv2.imwrite(save_path_local, samples)
+        return f'![Example Images for {name}]({save_path_remote})'
 
 def generate_markdown(name):
     with open(os.path.join(LOCAL_AGML_REPO, 'docs/datasets', f'{name}.md'), 'w') as f:

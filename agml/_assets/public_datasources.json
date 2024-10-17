@@ -437,7 +437,19 @@
             "5": "l_half_ripened",
             "6": "l_green"
         },
-        "external_image_sources": []
+        "external_image_sources": [],
+        "stats": {
+            "mean": [
+                0.46756285429000854,
+                0.5048850178718567,
+                0.317764014005661
+            ],
+            "std": [
+                0.21034087240695953,
+                0.19280721247196198,
+                0.22368815541267395
+            ]
+        }
     },
     "apple_flower_segmentation": {
         "ml_task": "semantic_segmentation",
@@ -1392,14 +1404,14 @@
         "docs_url": "https://www.kaggle.com/datasets/kaustubhb999/tomatoleaf?resource=download",
         "stats": {
             "mean": [
-                0.4527469873428345,
-                0.463305801153183,
-                0.41868722438812256
+                0.4527473449707031,
+                0.4633065462112427,
+                0.41868826746940613
             ],
             "std": [
-                0.16920898854732513,
-                0.1477184295654297,
-                0.1853858381509781
+                0.16920849680900574,
+                0.1477183699607849,
+                0.18538573384284973
             ]
         }
     },
@@ -1438,6 +1450,39 @@
                 0.2310592532157898,
                 0.2280450314283371,
                 0.23016904294490814
+            ]
+        }
+    },
+    "grape_bunch_detection": {
+        "classes": {
+            "0": "Chardonnay",
+            "1": "PinotGris",
+            "2": "PinotNoir"
+        },
+        "ml_task": "object_detection",
+        "ag_task": "grape_bunch_detection",
+        "location": {
+            "continent": "worldwide",
+            "country": "worldwide"
+        },
+        "sensor_modality": "rgb",
+        "real_synthetic": "real",
+        "platform": "handheld/ground",
+        "input_data_format": "jpg",
+        "annotation_format": "coco_json",
+        "n_images": "239",
+        "docs_url": "https://github.com/thsant/wgisd/tree/master",
+        "external_image_sources": [],
+        "stats": {
+            "mean": [
+                0.5015993714332581,
+                0.5361655950546265,
+                0.4303760826587677
+            ],
+            "std": [
+                0.2352389395236969,
+                0.2119981199502945,
+                0.22184956073760986
             ]
         }
     }
