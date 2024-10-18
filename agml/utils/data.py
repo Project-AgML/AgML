@@ -76,6 +76,7 @@ def copyright_print(name, location = None):
         'CC BY-SA 3.0': 'https://creativecommons.org/licenses/by-sa/3.0/',
         'CC BY-NC 3.0': 'https://creativecommons.org/licenses/by-nc/3.0/',
         'CC BY-NC SA 3.0': 'https://creativecommons.org/licenses/by-nc/3.0/',
+        "CC BY-NC-SA 4.0": 'https://creativecommons.org/licenses/by-nc/4.0/',
         'MIT': 'https://opensource.org/licenses/MIT',
         'GPL-3.0': 'https://opensource.org/licenses/GPL-3.0',
         'US Public Domain': 'https://www.usa.gov/government-works',
