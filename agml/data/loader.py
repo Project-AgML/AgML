@@ -372,6 +372,12 @@ class AgMLDataLoader(AgMLSerializable, metaclass = AgMLDataLoaderMeta):
                     raise NotADirectoryError(
                         f"Could not find a directory for Helios dataset '{name}' "
                         f"at the provided dataset path: {dataset_path}.")
+
+            # just in case there is a locally defined folder with the same name
+            # as a dataset in the `~/.agml/synthetic` directory, warn in advance:
+            if os.path.exists(os.path.join(os.path.abspath(synthetic_data_save_path()), name)):
+                log(f"Found a dataset folder '{name}' in the synthetic data "
+                    f"directory, which may conflict with the Helios dataset.")
             if not dataset_path.endswith(name):
                 dataset_path = os.path.join(dataset_path, name)
                 if not os.path.exists(dataset_path):

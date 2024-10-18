@@ -37,6 +37,7 @@ from agml.backend.tftorch import (
     user_changed_backend, StrictBackendError,
     is_array_like, convert_to_batch
 )
+from agml.viz.general import show_sample
 
 
 class CollectionWrapper(AgMLSerializable):
@@ -1722,6 +1723,40 @@ class AgMLMultiDatasetLoader(AgMLSerializable):
                              "object detection tasks.")
         return export_yolo(self, yolo_path=yolo_path)
 
+    def show_sample(self, image_only=False, no_show=False):
+        """Shows a single data sample from the dataset.
+
+        This method generates a data sample from the dataset with an image and
+        its corresponding annotation (or, if `image_only` is True, then only the
+        image itself). This data sample is then displayed, unless `no_show` is
+        True in which case the processed sample will simply be returned.
+
+        Parameters
+        ----------
+        image_only : optional
+            Whether to show only the image or the image and the annotation.
+        no_show : optional
+            Whether to display the sample or not.
+
+        Returns
+        -------
+        The data sample with/without annotation.
+        """
+        # pick a random dataset from within this loader
+        dataset = self._loaders[np.random.choice(self._loaders.keys)]
+
+        # Get the sample (and take only the first one in a batch if batched).
+        image, annotations = dataset[dataset._manager._get_random_index()]
+        if len(image.shape) == 4:
+            image = image[0]
+            annotations = annotations[0]
+
+        # Show the sample.
+        show_sample(self,
+                    image_only=image_only,
+                    no_show=no_show,
+                    sample=(image, annotations),
+                    num_to_class=self.num_to_class)
 
 
 
