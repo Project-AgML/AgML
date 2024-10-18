@@ -928,69 +928,69 @@ class PublicDataPreprocessor(object):
                     img = os.path.join(test_catg_dir, img_name)
                     shutil.copyfile(img, os.path.join(output_catg_dir, img_name))
 
-    def plant_doc_detection(self, dataset_name):
-        # Read public_datasources.json to get class information
-        category_info = self.data_sources[dataset_name]['classes']
-        labels_str = []
-        labels_ids = []
-        for info in category_info:
-            labels_str.append(category_info[info])
-            labels_ids.append(int(info))
+    # def plant_doc_detection(self, dataset_name):
+    #     # Read public_datasources.json to get class information
+    #     category_info = self.data_sources[dataset_name]['classes']
+    #     labels_str = []
+    #     labels_ids = []
+    #     for info in category_info:
+    #         labels_str.append(category_info[info])
+    #         labels_ids.append(int(info))
 
-        label2id = dict(zip(labels_str, labels_ids))
+    #     label2id = dict(zip(labels_str, labels_ids))
 
-        # Get paths to xml(annotation) files
-        dataset_dir = os.path.join(self.data_original_dir, dataset_name)
-        train_dir = os.path.join(dataset_dir, "TRAIN")
-        test_dir = os.path.join(dataset_dir, "TEST")
+    #     # Get paths to xml(annotation) files
+    #     dataset_dir = os.path.join(self.data_original_dir, dataset_name)
+    #     train_dir = os.path.join(dataset_dir, "TRAIN")
+    #     test_dir = os.path.join(dataset_dir, "TEST")
 
-        train_files = get_file_list(train_dir)
-        test_files = get_file_list(test_dir)
+    #     train_files = get_file_list(train_dir)
+    #     test_files = get_file_list(test_dir)
 
-        anno_files = [os.path.join(train_dir, ann_file) for ann_file in train_files if "xml" in ann_file]
-        anno_files += [os.path.join(test_dir, ann_file) for ann_file in test_files if "xml" in ann_file]
+    #     anno_files = [os.path.join(train_dir, ann_file) for ann_file in train_files if "xml" in ann_file]
+    #     anno_files += [os.path.join(test_dir, ann_file) for ann_file in test_files if "xml" in ann_file]
 
-        # Get paths to image files
-        img_files = [os.path.join(train_dir, img) for img in train_files if "xml" not in img]
-        img_files += [os.path.join(test_dir, img) for img in test_files if "xml" not in img]
+    #     # Get paths to image files
+    #     img_files = [os.path.join(train_dir, img) for img in train_files if "xml" not in img]
+    #     img_files += [os.path.join(test_dir, img) for img in test_files if "xml" not in img]
 
-        # Remove all images without annotations and make a list only containing annotations with images
-        valid_image_files = []
-        valid_anno_files = []
-        for img_file in img_files:
-            anno_file = img_file.rsplit(".", 1)[0] + ".xml"  # replace extension with xml to get image's annotation file
-            if anno_file in anno_files:
-                valid_image_files.append(img_file)  # add all images that have a corresponding annotation file
-                valid_anno_files.append(anno_file)  # add all annotation files that are referenced by an image
+    #     # Remove all images without annotations and make a list only containing annotations with images
+    #     valid_image_files = []
+    #     valid_anno_files = []
+    #     for img_file in img_files:
+    #         anno_file = img_file.rsplit(".", 1)[0] + ".xml"  # replace extension with xml to get image's annotation file
+    #         if anno_file in anno_files:
+    #             valid_image_files.append(img_file)  # add all images that have a corresponding annotation file
+    #             valid_anno_files.append(anno_file)  # add all annotation files that are referenced by an image
 
-        # Define path to processed annotation files
-        output_json_file = os.path.join(
-            self.data_processed_dir, dataset_name, 'annotations.json')
+    #     # Define path to processed annotation files
+    #     output_json_file = os.path.join(
+    #         self.data_processed_dir, dataset_name, 'annotations.json')
 
-        # Create directory for processed image files
-        output_img_path = os.path.join(
-            self.data_processed_dir, dataset_name, 'images')
-        create_dir(output_img_path)
+    #     # Create directory for processed image files
+    #     output_img_path = os.path.join(
+    #         self.data_processed_dir, dataset_name, 'images')
+    #     create_dir(output_img_path)
 
-        general_info = {
-            "description": "Plant Doc Object Detection Dataset",
-            "url": "https://github.com/pratikkayal/PlantDoc-Object-Detection-Dataset",
-            "version": "1.0",
-            "year": 2019,
-            "contributor": "Davinder Singh, Naman Jain, Pranjali Jain, Pratik Kayal, Sudhakar Kumawat, Nipun Batra",
-            "date_created": "2019/10/15"
-        }
+    #     general_info = {
+    #         "description": "Plant Doc Object Detection Dataset",
+    #         "url": "https://github.com/pratikkayal/PlantDoc-Object-Detection-Dataset",
+    #         "version": "1.0",
+    #         "year": 2019,
+    #         "contributor": "Davinder Singh, Naman Jain, Pranjali Jain, Pratik Kayal, Sudhakar Kumawat, Nipun Batra",
+    #         "date_created": "2019/10/15"
+    #     }
 
-        convert_xmls_to_cocojson(
-            general_info,
-            annotation_paths = valid_anno_files,
-            img_paths = valid_image_files,
-            label2id = label2id,
-            name_converter = None,
-            output_jsonpath = output_json_file,
-            output_imgpath = output_img_path,
-            extract_num_from_imgid = False
-        )
+    #     convert_xmls_to_cocojson(
+    #         general_info,
+    #         annotation_paths = valid_anno_files,
+    #         img_paths = valid_image_files,
+    #         label2id = label2id,
+    #         name_converter = None,
+    #         output_jsonpath = output_json_file,
+    #         output_imgpath = output_img_path,
+    #         extract_num_from_imgid = False
+    #     )
 
     def wheat_head_counting(self, dataset_name):
         label2id = {"Wheat Head": 1}
@@ -1303,7 +1303,69 @@ class PublicDataPreprocessor(object):
             json.dump(coco_annotation, json_file, indent=4)
 
         print(f"COCO annotations saved to {output_json_file}")
+    def plant_doc_detection(self, dataset_name):
+        # Resize the dataset (if necessary)
+        resize = 1.0
 
+        # Read public_datasources.json to get class information
+        datasource_file = os.path.join(os.path.dirname(__file__), "../_assets/public_datasources.json")
+        with open(datasource_file) as f:
+            data = json.load(f)
+            category_info = data[dataset_name]['classes']  # This will give us the class information
+            labels_str = []
+            labels_ids = []
+            for info in category_info:
+                labels_str.append(category_info[info])
+                labels_ids.append(int(info))
+
+            # No name conversion in this case, unless you need to remap class names
+            name_converter = None
+            label2id = dict(zip(labels_str, labels_ids))  # Map class names to their respective IDs
+
+        # Set paths to dataset and annotations
+        dataset_dir = os.path.join(self.data_original_dir)
+        ann_dir = dataset_dir  # Both images and XMLs are in the same directory
+
+        # Get image file and xml file
+        all_files = os.listdir(ann_dir)
+        anno_files = [os.path.join(ann_dir, x) for x in all_files if x.endswith("xml")]
+        img_files = [x.replace(".xml", ".jpg") for x in anno_files]  # Assuming images are in JPG format
+
+        # # Process annotation files
+        # save_dir_anno = os.path.join(self.data_processed_dir, dataset_name, 'annotations')
+        # create_dir(save_dir_anno)
+        # output_json_file = os.path.join(save_dir_anno, 'instances.json')
+
+        # Process image files
+        output_img_path = os.path.join(self.data_processed_dir, dataset_name, 'images')
+        create_dir(output_img_path)
+
+        # General information for the COCO JSON format
+        general_info = {
+            "description": "PlantDoc Object Detection Dataset",
+            "url": "https://github.com/pratikkayal/PlantDoc-Object-Detection-Dataset",
+            "version": "1.0",
+            "year": 2024,
+            "contributor": "PlantDoc",
+            "date_created": "2024/10/17"
+        }
+
+        # Save the COCO JSON file directly in the processed directory
+        output_json_file = os.path.join(self.data_processed_dir, dataset_name, 'annotations.json')
+
+        # Convert the XML annotations to COCO format using your existing function
+        convert_xmls_to_cocojson(
+            general_info=general_info,
+            annotation_paths=anno_files,
+            img_paths=img_files,
+            label2id=label2id,
+            name_converter=name_converter,
+            output_jsonpath=output_json_file,
+            output_imgpath=output_img_path,
+            extract_num_from_imgid=False
+        )
+
+        print(f"Preprocessing completed! Annotations saved to {output_json_file}")
 
     # def grape_bunch_detection(self, dataset_name):
     #     """Preprocesses your grape dataset (Chardonnay, PinotGris, PinotNoir) from YOLO format to COCO format."""
