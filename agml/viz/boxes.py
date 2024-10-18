@@ -129,7 +129,11 @@ def annotate_object_detection(image,
     # Check for any additional information that can be used to annotate labels.
     annotate_with_info = False
     if info is not None:
-        if all(isinstance(label, str) for label in labels):
+        if kwargs.get('num_to_class') is not None:
+            annotate_with_info = True
+            info = kwargs['num_to_class']
+
+        elif all(isinstance(label, str) for label in labels):
             # If the labels are already strings, then create an info dictionary
             # that maps each label to a specific integer value, then reverse it.
             annotate_with_info = True

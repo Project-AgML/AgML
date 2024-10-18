@@ -16,8 +16,35 @@ import sys
 
 import cv2
 import matplotlib.pyplot as plt
-
+from PIL import Image, ExifTags
+import numpy as np
 from agml.viz.tools import get_viz_backend
+
+
+def correct_image_orientation(image):
+    """Correct image orientation based on EXIF data."""
+    try:
+        pil_image = Image.fromarray(image)
+        for orientation in ExifTags.TAGS.keys():
+            if ExifTags.TAGS[orientation] == 'Orientation':
+                break
+        exif = pil_image._getexif()
+        if exif is not None:
+            orientation_value = exif.get(orientation, None)
+
+            # Rotate the image according to EXIF orientation
+            if orientation_value == 3:
+                pil_image = pil_image.rotate(180, expand=True)
+            elif orientation_value == 6:
+                pil_image = pil_image.rotate(270, expand=True)
+            elif orientation_value == 8:
+                pil_image = pil_image.rotate(90, expand=True)
+
+        # Convert back to numpy array for further use (e.g., with OpenCV or Matplotlib)
+        return np.array(pil_image)
+    except Exception as e:
+        # If any issue occurs, return the image as-is
+        return image
 
 
 def display_image(image, **kwargs):
