@@ -161,7 +161,7 @@ model.run_training(loader)
 [tomato_leaf_disease](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/tomato_leaf_disease.md) | Image Classification | 11000 |
 [vine_virus_photo_dataset](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/vine_virus_photo_dataset.md) | Image Classification | 3866 |
 [tomato_ripeness_detection](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/tomato_ripeness_detection.md) | Object Detection | 804 |
-[grape_bunch_detection](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/grape_bunch_detection.md) | Object Detection | 1000 |
+[grape_bunch_detection](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/grape_bunch_detection.md) | Object Detection | 239 |
 
 ## Usage Information
 
