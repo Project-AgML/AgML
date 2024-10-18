@@ -190,4 +190,8 @@ a bug or feature that you would like to see implemented, please don't hesitate t
 See the [contributing guidelines](/CONTRIBUTING.md) for more information.
 
 ## Funding
+<<<<<<< HEAD
 This project is partly funded by the [National AI Institute for 
+=======
+This project is partly funded by the [Na
+>>>>>>> 3cbb914... Changes for plant_doc_detection

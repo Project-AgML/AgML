@@ -921,69 +921,69 @@ class PublicDataPreprocessor(object):
                     img = os.path.join(test_catg_dir, img_name)
                     shutil.copyfile(img, os.path.join(output_catg_dir, img_name))
 
-    def plant_doc_detection(self, dataset_name):
-        # Read public_datasources.json to get class information
-        category_info = self.data_sources[dataset_name]['classes']
-        labels_str = []
-        labels_ids = []
-        for info in category_info:
-            labels_str.append(category_info[info])
-            labels_ids.append(int(info))
+    # def plant_doc_detection(self, dataset_name):
+    #     # Read public_datasources.json to get class information
+    #     category_info = self.data_sources[dataset_name]['classes']
+    #     labels_str = []
+    #     labels_ids = []
+    #     for info in category_info:
+    #         labels_str.append(category_info[info])
+    #         labels_ids.append(int(info))
 
-        label2id = dict(zip(labels_str, labels_ids))
+    #     label2id = dict(zip(labels_str, labels_ids))
 
-        # Get paths to xml(annotation) files
-        dataset_dir = os.path.join(self.data_original_dir, dataset_name)
-        train_dir = os.path.join(dataset_dir, "TRAIN")
-        test_dir = os.path.join(dataset_dir, "TEST")
+    #     # Get paths to xml(annotation) files
+    #     dataset_dir = os.path.join(self.data_original_dir, dataset_name)
+    #     train_dir = os.path.join(dataset_dir, "TRAIN")
+    #     test_dir = os.path.join(dataset_dir, "TEST")
 
-        train_files = get_file_list(train_dir)
-        test_files = get_file_list(test_dir)
+    #     train_files = get_file_list(train_dir)
+    #     test_files = get_file_list(test_dir)
 
-        anno_files = [os.path.join(train_dir, ann_file) for ann_file in train_files if "xml" in ann_file]
-        anno_files += [os.path.join(test_dir, ann_file) for ann_file in test_files if "xml" in ann_file]
+    #     anno_files = [os.path.join(train_dir, ann_file) for ann_file in train_files if "xml" in ann_file]
+    #     anno_files += [os.path.join(test_dir, ann_file) for ann_file in test_files if "xml" in ann_file]
 
-        # Get paths to image files
-        img_files = [os.path.join(train_dir, img) for img in train_files if "xml" not in img]
-        img_files += [os.path.join(test_dir, img) for img in test_files if "xml" not in img]
+    #     # Get paths to image files
+    #     img_files = [os.path.join(train_dir, img) for img in train_files if "xml" not in img]
+    #     img_files += [os.path.join(test_dir, img) for img in test_files if "xml" not in img]
 
-        # Remove all images without annotations and make a list only containing annotations with images
-        valid_image_files = []
-        valid_anno_files = []
-        for img_file in img_files:
-            anno_file = img_file.rsplit(".", 1)[0] + ".xml"  # replace extension with xml to get image's annotation file
-            if anno_file in anno_files:
-                valid_image_files.append(img_file)  # add all images that have a corresponding annotation file
-                valid_anno_files.append(anno_file)  # add all annotation files that are referenced by an image
+    #     # Remove all images without annotations and make a list only containing annotations with images
+    #     valid_image_files = []
+    #     valid_anno_files = []
+    #     for img_file in img_files:
+    #         anno_file = img_file.rsplit(".", 1)[0] + ".xml"  # replace extension with xml to get image's annotation file
+    #         if anno_file in anno_files:
+    #             valid_image_files.append(img_file)  # add all images that have a corresponding annotation file
+    #             valid_anno_files.append(anno_file)  # add all annotation files that are referenced by an image
 
-        # Define path to processed annotation files
-        output_json_file = os.path.join(
-            self.data_processed_dir, dataset_name, 'annotations.json')
+    #     # Define path to processed annotation files
+    #     output_json_file = os.path.join(
+    #         self.data_processed_dir, dataset_name, 'annotations.json')
 
-        # Create directory for processed image files
-        output_img_path = os.path.join(
-            self.data_processed_dir, dataset_name, 'images')
-        create_dir(output_img_path)
+    #     # Create directory for processed image files
+    #     output_img_path = os.path.join(
+    #         self.data_processed_dir, dataset_name, 'images')
+    #     create_dir(output_img_path)
 
-        general_info = {
-            "description": "Plant Doc Object Detection Dataset",
-            "url": "https://github.com/pratikkayal/PlantDoc-Object-Detection-Dataset",
-            "version": "1.0",
-            "year": 2019,
-            "contributor": "Davinder Singh, Naman Jain, Pranjali Jain, Pratik Kayal, Sudhakar Kumawat, Nipun Batra",
-            "date_created": "2019/10/15"
-        }
+    #     general_info = {
+    #         "description": "Plant Doc Object Detection Dataset",
+    #         "url": "https://github.com/pratikkayal/PlantDoc-Object-Detection-Dataset",
+    #         "version": "1.0",
+    #         "year": 2019,
+    #         "contributor": "Davinder Singh, Naman Jain, Pranjali Jain, Pratik Kayal, Sudhakar Kumawat, Nipun Batra",
+    #         "date_created": "2019/10/15"
+    #     }
 
-        convert_xmls_to_cocojson(
-            general_info,
-            annotation_paths = valid_anno_files,
-            img_paths = valid_image_files,
-            label2id = label2id,
-            name_converter = None,
-            output_jsonpath = output_json_file,
-            output_imgpath = output_img_path,
-            extract_num_from_imgid = False
-        )
+    #     convert_xmls_to_cocojson(
+    #         general_info,
+    #         annotation_paths = valid_anno_files,
+    #         img_paths = valid_image_files,
+    #         label2id = label2id,
+    #         name_converter = None,
+    #         output_jsonpath = output_json_file,
+    #         output_imgpath = output_img_path,
+    #         extract_num_from_imgid = False
+    #     )
 
     def wheat_head_counting(self, dataset_name):
         label2id = {"Wheat Head": 1}
@@ -1193,7 +1193,325 @@ class PublicDataPreprocessor(object):
             with open(os.path.join(splits_folder, f'{split_name}.json'), 'w') as f:
                 json.dump(split, f)
 
+            # Check if the directories exist
+            if not os.path.exists(images_dir) or not os.path.exists(labels_dir):
+                print(f"Error: Images or labels directory does not exist in {images_dir} or {labels_dir}")
+                continue
 
+            # Create output directory for this folder inside the processed folder
+            output_folder_img_dir = os.path.join(output_img_dir, folder)
+            os.makedirs(output_folder_img_dir, exist_ok=True)
+
+            # Process all images and their corresponding YOLO labels
+            for img_file in tqdm(os.listdir(images_dir), desc=f"Processing images for {folder}"):
+                if img_file.endswith(('jpg', 'jpeg', 'png')):
+                    image_path = os.path.join(images_dir, img_file)
+                    label_file = img_file.replace('.jpg', '.txt').replace('.jpeg', '.txt').replace('.png', '.txt')
+                    label_path = os.path.join(labels_dir, label_file)
+
+                    # Read the image to get its dimensions
+                    img = cv2.imread(image_path)
+                    if img is None:
+                        print(f"Error: Could not open image file {image_path}")
+                        continue
+                    img_height, img_width = img.shape[:2]
+
+                    # Add image information to COCO structure
+                    image_info = {
+                        "file_name": f"{folder}/{img_file}",  # Include folder name in file path
+                        "height": img_height,
+                        "width": img_width,
+                        "id": image_id
+                    }
+                    coco_annotation['images'].append(image_info)
+
+                    # Read the YOLO label file and convert to COCO format
+                    if os.path.exists(label_path):
+                        with open(label_path, 'r') as f:
+                            lines = f.readlines()
+
+                        # Prepare annotations in COCO format
+                        for line in lines:
+                            elements = line.strip().split()
+                            class_id = int(elements[0])  # class_id from YOLO
+                            x_center, y_center, bbox_width, bbox_height = map(float, elements[1:])
+
+                            # Convert to COCO format bounding box
+                            bbox = yolo_to_coco_bbox(x_center, y_center, bbox_width, bbox_height, img_width, img_height)
+
+                            annotation = {
+                                "image_id": image_id,  # Reference to the image ID
+                                "bbox": bbox,  # COCO bounding box [xmin, ymin, width, height]
+                                "category_id": 1,  # Assuming a single category "grape"
+                                "id": annotation_id,  # Unique annotation ID
+                                "area": bbox[2] * bbox[3],  # width * height
+                                "iscrowd": 0,
+                                "segmentation": []
+                            }
+                            coco_annotation['annotations'].append(annotation)
+                            annotation_id += 1
+                    else:
+                        print(f"Warning: No label file found for {img_file}")
+
+                    # Copy the image to the processed directory
+                    shutil.copyfile(image_path, os.path.join(output_folder_img_dir, img_file))
+
+                    # Increment image ID
+                    image_id += 1
+
+        # Save the final COCO annotations to the correct path inside the processed folder
+        output_json_file = os.path.join(output_base_dir, 'annotations.json')
+        with open(output_json_file, 'w') as json_file:
+            json.dump(coco_annotation, json_file, indent=4)
+
+        print(f"COCO annotations saved to {output_json_file}")
+    def plant_doc_detection(self, dataset_name):
+        # Resize the dataset (if necessary)
+        resize = 1.0
+
+        # Read public_datasources.json to get class information
+        datasource_file = os.path.join(os.path.dirname(__file__), "../_assets/public_datasources.json")
+        with open(datasource_file) as f:
+            data = json.load(f)
+            category_info = data[dataset_name]['classes']  # This will give us the class information
+            labels_str = []
+            labels_ids = []
+            for info in category_info:
+                labels_str.append(category_info[info])
+                labels_ids.append(int(info))
+
+            # No name conversion in this case, unless you need to remap class names
+            name_converter = None
+            label2id = dict(zip(labels_str, labels_ids))  # Map class names to their respective IDs
+
+        # Set paths to dataset and annotations
+        dataset_dir = os.path.join(self.data_original_dir)
+        ann_dir = dataset_dir  # Both images and XMLs are in the same directory
+
+        # Get image file and xml file
+        all_files = os.listdir(ann_dir)
+        anno_files = [os.path.join(ann_dir, x) for x in all_files if x.endswith("xml")]
+        img_files = [x.replace(".xml", ".jpg") for x in anno_files]  # Assuming images are in JPG format
+
+        # # Process annotation files
+        # save_dir_anno = os.path.join(self.data_processed_dir, dataset_name, 'annotations')
+        # create_dir(save_dir_anno)
+        # output_json_file = os.path.join(save_dir_anno, 'instances.json')
+
+        # Process image files
+        output_img_path = os.path.join(self.data_processed_dir, dataset_name, 'images')
+        create_dir(output_img_path)
+
+        # General information for the COCO JSON format
+        general_info = {
+            "description": "PlantDoc Object Detection Dataset",
+            "url": "https://github.com/pratikkayal/PlantDoc-Object-Detection-Dataset",
+            "version": "1.0",
+            "year": 2024,
+            "contributor": "PlantDoc",
+            "date_created": "2024/10/17"
+        }
+
+        # Save the COCO JSON file directly in the processed directory
+        output_json_file = os.path.join(self.data_processed_dir, dataset_name, 'annotations.json')
+
+        # Convert the XML annotations to COCO format using your existing function
+        convert_xmls_to_cocojson(
+            general_info=general_info,
+            annotation_paths=anno_files,
+            img_paths=img_files,
+            label2id=label2id,
+            name_converter=name_converter,
+            output_jsonpath=output_json_file,
+            output_imgpath=output_img_path,
+            extract_num_from_imgid=False
+        )
+
+        print(f"Preprocessing completed! Annotations saved to {output_json_file}")
+
+    # def grape_bunch_detection(self, dataset_name):
+    #     """Preprocesses your grape dataset (Chardonnay, PinotGris, PinotNoir) from YOLO format to COCO format."""
+    #     base_path = os.path.join(self.data_original_dir)
+        
+    #     # Get all the dataset folders (Chardonnay, PinotGris, PinotNoir)
+    #     dataset_folders = ['Chardonnay', 'PinotGris', 'PinotNoir']
+        
+    #     # Prepare the COCO annotation dictionary
+    #     coco_annotation = {
+    #         "images": [],
+    #         "annotations": [],
+    #         "categories": [{
+    #             "id": 1,  # Category ID for the object (e.g., grape)
+    #             "name": "grape",  # You can change this to match your dataset's object
+    #             "supercategory": "fruit"
+    #         }]
+    #     }
+
+    #     annotation_id = 1
+    #     image_id = 1
+
+    #     # Iterate through each dataset folder (Chardonnay, PinotGris, PinotNoir)
+    #     for folder in dataset_folders:
+    #         folder_path = os.path.join(base_path, folder)
+    #         images_dir = os.path.join(folder_path, 'images')
+    #         labels_dir = os.path.join(folder_path, 'labels')
+
+    #         # Create the output directories for processed images and annotations
+    #         output_json_file = os.path.join(self.data_processed_dir, dataset_name, 'annotations', f'{folder}_annotations.json')
+    #         output_img_dir = os.path.join(self.data_processed_dir, dataset_name, 'images', folder)
+    #         os.makedirs(output_img_dir, exist_ok=True)
+
+    #         # Process all images and their corresponding YOLO labels
+    #         for img_file in tqdm(os.listdir(images_dir), desc=f"Processing images for {folder}"):
+    #             if img_file.endswith(('jpg', 'jpeg', 'png')):
+    #                 image_path = os.path.join(images_dir, img_file)
+    #                 label_file = img_file.replace('.jpg', '.txt').replace('.jpeg', '.txt').replace('.png', '.txt')
+    #                 label_path = os.path.join(labels_dir, label_file)
+
+    #                 # Read the image to get its dimensions
+    #                 img = cv2.imread(image_path)
+    #                 if img is None:
+    #                     print(f"Error: Could not open image file {image_path}")
+    #                     continue
+    #                 img_height, img_width = img.shape[:2]
+
+    #                 # Add image information to COCO structure
+    #                 image_info = {
+    #                     "file_name": img_file,
+    #                     "height": img_height,
+    #                     "width": img_width,
+    #                     "id": image_id
+    #                 }
+    #                 coco_annotation['images'].append(image_info)
+
+    #                 # Read the YOLO label file and convert to COCO format
+    #                 if os.path.exists(label_path):
+    #                     with open(label_path, 'r') as f:
+    #                         lines = f.readlines()
+
+    #                     # Prepare annotations in COCO format
+    #                     for line in lines:
+    #                         elements = line.strip().split()
+    #                         class_id = int(elements[0])  # class_id from YOLO
+    #                         x_center, y_center, bbox_width, bbox_height = map(float, elements[1:])
+
+    #                         # Convert to COCO format bounding box
+    #                         bbox = yolo_to_coco_bbox(x_center, y_center, bbox_width, bbox_height, img_width, img_height)
+
+    #                         annotation = {
+    #                             "image_id": image_id,  # Reference to the image ID
+    #                             "bbox": bbox,  # COCO bounding box [xmin, ymin, width, height]
+    #                             "category_id": 1,  # Change if your dataset has more categories
+    #                             "id": annotation_id,  # Unique annotation ID
+    #                             "area": bbox[2] * bbox[3],  # width * height
+    #                             "iscrowd": 0
+    #                         }
+    #                         coco_annotation['annotations'].append(annotation)
+    #                         annotation_id += 1
+    #                 else:
+    #                     print(f"Warning: No label file found for {img_file}")
+
+    #                 # Copy the image to the processed directory
+    #                 shutil.copyfile(image_path, os.path.join(output_img_dir, img_file))
+    #                 image_id += 1
+
+    #         # Save the COCO annotations to a JSON file for this folder
+    #         os.makedirs(os.path.dirname(output_json_file), exist_ok=True)
+    #         with open(output_json_file, 'w') as json_file:
+    #             json.dump(coco_annotation, json_file, indent=4)
+
+    #         print(f"COCO annotations for {folder} saved to {output_json_file}")
+
+    # # def grape_bunch_detection(self, dataset_name):
+    #     """Preprocesses your specific YOLO dataset to COCO format."""
+    #     base_path = os.path.join(self.data_original_dir, dataset_name)
+    #     images_dir = os.path.join(base_path, 'images')
+    #     labels_dir = os.path.join(base_path, 'labels')
+
+    #     # Check if directories exist
+    #     if not os.path.exists(images_dir) or not os.path.exists(labels_dir):
+    #         print(f"Error: Images or labels directory does not exist in {base_path}")
+    #         return
+
+    #     # Prepare the COCO annotation dictionary
+    #     coco_annotation = {
+    #         "images": [],
+    #         "annotations": [],
+    #         "categories": [{
+    #             "id": 1,  # Category ID for the object (e.g., grape)
+    #             "name": "grape",  # You can change this to match your dataset's object
+    #             "supercategory": "fruit"
+    #         }]
+    #     }
+
+    #     annotation_id = 1
+    #     image_id = 1
+
+    #     # Create the output directories
+    #     output_json_file = os.path.join(self.data_processed_dir, dataset_name, 'annotations.json')
+    #     output_img_dir = os.path.join(self.data_processed_dir, dataset_name, 'images')
+    #     os.makedirs(output_img_dir, exist_ok=True)
+
+    #     # Process all images and their corresponding YOLO labels
+    #     for img_file in tqdm(os.listdir(images_dir), desc="Processing images"):
+    #         if img_file.endswith(('jpg', 'jpeg', 'png')):
+    #             image_path = os.path.join(images_dir, img_file)
+    #             label_file = img_file.replace('.jpg', '.txt').replace('.jpeg', '.txt').replace('.png', '.txt')
+    #             label_path = os.path.join(labels_dir, label_file)
+
+    #             # Read the image to get its dimensions
+    #             img = cv2.imread(image_path)
+    #             if img is None:
+    #                 print(f"Error: Could not open image file {image_path}")
+    #                 continue
+    #             img_height, img_width = img.shape[:2]
+
+    #             # Add image information to COCO structure
+    #             image_info = {
+    #                 "file_name": img_file,
+    #                 "height": img_height,
+    #                 "width": img_width,
+    #                 "id": image_id
+    #             }
+    #             coco_annotation['images'].append(image_info)
+
+    #             # Read the YOLO label file and convert to COCO format
+    #             if os.path.exists(label_path):
+    #                 with open(label_path, 'r') as f:
+    #                     lines = f.readlines()
+
+    #                 # Prepare annotations in COCO format
+    #                 for line in lines:
+    #                     elements = line.strip().split()
+    #                     class_id = int(elements[0])  # class_id from YOLO
+    #                     x_center, y_center, bbox_width, bbox_height = map(float, elements[1:])
+
+    #                     # Convert to COCO format bounding box
+    #                     bbox = yolo_to_coco_bbox(x_center, y_center, bbox_width, bbox_height, img_width, img_height)
+
+    #                     annotation = {
+    #                         "image_id": image_id,  # Reference to the image ID
+    #                         "bbox": bbox,  # COCO bounding box [xmin, ymin, width, height]
+    #                         "category_id": 1,  # Change if your dataset has more categories
+    #                         "id": annotation_id,  # Unique annotation ID
+    #                         "area": bbox[2] * bbox[3],  # width * height
+    #                         "iscrowd": 0
+    #                     }
+    #                     coco_annotation['annotations'].append(annotation)
+    #                     annotation_id += 1
+    #             else:
+    #                 print(f"Warning: No label file found for {img_file}")
+
+    #             # Copy the image to the processed directory
+    #             shutil.copyfile(image_path, os.path.join(output_img_dir, img_file))
+    #             image_id += 1
+
+    #     # Save the COCO annotations to a JSON file
+    #     os.makedirs(os.path.dirname(output_json_file), exist_ok=True)
+    #     with open(output_json_file, 'w') as json_file:
+    #         json.dump(coco_annotation, json_file, indent=4)
+
+    #     print(f"COCO annotations saved to {output_json_file}")
 
 
 

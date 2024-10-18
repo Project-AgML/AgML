@@ -930,19 +930,19 @@
         "platform": "ground",
         "input_data_format": "jpg",
         "annotation_format": "coco_json",
-        "n_images": "2598",
+        "n_images": "2346",
         "docs_url": "https://github.com/pratikkayal/PlantDoc-Object-Detection-Dataset",
         "external_image_sources": [],
         "stats": {
             "mean": [
-                0.4819715917110443,
-                0.5496680736541748,
-                0.38318973779678345
+                0.4765770733356476,
+                0.5437355637550354,
+                0.3779796361923218
             ],
             "std": [
-                0.21210965514183044,
-                0.20354853570461273,
-                0.22038120031356812
+                0.21106934547424316,
+                0.2036709189414978,
+                0.21807792782783508
             ]
         }
     },
