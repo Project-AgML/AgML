@@ -23,6 +23,7 @@ import numpy as np
 from agml.framework import AgMLSerializable
 from agml.backend.config import model_save_path
 from agml.utils.logging import log
+from agml.viz.boxes import show_image_and_boxes
 
 from agml.models.extensions.ultralytics import install_and_configure_ultralytics
 
@@ -61,6 +62,9 @@ class Detector(AgMLSerializable):
     designed to be a simple and easy-to-use interface for YOLO object detection.
     """
     serializable = frozenset(('net', '_verbose'))
+
+    # the default path to save the models in the AgML internal model repository.
+    DEFAULT_MODEL_PATH = os.path.join(model_save_path(), 'detectors')
 
     def __new__(cls, net, *args, **kwargs):
         # only setup Ultralytics when the class is initialized
@@ -161,7 +165,7 @@ class Detector(AgMLSerializable):
 
     @verbose.setter
     def verbose(self, value):
-        if not isinstance(verbose, bool): raise ValueError("Verbose must be True/False.")
+        if not isinstance(value, bool): raise ValueError("Verbose must be True/False.")
         self._verbose = value
 
     @staticmethod
@@ -200,7 +204,7 @@ class Detector(AgMLSerializable):
         # check whether a model exists already in the AgML internal model
         # directory, if not create it, if so then provide a warning unless
         # the user specifically wants to overwrite the model
-        model_save_dir = os.path.join(os.path.expanduser('~'), '.agml', 'models', run_name)
+        model_save_dir = os.path.join(Detector.DEFAULT_MODEL_PATH, run_name)
         if os.path.exists(model_save_dir):
             if os.listdir(model_save_dir) and not overwrite:
                 raise ValueError(f"Model with name {run_name} already exists. "
@@ -278,7 +282,7 @@ class Detector(AgMLSerializable):
         if name is not None and weights is not None:
             raise ValueError("You can only provide either a `name` or `weights` argument, not both.")
         if name is not None:
-            model_path = os.path.join(model_save_path(), name, 'best.pt')
+            model_path = os.path.join(Detector.DEFAULT_MODEL_PATH, name, 'best.pt')
             if not os.path.exists(model_path):
                 raise FileNotFoundError(f"Model with name {name} not found in the "
                                         f"internal AgML model repository at {model_path}. If "
