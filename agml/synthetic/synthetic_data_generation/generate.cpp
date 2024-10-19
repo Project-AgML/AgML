@@ -121,7 +121,12 @@ int main(int argc, char** argv) {
 
             // Generate a new image for each camera view.
             string image_dir = config.output_path + "/" + string("image" + to_string(i));
+            #ifdef _WIN32
+            std::replace(image_dir.begin(), image_dir.end(), '/', '\\');
+            system(("mkdir " + image_dir).c_str());
+            #else
             system(("mkdir -p " + image_dir).c_str());
+            #endif
             for (int i = 0; i < camera_position.size(); i++) {
                 // Update the camera position.
                 vis.setCameraPosition(camera_position[i], camera_lookat[i]);
@@ -136,7 +141,12 @@ int main(int argc, char** argv) {
 
                 // Save the image to the file.
                 string this_view_path =  string("view" + to_string(i));
+                #ifdef _WIN32
+                std::replace(this_view_path.being(), this_view_path.end(), '/', '\\');
+                system(("mkdir " + this_view_path).c_str());
+                #else
                 system(("mkdir -p " + this_view_path).c_str());
+                #endif
                 string image_view_path = this_view_path + "/" "RGB_rendering.jpeg";
                 vis.printWindow(image_view_path.c_str());
             }
@@ -157,7 +167,7 @@ int main(int argc, char** argv) {
         SyntheticAnnotation annotation(&context);
 
         // Choose either the LiDAR or RGB image simulation.
-        if (!config.simulation_type.empty() && config.simulation_type[1] == "lidar") {
+        if (config.simulation_type.size() > 1 && config.simulation_type[1] == "lidar") {
             // Get the UUID of all the elements on the scene
             vector<uint> UUID_trunk = cgen.getTrunkUUIDs();
             vector<uint> UUID_shoot = cgen.getBranchUUIDs();
@@ -192,7 +202,12 @@ int main(int argc, char** argv) {
 
             // Export point cloud data.
             string this_image_dir = config.output_path + "/" + string("image" + to_string(i));
+            #ifdef _WIN32
+            std::replace(this_image_dir.begin(), this_image_dir.end(), "/", "\\");
+            system(("mkdir " + this_image_dir).c_str());
+            #else
             system(("mkdir -p " + this_image_dir).c_str());
+            #endif
             std::this_thread::sleep_for(std::chrono::milliseconds(100)); // wait until folder is made
             string cloud_export = this_image_dir + "/" + string("point_cloud_" + to_string(i) + ".xyz");
             std::cout << "Writing LiDAR Point cloud to " << cloud_export << " " << std::endl;
