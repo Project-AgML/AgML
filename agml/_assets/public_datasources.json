@@ -437,7 +437,19 @@
             "5": "l_half_ripened",
             "6": "l_green"
         },
-        "external_image_sources": []
+        "external_image_sources": [],
+        "stats": {
+            "mean": [
+                0.466915100812912,
+                0.5039476752281189,
+                0.31698647141456604
+            ],
+            "std": [
+                0.21183282136917114,
+                0.19234506785869598,
+                0.22703123092651367
+            ]
+        }
     },
     "apple_flower_segmentation": {
         "ml_task": "semantic_segmentation",
