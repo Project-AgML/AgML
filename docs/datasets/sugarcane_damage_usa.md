@@ -14,11 +14,11 @@
 | **Annotation Format** | directory_names |
 | **Number of Images** | 153 |
 | **Documentation** | https://github.com/The77Lab/SugarcaneBilletsDataset |
+| **Classes** | cracked, crushed, no_buds, two_buds, single_damaged_buds, no_damage |
 | **Stats/Mean** | [0.244, 0.247, 0.262] |
 | **Stats/Standard Deviation** | [0.224, 0.217, 0.192] |
-| **Classes** | cracked, crushed, no_buds, two_buds, single_damaged_buds, no_damage |
 
 
 ## Examples
 
-![Example Images for sugarcane_damage_usa](https://github.com/Project-AgML/AgML/blob/main/docs/sample_images/sugarcane_damage_usa_examples.png)
+![Example Images for sugarcane_damage_usa](https://github.com/Project-AgML/AgML/blob/dev/docs/sample_images/sugarcane_damage_usa_examples.png)

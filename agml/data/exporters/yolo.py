@@ -154,7 +154,7 @@ def export_yolo(dataset, yolo_path=None):
     """.format(yolo_data_path, os.path.join(yolo_path, 'data', 'dataset.yaml'))
     log(information)
 
-    return yolo_data_path
+    return {'dataset_path': yolo_data_path, 'metadata_path': os.path.join(yolo_path, 'data', 'dataset.yaml')}
 
 
 

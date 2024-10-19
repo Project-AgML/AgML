@@ -37,6 +37,7 @@ from agml.backend.tftorch import (
     user_changed_backend, StrictBackendError,
     is_array_like, convert_to_batch
 )
+from agml.viz.general import show_sample
 
 
 class CollectionWrapper(AgMLSerializable):
@@ -513,6 +514,11 @@ class AgMLMultiDatasetLoader(AgMLSerializable):
         return len(self._loader_accessors)
 
     @property
+    def dataset_root(self):
+        """Returns a list of paths to the datasets in use."""
+        return self._loaders.get_attributes('dataset_root')
+
+    @property
     def info(self):
         """Returns a `DatasetMetadata` object containing dataset info.
 
@@ -835,6 +841,21 @@ class AgMLMultiDatasetLoader(AgMLSerializable):
             with seed_context(seed):
                 np.random.shuffle(self._loader_accessors)
         return self
+
+    def take_images(self):
+        """Returns a mini-loader over all of the images in the dataset.
+
+        This method returns a mini-loader over all of the images in the dataset,
+        without any annotations. This is useful for running inference over just
+        the images in a dataset, or in general any operations in which you just
+        want the raw image data from a loader, without any corresponding labels.
+
+        Returns
+        -------
+        An `agml.data.ImageLoader` with the dataset images.
+        """
+        from agml.data.image_loader import ImageLoader
+        return ImageLoader(self)
 
     def take_dataset(self, name) -> "AgMLDataLoader":
         """Takes one of the datasets in the multi-dataset collection.
@@ -1702,6 +1723,40 @@ class AgMLMultiDatasetLoader(AgMLSerializable):
                              "object detection tasks.")
         return export_yolo(self, yolo_path=yolo_path)
 
+    def show_sample(self, image_only=False, no_show=False):
+        """Shows a single data sample from the dataset.
+
+        This method generates a data sample from the dataset with an image and
+        its corresponding annotation (or, if `image_only` is True, then only the
+        image itself). This data sample is then displayed, unless `no_show` is
+        True in which case the processed sample will simply be returned.
+
+        Parameters
+        ----------
+        image_only : optional
+            Whether to show only the image or the image and the annotation.
+        no_show : optional
+            Whether to display the sample or not.
+
+        Returns
+        -------
+        The data sample with/without annotation.
+        """
+        # pick a random dataset from within this loader
+        dataset = self._loaders[np.random.choice(self._loaders.keys)]
+
+        # Get the sample (and take only the first one in a batch if batched).
+        image, annotations = dataset[dataset._manager._get_random_index()]
+        if len(image.shape) == 4:
+            image = image[0]
+            annotations = annotations[0]
+
+        # Show the sample.
+        show_sample(self,
+                    image_only=image_only,
+                    no_show=no_show,
+                    sample=(image, annotations),
+                    num_to_class=self.num_to_class)
 
 
 

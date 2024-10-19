@@ -15,11 +15,11 @@
 | **Annotation Format** | directory_names |
 | **Number of Images** | 1295 |
 | **Documentation** | https://github.com/AI-Lab-Makerere/ibean/ |
+| **Classes** | angular_leaf_spot, bean_rust, healthy |
 | **Stats/Mean** | [0.485, 0.519, 0.311] |
 | **Stats/Standard Deviation** | [0.182, 0.199, 0.169] |
-| **Classes** | angular_leaf_spot, bean_rust, healthy |
 
 
 ## Examples
 
-![Example Images for bean_disease_uganda](https://github.com/Project-AgML/AgML/blob/main/docs/sample_images/bean_disease_uganda_examples.png)
+![Example Images for bean_disease_uganda](https://github.com/Project-AgML/AgML/blob/dev/docs/sample_images/bean_disease_uganda_examples.png)
