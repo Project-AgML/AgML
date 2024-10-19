@@ -118,7 +118,8 @@ def _compile_helios_default(cmake_build_type='Release',
         _update_cmake_and_project(lidar_enabled=lidar_enabled)
 
         # Construct arguments for the compilation.
-        cmake_args = ['cmake', '..', '-G', 'Unix Makefiles',
+        generator = 'NMake' if sys.platform == 'win32' else 'Unix'
+        cmake_args = ['cmake', '..', '-G', generator + ' Makefiles',
                       f'-DCMAKE_LIBRARY_OUTPUT_DIRECTORY={HELIOS_BUILD}',
                       f'-DCMAKE_BUILD_TYPE={cmake_build_type}']
         if not parallel or sys.platform == 'win32':
