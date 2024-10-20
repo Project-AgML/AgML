@@ -162,6 +162,7 @@ model.run_training(loader)
 [vine_virus_photo_dataset](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/vine_virus_photo_dataset.md) | Image Classification | 3866 |
 [tomato_ripeness_detection](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/tomato_ripeness_detection.md) | Object Detection | 804 |
 [grape_bunch_detection](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/grape_bunch_detection.md) | Object Detection | 239 |
+[cauliflower_segmentation](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/cauliflower_segmentation.md) | Semantic Segmentation | 1542 |
 
 ## Usage Information
 
@@ -192,4 +193,4 @@ a bug or feature that you would like to see implemented, please don't hesitate t
 See the [contributing guidelines](/CONTRIBUTING.md) for more information.
 
 ## Funding
-This project is partly funded by the [Na
+This project

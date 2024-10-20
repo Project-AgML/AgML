@@ -46,23 +46,23 @@
         "annotation_format": "image",
         "n_images": "60",
         "docs_url": "https://github.com/cwfid/dataset",
-        "stats": {
-            "mean": [
-                0.2736402451992035,
-                0.31067562103271484,
-                0.2736402451992035
-            ],
-            "std": [
-                0.08643443882465363,
-                0.0995175838470459,
-                0.08643443882465363
-            ]
-        },
         "classes": {
             "0": "carrot",
             "1": "weeds"
         },
-        "external_image_sources": []
+        "external_image_sources": [],
+        "stats": {
+            "mean": [
+                0.2736402750015259,
+                0.31067565083503723,
+                0.2736402750015259
+            ],
+            "std": [
+                0.08643443882465363,
+                0.0995175763964653,
+                0.08643443882465363
+            ]
+        }
     },
     "plant_seedlings_aarhus": {
         "ml_task": "image_classification",
@@ -1325,14 +1325,14 @@
         "docs_url": "https://zenodo.org/records/7636408",
         "stats": {
             "mean": [
-                16.39170265197754,
-                18.68538475036621,
-                14.235136985778809
+                16.391704559326172,
+                18.685382843017578,
+                14.235113143920898
             ],
             "std": [
-                4.590310573577881,
-                5.818269729614258,
-                4.1895012855529785
+                4.5903120040893555,
+                5.818264007568359,
+                4.189508438110352
             ]
         }
     },
@@ -1475,14 +1475,47 @@
         "external_image_sources": [],
         "stats": {
             "mean": [
-                0.5015993714332581,
-                0.5361655950546265,
+                0.501599133014679,
+                0.5361654758453369,
                 0.4303760826587677
             ],
             "std": [
-                0.2352389395236969,
-                0.2119981199502945,
-                0.22184956073760986
+                0.2352389544248581,
+                0.21199806034564972,
+                0.22184963524341583
+            ]
+        }
+    },
+    "cauliflower_segmentation": {
+        "classes": {
+            "1": "maskLeaves",
+            "2": "maskPlants",
+            "3": "maskStems",
+            "4": "maskVoid"
+        },
+        "ml_task": "semantic_segmentation",
+        "ag_task": "crop_segmentation",
+        "location": {
+            "continent": "worldwide",
+            "country": "worldwide"
+        },
+        "sensor_modality": "rgb",
+        "real_synthetic": "real",
+        "platform": "handheld/ground",
+        "input_data_format": "jpg",
+        "annotation_format": "image",
+        "n_images": "1542",
+        "docs_url": "https://phenoroam.phenorob.de/geonetwork/srv/eng/catalog.search#/metadata/cb328232-31f5-4b84-a929-8e1ee551d66a",
+        "stats": {
+            "mean": [
+                0.48514899611473083,
+                0.42645666003227234,
+                0.33096620440483093
+            ],
+            "std": [
+                0.12302210927009583,
+                0.12601256370544434,
+                0.11423511058092117
             ]
         }
     }

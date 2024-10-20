@@ -29,6 +29,7 @@ import numpy as np
 class DefaultDict(dict):
     __missing__ = lambda self, key: key
 
+import matplotlib.pyplot as plt
 
 # Configuration Variables.
 NUM_EXAMPLES = 4
@@ -115,11 +116,84 @@ def build_table(json):
         table += TableFormat.handle(key, value)
     return table
 
-# def generate_example_images(name):
-#     """Generates the example images for the given dataset."""
-#     agml.backend.set_seed(189)
-#     loader = agml.data.AgMLDataLoader(name)
-#     return agml.viz.show_sample(loader, no_show = True)
+def show_sample(loader, image_only=False, num_images=1, **kwargs):
+    """A simplified convenience method that visualizes multiple samples from a loader.
+
+    This method works for all types of annotations and visualizes multiple
+    images based on the specified `num_images` parameter.
+
+    Parameters
+    ----------
+    loader : AgMLDataLoader
+        An AgMLDataLoader of any annotation type.
+    image_only : bool
+        Whether to only display the images.
+    num_images : int
+        The number of images to display (default is 1).
+
+    Returns
+    -------
+    The matplotlib figure showing the requested number of images.
+    """
+    if kwargs.get('sample', None) is not None:
+        sample = kwargs['sample']
+    else:
+        sample = loader[0]
+
+    if image_only:
+        return agml.viz.show_images(sample[0])
+
+    if loader.task == 'object_detection':
+    # Collect 4 images (or as many as available if fewer)
+        samples = [loader[i] for i in range(min(len(loader), 4))]
+        return [agml.viz.show_image_and_boxes(sample, info=loader.info, no_show=kwargs.get('no_show', False)) for sample in samples]
+
+    elif loader.task == 'semantic_segmentation':
+        samples = [loader[i] for i in range(min(len(loader), num_images))]
+        return [agml.viz.show_image_and_overlaid_mask(sample, no_show=kwargs.get('no_show', False)) for sample in samples]
+
+    elif loader.task == 'image_classification':
+        # Fetch all available classes and initialize an empty list for samples.
+        classes = loader.classes
+        num_classes = len(classes)
+        samples = []
+
+        # Adjust the dictionary to store samples per class, starting from class 1.
+        class_to_sample = {cls: None for cls in range(num_classes)}
+
+        # Ensure one image from each class first (without duplication).
+        for i in range(len(loader)):
+            sample = loader[i]
+            label = sample[1]
+
+            # Map label to its class index (if necessary)
+            if isinstance(label, (list, np.ndarray)):  # Handle one-hot encoding case
+                label = np.argmax(label) # Adjust indexing to start from 1
+            
+            if isinstance(label, dict):
+                label = label.get('label', None) 
+
+            if label in class_to_sample and class_to_sample[label] is None:
+                class_to_sample[label] = sample
+
+            # Stop once we have at least one image per class
+            if all(v is not None for v in class_to_sample.values()):
+                break
+
+        # Collect samples ensuring uniqueness per class until we hit num_classes.
+        samples = [class_to_sample[cls] for cls in range(num_classes) if class_to_sample[cls] is not None]
+
+        # If more images are required, duplicate randomly from the collected samples.
+        if num_images > num_classes:
+            additional_samples = random.choices(samples, k=num_images - num_classes)
+            samples.extend(additional_samples)
+        
+        # If fewer images are requested, truncate the sample list.
+        if num_images <= num_classes:
+            samples = samples[:num_images]
+        return agml.viz.show_images_and_labels(
+            samples, info=loader.info, no_show=kwargs.get('no_show', False))
+
 
 def generate_example_images(name):
     """Generates multiple example images for the given dataset."""
@@ -127,18 +201,7 @@ def generate_example_images(name):
     loader = agml.data.AgMLDataLoader(name)  # Ensure the batch size is correct
     return agml.viz.show_sample(loader, num_images=max(4,len(loader.classes)), no_show=True)
 
-# def build_examples(name):
-#     """Builds the example images for the given dataset."""
-#     sample = generate_example_images(name)  
-#     save_path_local = os.path.join(
-#         LOCAL_AGML_REPO, 'docs/sample_images', f'{name}_examples.png')
-#     save_path_remote = os.path.join(
-#         AGML_REPO, 'docs/sample_images', f'{name}_examples.png')
-#     cv2.imwrite(save_path_local, sample)
-#     return f'![Example Images for {name}]({save_path_remote})'
 
-
-import matplotlib.pyplot as plt
 def build_examples(name):
     """Builds the example images for the given dataset and combines them into one image."""
     samples = generate_example_images(name)  
@@ -184,6 +247,7 @@ def build_examples(name):
             AGML_REPO, 'docs/sample_images', f'{name}_examples.png')
         cv2.imwrite(save_path_local, samples)
         return f'![Example Images for {name}]({save_path_remote})'
+
 
 def generate_markdown(name):
     with open(os.path.join(LOCAL_AGML_REPO, 'docs/datasets', f'{name}.md'), 'w') as f:

@@ -166,5 +166,9 @@
     "grape_bunch_detection": {
         "license": "CC BY-NC 4.0",
         "citation": ""
+    },
+    "cauliflower_segmentation": {
+        "license": "",
+        "citation": "Kierdorf, Jana & Junker-Frohn, Laura & Delaney, Mike & Olave, Mariele & Burkart, Andreas & Jaenicke, Hannah & Muller, Onno & Roscher, Ribana. (2022). GrowliFlower: An image time‐series dataset for GROWth analysis of cauLIFLOWER. Journal of Field Robotics. 40. 10.1002/rob.22122. "
     }
 }
