@@ -47,10 +47,8 @@ def _update_cmake_and_project(lidar_enabled):
     if lidar_enabled:
         # Update the imports and CMake file
         if 'lidar' not in default_cmake_contents:  # add LiDAR to plugins
-            cmake_contents = default_cmake_contents.replace(
-                'set( PLUGINS "visualizer;canopygenerator;syntheticannotation" )',
-                'set( PLUGINS "lidar;visualizer;canopygenerator;syntheticannotation" )'
-            )
+            cmake_contents = re.sub(r'(set\s*\(\s*PLUGINS\s*")(\S*)("\s*\))', r'\1lidar;\2\3',
+                                    default_cmake_contents, flags=re.IGNORECASE)
         else:
             cmake_contents = default_cmake_contents
 
@@ -118,7 +116,8 @@ def _compile_helios_default(cmake_build_type='Release',
         _update_cmake_and_project(lidar_enabled=lidar_enabled)
 
         # Construct arguments for the compilation.
-        cmake_args = ['cmake', '..', '-G', 'Unix Makefiles',
+        generator = 'NMake' if sys.platform == 'win32' else 'Unix'
+        cmake_args = ['cmake', '..', '-G', generator + ' Makefiles',
                       f'-DCMAKE_LIBRARY_OUTPUT_DIRECTORY={HELIOS_BUILD}',
                       f'-DCMAKE_BUILD_TYPE={cmake_build_type}']
         if not parallel or sys.platform == 'win32':

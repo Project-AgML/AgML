@@ -28,6 +28,11 @@ To install the latest release of AgML, run the following command:
 pip install agml
 ```
 
+**_NOTE:_** Some features of AgML, such as synthetic data generation, require GUI applications. When running AgML through
+Windows Subsystem for Linux (WSL), it may be necessary to configure your WSL environment to utilize these features. Please
+follow the [Microsoft documentation](https://learn.microsoft.com/en-us/windows/wsl/tutorials/gui-apps) to install all
+necessary prerequisites and update WSL. The latest version of WSL includes built-in support for running Linux GUI applications.
+
 ## Quick Start
 
 AgML is designed for easy usage of agricultural data in a variety of formats. You can start off by using the `AgMLDataLoader` to
