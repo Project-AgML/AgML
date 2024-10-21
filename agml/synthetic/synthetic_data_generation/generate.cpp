@@ -3,6 +3,7 @@
 #include "Visualizer.h"
 #include "CanopyGenerator.h"
 #include "LiDAR.h"
+#include <filesystem>
 
 using namespace std;
 using namespace helios;
@@ -123,10 +124,11 @@ int main(int argc, char** argv) {
             string image_dir = config.output_path + "/" + string("image" + to_string(i));
             #ifdef _WIN32
             std::replace(image_dir.begin(), image_dir.end(), '/', '\\');
-            system(("mkdir " + image_dir).c_str());
-            #else
-            system(("mkdir -p " + image_dir).c_str());
             #endif
+            bool created_image_dir = std::filesystem::create_directory(image_dir);
+            if (!created_image_dir && !std::filesystem::exists(image_dir)) {
+                helios_runtime_error("ERROR (SyntheticAnnotation::render): output directory " + image_dir + " could not be created. Exiting...");
+            }
             for (int i = 0; i < camera_position.size(); i++) {
                 // Update the camera position.
                 vis.setCameraPosition(camera_position[i], camera_lookat[i]);
@@ -143,10 +145,11 @@ int main(int argc, char** argv) {
                 string this_view_path =  string("view" + to_string(i));
                 #ifdef _WIN32
                 std::replace(this_view_path.being(), this_view_path.end(), '/', '\\');
-                system(("mkdir " + this_view_path).c_str());
-                #else
-                system(("mkdir -p " + this_view_path).c_str());
                 #endif
+                bool created_view_dir = std::filesystem::create_directory(this_view_path);
+                if (!created_view_dir && !std::filesystem::exists(this_view_path)) {
+                    helios_runtime_error("ERROR (SyntheticAnnotation::render): output directory " + this_view_path + " could not be created. Exiting...");
+                }
                 string image_view_path = this_view_path + "/" "RGB_rendering.jpeg";
                 vis.printWindow(image_view_path.c_str());
             }
@@ -204,10 +207,11 @@ int main(int argc, char** argv) {
             string this_image_dir = config.output_path + "/" + string("image" + to_string(i));
             #ifdef _WIN32
             std::replace(this_image_dir.begin(), this_image_dir.end(), "/", "\\");
-            system(("mkdir " + this_image_dir).c_str());
-            #else
-            system(("mkdir -p " + this_image_dir).c_str());
             #endif
+            bool created_this_image_dir = std::filesystem::create_directory(this_image_dir);
+            if (!created_this_image_dir && !std::filesystem::exists(this_image_dir)) {
+                helios_runtime_error("ERROR (SyntheticAnnotation::render): output directory " + this_image_dir + " could not be created. Exiting...");
+            }
             std::this_thread::sleep_for(std::chrono::milliseconds(100)); // wait until folder is made
             string cloud_export = this_image_dir + "/" + string("point_cloud_" + to_string(i) + ".xyz");
             std::cout << "Writing LiDAR Point cloud to " << cloud_export << " " << std::endl;

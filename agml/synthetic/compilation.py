@@ -47,10 +47,8 @@ def _update_cmake_and_project(lidar_enabled):
     if lidar_enabled:
         # Update the imports and CMake file
         if 'lidar' not in default_cmake_contents:  # add LiDAR to plugins
-            cmake_contents = default_cmake_contents.replace(
-                'set( PLUGINS "visualizer;canopygenerator;syntheticannotation" )',
-                'set( PLUGINS "lidar;visualizer;canopygenerator;syntheticannotation" )'
-            )
+            cmake_contents = re.sub(r'(set\s*\(\s*PLUGINS\s*")(\S*)("\s*\))', r'\1lidar;\2\3',
+                                    default_cmake_contents, flags=re.IGNORECASE)
         else:
             cmake_contents = default_cmake_contents
 

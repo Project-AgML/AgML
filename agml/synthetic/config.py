@@ -122,10 +122,8 @@ def _check_helios_installation():
 
         # If the last check has been run less than 48 hours ago, then
         # return without having updated Helios.
-        # """ Uncomment to rebuild Helios executable
         if (dt.now() - last_check).days < 2:
             return
-        # """
 
         # Check if there is a new version available.
         sys.stderr.write(
