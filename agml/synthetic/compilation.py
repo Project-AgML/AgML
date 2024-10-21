@@ -23,6 +23,7 @@ from datetime import datetime as dt
 
 from agml.backend.config import _update_config, _get_config
 from agml.synthetic.config import HELIOS_PATH
+from pathlib import Path
 
 # Helios build and compilation paths.
 PROJECT_PATH = os.path.join(
@@ -35,8 +36,47 @@ HELIOS_EXECUTABLE = os.path.join(
 # Helios parameter paths.
 XML_PATH = os.path.join(PROJECT_PATH, 'xml')
 
+PROJECT = "SyntheticImageAnnotation"
+PROJECT_DICT = {"SyntheticImageAnnotation" : 'synthetic_data_generation',
+                "SyntheticRadiation" : 'synthetic_radiation'}
 
-def _update_cmake_and_project(lidar_enabled):
+
+def set_project(project="SyntheticImageAnnotation"):
+    if project not in PROJECT_DICT.keys():
+        print("Not a valid project.")
+        return
+    global PROJECT, PROJECT_PATH, HELIOS_BUILD, HELIOS_EXECUTABLE, XML_PATH
+    PROJECT = project
+    PROJECT_PATH = os.path.join(
+        HELIOS_PATH, 'projects/' + project)
+    HELIOS_BUILD = os.path.join(
+        PROJECT_PATH, 'build')
+    HELIOS_EXECUTABLE = os.path.join(
+        PROJECT_PATH, 'build', project)
+    XML_PATH = os.path.join(PROJECT_PATH, 'xml')
+    # create new directories if necessary
+    os.makedirs(PROJECT_PATH, exist_ok=True)
+    os.makedirs(HELIOS_BUILD, exist_ok=True)
+    os.makedirs(XML_PATH, exist_ok=True)
+    # copy CMakeLists.txt & generate.cpp to Helios project
+    source_dir = Path(os.path.join(os.path.dirname(__file__), PROJECT_DICT[project]))
+    output_dir = Path(PROJECT_PATH)
+    for src_file in os.listdir(source_dir):
+        shutil.copyfile(os.path.join(source_dir, src_file), os.path.join(output_dir, src_file))
+
+
+def update_project(project="SyntheticImageAnnotation", executable_only=False, debug_mode=False, lidar_enabled=False,
+                   parallel=True, recompile=False, wsl=True):
+    if project == PROJECT:
+        return
+    set_project(project)
+    _update_cmake_and_project(lidar_enabled)
+    if recompile:
+        recompile_helios(executable_only=executable_only, debug_mode=debug_mode, lidar_enabled=lidar_enabled,
+                         parallel=parallel, wsl=True)
+
+
+def _update_cmake_and_project(lidar_enabled=False):
     """Updates the CMake + project file to enable or disable LiDAR compilation."""
     cmake_file = os.path.join(PROJECT_PATH, 'CMakeLists.txt')
     project_file = os.path.join(PROJECT_PATH, 'generate.cpp')
@@ -47,10 +87,8 @@ def _update_cmake_and_project(lidar_enabled):
     if lidar_enabled:
         # Update the imports and CMake file
         if 'lidar' not in default_cmake_contents:  # add LiDAR to plugins
-            cmake_contents = default_cmake_contents.replace(
-                'set( PLUGINS "visualizer;canopygenerator;syntheticannotation" )',
-                'set( PLUGINS "lidar;visualizer;canopygenerator;syntheticannotation" )'
-            )
+            cmake_contents = re.sub(r'(set\s*\(\s*PLUGINS\s*")(\S*)("\s*\))', r'\1lidar;\2\3',
+                                    default_cmake_contents, flags=re.IGNORECASE)
         else:
             cmake_contents = default_cmake_contents
 
@@ -97,7 +135,8 @@ def _update_cmake_and_project(lidar_enabled):
 
 def _compile_helios_default(cmake_build_type='Release',
                             lidar_enabled=False,
-                            parallel=True):
+                            parallel=True,
+                            wsl=False):
     """Compiles the default Helios library upon installation and update."""
     if not os.path.exists(PROJECT_PATH):
         raise NotADirectoryError(
@@ -118,12 +157,20 @@ def _compile_helios_default(cmake_build_type='Release',
         _update_cmake_and_project(lidar_enabled=lidar_enabled)
 
         # Construct arguments for the compilation.
-        generator = 'NMake' if sys.platform == 'win32' else 'Unix'
-        cmake_args = ['cmake', '..', '-G', generator + ' Makefiles',
-                      f'-DCMAKE_LIBRARY_OUTPUT_DIRECTORY={HELIOS_BUILD}',
+        generator = r'"NMake Makefiles"' if sys.platform == 'win32' else 'Unix Makefiles'
+        HELIOS_BUILD_ = HELIOS_BUILD
+        # if wsl:
+        #     HELIOS_BUILD_ = re.sub(r'(/mnt/c)', r'C:', HELIOS_BUILD)
+        #     HELIOS_BUILD_ = re.sub(r'(/)', r'\\', HELIOS_BUILD_)
+        cmake_args = ['cmake', '..', '-G', generator,
+                      f'-DCMAKE_LIBRARY_OUTPUT_DIRECTORY={HELIOS_BUILD_}',
                       f'-DCMAKE_BUILD_TYPE={cmake_build_type}']
         if not parallel or sys.platform == 'win32':
             make_args = ['cmake', '--build', '.']
+            # if wsl:
+            #     cmake_args = ['cmd.exe', '/C', r'set PATH="C:\Program Files\JetBrains\CLion 2024.2.2\bin\cmake\win\x64\bin\";%PATH%', '&&'] + cmake_args
+            #     make_args.insert(0, 'cmd.exe')
+            #     make_args.append('--verbose')
         else:
             make_args = ['make', f'-j{os.cpu_count()}']
 
@@ -146,7 +193,7 @@ def _compile_helios_default(cmake_build_type='Release',
         sys.stderr.write("Compiling Helios with CMake.\n\n")
         cmake_process = sp.Popen(cmake_args, stdout=sp.PIPE, cwd=HELIOS_BUILD,
                                  stderr=sp.STDOUT, universal_newlines=True)
-        for line in iter(cmake_process.stdout.readline, ""):
+        for line in iter(cmake_process.stdout.readline, ""):  # if running cmd.exe through WSL, this will cause an infinite loop
             cmake_log += line
             sys.stderr.write(line)
         cmake_process.stdout.close()
@@ -163,6 +210,8 @@ def _compile_helios_default(cmake_build_type='Release',
         sys.stdout.write('\n')
         sys.stderr.write('\n')
 
+        # if wsl:
+        #     make_args = ['cmd.exe', '/C'] + make_args
         # Generate the main executable.
         cmake_log = "\n"
         sys.stderr.write("Building Helios executable with CMake.\n\n")
@@ -243,7 +292,8 @@ def _compile_helios_executable_only(parallel):
 def recompile_helios(executable_only=False,
                      debug_mode=False,
                      lidar_enabled=False,
-                     parallel=True):
+                     parallel=True,
+                     wsl=False):
     """Recompiles the Helios library with the set parameters.
 
     This method can be used by the user in order to recompile Helios, if, for
@@ -280,7 +330,8 @@ def recompile_helios(executable_only=False,
         cmake_build_type = 'Debug' if debug_mode else 'Release'
         _compile_helios_default(cmake_build_type=cmake_build_type,
                                 lidar_enabled=lidar_enabled,
-                                parallel=parallel)
+                                parallel=parallel,
+                                wsl=wsl)
 
 
 def _compilation_successful(lidar_enabled):

@@ -39,6 +39,13 @@ from agml.synthetic.converter import HeliosDataFormatConverter
 from agml.utils.logging import log
 
 
+def reimport_paths():
+    global HELIOS_BUILD, HELIOS_EXECUTABLE, XML_PATH, PROJECT_PATH
+    from agml.synthetic.compilation import (
+        HELIOS_BUILD, HELIOS_EXECUTABLE, XML_PATH, PROJECT_PATH
+    )
+
+
 @dataclass
 class GenerationInstanceOptions:
     canopy: str
@@ -106,6 +113,7 @@ class HeliosDataGenerator(AgMLSerializable):
     """
     @verify_helios
     def __init__(self, options: HeliosOptions = None, *, canopy = None):
+        reimport_paths()
         if options is None and canopy is not None:
             self._options = HeliosOptions(canopy)
         elif options is not None and canopy is None:
