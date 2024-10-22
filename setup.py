@@ -18,7 +18,7 @@ import setuptools
 
 # ============== SETUP INFORMATION ==============
 
-with open(os.path.join(os.path.dirname(__file__), 'README.md'), 'r') as f:
+with open(os.path.join(os.path.dirname(__file__), 'README.md'), 'r', encoding="utf-8") as f:
     long_description = f.read()
 
 python_supported = ['3', '3.7', '3.8', '3.9', '3.10']
@@ -33,7 +33,7 @@ CLASSIFIERS = [
 
 # ============ PACKAGE REQUIREMENTS =============
 
-with open(os.path.join(os.path.dirname(__file__), 'requirements.txt')) as f:
+with open(os.path.join(os.path.dirname(__file__), 'requirements.txt'), encoding="utf-8") as f:
     install_requires = [line[:-1] for line in f.readlines() if line != '']
 
 tests_require = [
@@ -52,7 +52,7 @@ dev_requires = [
 
 # ==================== VERSIONING ====================
 
-with open(os.path.join(os.path.dirname(__file__), 'agml', '__init__.py'), 'r') as f:
+with open(os.path.join(os.path.dirname(__file__), 'agml', '__init__.py'), 'r', encoding="utf-8") as f:
     version = re.search(
         r'^__version__ = [\'"]([^\'"]*)[\'"]', f.read(), re.M).group(1)
 
