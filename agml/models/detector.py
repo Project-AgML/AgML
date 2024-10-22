@@ -23,8 +23,13 @@ import numpy as np
 from agml.framework import AgMLSerializable
 from agml.backend.config import model_save_path
 from agml.utils.logging import log
+from agml.utils.data import load_detector_benchmarks
+from agml.utils.downloads import download_detector
 from agml.viz.boxes import show_image_and_boxes
 
+from agml.data.public import source
+from agml.data.public import public_data_sources
+from agml.data.tools import convert_bbox_format
 from agml.models.extensions.ultralytics import install_and_configure_ultralytics
 
 try:
@@ -85,6 +90,8 @@ class Detector(AgMLSerializable):
         self.net = net
 
         self._verbose = kwargs.get('verbose', False)
+        self._benchmark_data = kwargs.get('benchmark_data', None)
+        self._info = None
 
     def __call__(self, image, return_full=False, **kwargs):
         if isinstance(image, list) or (isinstance(image, np.ndarray) and len(image.shape) == 4):
@@ -108,7 +115,8 @@ class Detector(AgMLSerializable):
             return result_dict
         result_dict = result_dict.cpu().numpy()
         boxes = result_dict.boxes
-        bboxes = boxes.xywh.astype(np.int32)
+        bboxes = boxes.xyxy.astype(np.float32)
+        bboxes = convert_bbox_format(bboxes, 'xyxy')
         classes = boxes.cls.astype(np.int32)
         confidences = boxes.conf.astype(np.float32)
         return bboxes, classes, confidences
@@ -157,7 +165,7 @@ class Detector(AgMLSerializable):
         bboxes, labels, _ = self.predict(image)
         if isinstance(labels, int):
             bboxes, labels = [bboxes], [labels]
-        return show_image_and_boxes(image, bboxes, labels)
+        return show_image_and_boxes(image, bboxes, labels, info=self._info)
 
     @property
     def verbose(self):
@@ -167,6 +175,10 @@ class Detector(AgMLSerializable):
     def verbose(self, value):
         if not isinstance(value, bool): raise ValueError("Verbose must be True/False.")
         self._verbose = value
+
+    @property
+    def benchmark(self):
+        return self._benchmark_data
 
     @staticmethod
     def train(loader, model, run_name=None, epochs=100, overwrite=False):
@@ -296,6 +308,61 @@ class Detector(AgMLSerializable):
         # load the model using the Ultralytics package
         net = YOLO(model_path)  # noqa
         return cls(net=net, _internally_instantiated=True, **kwargs)
+
+    @classmethod
+    def load_benchmark(cls, dataset_name, yolo_model, **kwargs):
+        """Loads a benchmarked YOLO model from the AgML internal model repository.
+
+        This method can be used to load a benchmarked YOLO model from the AgML internal
+        model repository. The model can be loaded by providing the `dataset_name` and
+        the `yolo_model` name, which will be used to search for the model in the internal
+        model repository.
+
+        You should use this method after training a model using the `Detector.train`
+        method, which will train a model and save it to the `name` that is either
+        provided or generated from the run.
+
+        Parameters
+        ----------
+        dataset_name : str
+            The name of the dataset that the model was trained on.
+        yolo_model : str
+            The name of the YOLO model to load from the internal AgML model repository.
+        **kwargs : dict
+            verbose : bool, optional
+                Whether to enable verbose mode for the model. Default is False.
+
+        Returns
+        -------
+        The loaded YOLO model.
+        """
+        if dataset_name not in public_data_sources(ml_task='object_detection'):
+            raise ValueError(f"Dataset {dataset_name} is not a valid object detection dataset.")
+        if yolo_model.upper() not in YOLO11_MODELS_TO_PATH.keys():
+            if len(yolo_model) == 1:
+                yolo_model = 'yolo11' + yolo_model
+                if yolo_model not in YOLO11_MODELS_TO_PATH.keys():
+                    raise ValueError(f"YOLO model {yolo_model} is not a valid YOLO11 model.")
+            raise ValueError(f"YOLO model {yolo_model} is not a valid YOLO11 model.")
+
+        # Validate the pretrained benchmark name + model
+        model_name = f"{dataset_name}+{yolo_model}"
+        if model_name not in load_detector_benchmarks():
+            raise ValueError(f"Could not find a valid benchmark for model ({model_name}).")
+
+        # Download the model if it does not exist
+        if not os.path.exists(os.path.join(Detector.DEFAULT_MODEL_PATH, model_name.replace('+', '-'))):
+            download_detector(model_name, Detector.DEFAULT_MODEL_PATH)
+
+        # Load the model
+        benchmark_data = load_detector_benchmarks()[model_name]
+        model_path = os.path.join(Detector.DEFAULT_MODEL_PATH, model_name.replace('+', '-'), 'best.pt')
+        net = cls.load(weights=model_path, benchmark_data=benchmark_data, **kwargs)
+        net._info = source(dataset_name)
+        return net
+
+
+
 
 
 

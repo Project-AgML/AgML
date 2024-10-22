@@ -47,6 +47,15 @@ def load_model_benchmarks() -> dict:
         return json.load(f)
 
 
+@functools.lru_cache(maxsize = None)
+def load_detector_benchmarks() -> dict:
+    """Loads the citation sources JSON file."""
+    with open(os.path.join(
+            os.path.dirname(os.path.dirname(__file__)),
+            '_assets/detector_benchmarks.json')) as f:
+        return json.load(f)
+
+
 def maybe_you_meant(name, msg, source = None) -> str:
     """Suggests potential correct spellings for an invalid name."""
     source = source if source is not None \
