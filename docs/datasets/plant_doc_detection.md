@@ -14,10 +14,10 @@
 | **Platform** | ground |
 | **Input Data Format** | JPG |
 | **Annotation Format** | coco_json |
-| **Number of Images** | 2598 |
+| **Number of Images** | 2346 |
 | **Documentation** | https://github.com/pratikkayal/PlantDoc-Object-Detection-Dataset |
-| **Stats/Mean** | [0.482, 0.55, 0.383] |
-| **Stats/Standard Deviation** | [0.212, 0.204, 0.22] |
+| **Stats/Mean** | [0.477, 0.544, 0.378] |
+| **Stats/Standard Deviation** | [0.211, 0.204, 0.218] |
 
 
 ## Examples

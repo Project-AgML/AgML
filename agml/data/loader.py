@@ -372,6 +372,12 @@ class AgMLDataLoader(AgMLSerializable, metaclass = AgMLDataLoaderMeta):
                     raise NotADirectoryError(
                         f"Could not find a directory for Helios dataset '{name}' "
                         f"at the provided dataset path: {dataset_path}.")
+
+            # just in case there is a locally defined folder with the same name
+            # as a dataset in the `~/.agml/synthetic` directory, warn in advance:
+            if os.path.exists(os.path.join(os.path.abspath(synthetic_data_save_path()), name)):
+                log(f"Found a dataset folder '{name}' in the synthetic data "
+                    f"directory, which may conflict with the Helios dataset.")
             if not dataset_path.endswith(name):
                 dataset_path = os.path.join(dataset_path, name)
                 if not os.path.exists(dataset_path):
@@ -855,6 +861,21 @@ class AgMLDataLoader(AgMLSerializable, metaclass = AgMLDataLoaderMeta):
         self._manager.shuffle(seed = seed)
         return self
 
+    def take_images(self):
+        """Returns a mini-loader over all of the images in the dataset.
+
+        This method returns a mini-loader over all of the images in the dataset,
+        without any annotations. This is useful for running inference over just
+        the images in a dataset, or in general any operations in which you just
+        want the raw image data from a loader, without any corresponding labels.
+
+        Returns
+        -------
+        An `agml.data.ImageLoader` with the dataset images.
+        """
+        from agml.data.image_loader import ImageLoader
+        return ImageLoader(self)
+
     def take_dataset(self, name) -> "AgMLDataLoader":
         """Takes one of the datasets in a multi-dataset loader.
 
@@ -1262,6 +1283,10 @@ class AgMLDataLoader(AgMLSerializable, metaclass = AgMLDataLoaderMeta):
                         os.path.relpath(c, self.dataset_root):
                             os.path.relpath(v, self.dataset_root) for c, v in contents.items()
                     }
+                splits[split] = contents
+        elif self._info.tasks.ml == 'object_detection':
+            for split in ['train', 'val', 'test']:
+                contents = getattr(self, f'_{split}_content')
                 splits[split] = contents
 
         # Save the split to the internal location.

@@ -77,8 +77,7 @@ def coco_to_bboxes(annotations):
     """
     annotations = _resolve_coco_annotations(annotations)
     return annotations['bbox'], annotations['category_id']
-#hi hello
-#hooooooo
+
 
 def convert_bbox_format(annotations_or_bboxes, fmt):
     """Converts bounding box formats for COCO JSON and others.
@@ -113,6 +112,9 @@ def convert_bbox_format(annotations_or_bboxes, fmt):
     The initial argument type (either dict or array) with the bounding
     boxes formatted in the COCO JSON format.
     """
+    if len(annotations_or_bboxes) == 0:
+        return annotations_or_bboxes
+
     annotations_or_bboxes = _resolve_coco_annotations(annotations_or_bboxes)
     if isinstance(annotations_or_bboxes, dict):
         annotations = annotations_or_bboxes['bboxes']
@@ -124,6 +126,10 @@ def convert_bbox_format(annotations_or_bboxes, fmt):
         if 'voc' in fmt or 'pascal' in fmt:
             fmt = 'x_min y_min x_max y_max'
         elif 'efficientdet' in fmt or 'effdet' in fmt:
+            fmt = 'y_min x_min y_max x_max'
+        if fmt == 'xyxy':
+            fmt = 'x_min y_min x_max y_max'
+        if fmt == 'yxyx':
             fmt = 'y_min x_min y_max x_max'
         if ',' in fmt:
             fmt = fmt.split(',')
