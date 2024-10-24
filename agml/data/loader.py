@@ -1284,6 +1284,10 @@ class AgMLDataLoader(AgMLSerializable, metaclass = AgMLDataLoaderMeta):
                             os.path.relpath(v, self.dataset_root) for c, v in contents.items()
                     }
                 splits[split] = contents
+        elif self._info.tasks.ml == 'object_detection':
+            for split in ['train', 'val', 'test']:
+                contents = getattr(self, f'_{split}_content')
+                splits[split] = contents
 
         # Save the split to the internal location.
         split_dir = os.path.join(SUPER_BASE_DIR, 'splits', self.name)
