@@ -181,7 +181,7 @@ class Detector(AgMLSerializable):
         return self._benchmark_data
 
     @staticmethod
-    def train(loader, model, run_name=None, epochs=100, overwrite=False):
+    def train(loader, model, run_name=None, epochs=100, overwrite=False, **kwargs):
         """
         Train a YOLO model using the Ultralytics package.
 
@@ -237,7 +237,8 @@ class Detector(AgMLSerializable):
             train_result = net.train(
                 epochs=epochs,
                 data=export_path_dict['metadata_path'],
-                save_dir=f'runs/train/{run_name}'
+                save_dir=f'runs/train/{run_name}',
+                **kwargs
             )
 
             model_save_path = train_result.save_dir / 'weights' / 'best.pt'
