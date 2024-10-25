@@ -13,12 +13,15 @@
 # limitations under the License.
 
 import os
+import gc
+import json
 import shutil
 import warnings
 import datetime
 import importlib
 
 import numpy as np
+import torch
 
 from agml.framework import AgMLSerializable
 from agml.backend.config import model_save_path
@@ -245,6 +248,15 @@ class Detector(AgMLSerializable):
             model_results_csv = train_result.save_dir / 'results.csv'
             model_args_path = train_result.save_dir / 'args.yaml'
 
+            # compose a complete result dictionary
+            results = train_result.results_dict
+            results['class_map'] = {
+                'classes': train_result.names,
+                'maps': train_result.maps.tolist()
+            }
+            with open(os.path.join(model_save_dir, 'results.json'), 'w') as f:
+                json.dump(results, f, indent=4)
+
         # move the trained model to the `~/.agml/models` directory where it
         # will sit under the name `run_name` for easy loading in the future
         shutil.move(model_save_path, os.path.join(model_save_dir, 'best.pt'))
@@ -261,6 +273,10 @@ class Detector(AgMLSerializable):
 
         and the model with the best weights from this training run will be loaded.
         """)
+
+        # clear complete cuda memory
+        torch.cuda.empty_cache()
+        gc.collect()
 
         return run_name
 
