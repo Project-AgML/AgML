@@ -189,7 +189,8 @@ def _get_canopy_params():
         canopy_header_lines = f.readlines()
     canopy_types = [
         re.match('struct\\s(.*?){\\n', string).group(1).split('Parameters')[0]
-        for string in canopy_header_lines if 'struct ' in string]
+        for string in canopy_header_lines if 'struct ' in string
+        and not string.strip().startswith('/**') and not string.strip().startswith('//')]
 
     # Generate the canopy parameters.
     with open(CANOPY_SOURCE) as f:
@@ -208,15 +209,21 @@ def _get_canopy_params():
     # https://stackoverflow.com/questions/943391/how-to-get-the-function-declaration-or-definitions-using-regex
     # It searches for all method definitions and then gets all of the content in the method.
     for content in re.finditer(
-            r"((?<=[\s:~])(\w+)\s*\(([\w\s,<>\[\].=&':/*]*?)\)"
-            r"\s*(const)?\s*(?={)){(.*?)}", canopy_source_lines):
+            r"([A-Za-z]+)Parameters::\1Parameters\(\)\s*:\s*([A-Za-z]+)Parameters\(\)\s*{([^{}]*)}", canopy_source_lines):
         # Ensure that we're only checking valid parameter methods.
-        name = content.group(2).split('Parameters')[0]
-        source = content.group(5)
+        name = content.group(0).replace('()', '').split('Parameters')[0]
+        source = content.group(3)
 
         # Get all of the definitions by removing all spaces of at least length 2.
         if any(i == name for i in canopy_types) and 'std::cout' not in source:  # noqa
             canopy_parameters[name] = {}
+
+            # Ignore the methods which define the parameters from an XML file,
+            # we only want the ones that read the default parameter values.
+            if 'readParametersFromXML' in source:
+                print('xml', name, source)
+                continue
+
             definitions = [
                 s.replace(';', '') for s in re.split('[\\s]{2,}', source)
                 if s != '' and not s.startswith('//')]
@@ -243,6 +250,15 @@ def _get_canopy_params():
                 value = value.strip().replace('  ', ' ')
                 if 'M_PI' in value:
                     value = round(float(value.split('*')[0].strip()) * math.pi, 6)
+
+                # A specific case where the value is multiplying a float
+                # by another, already defined parameter value.)
+                elif '*' in value:
+                    value = value.split('*')
+                    if value[0].strip().replace('.', '').isdigit():
+                        value = float(value[0]) * canopy_parameters[name][value[1].strip()]
+                    else:
+                        value = canopy_parameters[name][value[0].strip()] * float(value[1])
 
                 # Convert numerical values to numbers/lists, as necessary.
                 elif value.isnumeric():

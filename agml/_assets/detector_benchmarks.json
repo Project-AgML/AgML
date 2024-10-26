@@ -1,0 +1,1314 @@
+{
+    "apple_detection_drone_brazil+yolo11l": {
+        "metrics/precision(B)": 0.8104349835380228,
+        "metrics/recall(B)": 0.7988342667927443,
+        "metrics/mAP50(B)": 0.8601733668427034,
+        "metrics/mAP50-95(B)": 0.5072494132458618,
+        "fitness": 0.542541808605546,
+        "class_map": {
+            "classes": {
+                "0": "apple"
+            },
+            "maps": [
+                0.5072494132458618
+            ]
+        }
+    },
+    "apple_detection_drone_brazil+yolo11m": {
+        "metrics/precision(B)": 0.8608394830617053,
+        "metrics/recall(B)": 0.7991967871485943,
+        "metrics/mAP50(B)": 0.8992294395315695,
+        "metrics/mAP50-95(B)": 0.5134246428119603,
+        "fitness": 0.5520051224839212,
+        "class_map": {
+            "classes": {
+                "0": "apple"
+            },
+            "maps": [
+                0.5134246428119603
+            ]
+        }
+    },
+    "apple_detection_drone_brazil+yolo11n": {
+        "metrics/precision(B)": 0.8507723684861725,
+        "metrics/recall(B)": 0.8225628237831374,
+        "metrics/mAP50(B)": 0.8956789461187679,
+        "metrics/mAP50-95(B)": 0.5022398615976896,
+        "fitness": 0.5415837700497974,
+        "class_map": {
+            "classes": {
+                "0": "apple"
+            },
+            "maps": [
+                0.5022398615976896
+            ]
+        }
+    },
+    "apple_detection_drone_brazil+yolo11s": {
+        "metrics/precision(B)": 0.7951189701449942,
+        "metrics/recall(B)": 0.8106776508309076,
+        "metrics/mAP50(B)": 0.8609606179092347,
+        "metrics/mAP50-95(B)": 0.4866340253378222,
+        "fitness": 0.5240666845949634,
+        "class_map": {
+            "classes": {
+                "0": "apple"
+            },
+            "maps": [
+                0.4866340253378222
+            ]
+        }
+    },
+    "apple_detection_drone_brazil+yolo11x": {
+        "metrics/precision(B)": 0.8069007869601802,
+        "metrics/recall(B)": 0.8775295985640813,
+        "metrics/mAP50(B)": 0.910928163353364,
+        "metrics/mAP50-95(B)": 0.5166210943431347,
+        "fitness": 0.5560518012441577,
+        "class_map": {
+            "classes": {
+                "0": "apple"
+            },
+            "maps": [
+                0.5166210943431347
+            ]
+        }
+    },
+    "apple_detection_spain+yolo11l": {
+        "metrics/precision(B)": 0.895859485025347,
+        "metrics/recall(B)": 0.8555849489543671,
+        "metrics/mAP50(B)": 0.9371364896175589,
+        "metrics/mAP50-95(B)": 0.579262748646173,
+        "fitness": 0.6150501227433116,
+        "class_map": {
+            "classes": {
+                "0": "apple"
+            },
+            "maps": [
+                0.579262748646173
+            ]
+        }
+    },
+    "apple_detection_spain+yolo11m": {
+        "metrics/precision(B)": 0.886427547531193,
+        "metrics/recall(B)": 0.8813830876330876,
+        "metrics/mAP50(B)": 0.9436276131565261,
+        "metrics/mAP50-95(B)": 0.6027847361615526,
+        "fitness": 0.6368690238610499,
+        "class_map": {
+            "classes": {
+                "0": "apple"
+            },
+            "maps": [
+                0.6027847361615526
+            ]
+        }
+    },
+    "apple_detection_spain+yolo11n": {
+        "metrics/precision(B)": 0.8772810873702708,
+        "metrics/recall(B)": 0.8794449125384377,
+        "metrics/mAP50(B)": 0.9422717351592312,
+        "metrics/mAP50-95(B)": 0.5968358978532009,
+        "fitness": 0.631379481583804,
+        "class_map": {
+            "classes": {
+                "0": "apple"
+            },
+            "maps": [
+                0.5968358978532009
+            ]
+        }
+    },
+    "apple_detection_spain+yolo11s": {
+        "metrics/precision(B)": 0.9028280294123243,
+        "metrics/recall(B)": 0.8805440582444066,
+        "metrics/mAP50(B)": 0.9460649029636068,
+        "metrics/mAP50-95(B)": 0.5950217456217229,
+        "fitness": 0.6301260613559113,
+        "class_map": {
+            "classes": {
+                "0": "apple"
+            },
+            "maps": [
+                0.5950217456217229
+            ]
+        }
+    },
+    "apple_detection_spain+yolo11x": {
+        "metrics/precision(B)": 0.8854823467235927,
+        "metrics/recall(B)": 0.8588322246858833,
+        "metrics/mAP50(B)": 0.9251687653229144,
+        "metrics/mAP50-95(B)": 0.5872286398209259,
+        "fitness": 0.6210226523711248,
+        "class_map": {
+            "classes": {
+                "0": "apple"
+            },
+            "maps": [
+                0.5872286398209259
+            ]
+        }
+    },
+    "apple_detection_usa+yolo11n": {
+        "metrics/precision(B)": 0.9270838048818623,
+        "metrics/recall(B)": 0.9338242039905568,
+        "metrics/mAP50(B)": 0.9748424668962935,
+        "metrics/mAP50-95(B)": 0.7811112753679461,
+        "fitness": 0.8004843945207809,
+        "class_map": {
+            "classes": {
+                "0": "apple"
+            },
+            "maps": [
+                0.7811112753679461
+            ]
+        }
+    },
+    "apple_detection_usa+yolo11s": {
+        "metrics/precision(B)": 0.9470802220658486,
+        "metrics/recall(B)": 0.9347684279191129,
+        "metrics/mAP50(B)": 0.9798209001351015,
+        "metrics/mAP50-95(B)": 0.8303136510701614,
+        "fitness": 0.8452643759766554,
+        "class_map": {
+            "classes": {
+                "0": "apple"
+            },
+            "maps": [
+                0.8303136510701614
+            ]
+        }
+    },
+    "fruit_detection_worldwide+yolo11l": {
+        "metrics/precision(B)": 0.7840810800621841,
+        "metrics/recall(B)": 0.8191062145159602,
+        "metrics/mAP50(B)": 0.8641094337838477,
+        "metrics/mAP50-95(B)": 0.5416057642125035,
+        "fitness": 0.573856131169638,
+        "class_map": {
+            "classes": {
+                "0": "avocado",
+                "1": "rockmelon",
+                "2": "apple",
+                "3": "orange",
+                "4": "strawberry",
+                "5": "mango",
+                "6": "capsicum"
+            },
+            "maps": [
+                0.6937530110895355,
+                0.6599475916860917,
+                0.3072447491193536,
+                0.44985732917887516,
+                0.6684763555021369,
+                0.621381101506044,
+                0.3905802114054871
+            ]
+        }
+    },
+    "fruit_detection_worldwide+yolo11m": {
+        "metrics/precision(B)": 0.7699396847252584,
+        "metrics/recall(B)": 0.7049490920251014,
+        "metrics/mAP50(B)": 0.7917153211939195,
+        "metrics/mAP50-95(B)": 0.4507520456030815,
+        "fitness": 0.48484837316216534,
+        "class_map": {
+            "classes": {
+                "0": "avocado",
+                "1": "rockmelon",
+                "2": "apple",
+                "3": "orange",
+                "4": "strawberry",
+                "5": "mango",
+                "6": "capsicum"
+            },
+            "maps": [
+                0.5338804695616493,
+                0.4643126528314029,
+                0.5596974845150083,
+                0.3994619555034442,
+                0.40974001920122893,
+                0.43729794524602844,
+                0.35087379236280913
+            ]
+        }
+    },
+    "fruit_detection_worldwide+yolo11n": {
+        "metrics/precision(B)": 0.9226956515783662,
+        "metrics/recall(B)": 0.8428619967059985,
+        "metrics/mAP50(B)": 0.9282310037207211,
+        "metrics/mAP50-95(B)": 0.5653289765966472,
+        "fitness": 0.6016191793090545,
+        "class_map": {
+            "classes": {
+                "0": "avocado",
+                "1": "rockmelon",
+                "2": "apple",
+                "3": "orange",
+                "4": "strawberry",
+                "5": "mango",
+                "6": "capsicum"
+            },
+            "maps": [
+                0.5077999713770625,
+                0.7048337662337663,
+                0.6961418200702028,
+                0.5176978995737195,
+                0.5109032371347128,
+                0.5440584978198245,
+                0.47586764396724074
+            ]
+        }
+    },
+    "fruit_detection_worldwide+yolo11s": {
+        "metrics/precision(B)": 0.8749349608578184,
+        "metrics/recall(B)": 0.8491066178862222,
+        "metrics/mAP50(B)": 0.9011810080939855,
+        "metrics/mAP50-95(B)": 0.5785717028098898,
+        "fitness": 0.6108326333382994,
+        "class_map": {
+            "classes": {
+                "0": "avocado",
+                "1": "rockmelon",
+                "2": "apple",
+                "3": "orange",
+                "4": "strawberry",
+                "5": "mango",
+                "6": "capsicum"
+            },
+            "maps": [
+                0.7381820126096492,
+                0.6398140426525528,
+                0.5399714799890161,
+                0.6917575199485568,
+                0.43697906240342893,
+                0.5203213108500946,
+                0.4829764912159303
+            ]
+        }
+    },
+    "fruit_detection_worldwide+yolo11x": {
+        "metrics/precision(B)": 0.78655473099151,
+        "metrics/recall(B)": 0.7043307364199446,
+        "metrics/mAP50(B)": 0.7872813915634435,
+        "metrics/mAP50-95(B)": 0.5012090094387892,
+        "fitness": 0.5298162476512547,
+        "class_map": {
+            "classes": {
+                "0": "avocado",
+                "1": "rockmelon",
+                "2": "apple",
+                "3": "orange",
+                "4": "strawberry",
+                "5": "mango",
+                "6": "capsicum"
+            },
+            "maps": [
+                0.6725356118333934,
+                0.5808266095238095,
+                0.2792468486772157,
+                0.4817921302985327,
+                0.535893342081749,
+                0.4863169982590526,
+                0.47185152539777037
+            ]
+        }
+    },
+    "ghai_broccoli_detection+yolo11l": {
+        "metrics/precision(B)": 0.7409921665653947,
+        "metrics/recall(B)": 0.7277157702805868,
+        "metrics/mAP50(B)": 0.7428713423394218,
+        "metrics/mAP50-95(B)": 0.5635296062946676,
+        "fitness": 0.5814637798991431,
+        "class_map": {
+            "classes": {
+                "0": "canopy",
+                "1": "crown"
+            },
+            "maps": [
+                0.3223404913339708,
+                0.8047187212553645
+            ]
+        }
+    },
+    "ghai_broccoli_detection+yolo11m": {
+        "metrics/precision(B)": 0.7576714485757008,
+        "metrics/recall(B)": 0.7369239726716079,
+        "metrics/mAP50(B)": 0.7584831482913197,
+        "metrics/mAP50-95(B)": 0.5599340879416073,
+        "fitness": 0.5797889939765786,
+        "class_map": {
+            "classes": {
+                "0": "canopy",
+                "1": "crown"
+            },
+            "maps": [
+                0.3324174053329621,
+                0.7874507705502521
+            ]
+        }
+    },
+    "ghai_broccoli_detection+yolo11n": {
+        "metrics/precision(B)": 0.7377016001185307,
+        "metrics/recall(B)": 0.6524970264004617,
+        "metrics/mAP50(B)": 0.6838369761182593,
+        "metrics/mAP50-95(B)": 0.469799986880626,
+        "fitness": 0.4912036858043894,
+        "class_map": {
+            "classes": {
+                "0": "canopy",
+                "1": "crown"
+            },
+            "maps": [
+                0.23939637932948324,
+                0.7002035944317686
+            ]
+        }
+    },
+    "ghai_broccoli_detection+yolo11s": {
+        "metrics/precision(B)": 0.7329678146138658,
+        "metrics/recall(B)": 0.724735813460258,
+        "metrics/mAP50(B)": 0.7388249529707553,
+        "metrics/mAP50-95(B)": 0.5386676297103012,
+        "fitness": 0.5586833620363467,
+        "class_map": {
+            "classes": {
+                "0": "canopy",
+                "1": "crown"
+            },
+            "maps": [
+                0.3160978305795931,
+                0.7612374288410095
+            ]
+        }
+    },
+    "ghai_broccoli_detection+yolo11x": {
+        "metrics/precision(B)": 0.7672524763778574,
+        "metrics/recall(B)": 0.7342813692020289,
+        "metrics/mAP50(B)": 0.7708247492458355,
+        "metrics/mAP50-95(B)": 0.5935923090810958,
+        "fitness": 0.6113155530975698,
+        "class_map": {
+            "classes": {
+                "0": "canopy",
+                "1": "crown"
+            },
+            "maps": [
+                0.38456190936112233,
+                0.8026227088010692
+            ]
+        }
+    },
+    "ghai_green_cabbage_detection+yolo11l": {
+        "metrics/precision(B)": 0.8613838860312255,
+        "metrics/recall(B)": 0.8429330535008768,
+        "metrics/mAP50(B)": 0.9116406496856747,
+        "metrics/mAP50-95(B)": 0.7118640967709261,
+        "fitness": 0.731841752062401,
+        "class_map": {
+            "classes": {
+                "0": "green_cabbage"
+            },
+            "maps": [
+                0.7118640967709261
+            ]
+        }
+    },
+    "ghai_green_cabbage_detection+yolo11m": {
+        "metrics/precision(B)": 0.8673449730257053,
+        "metrics/recall(B)": 0.8342857142857143,
+        "metrics/mAP50(B)": 0.8907064681223883,
+        "metrics/mAP50-95(B)": 0.6944137082286287,
+        "fitness": 0.7140429842180047,
+        "class_map": {
+            "classes": {
+                "0": "green_cabbage"
+            },
+            "maps": [
+                0.6944137082286287
+            ]
+        }
+    },
+    "ghai_green_cabbage_detection+yolo11n": {
+        "metrics/precision(B)": 0.8355977884325566,
+        "metrics/recall(B)": 0.8151426059182874,
+        "metrics/mAP50(B)": 0.8691196766626649,
+        "metrics/mAP50-95(B)": 0.6591389190599897,
+        "fitness": 0.6801369948202572,
+        "class_map": {
+            "classes": {
+                "0": "green_cabbage"
+            },
+            "maps": [
+                0.6591389190599897
+            ]
+        }
+    },
+    "ghai_green_cabbage_detection+yolo11s": {
+        "metrics/precision(B)": 0.8857430201563139,
+        "metrics/recall(B)": 0.8585525715610961,
+        "metrics/mAP50(B)": 0.9102921460534825,
+        "metrics/mAP50-95(B)": 0.7139257965173013,
+        "fitness": 0.7335624314709195,
+        "class_map": {
+            "classes": {
+                "0": "green_cabbage"
+            },
+            "maps": [
+                0.7139257965173013
+            ]
+        }
+    },
+    "ghai_green_cabbage_detection+yolo11x": {
+        "metrics/precision(B)": 0.8884185216941978,
+        "metrics/recall(B)": 0.8343497989006972,
+        "metrics/mAP50(B)": 0.9109117546708069,
+        "metrics/mAP50-95(B)": 0.704366630205667,
+        "fitness": 0.725021142652181,
+        "class_map": {
+            "classes": {
+                "0": "green_cabbage"
+            },
+            "maps": [
+                0.704366630205667
+            ]
+        }
+    },
+    "ghai_iceberg_lettuce_detection+yolo11l": {
+        "metrics/precision(B)": 0.8842813590120964,
+        "metrics/recall(B)": 0.78,
+        "metrics/mAP50(B)": 0.880281737114181,
+        "metrics/mAP50-95(B)": 0.5308984079738271,
+        "fitness": 0.5658367408878625,
+        "class_map": {
+            "classes": {
+                "0": "iceberg_lettuce"
+            },
+            "maps": [
+                0.5308984079738271
+            ]
+        }
+    },
+    "ghai_iceberg_lettuce_detection+yolo11m": {
+        "metrics/precision(B)": 0.8565205192561391,
+        "metrics/recall(B)": 0.852,
+        "metrics/mAP50(B)": 0.8882337959487256,
+        "metrics/mAP50-95(B)": 0.5447845441322091,
+        "fitness": 0.5791294693138608,
+        "class_map": {
+            "classes": {
+                "0": "iceberg_lettuce"
+            },
+            "maps": [
+                0.5447845441322091
+            ]
+        }
+    },
+    "ghai_iceberg_lettuce_detection+yolo11n": {
+        "metrics/precision(B)": 0.9075705684362595,
+        "metrics/recall(B)": 0.8520705116070535,
+        "metrics/mAP50(B)": 0.8951989397183541,
+        "metrics/mAP50-95(B)": 0.5689564386149899,
+        "fitness": 0.6015806887253263,
+        "class_map": {
+            "classes": {
+                "0": "iceberg_lettuce"
+            },
+            "maps": [
+                0.5689564386149899
+            ]
+        }
+    },
+    "ghai_iceberg_lettuce_detection+yolo11s": {
+        "metrics/precision(B)": 0.8848128837651625,
+        "metrics/recall(B)": 0.7824267782426778,
+        "metrics/mAP50(B)": 0.8701965203008429,
+        "metrics/mAP50-95(B)": 0.5381306510663206,
+        "fitness": 0.5713372379897729,
+        "class_map": {
+            "classes": {
+                "0": "iceberg_lettuce"
+            },
+            "maps": [
+                0.5381306510663206
+            ]
+        }
+    },
+    "ghai_iceberg_lettuce_detection+yolo11x": {
+        "metrics/precision(B)": 0.8744060262501543,
+        "metrics/recall(B)": 0.7860519492425313,
+        "metrics/mAP50(B)": 0.8649674277006355,
+        "metrics/mAP50-95(B)": 0.5270984046669671,
+        "fitness": 0.560885306970334,
+        "class_map": {
+            "classes": {
+                "0": "iceberg_lettuce"
+            },
+            "maps": [
+                0.5270984046669671
+            ]
+        }
+    },
+    "ghai_romaine_detection+yolo11l": {
+        "metrics/precision(B)": 0.9368473966694478,
+        "metrics/recall(B)": 0.8546757717214724,
+        "metrics/mAP50(B)": 0.9193170125873877,
+        "metrics/mAP50-95(B)": 0.7699090606095494,
+        "fitness": 0.7848498558073334,
+        "class_map": {
+            "classes": {
+                "0": "romaine"
+            },
+            "maps": [
+                0.7699090606095494
+            ]
+        }
+    },
+    "ghai_romaine_detection+yolo11m": {
+        "metrics/precision(B)": 0.9313772904604823,
+        "metrics/recall(B)": 0.8590308370044053,
+        "metrics/mAP50(B)": 0.9444871705216602,
+        "metrics/mAP50-95(B)": 0.7907666278321335,
+        "fitness": 0.8061386821010862,
+        "class_map": {
+            "classes": {
+                "0": "romaine"
+            },
+            "maps": [
+                0.7907666278321335
+            ]
+        }
+    },
+    "ghai_romaine_detection+yolo11n": {
+        "metrics/precision(B)": 0.9536018902378349,
+        "metrics/recall(B)": 0.8477366255144033,
+        "metrics/mAP50(B)": 0.9274152280108815,
+        "metrics/mAP50-95(B)": 0.7745598409185308,
+        "fitness": 0.7898453796277659,
+        "class_map": {
+            "classes": {
+                "0": "romaine"
+            },
+            "maps": [
+                0.7745598409185308
+            ]
+        }
+    },
+    "ghai_romaine_detection+yolo11s": {
+        "metrics/precision(B)": 0.9421641001234269,
+        "metrics/recall(B)": 0.8611664812460607,
+        "metrics/mAP50(B)": 0.9511326333399283,
+        "metrics/mAP50-95(B)": 0.7972501823711204,
+        "fitness": 0.8126384274680013,
+        "class_map": {
+            "classes": {
+                "0": "romaine"
+            },
+            "maps": [
+                0.7972501823711204
+            ]
+        }
+    },
+    "ghai_romaine_detection+yolo11x": {
+        "metrics/precision(B)": 0.9223680838425339,
+        "metrics/recall(B)": 0.8123984591915938,
+        "metrics/mAP50(B)": 0.9086774326923178,
+        "metrics/mAP50-95(B)": 0.7400014802754252,
+        "fitness": 0.7568690755171145,
+        "class_map": {
+            "classes": {
+                "0": "romaine"
+            },
+            "maps": [
+                0.7400014802754252
+            ]
+        }
+    },
+    "ghai_strawberry_fruit_detection+yolo11l": {
+        "metrics/precision(B)": 0.6448881162125962,
+        "metrics/recall(B)": 0.49763784192355615,
+        "metrics/mAP50(B)": 0.5360449682848161,
+        "metrics/mAP50-95(B)": 0.36858859954370954,
+        "fitness": 0.3853342364178202,
+        "class_map": {
+            "classes": {
+                "0": "Bud",
+                "1": "Calyx",
+                "2": "Detached Fruit",
+                "3": "Flower",
+                "4": "Large green",
+                "5": "Leaf",
+                "6": "Ripe fruit",
+                "7": "Small Green",
+                "8": "Stem",
+                "9": "Unripe fruit"
+            },
+            "maps": [
+                0.36858859954370954,
+                0.469766081987379,
+                0.4586561965811966,
+                0.2744212082247911,
+                0.08640693226385923,
+                0.9919636363636364,
+                0.4135172471752262,
+                0.07613553965837612,
+                0.46867301006156703,
+                0.07775754357735426
+            ]
+        }
+    },
+    "ghai_strawberry_fruit_detection+yolo11m": {
+        "metrics/precision(B)": 0.5757778491011301,
+        "metrics/recall(B)": 0.4415712268148009,
+        "metrics/mAP50(B)": 0.444863565990511,
+        "metrics/mAP50-95(B)": 0.27921732332490995,
+        "fitness": 0.29578194759147003,
+        "class_map": {
+            "classes": {
+                "0": "Bud",
+                "1": "Calyx",
+                "2": "Detached Fruit",
+                "3": "Flower",
+                "4": "Large green",
+                "5": "Leaf",
+                "6": "Ripe fruit",
+                "7": "Small Green",
+                "8": "Stem",
+                "9": "Unripe fruit"
+            },
+            "maps": [
+                0.0,
+                0.5006049591619524,
+                0.23618073593073588,
+                0.31732732321969975,
+                0.04961585492434706,
+                0.9045611089249965,
+                0.2484189806795046,
+                0.06908596496122062,
+                0.4234868976489901,
+                0.042891407797652575
+            ]
+        }
+    },
+    "ghai_strawberry_fruit_detection+yolo11n": {
+        "metrics/precision(B)": 0.43024502781160584,
+        "metrics/recall(B)": 0.47812476497970713,
+        "metrics/mAP50(B)": 0.43768460776658524,
+        "metrics/mAP50-95(B)": 0.26189911059565196,
+        "fitness": 0.2794776603127453,
+        "class_map": {
+            "classes": {
+                "0": "Bud",
+                "1": "Calyx",
+                "2": "Detached Fruit",
+                "3": "Flower",
+                "4": "Large green",
+                "5": "Leaf",
+                "6": "Ripe fruit",
+                "7": "Small Green",
+                "8": "Stem",
+                "9": "Unripe fruit"
+            },
+            "maps": [
+                0.26189911059565196,
+                0.28001587526598604,
+                0.4963485268084572,
+                0.11916920292153717,
+                0.03683740274673995,
+                0.9382351146161799,
+                0.043547383404538696,
+                0.040321322331614076,
+                0.36669891550313993,
+                0.03591825176267435
+            ]
+        }
+    },
+    "ghai_strawberry_fruit_detection+yolo11s": {
+        "metrics/precision(B)": 0.5058797129220138,
+        "metrics/recall(B)": 0.3943899456162283,
+        "metrics/mAP50(B)": 0.39689324528219905,
+        "metrics/mAP50-95(B)": 0.2693731453786905,
+        "fitness": 0.28212515536904137,
+        "class_map": {
+            "classes": {
+                "0": "Bud",
+                "1": "Calyx",
+                "2": "Detached Fruit",
+                "3": "Flower",
+                "4": "Large green",
+                "5": "Leaf",
+                "6": "Ripe fruit",
+                "7": "Small Green",
+                "8": "Stem",
+                "9": "Unripe fruit"
+            },
+            "maps": [
+                0.0,
+                0.3861783354825693,
+                0.4743717311111112,
+                0.18124887953621094,
+                0.015798379333843936,
+                0.9814681574239714,
+                0.1457980084607174,
+                0.04372695172090872,
+                0.42937711916648774,
+                0.03576389155108432
+            ]
+        }
+    },
+    "ghai_strawberry_fruit_detection+yolo11x": {
+        "metrics/precision(B)": 0.5031699374002283,
+        "metrics/recall(B)": 0.4661095882326068,
+        "metrics/mAP50(B)": 0.47375836147430367,
+        "metrics/mAP50-95(B)": 0.3375521022306996,
+        "fitness": 0.35117272815506,
+        "class_map": {
+            "classes": {
+                "0": "Bud",
+                "1": "Calyx",
+                "2": "Detached Fruit",
+                "3": "Flower",
+                "4": "Large green",
+                "5": "Leaf",
+                "6": "Ripe fruit",
+                "7": "Small Green",
+                "8": "Stem",
+                "9": "Unripe fruit"
+            },
+            "maps": [
+                0.0,
+                0.5073074896278351,
+                0.6498271724137932,
+                0.3149322149563958,
+                0.055327773855347165,
+                0.9814479041406694,
+                0.19138336651215965,
+                0.08376537101164086,
+                0.5361975168123582,
+                0.05533221297679599
+            ]
+        }
+    },
+    "grape_detection_californiaday+yolo11l": {
+        "metrics/precision(B)": 0.7359297112238289,
+        "metrics/recall(B)": 0.6666666666666666,
+        "metrics/mAP50(B)": 0.7488084760197763,
+        "metrics/mAP50-95(B)": 0.4349909954379633,
+        "fitness": 0.46637274349614466,
+        "class_map": {
+            "classes": {
+                "0": "grape"
+            },
+            "maps": [
+                0.4349909954379633
+            ]
+        }
+    },
+    "grape_detection_californiaday+yolo11m": {
+        "metrics/precision(B)": 0.7773064938902419,
+        "metrics/recall(B)": 0.7374353226465903,
+        "metrics/mAP50(B)": 0.8077534084598061,
+        "metrics/mAP50-95(B)": 0.4722895973277059,
+        "fitness": 0.505835978440916,
+        "class_map": {
+            "classes": {
+                "0": "grape"
+            },
+            "maps": [
+                0.4722895973277059
+            ]
+        }
+    },
+    "grape_detection_californiaday+yolo11n": {
+        "metrics/precision(B)": 0.7763716212075286,
+        "metrics/recall(B)": 0.6999522564038694,
+        "metrics/mAP50(B)": 0.7950193029970769,
+        "metrics/mAP50-95(B)": 0.4354202972550957,
+        "fitness": 0.4713801978292938,
+        "class_map": {
+            "classes": {
+                "0": "grape"
+            },
+            "maps": [
+                0.4354202972550957
+            ]
+        }
+    },
+    "grape_detection_californiaday+yolo11s": {
+        "metrics/precision(B)": 0.7714644290308007,
+        "metrics/recall(B)": 0.7016129032258065,
+        "metrics/mAP50(B)": 0.7758377164119181,
+        "metrics/mAP50-95(B)": 0.4587987241064469,
+        "fitness": 0.490502623336994,
+        "class_map": {
+            "classes": {
+                "0": "grape"
+            },
+            "maps": [
+                0.4587987241064469
+            ]
+        }
+    },
+    "grape_detection_californiaday+yolo11x": {
+        "metrics/precision(B)": 0.7741723749893685,
+        "metrics/recall(B)": 0.7342657342657343,
+        "metrics/mAP50(B)": 0.7929902314501572,
+        "metrics/mAP50-95(B)": 0.46120749873436406,
+        "fitness": 0.4943857720059434,
+        "class_map": {
+            "classes": {
+                "0": "grape"
+            },
+            "maps": [
+                0.46120749873436406
+            ]
+        }
+    },
+    "grape_detection_californianight+yolo11l": {
+        "metrics/precision(B)": 0.8205106047713361,
+        "metrics/recall(B)": 0.714765100671141,
+        "metrics/mAP50(B)": 0.7789473565331466,
+        "metrics/mAP50-95(B)": 0.38727844233662967,
+        "fitness": 0.4264453337562814,
+        "class_map": {
+            "classes": {
+                "0": "grape"
+            },
+            "maps": [
+                0.38727844233662967
+            ]
+        }
+    },
+    "grape_detection_californianight+yolo11m": {
+        "metrics/precision(B)": 0.7498171113931226,
+        "metrics/recall(B)": 0.6684950129807627,
+        "metrics/mAP50(B)": 0.7597497390103658,
+        "metrics/mAP50-95(B)": 0.3955797325963587,
+        "fitness": 0.43199673323775944,
+        "class_map": {
+            "classes": {
+                "0": "grape"
+            },
+            "maps": [
+                0.3955797325963587
+            ]
+        }
+    },
+    "grape_detection_californianight+yolo11n": {
+        "metrics/precision(B)": 0.8047380714047381,
+        "metrics/recall(B)": 0.6868892702226036,
+        "metrics/mAP50(B)": 0.7710866835242444,
+        "metrics/mAP50-95(B)": 0.38862968136840154,
+        "fitness": 0.42687538158398586,
+        "class_map": {
+            "classes": {
+                "0": "grape"
+            },
+            "maps": [
+                0.38862968136840154
+            ]
+        }
+    },
+    "grape_detection_californianight+yolo11s": {
+        "metrics/precision(B)": 0.7567877803719415,
+        "metrics/recall(B)": 0.7690381054281749,
+        "metrics/mAP50(B)": 0.8017478762899578,
+        "metrics/mAP50-95(B)": 0.437436860925854,
+        "fitness": 0.47386796246226437,
+        "class_map": {
+            "classes": {
+                "0": "grape"
+            },
+            "maps": [
+                0.437436860925854
+            ]
+        }
+    },
+    "grape_detection_californianight+yolo11x": {
+        "metrics/precision(B)": 0.736821555156227,
+        "metrics/recall(B)": 0.7449392712550608,
+        "metrics/mAP50(B)": 0.7811544936516707,
+        "metrics/mAP50-95(B)": 0.45322934116927815,
+        "fitness": 0.48602185641751744,
+        "class_map": {
+            "classes": {
+                "0": "grape"
+            },
+            "maps": [
+                0.45322934116927815
+            ]
+        }
+    },
+    "grape_detection_syntheticday+yolo11l": {
+        "metrics/precision(B)": 0.9479649653275937,
+        "metrics/recall(B)": 0.8096817356076615,
+        "metrics/mAP50(B)": 0.9180702791053456,
+        "metrics/mAP50-95(B)": 0.720114342036841,
+        "fitness": 0.7399099357436915,
+        "class_map": {
+            "classes": {
+                "0": "grape"
+            },
+            "maps": [
+                0.720114342036841
+            ]
+        }
+    },
+    "grape_detection_syntheticday+yolo11m": {
+        "metrics/precision(B)": 0.9209415736623586,
+        "metrics/recall(B)": 0.7480933095611995,
+        "metrics/mAP50(B)": 0.8824423748033108,
+        "metrics/mAP50-95(B)": 0.6451196561441267,
+        "fitness": 0.6688519280100451,
+        "class_map": {
+            "classes": {
+                "0": "grape"
+            },
+            "maps": [
+                0.6451196561441267
+            ]
+        }
+    },
+    "grape_detection_syntheticday+yolo11n": {
+        "metrics/precision(B)": 0.967477944679693,
+        "metrics/recall(B)": 0.7243090046568308,
+        "metrics/mAP50(B)": 0.8866848206786255,
+        "metrics/mAP50-95(B)": 0.6597935907906964,
+        "fitness": 0.6824827137794894,
+        "class_map": {
+            "classes": {
+                "0": "grape"
+            },
+            "maps": [
+                0.6597935907906964
+            ]
+        }
+    },
+    "grape_detection_syntheticday+yolo11s": {
+        "metrics/precision(B)": 0.937753124746368,
+        "metrics/recall(B)": 0.7158730158730159,
+        "metrics/mAP50(B)": 0.8756332872383675,
+        "metrics/mAP50-95(B)": 0.6526962340923247,
+        "fitness": 0.674989939406929,
+        "class_map": {
+            "classes": {
+                "0": "grape"
+            },
+            "maps": [
+                0.6526962340923247
+            ]
+        }
+    },
+    "grape_detection_syntheticday+yolo11x": {
+        "metrics/precision(B)": 0.9046948366020652,
+        "metrics/recall(B)": 0.7638888888888888,
+        "metrics/mAP50(B)": 0.8939851564733988,
+        "metrics/mAP50-95(B)": 0.6670388816374231,
+        "fitness": 0.6897335091210207,
+        "class_map": {
+            "classes": {
+                "0": "grape"
+            },
+            "maps": [
+                0.6670388816374231
+            ]
+        }
+    },
+    "mango_detection_australia+yolo11n": {
+        "metrics/precision(B)": 0.9608107469068398,
+        "metrics/recall(B)": 0.9592006661115737,
+        "metrics/mAP50(B)": 0.9905041965687286,
+        "metrics/mAP50-95(B)": 0.7329004634628975,
+        "fitness": 0.7586608367734806,
+        "class_map": {
+            "classes": {
+                "0": "mango"
+            },
+            "maps": [
+                0.7329004634628975
+            ]
+        }
+    },
+    "mango_detection_australia+yolo11s": {
+        "metrics/precision(B)": 0.9621686178541151,
+        "metrics/recall(B)": 0.9601259181532005,
+        "metrics/mAP50(B)": 0.9897904628631954,
+        "metrics/mAP50-95(B)": 0.7417234866786149,
+        "fitness": 0.7665301842970729,
+        "class_map": {
+            "classes": {
+                "0": "mango"
+            },
+            "maps": [
+                0.7417234866786149
+            ]
+        }
+    },
+    "plant_doc_detection+yolo11n": {
+        "metrics/precision(B)": 0.5699978210221228,
+        "metrics/recall(B)": 0.4667694854146501,
+        "metrics/mAP50(B)": 0.49983071722743755,
+        "metrics/mAP50-95(B)": 0.28933845111216405,
+        "fitness": 0.3103876777236914,
+        "class_map": {
+            "classes": {
+                "0": "Corn leaf blight",
+                "1": "Tomato Early blight leaf",
+                "2": "Potato leaf early blight",
+                "3": "Potato leaf late blight",
+                "4": "Blueberry leaf",
+                "5": "grape leaf black rot",
+                "6": "Bell_pepper leaf spot",
+                "7": "Cherry leaf",
+                "8": "Peach leaf",
+                "9": "Soyabean leaf",
+                "10": "Strawberry leaf",
+                "11": "Apple Scab Leaf",
+                "12": "Corn rust leaf",
+                "13": "Apple leaf",
+                "14": "Corn Gray leaf spot",
+                "15": "Tomato leaf mosaic virus",
+                "16": "Tomato mold leaf",
+                "17": "Tomato leaf yellow virus",
+                "18": "Tomato leaf bacterial spot",
+                "19": "Tomato leaf late blight",
+                "20": "Squash Powdery mildew leaf",
+                "21": "Bell_pepper leaf",
+                "22": "grape leaf",
+                "23": "Apple rust leaf",
+                "24": "Tomato Septoria leaf spot",
+                "25": "Tomato leaf",
+                "26": "Raspberry leaf",
+                "27": "Potato leaf",
+                "28": "Tomato two spotted spider mites leaf"
+            },
+            "maps": [
+                0.21165168785446267,
+                0.2792325697569097,
+                0.1354302448211265,
+                0.263397483670283,
+                0.3782640229715143,
+                0.515134299139252,
+                0.3829545815204622,
+                0.28162911303808413,
+                0.407434444466772,
+                0.4101654916508175,
+                0.6115402640316101,
+                0.2757413754673899,
+                0.3832889745021061,
+                0.29309831862053365,
+                0.3417740747743542,
+                0.14864104802091133,
+                0.09251660230388258,
+                0.22793129430027714,
+                0.1096991079374952,
+                0.3384237564640334,
+                0.4487062911280722,
+                0.46780512902862303,
+                0.21608434755864292,
+                0.25096967753644134,
+                0.17234089042132714,
+                0.34210560135206436,
+                0.39394232324864203,
+                0.010912066666666666,
+                0.0
+            ]
+        }
+    },
+    "plant_doc_detection+yolo11s": {
+        "metrics/precision(B)": 0.5208979589174184,
+        "metrics/recall(B)": 0.5696899647509104,
+        "metrics/mAP50(B)": 0.5618029491774192,
+        "metrics/mAP50-95(B)": 0.3287203928993561,
+        "fitness": 0.3520286485271624,
+        "class_map": {
+            "classes": {
+                "0": "Corn leaf blight",
+                "1": "Tomato Early blight leaf",
+                "2": "Potato leaf early blight",
+                "3": "Potato leaf late blight",
+                "4": "Blueberry leaf",
+                "5": "grape leaf black rot",
+                "6": "Bell_pepper leaf spot",
+                "7": "Cherry leaf",
+                "8": "Peach leaf",
+                "9": "Soyabean leaf",
+                "10": "Strawberry leaf",
+                "11": "Apple Scab Leaf",
+                "12": "Corn rust leaf",
+                "13": "Apple leaf",
+                "14": "Corn Gray leaf spot",
+                "15": "Tomato leaf mosaic virus",
+                "16": "Tomato mold leaf",
+                "17": "Tomato leaf yellow virus",
+                "18": "Tomato leaf bacterial spot",
+                "19": "Tomato leaf late blight",
+                "20": "Squash Powdery mildew leaf",
+                "21": "Bell_pepper leaf",
+                "22": "grape leaf",
+                "23": "Apple rust leaf",
+                "24": "Tomato Septoria leaf spot",
+                "25": "Tomato leaf",
+                "26": "Raspberry leaf",
+                "27": "Potato leaf",
+                "28": "Tomato two spotted spider mites leaf"
+            },
+            "maps": [
+                0.2259487438831727,
+                0.03936366643804077,
+                0.341892241889508,
+                0.07243948582620627,
+                0.43245585022891275,
+                0.5274739759036144,
+                0.43621388674439177,
+                0.35123023909078277,
+                0.2803598679029792,
+                0.4787679330427327,
+                0.5936627836372785,
+                0.2769313350532646,
+                0.4074691558138146,
+                0.45653293038859327,
+                0.463017540106952,
+                0.29188476003679065,
+                0.13341390064905032,
+                0.1527025963641791,
+                0.21154645072713732,
+                0.32613242674334925,
+                0.3667393608026686,
+                0.483387343071833,
+                0.42529072532523193,
+                0.389782799313227,
+                0.2171715838648273,
+                0.020821773218783948,
+                0.47281725221529197,
+                0.3287203928993561,
+                0.3287203928993561
+            ]
+        }
+    },
+    "tomato_ripeness_detection+yolo11n": {
+        "metrics/precision(B)": 0.8604115397443802,
+        "metrics/recall(B)": 0.797066972977987,
+        "metrics/mAP50(B)": 0.8782874784766541,
+        "metrics/mAP50-95(B)": 0.7272230615344513,
+        "fitness": 0.7423295032286716,
+        "class_map": {
+            "classes": {
+                "0": "b_fully_ripened",
+                "1": "b_half_ripened",
+                "2": "b_green",
+                "3": "l_fully_ripened",
+                "4": "l_half_ripened",
+                "5": "l_green"
+            },
+            "maps": [
+                0.7354947193755746,
+                0.6358638892642564,
+                0.7243581208396942,
+                0.8167860030366242,
+                0.6972496245489528,
+                0.7535860121416055
+            ]
+        }
+    },
+    "tomato_ripeness_detection+yolo11s": {
+        "metrics/precision(B)": 0.8229190445960298,
+        "metrics/recall(B)": 0.8835138959024996,
+        "metrics/mAP50(B)": 0.9121278256507654,
+        "metrics/mAP50-95(B)": 0.766808600552848,
+        "fitness": 0.7813405230626399,
+        "class_map": {
+            "classes": {
+                "0": "b_fully_ripened",
+                "1": "b_half_ripened",
+                "2": "b_green",
+                "3": "l_fully_ripened",
+                "4": "l_half_ripened",
+                "5": "l_green"
+            },
+            "maps": [
+                0.7548328307989863,
+                0.7823764546071317,
+                0.8009270920266699,
+                0.7731819691183286,
+                0.7255040982562855,
+                0.7640291585096863
+            ]
+        }
+    },
+    "wheat_head_counting+yolo11l": {
+        "metrics/precision(B)": 0.9245879212203956,
+        "metrics/recall(B)": 0.8779604425952586,
+        "metrics/mAP50(B)": 0.9340138625325242,
+        "metrics/mAP50-95(B)": 0.5784247103757646,
+        "fitness": 0.6139836255914406,
+        "class_map": {
+            "classes": {
+                "0": "Wheat Head"
+            },
+            "maps": [
+                0.5784247103757646
+            ]
+        }
+    },
+    "wheat_head_counting+yolo11m": {
+        "metrics/precision(B)": 0.9183902766224068,
+        "metrics/recall(B)": 0.8840558731996816,
+        "metrics/mAP50(B)": 0.9366175742380312,
+        "metrics/mAP50-95(B)": 0.5713564029858087,
+        "fitness": 0.6078825201110309,
+        "class_map": {
+            "classes": {
+                "0": "Wheat Head"
+            },
+            "maps": [
+                0.5713564029858087
+            ]
+        }
+    },
+    "wheat_head_counting+yolo11n": {
+        "metrics/precision(B)": 0.9171613583006002,
+        "metrics/recall(B)": 0.8632682396662342,
+        "metrics/mAP50(B)": 0.9281931030761819,
+        "metrics/mAP50-95(B)": 0.5556535027937193,
+        "fitness": 0.5929074628219655,
+        "class_map": {
+            "classes": {
+                "0": "Wheat Head"
+            },
+            "maps": [
+                0.5556535027937193
+            ]
+        }
+    },
+    "wheat_head_counting+yolo11s": {
+        "metrics/precision(B)": 0.9254287063231834,
+        "metrics/recall(B)": 0.8788046106055802,
+        "metrics/mAP50(B)": 0.93777255866261,
+        "metrics/mAP50-95(B)": 0.5679245907418896,
+        "fitness": 0.6049093875339617,
+        "class_map": {
+            "classes": {
+                "0": "Wheat Head"
+            },
+            "maps": [
+                0.5679245907418896
+            ]
+        }
+    },
+    "wheat_head_counting+yolo11x": {
+        "metrics/precision(B)": 0.9223821425244931,
+        "metrics/recall(B)": 0.8769885342336543,
+        "metrics/mAP50(B)": 0.9271253514411493,
+        "metrics/mAP50-95(B)": 0.5721022258377911,
+        "fitness": 0.607604538398127,
+        "class_map": {
+            "classes": {
+                "0": "Wheat Head"
+            },
+            "maps": [
+                0.5721022258377911
+            ]
+        }
+    }
+}

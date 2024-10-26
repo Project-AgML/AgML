@@ -28,6 +28,11 @@ To install the latest release of AgML, run the following command:
 pip install agml
 ```
 
+**_NOTE:_** Some features of AgML, such as synthetic data generation, require GUI applications. When running AgML through
+Windows Subsystem for Linux (WSL), it may be necessary to configure your WSL environment to utilize these features. Please
+follow the [Microsoft documentation](https://learn.microsoft.com/en-us/windows/wsl/tutorials/gui-apps) to install all
+necessary prerequisites and update WSL. The latest version of WSL includes built-in support for running Linux GUI applications.
+
 ## Quick Start
 
 AgML is designed for easy usage of agricultural data in a variety of formats. You can start off by using the `AgMLDataLoader` to
@@ -119,44 +124,47 @@ model.run_training(loader)
 ## Public Dataset Listing
 
 | Dataset | Task | Number of Images |
-| :--- | ---: | ---: |
-[bean_disease_uganda](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/bean_disease_uganda.md) | Image Classification | 1295 | 
-[carrot_weeds_germany](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/carrot_weeds_germany.md) | Semantic Segmentation | 60 | 
-[plant_seedlings_aarhus](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/plant_seedlings_aarhus.md) | Image Classification | 5539 | 
-[soybean_weed_uav_brazil](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/soybean_weed_uav_brazil.md) | Image Classification | 15336 | 
-[sugarcane_damage_usa](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/sugarcane_damage_usa.md) | Image Classification | 153 | 
-[crop_weeds_greece](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/crop_weeds_greece.md) | Image Classification | 508 | 
-[sugarbeet_weed_segmentation](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/sugarbeet_weed_segmentation.md) | Semantic Segmentation | 1931 | 
-[rangeland_weeds_australia](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/rangeland_weeds_australia.md) | Image Classification | 17509 | 
-[fruit_detection_worldwide](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/fruit_detection_worldwide.md) | Object Detection | 565 | 
-[leaf_counting_denmark](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/leaf_counting_denmark.md) | Image Classification | 9372 | 
-[apple_detection_usa](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/apple_detection_usa.md) | Object Detection | 2290 | 
-[mango_detection_australia](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/mango_detection_australia.md) | Object Detection | 1730 | 
-[apple_flower_segmentation](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/apple_flower_segmentation.md) | Semantic Segmentation | 148 | 
-[apple_segmentation_minnesota](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/apple_segmentation_minnesota.md) | Semantic Segmentation | 670 | 
-[rice_seedling_segmentation](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/rice_seedling_segmentation.md) | Semantic Segmentation | 224 | 
-[plant_village_classification](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/plant_village_classification.md) | Image Classification | 55448 | 
-[autonomous_greenhouse_regression](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/autonomous_greenhouse_regression.md) | Image Regression | 389 | 
-[grape_detection_syntheticday](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/grape_detection_syntheticday.md) | Object Detection | 448 | 
-[grape_detection_californiaday](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/grape_detection_californiaday.md) | Object Detection | 126 | 
-[grape_detection_californianight](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/grape_detection_californianight.md) | Object Detection | 150 | 
-[guava_disease_pakistan](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/guava_disease_pakistan.md) | Image Classification | 306 | 
-[apple_detection_spain](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/apple_detection_spain.md) | Object Detection | 967 | 
-[apple_detection_drone_brazil](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/apple_detection_drone_brazil.md) | Object Detection | 689 | 
-[plant_doc_classification](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/plant_doc_classification.md) | Image Classification | 2598 | 
-[plant_doc_detection](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/plant_doc_detection.md) | Object Detection | 2598 | 
-[wheat_head_counting](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/wheat_head_counting.md) | Object Detection | 6512 | 
-[peachpear_flower_segmentation](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/peachpear_flower_segmentation.md) | Semantic Segmentation | 42 | 
-[red_grapes_and_leaves_segmentation](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/red_grapes_and_leaves_segmentation.md) | Semantic Segmentation | 258 | 
-[white_grapes_and_leaves_segmentation](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/white_grapes_and_leaves_segmentation.md) | Semantic Segmentation | 273 | 
-[ghai_romaine_detection](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/ghai_romaine_detection.md) | Object Detection | 500 |
-[ghai_green_cabbage_detection](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/ghai_green_cabbage_detection.md) | Object Detection | 500 |
-[ghai_iceberg_lettuce_detection](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/ghai_iceberg_lettuce_detection.md) | Object Detection | 500 |
-[riseholme_strawberry_classification_2021](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/riseholme_strawberry_classification_2021.md) | Image Classification | 3520 |
-[ghai_broccoli_detection](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/ghai_broccoli_detection.md) | Object Detection | 500 |
-[bean_synthetic_earlygrowth_aerial](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/bean_synthetic_earlygrowth_aerial.md) | Semantic Segmentation | 2500 |
-[ghai_strawberry_fruit_detection](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/ghai_strawberry_fruit_detection.md) | Object Detection | 500 |
-[vegann_multicrop_presence_segmentation](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/vegann_multicrop_presence_segmentation.md) | Semantic Segmentation | 3775 |
+| :--- | ---: |-----------------:|
+[bean_disease_uganda](https://github.com/Project-AgML/AgML/blob/dev/docs/datasets/bean_disease_uganda.md) | Image Classification |             1295 | 
+[carrot_weeds_germany](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/carrot_weeds_germany.md) | Semantic Segmentation |               60 | 
+[plant_seedlings_aarhus](https://github.com/Project-AgML/AgML/blob/dev/docs/datasets/plant_seedlings_aarhus.md) | Image Classification |             5539 | 
+[soybean_weed_uav_brazil](https://github.com/Project-AgML/AgML/blob/dev/docs/datasets/soybean_weed_uav_brazil.md) | Image Classification |            15336 | 
+[sugarcane_damage_usa](https://github.com/Project-AgML/AgML/blob/dev/docs/datasets/sugarcane_damage_usa.md) | Image Classification |              153 | 
+[crop_weeds_greece](https://github.com/Project-AgML/AgML/blob/dev/docs/datasets/crop_weeds_greece.md) | Image Classification |              508 | 
+[sugarbeet_weed_segmentation](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/sugarbeet_weed_segmentation.md) | Semantic Segmentation |             1931 | 
+[rangeland_weeds_australia](https://github.com/Project-AgML/AgML/blob/dev/docs/datasets/rangeland_weeds_australia.md) | Image Classification |            17509 | 
+[fruit_detection_worldwide](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/fruit_detection_worldwide.md) | Object Detection |              565 | 
+[leaf_counting_denmark](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/leaf_counting_denmark.md) | Image Classification |             9372 | 
+[apple_detection_usa](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/apple_detection_usa.md) | Object Detection |             2290 | 
+[mango_detection_australia](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/mango_detection_australia.md) | Object Detection |             1730 | 
+[apple_flower_segmentation](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/apple_flower_segmentation.md) | Semantic Segmentation |              148 | 
+[apple_segmentation_minnesota](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/apple_segmentation_minnesota.md) | Semantic Segmentation |              670 | 
+[rice_seedling_segmentation](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/rice_seedling_segmentation.md) | Semantic Segmentation |              224 | 
+[plant_village_classification](https://github.com/Project-AgML/AgML/blob/dev/docs/datasets/plant_village_classification.md) | Image Classification |            55448 | 
+[autonomous_greenhouse_regression](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/autonomous_greenhouse_regression.md) | Image Regression |              389 | 
+[grape_detection_syntheticday](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/grape_detection_syntheticday.md) | Object Detection |              448 | 
+[grape_detection_californiaday](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/grape_detection_californiaday.md) | Object Detection |              126 | 
+[grape_detection_californianight](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/grape_detection_californianight.md) | Object Detection |              150 | 
+[guava_disease_pakistan](https://github.com/Project-AgML/AgML/blob/dev/docs/datasets/guava_disease_pakistan.md) | Image Classification |              306 | 
+[apple_detection_spain](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/apple_detection_spain.md) | Object Detection |              967 | 
+[apple_detection_drone_brazil](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/apple_detection_drone_brazil.md) | Object Detection |              689 | 
+[plant_doc_classification](https://github.com/Project-AgML/AgML/blob/dev/docs/datasets/plant_doc_classification.md) | Image Classification |             2598 | 
+[plant_doc_detection](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/plant_doc_detection.md) | Object Detection |             2346 | 
+[wheat_head_counting](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/wheat_head_counting.md) | Object Detection |             6512 | 
+[peachpear_flower_segmentation](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/peachpear_flower_segmentation.md) | Semantic Segmentation |               42 | 
+[red_grapes_and_leaves_segmentation](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/red_grapes_and_leaves_segmentation.md) | Semantic Segmentation |              258 | 
+[white_grapes_and_leaves_segmentation](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/white_grapes_and_leaves_segmentation.md) | Semantic Segmentation |              273 | 
+[ghai_romaine_detection](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/ghai_romaine_detection.md) | Object Detection |              500 |
+[ghai_green_cabbage_detection](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/ghai_green_cabbage_detection.md) | Object Detection |              500 |
+[ghai_iceberg_lettuce_detection](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/ghai_iceberg_lettuce_detection.md) | Object Detection |              500 |
+[riseholme_strawberry_classification_2021](https://github.com/Project-AgML/AgML/blob/dev/docs/datasets/riseholme_strawberry_classification_2021.md) | Image Classification |             3520 |
+[ghai_broccoli_detection](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/ghai_broccoli_detection.md) | Object Detection |              500 |
+[bean_synthetic_earlygrowth_aerial](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/bean_synthetic_earlygrowth_aerial.md) | Semantic Segmentation |             2500 |
+[ghai_strawberry_fruit_detection](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/ghai_strawberry_fruit_detection.md) | Object Detection |              500 |
+[vegann_multicrop_presence_segmentation](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/vegann_multicrop_presence_segmentation.md) | Semantic Segmentation |             3775 |
+[corn_maize_leaf_disease](https://github.com/Project-AgML/AgML/blob/dev/docs/datasets/corn_maize_leaf_disease.md) | Image Classification |             4188 |
+[tomato_leaf_disease](https://github.com/Project-AgML/AgML/blob/dev/docs/datasets/tomato_leaf_disease.md) | Image Classification |            11000 |
+[vine_virus_photo_dataset](https://github.com/Project-AgML/AgML/blob/dev/docs/datasets/vine_virus_photo_dataset.md) | Image Classification |             3866 |
 
 ## Usage Information
 
@@ -187,4 +195,4 @@ a bug or feature that you would like to see implemented, please don't hesitate t
 See the [contributing guidelines](/CONTRIBUTING.md) for more information.
 
 ## Funding
-This project is partly funded by the [National AI Institute for Food Systems (AIFS)](https://aifs.ucdavis.edu).
+This project is partly funded by the [National AI Institute for Food Systems](https://aifs.ucdavis.edu)

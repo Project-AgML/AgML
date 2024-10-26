@@ -47,6 +47,15 @@ def load_model_benchmarks() -> dict:
         return json.load(f)
 
 
+@functools.lru_cache(maxsize = None)
+def load_detector_benchmarks() -> dict:
+    """Loads the citation sources JSON file."""
+    with open(os.path.join(
+            os.path.dirname(os.path.dirname(__file__)),
+            '_assets/detector_benchmarks.json')) as f:
+        return json.load(f)
+
+
 def maybe_you_meant(name, msg, source = None) -> str:
     """Suggests potential correct spellings for an invalid name."""
     source = source if source is not None \
@@ -76,9 +85,12 @@ def copyright_print(name, location = None):
         'CC BY-SA 3.0': 'https://creativecommons.org/licenses/by-sa/3.0/',
         'CC BY-NC 3.0': 'https://creativecommons.org/licenses/by-nc/3.0/',
         'CC BY-NC SA 3.0': 'https://creativecommons.org/licenses/by-nc/3.0/',
+        "CC BY-NC-SA 4.0": 'https://creativecommons.org/licenses/by-nc/4.0/',
         'MIT': 'https://opensource.org/licenses/MIT',
         'GPL-3.0': 'https://opensource.org/licenses/GPL-3.0',
-        'US Public Domain': 'https://www.usa.gov/government-works'}
+        'US Public Domain': 'https://www.usa.gov/government-works',
+        'CC0: Public Domain': 'https://creativecommons.org/publicdomain/zero/1.0/',
+        'Apache 2.0': 'https://www.apache.org/licenses/LICENSE-2.0'}
     if license == '':
         license_msg = "This dataset has " \
                       + _bold("no license") + ".\n"

@@ -24,3 +24,4 @@ from .tools import (
 )
 from . import experimental
 from . import exporters
+from . import extensions

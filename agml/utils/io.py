@@ -38,6 +38,8 @@ def get_file_list(fpath, ext = None, full_paths = True):
                  for f in os.listdir(fpath)
                  if _is_valid_file(os.path.join(fpath, f))]
     if ext is not None:
+        if callable(ext):
+            return [f for f in base_list if ext(f)]
         if isinstance(ext, str):
             return [f for f in base_list if f.endswith(ext)]
         else:
@@ -67,6 +69,8 @@ def nested_dir_list(fpath):
 
 def nested_file_list(fpath, ext = None):
     """Returns a nested list of files from a path."""
+    if ext == 'image':
+        ext = ['jpg', 'jpeg', 'png', 'bmp', 'tiff']
     files = get_file_list(fpath, ext = ext)
     dirs = nested_dir_list(fpath)
     for dir_ in dirs:
