@@ -168,7 +168,10 @@ def annotate_object_detection(image,
         # If the user passed additional information, annotate it onto the image
         # by putting the text above the bounding box with the corresponding label.
         if annotate_with_info:
-            text = info[label]
+            try:
+                text = info[label]
+            except KeyError:  # 0-indexing vs. 1-indexing errors
+                text = info[label + 1]
 
             # Get the text size.
             (label_width, label_height), baseline = cv2.getTextSize(
