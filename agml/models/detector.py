@@ -269,7 +269,7 @@ class Detector(AgMLSerializable):
         To load the AgML model directly, you can run: 
 
         import agml.models
-        model = agml.models.Detector('{run_name}')
+        model = agml.models.Detector.load('{run_name}')
 
         and the model with the best weights from this training run will be loaded.
         """)
