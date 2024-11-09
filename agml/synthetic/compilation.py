@@ -22,21 +22,24 @@ import subprocess as sp
 from datetime import datetime as dt
 
 from agml.backend.config import _update_config, _get_config
-from agml.synthetic.config import HELIOS_PATH
+from agml.synthetic.config import HELIOS_PATH, PROJECT_ROOT
+from pathlib import Path
+
+PROJECT = "SyntheticImageAnnotation"
 
 # Helios build and compilation paths.
 PROJECT_PATH = os.path.join(
-    HELIOS_PATH, 'projects/SyntheticImageAnnotation')
+    PROJECT_ROOT, PROJECT)
 HELIOS_BUILD = os.path.join(
     PROJECT_PATH, 'build')
 HELIOS_EXECUTABLE = os.path.join(
-    PROJECT_PATH, 'build', 'SyntheticImageAnnotation')
+    PROJECT_PATH, 'build', PROJECT)
 
 # Helios parameter paths.
 XML_PATH = os.path.join(PROJECT_PATH, 'xml')
 
 
-def _update_cmake_and_project(lidar_enabled):
+def _update_cmake_and_project(lidar_enabled=False):
     """Updates the CMake + project file to enable or disable LiDAR compilation."""
     cmake_file = os.path.join(PROJECT_PATH, 'CMakeLists.txt')
     project_file = os.path.join(PROJECT_PATH, 'generate.cpp')
