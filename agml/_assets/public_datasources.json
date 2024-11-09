@@ -1363,14 +1363,14 @@
         "docs_url": "https://www.kaggle.com/datasets/smaranjitghose/corn-or-maize-leaf-disease-dataset/data",
         "stats": {
             "mean": [
-                0.4375976622104645,
-                0.49800175428390503,
-                0.3756123483181
+                0.43759793043136597,
+                0.4980018138885498,
+                0.37561264634132385
             ],
             "std": [
-                0.17942173779010773,
-                0.1671891063451767,
-                0.17422494292259216
+                0.17942169308662415,
+                0.16718940436840057,
+                0.17422522604465485
             ]
         }
     },
@@ -1405,13 +1405,13 @@
         "stats": {
             "mean": [
                 0.4527469873428345,
-                0.463305801153183,
-                0.41868722438812256
+                0.4633050858974457,
+                0.41868776082992554
             ],
             "std": [
-                0.16920898854732513,
-                0.1477184295654297,
-                0.1853858381509781
+                0.1692083775997162,
+                0.14771831035614014,
+                0.1853858083486557
             ]
         }
     },
@@ -1452,5 +1452,26 @@
                 0.23016904294490814
             ]
         }
+    },    
+    "cauliflower_segmentation": {
+        "classes": {
+            "1": "maskLeaves",
+            "2": "maskPlants",
+            "3": "maskStems",
+            "4": "maskVoid"
+        },
+        "ml_task": "semantic_segmentation",
+        "ag_task": "crop_segmentation",
+        "location": {
+            "continent": "worldwide",
+            "country": "worldwide"
+        },
+        "sensor_modality": "rgb",
+        "real_synthetic": "real",
+        "platform": "handheld/ground",
+        "input_data_format": "jpg",
+        "annotation_format": "image",
+        "n_images": "1542",
+        "docs_url": "https://phenoroam.phenorob.de/geonetwork/srv/eng/catalog.search#/metadata/cb328232-31f5-4b84-a929-8e1ee551d66a"
     }
 }

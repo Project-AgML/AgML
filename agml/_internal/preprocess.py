@@ -1265,6 +1265,18 @@ class PublicDataPreprocessor(object):
 
         print(f"Preprocessing completed! Annotations saved to {output_json_file}")
 
+        
+    def strawberry_detection_2023(self, dataset_name):
+        # Create processed directories
+        original_dir = os.path.join(self.data_original_dir)
+        processed_dir = os.path.join(self.data_processed_dir, dataset_name)
+        processed_image_dir = os.path.join(processed_dir, 'images')
+        os.makedirs(processed_image_dir, exist_ok = True)
+        # Move images
+        for image in tqdm(glob.glob(os.path.join(original_dir, '*.jpg'))):
+            shutil.move(image, processed_image_dir)
+        shutil.move(os.path.join(original_dir, 'coco.json'),
+                    os.path.join(processed_dir, 'annotations.json'))
     # def grape_bunch_detection(self, dataset_name):
     #     """Preprocesses your grape dataset (Chardonnay, PinotGris, PinotNoir) from YOLO format to COCO format."""
     #     base_path = os.path.join(self.data_original_dir)

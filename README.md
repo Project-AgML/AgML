@@ -165,6 +165,7 @@ model.run_training(loader)
 [corn_maize_leaf_disease](https://github.com/Project-AgML/AgML/blob/dev/docs/datasets/corn_maize_leaf_disease.md) | Image Classification |             4188 |
 [tomato_leaf_disease](https://github.com/Project-AgML/AgML/blob/dev/docs/datasets/tomato_leaf_disease.md) | Image Classification |            11000 |
 [vine_virus_photo_dataset](https://github.com/Project-AgML/AgML/blob/dev/docs/datasets/vine_virus_photo_dataset.md) | Image Classification |             3866 |
+[tomato_ripeness_detection](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/tomato_ripeness_detection.md) | Object Detection | 804 |
 
 ## Usage Information
 
@@ -195,4 +196,4 @@ a bug or feature that you would like to see implemented, please don't hesitate t
 See the [contributing guidelines](/CONTRIBUTING.md) for more information.
 
 ## Funding
-This project is partly funded by the [National AI Institute for Food Systems](https://aifs.ucdavis.edu)
+This project is partly funded by the [National AI Institute for Food Systems](https://aifs.ucdavis.edu
