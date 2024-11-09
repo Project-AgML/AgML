@@ -1,13 +1,16 @@
+# create environment with conda env create -f environment.yml -n <ENVIRONMENT_NAME>
 name: agml-env
 channels:
   - defaults
   - conda-forge
   - nvidia
 dependencies:
-  - gcc
+  - gcc=12
   - gxx
   - cmake
   - make
+  - glfw
+  - glew
   - libx11-devel-cos6-x86_64
   - xorg-libx11
   - mesa-libgl-cos7-x86_64
@@ -22,6 +25,8 @@ dependencies:
   - xorg-libxcursor
   - xorg-libxi
   - cuda
+  - cudatoolkit
+  - cuda-nvcc
   - pip
   - pip:
       - setuptools>=58.0.0
