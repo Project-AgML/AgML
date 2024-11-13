@@ -7,11 +7,11 @@
 | --- | --- |
 | **Classes** | Visible Fruit/Flower |
 | **Machine Learning Task** | object_detection |
-| **Agricultural Task** | almond_bloom2023 |
-| **Location** | Worldwide |
+| **Agricultural Task** | flower_detection |
+| **Location** | United States, North America |
 | **Sensor Modality** | RGB |
 | **Real or Synthetic** | real |
-| **Platform** | handheld/ground |
+| **Platform** | ground |
 | **Annotation Format** | coco_json |
 | **Input Data Format** | JPG |
 | **Number of Images** | 100 |

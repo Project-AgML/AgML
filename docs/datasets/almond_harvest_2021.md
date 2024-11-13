@@ -5,13 +5,13 @@
 
 | Metadata | Value |
 | --- | --- |
-| **Classes** | Visible Fruit/Flower, Partially Visible Fruit/Flower, category:2, Visible Occluded Fruit/Flower |
+| **Classes** | Visible Fruit/Flower, Partially Visible Fruit/Flower, Visible Occluded Fruit/Flower, Partially Visible Occluded Fruit/Flower |
 | **Machine Learning Task** | object_detection |
-| **Agricultural Task** | almond_harvest2021 |
-| **Location** | Worldwide |
+| **Agricultural Task** | fruit_detection |
+| **Location** | United States, North America |
 | **Sensor Modality** | RGB |
 | **Real or Synthetic** | real |
-| **Platform** | handheld/ground |
+| **Platform** | ground |
 | **Annotation Format** | coco_json |
 | **Input Data Format** | JPG |
 | **Number of Images** | 50 |

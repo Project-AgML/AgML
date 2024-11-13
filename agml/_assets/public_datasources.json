@@ -1597,8 +1597,8 @@
         "classes": {
             "0": "Visible Fruit/Flower",
             "1": "Partially Visible Fruit/Flower",
-            "2": "category:2",
-            "3": "Visible Occluded Fruit/Flower"
+            "2": "Visible Occluded Fruit/Flower",
+            "3": "Partially Visible Occluded Fruit/Flower"
         },
         "ml_task": "object_detection",
         "ag_task": "fruit_detection",
@@ -1622,7 +1622,7 @@
             ],
             "std": [
                 0.16955046355724335,
-                0.17023135721683502,
+                0.1702313870191574,
                 0.1667901575565338
             ]
         }
@@ -1648,13 +1648,13 @@
         "stats": {
             "mean": [
                 0.32803982496261597,
-                0.34916895627975464,
+                0.34916892647743225,
                 0.3486247956752777
             ],
             "std": [
-                0.23713532090187073,
-                0.24729835987091064,
-                0.239897683262825
+                0.23713527619838715,
+                0.24729833006858826,
+                0.23989765346050262
             ]
         }
     }
