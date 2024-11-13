@@ -21,14 +21,14 @@
         "external_image_sources": [],
         "stats": {
             "mean": [
-                0.4848317503929138,
-                0.5186859369277954,
-                0.31070852279663086
+                0.484832227230072,
+                0.5186858773231506,
+                0.31070876121520996
             ],
             "std": [
-                0.18201085925102234,
-                0.19948194921016693,
-                0.16856086254119873
+                0.18201105296611786,
+                0.1994817703962326,
+                0.16856099665164948
             ]
         }
     },
@@ -1508,14 +1508,153 @@
         "docs_url": "https://phenoroam.phenorob.de/geonetwork/srv/eng/catalog.search#/metadata/cb328232-31f5-4b84-a929-8e1ee551d66a",
         "stats": {
             "mean": [
-                0.48514899611473083,
-                0.42645666003227234,
-                0.33096620440483093
+                0.4851488173007965,
+                0.42645663022994995,
+                0.3309663236141205
             ],
             "std": [
-                0.12302210927009583,
-                0.12601256370544434,
-                0.11423511058092117
+                0.12302207946777344,
+                0.12601260840892792,
+                0.11423514038324356
+            ]
+        }
+    },
+    "strawberry_detection_2023": {
+        "classes": {
+            "0": "strawberry",
+            "1": "flower",
+            "2": "green",
+            "3": "large_white",
+            "4": "pink",
+            "5": "red",
+            "6": "small_white"
+        },
+        "ml_task": "object_detection",
+        "ag_task": "strawberry_detection",
+        "location": {
+            "continent": "north_america",
+            "country": "usa"
+        },
+        "sensor_modality": "rgb",
+        "real_synthetic": "real",
+        "platform": "handheld/ground",
+        "annotation_format": "coco_json",
+        "input_data_format": "jpg",
+        "n_images": "204",
+        "docs_url": "https://universe.roboflow.com/strawberrydet/strawberry_2023/3",
+        "external_image_sources": [],
+        "stats": {
+            "mean": [
+                0.2719569802284241,
+                0.2755374312400818,
+                0.2003764510154724
+            ],
+            "std": [
+                0.14823083579540253,
+                0.1477075070142746,
+                0.14832836389541626
+            ]
+        }
+    },
+    "strawberry_detection_2022": {
+        "classes": {
+            "0": "strawberry",
+            "1": "flower",
+            "2": "green",
+            "3": "large_white",
+            "4": "pink",
+            "5": "red",
+            "6": "small_white"
+        },
+        "ml_task": "object_detection",
+        "ag_task": "strawberry_detection",
+        "location": {
+            "continent": "north_america",
+            "country": "usa"
+        },
+        "sensor_modality": "rgb",
+        "real_synthetic": "real",
+        "platform": "handheld/ground",
+        "annotation_format": "coco_json",
+        "input_data_format": "jpg",
+        "n_images": "175",
+        "docs_url": "https://universe.roboflow.com/strawberrydet/strawberry_2022/dataset/4",
+        "external_image_sources": [],
+        "stats": {
+            "mean": [
+                0.287511944770813,
+                0.3060769736766815,
+                0.29882678389549255
+            ],
+            "std": [
+                0.21001286804676056,
+                0.19917000830173492,
+                0.20504336059093475
+            ]
+        }
+    },
+    "almond_harvest_2021": {
+        "classes": {
+            "0": "Visible Fruit/Flower",
+            "1": "Partially Visible Fruit/Flower",
+            "2": "category:2",
+            "3": "Visible Occluded Fruit/Flower"
+        },
+        "ml_task": "object_detection",
+        "ag_task": "fruit_detection",
+        "location": {
+            "continent": "north_america",
+            "country": "usa"
+        },
+        "sensor_modality": "rgb",
+        "real_synthetic": "real",
+        "platform": "ground",
+        "annotation_format": "coco_json",
+        "input_data_format": "jpg",
+        "n_images": "50",
+        "docs_url": "",
+        "external_image_sources": [],
+        "stats": {
+            "mean": [
+                0.1509094387292862,
+                0.15222010016441345,
+                0.14836227893829346
+            ],
+            "std": [
+                0.16955046355724335,
+                0.17023135721683502,
+                0.1667901575565338
+            ]
+        }
+    },
+    "almond_bloom_2023": {
+        "classes": {
+            "0": "Visible Fruit/Flower"
+        },
+        "ml_task": "object_detection",
+        "ag_task": "flower_detection",
+        "location": {
+            "continent": "north_america",
+            "country": "usa"
+        },
+        "sensor_modality": "rgb",
+        "real_synthetic": "real",
+        "platform": "ground",
+        "annotation_format": "coco_json",
+        "input_data_format": "jpg",
+        "n_images": "100",
+        "docs_url": "",
+        "external_image_sources": [],
+        "stats": {
+            "mean": [
+                0.32803982496261597,
+                0.34916895627975464,
+                0.3486247956752777
+            ],
+            "std": [
+                0.23713532090187073,
+                0.24729835987091064,
+                0.239897683262825
             ]
         }
     }

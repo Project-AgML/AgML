@@ -170,5 +170,21 @@
     "cauliflower_segmentation": {
         "license": "",
         "citation": "Kierdorf, Jana & Junker-Frohn, Laura & Delaney, Mike & Olave, Mariele & Burkart, Andreas & Jaenicke, Hannah & Muller, Onno & Roscher, Ribana. (2022). GrowliFlower: An image time‐series dataset for GROWth analysis of cauLIFLOWER. Journal of Field Robotics. 40. 10.1002/rob.22122. "
+    },
+    "strawberry_detection_2023": {
+        "license": "CC BY 4.0",
+        "citation": ""
+    },
+    "strawberry_detection_2022": {
+        "license": "CC BY 4.0",
+        "citation": ""
+    },
+    "almond_harvest_2021": {
+        "license": "",
+        "citation": ""
+    },
+    "almond_bloom_2023": {
+        "license": "",
+        "citation": ""
     }
 }

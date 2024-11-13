@@ -163,6 +163,10 @@ model.run_training(loader)
 [tomato_ripeness_detection](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/tomato_ripeness_detection.md) | Object Detection | 804 |
 [grape_bunch_detection](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/grape_bunch_detection.md) | Object Detection | 239 |
 [cauliflower_segmentation](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/cauliflower_segmentation.md) | Semantic Segmentation | 1542 |
+[strawberry_detection_2023](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/strawberry_detection_2023.md) | Object Detection | 204 |
+[strawberry_detection_2022](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/strawberry_detection_2022.md) | Object Detection | 175 |
+[almond_harvest_2021](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/almond_harvest_2021.md) | Object Detection | 50 |
+[almond_bloom_2023](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/almond_bloom_2023.md) | Object Detection | 100 |
 
 ## Usage Information
 
@@ -193,4 +197,3 @@ a bug or feature that you would like to see implemented, please don't hesitate t
 See the [contributing guidelines](/CONTRIBUTING.md) for more information.
 
 ## Funding
-This project

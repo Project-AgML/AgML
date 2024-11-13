@@ -1403,7 +1403,54 @@ class PublicDataPreprocessor(object):
             cv2.imwrite(out_image_path, orig_image)  
             cv2.imwrite(out_mask_path, merged_mask)  
 
+    def strawberry_detection_2023(self, dataset_name):
+        # Create processed directories
+        original_dir = os.path.join(self.data_original_dir)
+        processed_dir = os.path.join(self.data_processed_dir, dataset_name)
+        processed_image_dir = os.path.join(processed_dir, 'images')
+        os.makedirs(processed_image_dir, exist_ok = True)
+        # Move images
+        for image in tqdm(glob.glob(os.path.join(original_dir, '*.jpg'))):
+            shutil.move(image, processed_image_dir)
+        shutil.move(os.path.join(original_dir, 'coco.json'),
+                    os.path.join(processed_dir, 'annotations.json'))
+        
+    def strawberry_detection_2022(self, dataset_name):
+        # Create processed directories
+        original_dir = os.path.join(self.data_original_dir)
+        processed_dir = os.path.join(self.data_processed_dir, dataset_name)
+        processed_image_dir = os.path.join(processed_dir, 'images')
+        os.makedirs(processed_image_dir, exist_ok = True)
+        # Move images
+        for image in tqdm(glob.glob(os.path.join(original_dir, '*.jpg'))):
+            shutil.move(image, processed_image_dir)
+        shutil.move(os.path.join(original_dir, 'coco.json'),
+                    os.path.join(processed_dir, 'annotations.json'))
+        
+    def almond_harvest_2021(self, dataset_name):
+        # Create processed directories
+        original_dir = os.path.join(self.data_original_dir)
+        processed_dir = os.path.join(self.data_processed_dir, dataset_name)
+        processed_image_dir = os.path.join(processed_dir, 'images')
+        os.makedirs(processed_image_dir, exist_ok = True)
+        # Move images
+        for image in tqdm(glob.glob(os.path.join(original_dir, '*.jpg'))):
+            shutil.move(image, processed_image_dir)
+        shutil.move(os.path.join(original_dir, 'coco.json'),
+                    os.path.join(processed_dir, 'annotations.json'))
 
+    def almond_bloom_2023(self, dataset_name):
+        # Create processed directories
+        original_dir = os.path.join(self.data_original_dir)
+        processed_dir = os.path.join(self.data_processed_dir, dataset_name)
+        processed_image_dir = os.path.join(processed_dir, 'images')
+        os.makedirs(processed_image_dir, exist_ok = True)
+        # Move images
+        for image in tqdm(glob.glob(os.path.join(original_dir, '*.jpg'))):
+            shutil.move(image, processed_image_dir)
+        shutil.move(os.path.join(original_dir, 'coco.json'),
+                    os.path.join(processed_dir, 'annotations.json'))
+        
 if __name__ == '__main__':
     # Initialize program arguments.
     ap = argparse.ArgumentParser()

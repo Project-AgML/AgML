@@ -82,7 +82,8 @@ def copyright_print(name, location = None):
         'CC0: Public Domain': 'https://creativecommons.org/publicdomain/zero/1.0/',
         'Apache 2.0': 'https://www.apache.org/licenses/LICENSE-2.0',
         'CC BY-NC 4.0': 'https://creativecommons.org/licenses/by-nc/4.0/',
-        'CC BY-NC-SA 4.0': 'https://creativecommons.org/licenses/by-nc-sa/4.0/'}
+        'CC BY-NC-SA 4.0': 'https://creativecommons.org/licenses/by-nc-sa/4.0/',
+        'CC BY 4.0': 'https://creativecommons.org/licenses/by/4.0/deed.en'}
     if license == '':
         license_msg = "This dataset has " \
                       + _bold("no license") + ".\n"
