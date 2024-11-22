@@ -26,18 +26,22 @@ test: $(test.python) $(src.python) ## Run tests
 
 
 .PHONY: format
-format: ## Run format
+format: ## Run ruff format
 	uv run ruff format --config=config/ruff.toml $(src.python) $(test.python)
 
-.PHONY: check-Format
-check-format: ## Check format
+.PHONY: check-format
+check-format: ## Check ruff format
 	uv run ruff format --check --config=config/ruff.toml $(src.python) $(test.python)
 
 
 .PHONY: lint-fix
-lint-fix: ## Fix Lint issues
+lint-fix: ## Fix ruff Lint issues
 	uv run ruff check --fix --config=config/ruff.toml $(src.python) $(test.python)
 
 .PHONY: lint
-lint: ## Run Code Linter
+lint: ## Run ruff Code Linter
 	uv run ruff check --config=config/ruff.toml $(src.python) $(test.python)
+
+.PHONY: check-types
+check-types: ## Run mypy to check type definitions.
+	uv run mypy --config=config/mypy.ini $(src.python) $(test.python)
