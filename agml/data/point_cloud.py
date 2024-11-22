@@ -54,9 +54,7 @@ class PointCloud(object):
             contents = os.path.abspath(contents)
             if not os.path.exists(contents):
                 raise FileNotFoundError(f"Point cloud file {contents} does not exist.")
-            raw_contents = [
-                i for i in open(contents, "r").read().splitlines() if not i == ""
-            ]
+            raw_contents = [i for i in open(contents, "r").read().splitlines() if not i == ""]
             self._raw_contents = raw_contents
             self._path = contents
         else:
@@ -65,9 +63,7 @@ class PointCloud(object):
             self._path = None
 
         # Set the colormap for the point cloud visualization.
-        self._colormap = (
-            colormap if colormap is not None else cm.rainbow(np.linspace(0, 1, 6))
-        )
+        self._colormap = colormap if colormap is not None else cm.rainbow(np.linspace(0, 1, 6))
 
         # Load the point cloud and the colors.
         self._structure = self._infer_structure(raw_contents[0], structure)
@@ -102,9 +98,7 @@ class PointCloud(object):
             # If a string is passed, it should contain space/comma separated values.
             if isinstance(pointcloud_structure, str):
                 if "," in pointcloud_structure:
-                    pointcloud_structure = [
-                        i.strip() for i in pointcloud_structure.split(",")
-                    ]
+                    pointcloud_structure = [i.strip() for i in pointcloud_structure.split(",")]
                 else:
                     pointcloud_structure = pointcloud_structure.split(" ")
 
@@ -178,13 +172,8 @@ class PointCloud(object):
         full_data = []
         for line in contents:
             line = line.strip().split(" ")
-            current_line = [
-                PointCloud.VALID_STRUCTURES[fmt](i)
-                for i, fmt in zip(line, self._structure)
-            ]
-            current_line = [
-                i if i != -9999 else 0 for i in current_line
-            ]  # fix this label
+            current_line = [PointCloud.VALID_STRUCTURES[fmt](i) for i, fmt in zip(line, self._structure)]
+            current_line = [i if i != -9999 else 0 for i in current_line]  # fix this label
             full_data.append(current_line)
 
         # Create arrays with the data.
@@ -194,9 +183,7 @@ class PointCloud(object):
 
         # Load the corresponding colormap for the coordinates if possible.
         if "label" in self._structure:
-            self._labels = labels = self._full_data[
-                :, self._structure.index("label")
-            ].astype(int)
+            self._labels = labels = self._full_data[:, self._structure.index("label")].astype(int)
         else:
             labels = np.zeros(shape=(len(full_data),), dtype=int)
             self._labels = None

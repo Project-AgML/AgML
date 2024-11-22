@@ -132,9 +132,7 @@ class TFExporter(object):
         for feature in features.keys():
             features[feature] = tf.ragged.constant(features[feature])
         feature_ds = tf.data.Dataset.from_tensor_slices(features)
-        ds = tf.data.Dataset.zip(
-            (tf.data.Dataset.from_tensor_slices(images), feature_ds)
-        )
+        ds = tf.data.Dataset.zip((tf.data.Dataset.from_tensor_slices(images), feature_ds))
         return ds.shuffle(len(images))
 
     # The following methods are used for loading images and
@@ -143,26 +141,20 @@ class TFExporter(object):
     @staticmethod
     @tf.function
     def _image_classification_load(image, label):
-        image = (
-            tf.cast(tf.image.decode_jpeg(tf.io.read_file(image)), tf.float32) / 255.0
-        )
+        image = tf.cast(tf.image.decode_jpeg(tf.io.read_file(image)), tf.float32) / 255.0
         return image, tf.convert_to_tensor(label)
 
     @staticmethod
     @tf.function
     def _semantic_segmentation_load(image, mask):
-        image = (
-            tf.cast(tf.image.decode_jpeg(tf.io.read_file(image)), tf.float32) / 255.0
-        )
+        image = tf.cast(tf.image.decode_jpeg(tf.io.read_file(image)), tf.float32) / 255.0
         mask = tf.image.decode_jpeg(tf.io.read_file(mask))
         return image, mask
 
     @staticmethod
     @tf.function
     def _object_detection_load(image, coco):
-        image = (
-            tf.cast(tf.image.decode_jpeg(tf.io.read_file(image)), tf.float32) / 255.0
-        )
+        image = tf.cast(tf.image.decode_jpeg(tf.io.read_file(image)), tf.float32) / 255.0
         ret_coco = coco.copy()
         for key in coco.keys():
             try:
@@ -178,9 +170,7 @@ class TFExporter(object):
         return image, label
 
     def _semantic_segmentation_resize(self, image, mask):
-        image = tf.cast(
-            tf.image.resize(image, self._size, method="nearest"), tf.float32
-        )
+        image = tf.cast(tf.image.resize(image, self._size, method="nearest"), tf.float32)
         mask = tf.cast(tf.image.resize(mask, self._size, method="nearest"), tf.float32)
         return image, mask
 
@@ -251,7 +241,5 @@ class TFExporter(object):
         # The actual transforming can't take place in graph mode
         # (in most cases), so we dispatch and reassign.
         transforms = self._transforms
-        image, annotation = tf.py_function(
-            _py_apply, [image, annotation], [tf.float32, tf.int32]
-        )
+        image, annotation = tf.py_function(_py_apply, [image, annotation], [tf.float32, tf.int32])
         return image, annotation

@@ -85,6 +85,4 @@ def restructure_cvat_annotations(image_dir, cvat_dir, dataset_name, output_dir=N
     with open(annotations_output_path, "w") as f:
         json.dump(coco, f)
 
-    print(
-        f"Dataset '{dataset_name}' has been created successfully at '{dataset_path}'."
-    )
+    print(f"Dataset '{dataset_name}' has been created successfully at '{dataset_path}'.")

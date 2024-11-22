@@ -33,9 +33,7 @@ from agml.utils.image import consistent_shapes
 # Suppress any irrelevant warnings which will pop up from either backend.
 import warnings
 
-warnings.filterwarnings(
-    "ignore", category=UserWarning, message=".*Named tensors.*Triggered internally.*"
-)
+warnings.filterwarnings("ignore", category=UserWarning, message=".*Named tensors.*Triggered internally.*")
 
 
 class StrictBackendError(ValueError):
@@ -110,16 +108,14 @@ def set_backend(backend):
     if backend in ["tensorflow", "tf"] and _BACKEND != "tensorflow":
         if not _HAS_TENSORFLOW:
             raise ImportError(
-                "TensorFlow not found on system, cannot be used as "
-                "backend. Try running `pip install tensorflow`."
+                "TensorFlow not found on system, cannot be used as " "backend. Try running `pip install tensorflow`."
             )
         _BACKEND = "tf"
         log("Switched backend to TensorFlow.", level=logging.INFO)
     elif backend in ["torch", "pytorch"] and _BACKEND != "torch":
         if not _HAS_TORCH:
             raise ImportError(
-                "PyTorch not found on system, cannot be used as "
-                "backend. Try running `pip install torch`."
+                "PyTorch not found on system, cannot be used as " "backend. Try running `pip install torch`."
             )
         _BACKEND = "torch"
         log("Switched backend to PyTorch.", level=logging.INFO)

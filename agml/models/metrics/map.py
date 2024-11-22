@@ -80,8 +80,7 @@ def mean_average_precision(predicted_boxes, truth_boxes, num_classes=1, iou_thre
         # Determine the number of boxes for each of the training samples.
         numpy_gt = torch.tensor(ground_truths)
         amount_bboxes = {
-            int(k.numpy().item()): torch.zeros(v)
-            for k, v in zip(*torch.unique(numpy_gt[:, 0], return_counts=True))
+            int(k.numpy().item()): torch.zeros(v) for k, v in zip(*torch.unique(numpy_gt[:, 0], return_counts=True))
         }
 
         # Sort the boxes by probabilities.
@@ -104,12 +103,7 @@ def mean_average_precision(predicted_boxes, truth_boxes, num_classes=1, iou_thre
             ground_truth_img = torch_gt[torch.where(torch_gt[:, 0] == update_num)[0]]
 
             # Get the bounding box with the highest IoU.
-            ious = torch.tensor(
-                [
-                    bbox_iou(torch.tensor(detection[3:]), gt[3:].clone())
-                    for gt in ground_truth_img
-                ]
-            )
+            ious = torch.tensor([bbox_iou(torch.tensor(detection[3:]), gt[3:].clone()) for gt in ground_truth_img])
 
             # If there are no ground truths for this image, then
             # this is a false positive.
@@ -208,9 +202,7 @@ class MeanAveragePrecision(nn.Module):
         pred_boxes = np.squeeze(pred_boxes)
         pred_labels = np.squeeze(pred_labels)
         pred_scores = np.squeeze(pred_scores)
-        pred_labels, gt_labels, pred_scores = self._scalar_to_array(
-            pred_labels, gt_labels, pred_scores
-        )
+        pred_labels, gt_labels, pred_scores = self._scalar_to_array(pred_labels, gt_labels, pred_scores)
         gt_boxes = np.squeeze(gt_boxes)
         if pred_boxes.ndim == 1:
             pred_boxes = np.expand_dims(pred_boxes, axis=0)
@@ -223,9 +215,7 @@ class MeanAveragePrecision(nn.Module):
         if pred_boxes.ndim == 1:
             pred_boxes = np.expand_dims(pred_boxes, axis=0)
         for bbox, label, score in zip(pred_boxes, pred_labels, pred_scores):
-            self._prediction_data.append(
-                [self._num_updates, int(label - 1), score, *bbox]
-            )
+            self._prediction_data.append([self._num_updates, int(label - 1), score, *bbox])
 
         # Increment the number of updates.
         self._num_updates += 1
@@ -233,10 +223,7 @@ class MeanAveragePrecision(nn.Module):
     def compute(self):
         """Computes the mean average precision with the given data."""
         if self._num_updates == 0:
-            log(
-                "Tried to compute mean average precision "
-                "without any data updates; returning 0.0."
-            )
+            log("Tried to compute mean average precision " "without any data updates; returning 0.0.")
             return 0.0
 
         return mean_average_precision(

@@ -36,9 +36,7 @@ from agml.utils.logging import log
 @functools.lru_cache(maxsize=None)
 def _load_colormaps():
     with open(
-        os.path.join(
-            os.path.dirname(os.path.dirname(__file__)), "_assets", "viz_colormaps.json"
-        ),
+        os.path.join(os.path.dirname(os.path.dirname(__file__)), "_assets", "viz_colormaps.json"),
         "r",
     ) as f:
         cmaps = json.load(f)
@@ -90,9 +88,7 @@ def set_colormap(colormap):
     global _COLORMAP_CHOICE, _COLORMAPS
     if isinstance(colormap, list):
         if not all(len(i) == 3 for i in colormap):
-            raise ValueError(
-                "If you want a custom colormap, then pass a list of RGB values."
-            )
+            raise ValueError("If you want a custom colormap, then pass a list of RGB values.")
     elif isinstance(colormap, str):
         colormap = colormap.lower()
         if colormap not in _COLORMAPS.keys():
@@ -153,17 +149,13 @@ def format_image(img, mask=False):
     elif isinstance(img, tf.Tensor):
         img = img.numpy()
     else:
-        raise TypeError(
-            f"Expected either an np.ndarray, torch.Tensor, "
-            f"tf.Tensor, or PIL.Image, got {type(img)}."
-        )
+        raise TypeError(f"Expected either an np.ndarray, torch.Tensor, " f"tf.Tensor, or PIL.Image, got {type(img)}.")
 
     # Convert channels_first to channels_last.
     if img.ndim == 4:
         if img.shape[0] > 1:
             raise ValueError(
-                f"Got a batch of images with shape {img.shape}, "
-                f"expected at most a batch of one image."
+                f"Got a batch of images with shape {img.shape}, " f"expected at most a batch of one image."
             )
         img = np.squeeze(img)
     if img.shape[0] <= 3:

@@ -36,9 +36,7 @@ def consistent_shapes(objects):
 def needs_batch_dim(image):
     """Determines whether an image has or is missing a batch dimension."""
     if not hasattr(image, "shape"):
-        raise TypeError(
-            "Can only determine batch dimensions for numpy arrays or tensors."
-        )
+        raise TypeError("Can only determine batch dimensions for numpy arrays or tensors.")
     if len(image.shape) == 2:
         return True
     elif len(image.shape) == 3:
@@ -52,14 +50,11 @@ def resolve_image_size(size):
         return size, size
     elif isinstance(size, (list, tuple, set, np.ndarray)):
         if not len(size) == 2:
-            raise ValueError(
-                "Only two values must be provided for an input image size."
-            )
+            raise ValueError("Only two values must be provided for an input image size.")
         return size
     else:
         raise ValueError(
-            f"Expected either an integer or list of two values for "
-            f"image size, got ({size}) of type ({type(size)})."
+            f"Expected either an integer or list of two values for " f"image size, got ({size}) of type ({type(size)})."
         )
 
 

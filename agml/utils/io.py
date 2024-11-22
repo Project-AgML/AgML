@@ -35,9 +35,7 @@ def _is_valid_file(file):
 def get_file_list(fpath, ext=None, full_paths=True):
     """Gets a list of files from a path."""
     base_list = [
-        os.path.join(fpath, f) if full_paths else f
-        for f in os.listdir(fpath)
-        if _is_valid_file(os.path.join(fpath, f))
+        os.path.join(fpath, f) if full_paths else f for f in os.listdir(fpath) if _is_valid_file(os.path.join(fpath, f))
     ]
     if ext is not None:
         if callable(ext):
@@ -102,8 +100,7 @@ def load_code_from_string_or_file(code):
     """Returns valid code either from the file `code` or the string `code`."""
     if not isinstance(code, str):
         raise TypeError(
-            f"`code` must be either a code string or a path to "
-            f"a code file, got {code} of type ({type(code)})."
+            f"`code` must be either a code string or a path to " f"a code file, got {code} of type ({type(code)})."
         )
 
     # Check if it is a path. Just because the path doesn't exist doesn't mean
@@ -112,11 +109,6 @@ def load_code_from_string_or_file(code):
         with open(code, "r") as f:
             code = f.read()
     else:
-        if (
-            code.endswith(".cpp")
-            or code.endswith(".cc")
-            or code.endswith(".txt")
-            or code.endswith(".py")
-        ):
+        if code.endswith(".cpp") or code.endswith(".cc") or code.endswith(".txt") or code.endswith(".py"):
             raise ValueError(f"The provided file at {code} could not be found.")
     return code

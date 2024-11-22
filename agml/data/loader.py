@@ -172,13 +172,18 @@ class AgMLDataLoader(AgMLSerializable, metaclass=AgMLDataLoaderMeta):
         # internal contents are constructed using a `DataBuilder`, which
         # finds and wraps the local data in a proper format.
         self._builder = DataBuilder(
-            info=self._info, dataset_path=kwargs.get("dataset_path", None), overwrite=kwargs.get("overwrite", False)
+            info=self._info,
+            dataset_path=kwargs.get("dataset_path", None),
+            overwrite=kwargs.get("overwrite", False),
         )
 
         # These contents are then passed to a `DataManager`, which conducts
         # the actual loading and processing of the data when called.
         self._manager = DataManager(
-            builder=self._builder, task=self._info.tasks.ml, name=self._info.name, root=self._builder.dataset_root
+            builder=self._builder,
+            task=self._info.tasks.ml,
+            name=self._info.name,
+            root=self._builder.dataset_root,
         )
 
         # If the dataset is split, then the `AgMLDataLoader`s with the
@@ -331,7 +336,11 @@ class AgMLDataLoader(AgMLSerializable, metaclass=AgMLDataLoaderMeta):
                     classes = [c["name"] for c in json.load(f)["categories"]]
 
         # Construct and return the `AgMLDataLoader`.
-        return cls(name, dataset_path=dataset_path, meta={"task": task, "classes": classes, **kwargs})
+        return cls(
+            name,
+            dataset_path=dataset_path,
+            meta={"task": task, "classes": classes, **kwargs},
+        )
 
     @classmethod
     def helios(cls, name, dataset_path=None):
@@ -1023,7 +1032,10 @@ class AgMLDataLoader(AgMLSerializable, metaclass=AgMLDataLoaderMeta):
 
         # Create the new loader.
         obj = self._generate_split_loader(
-            new_coco_map, "train", meta_properties=new_properties, labels_for_image=new_category_map
+            new_coco_map,
+            "train",
+            meta_properties=new_properties,
+            labels_for_image=new_category_map,
         )
         obj._is_split = False
 
@@ -1427,7 +1439,12 @@ class AgMLDataLoader(AgMLSerializable, metaclass=AgMLDataLoaderMeta):
         """
         self._manager.assign_resize(image_size=image_size, method=method)
 
-    def transform(self, transform=NoArgument, target_transform=NoArgument, dual_transform=NoArgument):
+    def transform(
+        self,
+        transform=NoArgument,
+        target_transform=NoArgument,
+        dual_transform=NoArgument,
+    ):
         """Applies vision transforms to the input image and annotation data.
 
         This method applies transformations to the image and annotation data
@@ -1495,7 +1512,9 @@ class AgMLDataLoader(AgMLSerializable, metaclass=AgMLDataLoaderMeta):
           `transform` argument and they will automatically be applied.
         """
         self._manager.push_transforms(
-            transform=transform, target_transform=target_transform, dual_transform=dual_transform
+            transform=transform,
+            target_transform=target_transform,
+            dual_transform=dual_transform,
         )
 
     def normalize_images(self, method="scale"):
@@ -1782,7 +1801,13 @@ class AgMLDataLoader(AgMLSerializable, metaclass=AgMLDataLoaderMeta):
 
         # Return the DataLoader with a copy of this AgMLDataLoader, so
         # that changes to this will not affect the returned loader.
-        return DataLoader(obj, batch_size=batch_size, shuffle=shuffle, collate_fn=collate_fn, **loader_kwargs)
+        return DataLoader(
+            obj,
+            batch_size=batch_size,
+            shuffle=shuffle,
+            collate_fn=collate_fn,
+            **loader_kwargs,
+        )
 
     def export_yolo(self, yolo_path=None):
         """Exports the contents of the loader to the YOLO format, ready for training.

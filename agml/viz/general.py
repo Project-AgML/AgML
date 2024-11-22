@@ -59,14 +59,9 @@ def show_sample(loader, image_only=False, num_images=1, **kwargs):
             for sample in samples
         ]
     elif loader.task == "semantic_segmentation":
-        return [
-            show_image_and_overlaid_mask(sample, no_show=kwargs.get("no_show", False))
-            for sample in samples
-        ]
+        return [show_image_and_overlaid_mask(sample, no_show=kwargs.get("no_show", False)) for sample in samples]
     elif loader.task == "image_classification":
-        return show_images_and_labels(
-            samples, info=loader.info, no_show=kwargs.get("no_show", False)
-        )
+        return show_images_and_labels(samples, info=loader.info, no_show=kwargs.get("no_show", False))
 
 
 def show_images(images, shape=None, **kwargs):
@@ -108,8 +103,7 @@ def show_images(images, shape=None, **kwargs):
         shape = _inference_best_shape(len(images))
     if max(shape) > 20:
         raise NotImplementedError(
-            "Length of maximum shape length is greater than 20. "
-            "This method does not support non-rectangular shapes."
+            "Length of maximum shape length is greater than 20. " "This method does not support non-rectangular shapes."
         )
 
     fig, axes = plt.subplots(shape[0], shape[1], figsize=(shape[1] * 2, shape[0] * 2))
@@ -122,9 +116,7 @@ def show_images(images, shape=None, **kwargs):
         ax.set_aspect(1)
         ax.set_xticklabels([])
         ax.set_yticklabels([])
-        ax.tick_params(
-            axis="both", which="both", bottom=False, top=False, left=False, right=False
-        )
+        ax.tick_params(axis="both", which="both", bottom=False, top=False, left=False, right=False)
         plt.setp(ax.spines.values(), visible=False)
     fig.tight_layout()
 

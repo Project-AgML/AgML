@@ -43,10 +43,7 @@ def download_dataset(dataset_name, dest_dir, redownload=False):
             msg = maybe_you_meant(dataset_name, msg)
             raise ValueError(msg)
         else:
-            log(
-                f"Interpreted dataset '{dataset_name}' as "
-                f"'{dataset_name.replace('-', '_')}.'"
-            )
+            log(f"Interpreted dataset '{dataset_name}' as " f"'{dataset_name.replace('-', '_')}.'")
             dataset_name = dataset_name.replace("-", "_")
 
     # Connect to S3 and generate unsigned URL for bucket object
@@ -58,10 +55,7 @@ def download_dataset(dataset_name, dest_dir, redownload=False):
     exist_dir = os.path.join(dest_dir, dataset_name)
     if not redownload:
         if os.path.exists(exist_dir):
-            log(
-                f"Dataset '{dataset_name}' already exists "
-                f"in '{exist_dir}', skipping download."
-            )
+            log(f"Dataset '{dataset_name}' already exists " f"in '{exist_dir}', skipping download.")
             return
     elif os.path.exists(exist_dir) and redownload:
         shutil.rmtree(exist_dir)
@@ -135,10 +129,7 @@ def download_model(model_name, dest_dir, redownload=False):
             msg = maybe_you_meant(model_name, msg)
             raise ValueError(msg)
         else:
-            log(
-                f"Interpreted dataset '{model_name}' as "
-                f"'{model_name.replace('-', '_')}.'"
-            )
+            log(f"Interpreted dataset '{model_name}' as " f"'{model_name.replace('-', '_')}.'")
             model_name = model_name.replace("-", "_")
 
     # Connect to S3 and generate unsigned URL for bucket object
@@ -150,10 +141,7 @@ def download_model(model_name, dest_dir, redownload=False):
     exist_dir = os.path.join(dest_dir, model_name)
     if not redownload:
         if os.path.exists(exist_dir):
-            log(
-                f"Model '{model_name}' already exists "
-                f"in '{exist_dir}', skipping download."
-            )
+            log(f"Model '{model_name}' already exists " f"in '{exist_dir}', skipping download.")
             return
     elif os.path.exists(exist_dir) and redownload:
         shutil.rmtree(exist_dir)
@@ -216,10 +204,7 @@ def download_detector(detector_name, dest_dir, redownload=False):
     exist_dir = os.path.join(dest_dir, detector_name)
     if not redownload:
         if os.path.exists(exist_dir):
-            log(
-                f"Model '{detector_name}' already exists "
-                f"in '{exist_dir}', skipping download."
-            )
+            log(f"Model '{detector_name}' already exists " f"in '{exist_dir}', skipping download.")
             return
     elif os.path.exists(exist_dir) and redownload:
         shutil.rmtree(exist_dir)

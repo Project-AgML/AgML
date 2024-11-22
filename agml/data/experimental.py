@@ -87,9 +87,7 @@ def generate_keras_segmentation_dual_transform(*layers):
             use_seeds.append(True)
         else:
             use_seeds.append(False)
-        preprocessing_methods.append(
-            _single_preprocessing_layer_base(layer.__class__, config)
-        )
+        preprocessing_methods.append(_single_preprocessing_layer_base(layer.__class__, config))
 
     def _execute_preprocessing(layers_, use_seeds_):
         def _execute(image, annotation):

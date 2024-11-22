@@ -100,19 +100,12 @@ class Detector(AgMLSerializable):
         self._info = None
 
     def __call__(self, image, return_full=False, **kwargs):
-        if isinstance(image, list) or (
-            isinstance(image, np.ndarray) and len(image.shape) == 4
-        ):
+        if isinstance(image, list) or (isinstance(image, np.ndarray) and len(image.shape) == 4):
             if return_full:
-                return [
-                    self._single_input_inference(img, return_full, **kwargs)
-                    for img in image
-                ]
+                return [self._single_input_inference(img, return_full, **kwargs) for img in image]
             bboxes, classes, confidences = [], [], []
             for img in image:
-                bbox, cls, conf = self._single_input_inference(
-                    img, return_full, **kwargs
-                )
+                bbox, cls, conf = self._single_input_inference(img, return_full, **kwargs)
                 bboxes.append(bbox)
                 classes.append(cls)
                 confidences.append(conf)
@@ -233,10 +226,7 @@ class Detector(AgMLSerializable):
         model_save_dir = os.path.join(Detector.DEFAULT_MODEL_PATH, run_name)
         if os.path.exists(model_save_dir):
             if os.listdir(model_save_dir) and not overwrite:
-                raise ValueError(
-                    f"Model with name {run_name} already exists. "
-                    f"Set `overwrite=True` to overwrite."
-                )
+                raise ValueError(f"Model with name {run_name} already exists. " f"Set `overwrite=True` to overwrite.")
         os.makedirs(model_save_dir, exist_ok=True)
 
         # export the YOLO dataset in the Ultralytics package directory
@@ -246,9 +236,7 @@ class Detector(AgMLSerializable):
         try:  # instantiate the YOLO model based on the available choices
             net = YOLO(YOLO11_MODELS_TO_PATH[model.upper()])
         except KeyError:
-            raise ValueError(
-                f"Invalid model choice: {model}. Choose from: {VALID_YOLO11_MODELS}"
-            )
+            raise ValueError(f"Invalid model choice: {model}. Choose from: {VALID_YOLO11_MODELS}")
 
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore", message=".*torch.amp.autocast")
@@ -324,9 +312,7 @@ class Detector(AgMLSerializable):
         """
         # get the path to the model based on the input arguments
         if name is not None and weights is not None:
-            raise ValueError(
-                "You can only provide either a `name` or `weights` argument, not both."
-            )
+            raise ValueError("You can only provide either a `name` or `weights` argument, not both.")
         if name is not None:
             model_path = os.path.join(Detector.DEFAULT_MODEL_PATH, name, "best.pt")
             if not os.path.exists(model_path):
@@ -339,9 +325,7 @@ class Detector(AgMLSerializable):
         if weights is not None:
             model_path = weights
             if not os.path.exists(model_path):
-                raise FileNotFoundError(
-                    f"Model weights not found at the provided path: {model_path}"
-                )
+                raise FileNotFoundError(f"Model weights not found at the provided path: {model_path}")
 
         # load the model using the Ultralytics package
         net = YOLO(model_path)  # noqa
@@ -375,36 +359,26 @@ class Detector(AgMLSerializable):
         The loaded YOLO model.
         """
         if dataset_name not in public_data_sources(ml_task="object_detection"):
-            raise ValueError(
-                f"Dataset {dataset_name} is not a valid object detection dataset."
-            )
+            raise ValueError(f"Dataset {dataset_name} is not a valid object detection dataset.")
         if yolo_model.upper() not in YOLO11_MODELS_TO_PATH.keys():
             if len(yolo_model) == 1:
                 yolo_model = "yolo11" + yolo_model
                 if yolo_model not in YOLO11_MODELS_TO_PATH.keys():
-                    raise ValueError(
-                        f"YOLO model {yolo_model} is not a valid YOLO11 model."
-                    )
+                    raise ValueError(f"YOLO model {yolo_model} is not a valid YOLO11 model.")
             raise ValueError(f"YOLO model {yolo_model} is not a valid YOLO11 model.")
 
         # Validate the pretrained benchmark name + model
         model_name = f"{dataset_name}+{yolo_model}"
         if model_name not in load_detector_benchmarks():
-            raise ValueError(
-                f"Could not find a valid benchmark for model ({model_name})."
-            )
+            raise ValueError(f"Could not find a valid benchmark for model ({model_name}).")
 
         # Download the model if it does not exist
-        if not os.path.exists(
-            os.path.join(Detector.DEFAULT_MODEL_PATH, model_name.replace("+", "-"))
-        ):
+        if not os.path.exists(os.path.join(Detector.DEFAULT_MODEL_PATH, model_name.replace("+", "-"))):
             download_detector(model_name, Detector.DEFAULT_MODEL_PATH)
 
         # Load the model
         benchmark_data = load_detector_benchmarks()[model_name]
-        model_path = os.path.join(
-            Detector.DEFAULT_MODEL_PATH, model_name.replace("+", "-"), "best.pt"
-        )
+        model_path = os.path.join(Detector.DEFAULT_MODEL_PATH, model_name.replace("+", "-"), "best.pt")
         net = cls.load(weights=model_path, benchmark_data=benchmark_data, **kwargs)
         net._info = source(dataset_name)
         return net

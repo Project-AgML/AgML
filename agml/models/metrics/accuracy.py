@@ -65,9 +65,7 @@ class Accuracy(nn.Module):
 
     def compute(self):
         """Computes the accuracy between the predictions and ground truths."""
-        return accuracy(
-            torch.stack(self._prediction_data), torch.stack(self._truth_data)
-        )
+        return accuracy(torch.stack(self._prediction_data), torch.stack(self._truth_data))
 
     def reset(self):
         """Resets the accumulator states."""

@@ -153,10 +153,7 @@ class ClassificationModel(AgMLModelBase):
         """
         images = ClassificationModel._expand_input_images(images)
         return torch.stack(
-            [
-                ClassificationModel._preprocess_image(image, **kwargs)
-                for image in images
-            ],
+            [ClassificationModel._preprocess_image(image, **kwargs) for image in images],
             dim=0,
         )
 
@@ -359,9 +356,7 @@ class ClassificationModel(AgMLModelBase):
                 self.loss = nn.CrossEntropyLoss()
         else:
             if not isinstance(loss, nn.Module) or not callable(loss):
-                raise TypeError(
-                    f"Expected a callable loss function, but got '{type(loss)}'."
-                )
+                raise TypeError(f"Expected a callable loss function, but got '{type(loss)}'.")
 
         # Initialize the metrics.
         metric_collection = []
@@ -388,12 +383,8 @@ class ClassificationModel(AgMLModelBase):
 
                         # convert to camel case
                         else:
-                            metric = "".join(
-                                [word.capitalize() for word in metric.split("_")]
-                            )
-                            metric_collection.append(
-                                [metric, getattr(class_metrics, metric)()]
-                            )
+                            metric = "".join([word.capitalize() for word in metric.split("_")])
+                            metric_collection.append([metric, getattr(class_metrics, metric)()])
                     else:
                         raise ValueError(
                             f"Expected a valid metric torchmetrics metric name, "
@@ -407,9 +398,7 @@ class ClassificationModel(AgMLModelBase):
 
                 # Otherwise, raise an error.
                 else:
-                    raise TypeError(
-                        f"Expected a metric name or a metric class, but got '{type(metric)}'."
-                    )
+                    raise TypeError(f"Expected a metric name or a metric class, but got '{type(metric)}'.")
         self._metrics = metric_collection
 
         # Initialize the optimizer/learning rate scheduler.
@@ -421,15 +410,11 @@ class ClassificationModel(AgMLModelBase):
                     f"Check `torch.optim` for a list of valid optimizers."
                 )
 
-            optimizer = getattr(torch.optim, optimizer_class)(
-                self.parameters(), lr=kwargs.get("lr", 1e-3)
-            )
+            optimizer = getattr(torch.optim, optimizer_class)(self.parameters(), lr=kwargs.get("lr", 1e-3))
         elif isinstance(optimizer, torch.optim.Optimizer):
             pass  # nothing to do
         else:
-            raise TypeError(
-                f"Expected an optimizer name or a torch optimizer, but got '{type(optimizer)}'."
-            )
+            raise TypeError(f"Expected an optimizer name or a torch optimizer, but got '{type(optimizer)}'.")
 
         scheduler = kwargs.get("lr_scheduler", None)
         if scheduler is not None:
@@ -440,9 +425,7 @@ class ClassificationModel(AgMLModelBase):
                     f"it on your own and pass it to the `lr_scheduler` argument. "
                 )
             elif not isinstance(scheduler, torch.optim.lr_scheduler.LRScheduler):
-                raise TypeError(
-                    f"Expected a torch LR scheduler, but got '{type(scheduler)}'."
-                )
+                raise TypeError(f"Expected a torch LR scheduler, but got '{type(scheduler)}'.")
 
         self._optimization_parameters = {
             "optimizer": optimizer,

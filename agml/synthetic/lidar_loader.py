@@ -59,12 +59,8 @@ class LiDARDataLoader(AgMLSerializable):
             if not os.path.isdir(location):
                 raise ValueError(f"Invalid location: {location}")
         structure = self._load_structure(location)
-        point_cloud_files = glob.glob(
-            os.path.join(location, "**/*.xyz"), recursive=True
-        )
-        self._point_clouds = [
-            PointCloud(f, structure=structure) for f in point_cloud_files
-        ]
+        point_cloud_files = glob.glob(os.path.join(location, "**/*.xyz"), recursive=True)
+        self._point_clouds = [PointCloud(f, structure=structure) for f in point_cloud_files]
 
     @staticmethod
     def _load_structure(location):
@@ -79,9 +75,7 @@ class LiDARDataLoader(AgMLSerializable):
 
         # Load the `ASCII_format` XML tag if it exists.
         contents = open(style_file, "r").read()
-        ascii_format = (
-            re.search("<ASCII_format>(.*)</ASCII_format>", contents).group(1).strip()
-        )
+        ascii_format = re.search("<ASCII_format>(.*)</ASCII_format>", contents).group(1).strip()
         ascii_format = ascii_format.replace("object_label", "label")
         ascii_format = ascii_format.split(" ")
         return ascii_format
@@ -91,6 +85,4 @@ class LiDARDataLoader(AgMLSerializable):
         # Prevent circular imports.
         from agml.viz.point_clouds import show_point_cloud
 
-        show_point_cloud(
-            self._point_clouds[np.random.choice(self._accessor_list)], format=format
-        )
+        show_point_cloud(self._point_clouds[np.random.choice(self._accessor_list)], format=format)

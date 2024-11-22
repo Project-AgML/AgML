@@ -53,11 +53,7 @@ def resolve_tuple_values(*inputs, custom_error=None):
     if isinstance(inputs[0], (list, tuple)) and all(c is None for c in inputs[1:]):
         if len(inputs[0]) != len(inputs):
             # special case for COCO JSON
-            if (
-                len(inputs) == 3
-                and len(inputs[0]) == 2
-                and isinstance(inputs[0][1], dict)
-            ):
+            if len(inputs) == 3 and len(inputs[0]) == 2 and isinstance(inputs[0][1], dict):
                 try:
                     return (
                         inputs[0][0],
@@ -151,11 +147,7 @@ def weak_squeeze(arr, ndims=2):
 
 def is_float(num):
     """Determines if a number is a float."""
-    is_ = (
-        isinstance(num, float)
-        or isinstance(num, np.float32)
-        or isinstance(num, np.float64)
-    )
+    is_ = isinstance(num, float) or isinstance(num, np.float32) or isinstance(num, np.float64)
     if is_:
         return True
     try:

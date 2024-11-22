@@ -123,24 +123,18 @@ def visualize_all_views(dataset_path, image):
     """
     dataset_path = os.path.abspath(os.path.expanduser(dataset_path))
     if not os.path.exists(dataset_path):
-        raise NotADirectoryError(
-            f"The provided dataset path {dataset_path} does not exist."
-        )
+        raise NotADirectoryError(f"The provided dataset path {dataset_path} does not exist.")
 
     # Get all of the views for the input image.
     image = str(image)
     if image.startswith("image"):
         image = image.replace("image", "")
     if _is_agml_converted(dataset_path):
-        views = glob.glob(
-            os.path.join(dataset_path, "images", f"image{image}-view*.jpeg")
-        )
+        views = glob.glob(os.path.join(dataset_path, "images", f"image{image}-view*.jpeg"))
         if len(views) == 0:
             views = glob.glob(os.path.join(dataset_path, f"image{image}-view*.jpeg"))
     else:
-        views = glob.glob(
-            os.path.join(dataset_path, f"image{image}", "**/*.jpeg"), recursive=True
-        )
+        views = glob.glob(os.path.join(dataset_path, f"image{image}", "**/*.jpeg"), recursive=True)
 
     # Check that there are images.
     if len(views) == 0:

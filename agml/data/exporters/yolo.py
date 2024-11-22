@@ -67,9 +67,7 @@ def export_yolo(dataset, yolo_path=None):
     if yolo_path is None:
         yolo_path = os.path.join(os.getcwd(), f"{loader.name}_yolo_export")
     if not os.path.exists(os.path.join(yolo_path, "data")):
-        log(
-            "YOLO Export Tool did not receive a valid YOLO path. Creating a new directory for the export."
-        )
+        log("YOLO Export Tool did not receive a valid YOLO path. Creating a new directory for the export.")
 
     yolo_data_path = os.path.join(yolo_path, "datasets", loader.name)
     output_image_dir = os.path.join(yolo_data_path, "images")
@@ -87,16 +85,11 @@ def export_yolo(dataset, yolo_path=None):
     # get the height/width for all the images for normalization purposes
     if loader.IS_MULTI_DATASET:
         image_info = flatten(
-            [
-                sub_loader._builder._default_coco_annotations["images"]
-                for sub_loader in loader._loaders
-            ]
+            [sub_loader._builder._default_coco_annotations["images"] for sub_loader in loader._loaders]
         )  # noqa
     else:
         image_info = loader._builder._default_coco_annotations["images"]
-    image_info = {
-        image["file_name"]: (image["height"], image["width"]) for image in image_info
-    }
+    image_info = {image["file_name"]: (image["height"], image["width"]) for image in image_info}
 
     # compatibility for content format for multi-dataset loaders
     if not loader.IS_MULTI_DATASET:
@@ -146,12 +139,8 @@ def export_yolo(dataset, yolo_path=None):
             # convert from the default AgML format (COCO: [x, y, w, h])
             # to YOLO format: (normalized [x_center, y_center, w, h])
             image_shape = image_info[os.path.basename(image)]
-            new_annotation_set = convert_annotations_to_yolo_list(
-                annotation_set, image_shape, class_mapper
-            )
-            text_content = "\n".join(
-                [" ".join(map(str, annotation)) for annotation in new_annotation_set]
-            )
+            new_annotation_set = convert_annotations_to_yolo_list(annotation_set, image_shape, class_mapper)
+            text_content = "\n".join([" ".join(map(str, annotation)) for annotation in new_annotation_set])
 
             # the name of the new image is {dataset_name}_{old_name}.{ext}
             image_name = f"{loader_name}_{os.path.basename(image)}"

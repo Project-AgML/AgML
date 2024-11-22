@@ -75,9 +75,7 @@ class ImageResizeManager(AgMLSerializable):
 
     # Stores the path to the local file which contains the
     # information on the image shapes in all of the datasets.
-    _shape_info_file = os.path.join(
-        recursive_dirname(__file__, 3), "_assets", "shape_info.pickle"
-    )
+    _shape_info_file = os.path.join(recursive_dirname(__file__, 3), "_assets", "shape_info.pickle")
 
     # Stores the default image size if it is not inferenced.
     _default_size = (512, 512)
@@ -289,8 +287,7 @@ class ImageResizeManager(AgMLSerializable):
             return self._resize_single_image(contents, image_size)
         if image_size is not None:
             return {
-                k: self._method_resize(i.astype(np.uint16), image_size).astype(np.int32)
-                for k, i in image.items()
+                k: self._method_resize(i.astype(np.uint16), image_size).astype(np.int32) for k, i in image.items()
             }, label
         return image, label
 
@@ -310,9 +307,7 @@ class ImageResizeManager(AgMLSerializable):
             processed_bboxes = []
             for bbox in bboxes:
                 x1, y1, width, height = bbox
-                processed_bboxes.append(
-                    [x1 / x_scale, y1 / y_scale, width / x_scale, height / y_scale]
-                )
+                processed_bboxes.append([x1 / x_scale, y1 / y_scale, width / x_scale, height / y_scale])
 
             # Clip the bounding boxes (There might be a case where
             # the bounding box is on the edge, but goes to just over 1.0

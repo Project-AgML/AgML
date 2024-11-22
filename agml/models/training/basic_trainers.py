@@ -148,9 +148,7 @@ def train_classification(
         any([train_dataloader, val_dataloader, test_dataloader]),
     )
     if not (dataset_exists ^ dataloader_exists):
-        raise ValueError(
-            "You must pass one and only one of the dataset/dataloader arguments."
-        )
+        raise ValueError("You must pass one and only one of the dataset/dataloader arguments.")
 
     if dataset_exists:
         nw = kwargs.get("num_workers", None)
@@ -159,24 +157,19 @@ def train_classification(
         if not any([dataset.train_data, dataset.val_data, dataset.test_data]):
             raise ValueError("The provided dataset must have split data.")
         if dataset.train_data is not None:
-            train_dataloader = dataset.train_data.export_torch(
-                batch_size=batch_size, shuffle=True, num_workers=nw
-            )
+            train_dataloader = dataset.train_data.export_torch(batch_size=batch_size, shuffle=True, num_workers=nw)
         if dataset.val_data is not None:
-            val_dataloader = dataset.val_data.export_torch(
-                batch_size=batch_size, shuffle=False, num_workers=nw
-            )
+            val_dataloader = dataset.val_data.export_torch(batch_size=batch_size, shuffle=False, num_workers=nw)
         if dataset.test_data is not None:
-            test_dataloader = dataset.test_data.export_torch(
-                batch_size=batch_size, shuffle=False, num_workers=nw
-            )
+            test_dataloader = dataset.test_data.export_torch(batch_size=batch_size, shuffle=False, num_workers=nw)
         dataset_name = dataset.info.name
 
     # Set up the model for training (and choose the default parameters).
     if not isinstance(model, ClassificationModel):
         raise ValueError(
-            "Expected an `agml.models.ClassificationModel` for an image "
-            "classification task, instead got {}.".format(type(model))
+            "Expected an `agml.models.ClassificationModel` for an image " "classification task, instead got {}.".format(
+                type(model)
+            )
         )
 
     if loss is None:
@@ -216,26 +209,21 @@ def train_classification(
     if experiment_name is None:
         curr_datetime = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M")
         if dataset_exists:
-            experiment_name = "{}_{}_{}".format(
-                "image_classification", dataset_name, curr_datetime
-            )  # noqa
+            experiment_name = "{}_{}_{}".format("image_classification", dataset_name, curr_datetime)  # noqa
         else:
-            experiment_name = "{}_{}_{}".format(
-                "image_classification", "unknown", curr_datetime
-            )
+            experiment_name = "{}_{}_{}".format("image_classification", "unknown", curr_datetime)
     if loggers is not None:
         for _logger in loggers:
             if not isinstance(_logger, Logger):
                 raise ValueError(
-                    "Expected a `pytorch_lightning.loggers.Logger` for a "
-                    "logger, instead got {}.".format(type(_logger))
+                    "Expected a `pytorch_lightning.loggers.Logger` for a " "logger, instead got {}.".format(
+                        type(_logger)
+                    )
                 )
     else:
         loggers = [TensorBoardLogger(save_dir, name=experiment_name)]
     save_dir = os.path.join(save_dir, experiment_name)
-    checkpoint_callback = ModelCheckpoint(
-        save_dir, monitor="val_loss", mode="min", save_top_k=1
-    )
+    checkpoint_callback = ModelCheckpoint(save_dir, monitor="val_loss", mode="min", save_top_k=1)
 
     accelerator = get_accelerator(use_cpu=use_cpu)
     if accelerator == "cuda":
@@ -391,9 +379,7 @@ def train_segmentation(
         any([train_dataloader, val_dataloader, test_dataloader]),
     )
     if not (dataset_exists ^ dataloader_exists):
-        raise ValueError(
-            "You must pass one and only one of the dataset/dataloader arguments."
-        )
+        raise ValueError("You must pass one and only one of the dataset/dataloader arguments.")
 
     if dataset_exists:
         nw = kwargs.get("num_workers", None)
@@ -402,24 +388,19 @@ def train_segmentation(
         if not any([dataset.train_data, dataset.val_data, dataset.test_data]):
             raise ValueError("The provided dataset must have split data.")
         if dataset.train_data is not None:
-            train_dataloader = dataset.train_data.export_torch(
-                batch_size=batch_size, shuffle=True, num_workers=nw
-            )
+            train_dataloader = dataset.train_data.export_torch(batch_size=batch_size, shuffle=True, num_workers=nw)
         if dataset.val_data is not None:
-            val_dataloader = dataset.val_data.export_torch(
-                batch_size=batch_size, shuffle=False, num_workers=nw
-            )
+            val_dataloader = dataset.val_data.export_torch(batch_size=batch_size, shuffle=False, num_workers=nw)
         if dataset.test_data is not None:
-            test_dataloader = dataset.test_data.export_torch(
-                batch_size=batch_size, shuffle=False, num_workers=nw
-            )
+            test_dataloader = dataset.test_data.export_torch(batch_size=batch_size, shuffle=False, num_workers=nw)
         dataset_name = dataset.info.name
 
     # Set up the model for training (and choose the default parameters).
     if not isinstance(model, SegmentationModel):
         raise ValueError(
-            "Expected an `agml.models.SegmentationModel` for an image "
-            "classification task, instead got {}.".format(type(model))
+            "Expected an `agml.models.SegmentationModel` for an image " "classification task, instead got {}.".format(
+                type(model)
+            )
         )
 
     if loss is None:
@@ -462,26 +443,21 @@ def train_segmentation(
     if experiment_name is None:
         curr_datetime = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M")
         if dataset_exists:
-            experiment_name = "{}_{}_{}".format(
-                "semantic_segmentation", dataset_name, curr_datetime
-            )  # noqa
+            experiment_name = "{}_{}_{}".format("semantic_segmentation", dataset_name, curr_datetime)  # noqa
         else:
-            experiment_name = "{}_{}_{}".format(
-                "semantic_segmentation", "unknown", curr_datetime
-            )
+            experiment_name = "{}_{}_{}".format("semantic_segmentation", "unknown", curr_datetime)
     save_dir = os.path.join(save_dir, experiment_name)
     if loggers is not None:
         for _logger in loggers:
             if not isinstance(_logger, Logger):
                 raise ValueError(
-                    "Expected a `pytorch_lightning.loggers.Logger` for a "
-                    "logger, instead got {}.".format(type(_logger))
+                    "Expected a `pytorch_lightning.loggers.Logger` for a " "logger, instead got {}.".format(
+                        type(_logger)
+                    )
                 )
     else:
         loggers = [TensorBoardLogger(save_dir, name=experiment_name)]
-    checkpoint_callback = ModelCheckpoint(
-        save_dir, monitor="val_loss", mode="min", save_top_k=1
-    )
+    checkpoint_callback = ModelCheckpoint(save_dir, monitor="val_loss", mode="min", save_top_k=1)
 
     accelerator = get_accelerator(use_cpu=use_cpu)
     if accelerator == "cuda":
@@ -634,9 +610,7 @@ def train_detection(
         any([train_dataloader, val_dataloader, test_dataloader]),
     )
     if not (dataset_exists ^ dataloader_exists):
-        raise ValueError(
-            "You must pass one and only one of the dataset/dataloader arguments."
-        )
+        raise ValueError("You must pass one and only one of the dataset/dataloader arguments.")
 
     if dataset_exists:
         nw = kwargs.get("num_workers", None)
@@ -645,24 +619,19 @@ def train_detection(
         if not any([dataset.train_data, dataset.val_data, dataset.test_data]):
             raise ValueError("The provided dataset must have split data.")
         if dataset.train_data is not None:
-            train_dataloader = dataset.train_data.export_torch(
-                batch_size=batch_size, shuffle=True, num_workers=nw
-            )
+            train_dataloader = dataset.train_data.export_torch(batch_size=batch_size, shuffle=True, num_workers=nw)
         if dataset.val_data is not None:
-            val_dataloader = dataset.val_data.export_torch(
-                batch_size=batch_size, shuffle=False, num_workers=nw
-            )
+            val_dataloader = dataset.val_data.export_torch(batch_size=batch_size, shuffle=False, num_workers=nw)
         if dataset.test_data is not None:
-            test_dataloader = dataset.test_data.export_torch(
-                batch_size=batch_size, shuffle=False, num_workers=nw
-            )
+            test_dataloader = dataset.test_data.export_torch(batch_size=batch_size, shuffle=False, num_workers=nw)
         dataset_name = dataset.info.name
 
     # Set up the model for training (and choose the default parameters).
     if not isinstance(model, DetectionModel):
         raise ValueError(
-            "Expected an `agml.models.DetectionModel` for an image "
-            "classification task, instead got {}.".format(type(model))
+            "Expected an `agml.models.DetectionModel` for an image " "classification task, instead got {}.".format(
+                type(model)
+            )
         )
 
     if metrics is None:
@@ -699,26 +668,21 @@ def train_detection(
     if experiment_name is None:
         curr_datetime = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M")
         if dataset_exists:
-            experiment_name = "{}_{}_{}".format(
-                "object_detection", dataset_name, curr_datetime
-            )  # noqa
+            experiment_name = "{}_{}_{}".format("object_detection", dataset_name, curr_datetime)  # noqa
         else:
-            experiment_name = "{}_{}_{}".format(
-                "object_detection", "unknown", curr_datetime
-            )
+            experiment_name = "{}_{}_{}".format("object_detection", "unknown", curr_datetime)
     save_dir = os.path.join(save_dir, experiment_name)
     if loggers is not None:
         for _logger in loggers:
             if not isinstance(_logger, Logger):
                 raise ValueError(
-                    "Expected a `pytorch_lightning.loggers.Logger` for a "
-                    "logger, instead got {}.".format(type(_logger))
+                    "Expected a `pytorch_lightning.loggers.Logger` for a " "logger, instead got {}.".format(
+                        type(_logger)
+                    )
                 )
     else:
         loggers = [TensorBoardLogger(save_dir, name=experiment_name)]
-    checkpoint_callback = ModelCheckpoint(
-        save_dir, monitor="val_map", mode="max", save_top_k=1
-    )
+    checkpoint_callback = ModelCheckpoint(save_dir, monitor="val_map", mode="max", save_top_k=1)
 
     accelerator = get_accelerator(use_cpu=use_cpu)
     if accelerator == "cuda":

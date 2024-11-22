@@ -77,13 +77,7 @@ class PublicDataPreprocessor(object):
         """Preprocesses the Vine Virus Photo Dataset."""
         # Get the dataset directory directly (no need for 'original' directory)
         base_path = self.data_dir
-        classes = sorted(
-            [
-                d
-                for d in os.listdir(base_path)
-                if os.path.isdir(os.path.join(base_path, d))
-            ]
-        )
+        classes = sorted([d for d in os.listdir(base_path) if os.path.isdir(os.path.join(base_path, d))])
 
         # Create output directory
         output_path = os.path.join(self.data_processed_dir, dataset_name)
@@ -104,21 +98,13 @@ class PublicDataPreprocessor(object):
                     img_path = os.path.join(class_path, img)
                     shutil.copyfile(img_path, os.path.join(output_path, cls, img))
 
-        print(
-            f"Dataset {dataset_name} has been preprocessed and saved to {output_path}"
-        )
+        print(f"Dataset {dataset_name} has been preprocessed and saved to {output_path}")
 
     def corn_maize_leaf_disease(self, dataset_name):
         """Preprocesses the Corn or Maize Leaf Disease Dataset."""
         # Get the dataset directory directly (no need for 'original' directory)
         base_path = self.data_dir
-        classes = sorted(
-            [
-                d
-                for d in os.listdir(base_path)
-                if os.path.isdir(os.path.join(base_path, d))
-            ]
-        )
+        classes = sorted([d for d in os.listdir(base_path) if os.path.isdir(os.path.join(base_path, d))])
 
         # Create output directory
         output_path = os.path.join(self.data_processed_dir, dataset_name)
@@ -157,21 +143,13 @@ class PublicDataPreprocessor(object):
                         # Save the processed image to the output directory
                         processed_image.save(os.path.join(output_path, cls, img))
 
-        print(
-            f"Dataset {dataset_name} has been preprocessed and saved to {output_path}"
-        )
+        print(f"Dataset {dataset_name} has been preprocessed and saved to {output_path}")
 
     def tomato_leaf_disease(self, dataset_name):
         """Preprocesses the Tomato Leaf Disease Dataset."""
         # Get the dataset directory directly (no need for 'original' directory)
         base_path = self.data_dir
-        classes = sorted(
-            [
-                d
-                for d in os.listdir(base_path)
-                if os.path.isdir(os.path.join(base_path, d))
-            ]
-        )
+        classes = sorted([d for d in os.listdir(base_path) if os.path.isdir(os.path.join(base_path, d))])
 
         # Create output directory
         output_path = os.path.join(self.data_processed_dir, dataset_name)
@@ -210,9 +188,7 @@ class PublicDataPreprocessor(object):
                         # Save the processed image to the output directory
                         processed_image.save(os.path.join(output_path, cls, img))
 
-        print(
-            f"Dataset {dataset_name} has been preprocessed and saved to {output_path}"
-        )
+        print(f"Dataset {dataset_name} has been preprocessed and saved to {output_path}")
 
     def bean_disease_uganda(self, dataset_name):
         # Get the dataset classes and paths
@@ -254,15 +230,9 @@ class PublicDataPreprocessor(object):
         processed_dir = os.path.join(self.data_processed_dir, dataset_name)
         unique_labels = np.unique(df["Species"])
         for unique_label in unique_labels:
-            os.makedirs(
-                os.path.join(processed_dir, unique_label.title()), exist_ok=True
-            )
+            os.makedirs(os.path.join(processed_dir, unique_label.title()), exist_ok=True)
         for file in tqdm(images, desc="Moving Images", file=sys.stdout):
-            save_dir = (
-                df.loc[df["Filename"] == os.path.basename(file)]["Species"]
-                .values[0]
-                .title()
-            )
+            save_dir = df.loc[df["Filename"] == os.path.basename(file)]["Species"].values[0].title()
             shutil.copyfile(
                 os.path.join(dataset_dir, "images", file),
                 os.path.join(processed_dir, save_dir, os.path.basename(file)),
@@ -283,14 +253,10 @@ class PublicDataPreprocessor(object):
             for anno_file_name in annotations:
                 # Read annotations
                 try:
-                    anno_data = read_txt_file(
-                        os.path.join(dataset_path, anno_file_name)
-                    )
+                    anno_data = read_txt_file(os.path.join(dataset_path, anno_file_name))
                 except:
                     try:
-                        anno_data = read_txt_file(
-                            os.path.join(dataset_path, anno_file_name + ".txt")
-                        )
+                        anno_data = read_txt_file(os.path.join(dataset_path, anno_file_name + ".txt"))
                     except Exception as e:
                         raise e
 
@@ -304,9 +270,7 @@ class PublicDataPreprocessor(object):
                 anno_data_all += anno_data
 
         # Process annotation files
-        save_dir_anno = os.path.join(
-            self.data_processed_dir, dataset_name, "annotations"
-        )
+        save_dir_anno = os.path.join(self.data_processed_dir, dataset_name, "annotations")
         create_dir(save_dir_anno)
         output_json_file = os.path.join(save_dir_anno, "instances.json")
 
@@ -323,9 +287,7 @@ class PublicDataPreprocessor(object):
         output_img_path = os.path.join(self.data_processed_dir, dataset_name, "images")
         create_dir(output_img_path)
 
-        convert_bbox_to_coco(
-            anno_data_all, label2id, output_json_file, output_img_path, general_info
-        )
+        convert_bbox_to_coco(anno_data_all, label2id, output_json_file, output_img_path, general_info)
 
     def apple_detection_usa(self, dataset_name, fix=False):
         # Just a quick fix to clip over-sized bounding boxes.
@@ -415,9 +377,7 @@ class PublicDataPreprocessor(object):
                 anno_data_all += anno_data
 
         # Process annotation files
-        save_dir_anno = os.path.join(
-            self.data_processed_dir, dataset_name, "annotations"
-        )
+        save_dir_anno = os.path.join(self.data_processed_dir, dataset_name, "annotations")
         create_dir(save_dir_anno)
         output_json_file = os.path.join(save_dir_anno, "instances.json")
 
@@ -451,9 +411,7 @@ class PublicDataPreprocessor(object):
         resize = 1.0
 
         # Read public_datasources.json to get class information
-        datasource_file = os.path.join(
-            os.path.dirname(__file__), "../_assets/public_datasources.json"
-        )
+        datasource_file = os.path.join(os.path.dirname(__file__), "../_assets/public_datasources.json")
         with open(datasource_file) as f:
             data = json.load(f)
             category_info = data[dataset_name]["crop_types"]
@@ -472,15 +430,10 @@ class PublicDataPreprocessor(object):
         # Get image file and xml file
         all_files = get_file_list(ann_dir)
         anno_files = [os.path.join(ann_dir, x) for x in all_files if "xml" in x]
-        img_files = [
-            x.replace(".xml", ".jpg").replace("Annotations", "JPEGImages")
-            for x in anno_files
-        ]
+        img_files = [x.replace(".xml", ".jpg").replace("Annotations", "JPEGImages") for x in anno_files]
 
         # Process annotation files
-        save_dir_anno = os.path.join(
-            self.data_processed_dir, dataset_name, "annotations"
-        )
+        save_dir_anno = os.path.join(self.data_processed_dir, dataset_name, "annotations")
         create_dir(save_dir_anno)
         output_json_file = os.path.join(save_dir_anno, "instances.json")
 
@@ -547,9 +500,7 @@ class PublicDataPreprocessor(object):
                     a_set["y2"],
                     label2id[a_set["tags"][0]],
                 ]
-                base_annotation_data = get_coco_annotation_from_obj(
-                    formatted_set, a_set["name"]
-                )
+                base_annotation_data = get_coco_annotation_from_obj(formatted_set, a_set["name"])
                 base_annotation_data["image_id"] = indx + 1
                 annotation_data.append(base_annotation_data)
 
@@ -586,9 +537,7 @@ class PublicDataPreprocessor(object):
         for path in images:
             if path not in valid_paths:
                 continue
-            shutil.copyfile(
-                path, os.path.join(processed_img_dir, os.path.basename(path))
-            )
+            shutil.copyfile(path, os.path.join(processed_img_dir, os.path.basename(path)))
         with open(os.path.join(processed_dir, "annotations.json"), "w") as f:
             json.dump(all_annotation_data, f, indent=4)
 
@@ -610,21 +559,13 @@ class PublicDataPreprocessor(object):
         # Map image filenames with their corresponding labels.
         fname_map_a, fname_map_b = {}, {}
         for fname in apple_a_images:
-            fname_id = (
-                str(int(float(os.path.splitext(fname)[0].split("_")[-1]))) + ".png"
-            )
+            fname_id = str(int(float(os.path.splitext(fname)[0].split("_")[-1]))) + ".png"
             if fname_id in apple_a_labels:
-                fname_map_a[os.path.join(apple_a_dir, fname)] = os.path.join(
-                    apple_a_label_dir, fname_id
-                )
+                fname_map_a[os.path.join(apple_a_dir, fname)] = os.path.join(apple_a_label_dir, fname_id)
         for fname in apple_b_images:
-            fname_id = (
-                str(int(float(os.path.splitext(fname)[0].split("_")[-1]))) + ".png"
-            )
+            fname_id = str(int(float(os.path.splitext(fname)[0].split("_")[-1]))) + ".png"
             if fname_id in apple_b_labels:
-                fname_map_b[os.path.join(apple_b_dir, fname)] = os.path.join(
-                    apple_b_label_dir, fname_id
-                )
+                fname_map_b[os.path.join(apple_b_dir, fname)] = os.path.join(apple_b_label_dir, fname_id)
 
         # Process and move the images.
         processed_dir = os.path.join(self.data_processed_dir, dataset_name)
@@ -633,9 +574,7 @@ class PublicDataPreprocessor(object):
         os.makedirs(processed_image_dir, exist_ok=True)
         processed_annotation_dir = os.path.join(processed_dir, "annotations")
         os.makedirs(processed_annotation_dir, exist_ok=True)
-        for image_path, label_path in tqdm(
-            fname_map_a.items(), desc="Processing Part A", file=sys.stdout
-        ):
+        for image_path, label_path in tqdm(fname_map_a.items(), desc="Processing Part A", file=sys.stdout):
             image = cv2.resize(cv2.imread(image_path), (2074, 1382))
             label = cv2.resize(cv2.imread(label_path), (2074, 1382)) // 255
             label_path = os.path.basename(label_path)
@@ -643,9 +582,7 @@ class PublicDataPreprocessor(object):
             out_label_path = os.path.join(processed_annotation_dir, label_path)
             cv2.imwrite(out_image_path.replace(".png", ".jpg"), image)
             cv2.imwrite(out_label_path, label)
-        for image_path, label_path in tqdm(
-            fname_map_b.items(), desc="Processing Part B", file=sys.stdout
-        ):
+        for image_path, label_path in tqdm(fname_map_b.items(), desc="Processing Part B", file=sys.stdout):
             image = cv2.resize(cv2.imread(image_path), (2074, 1382))
             label = cv2.resize(cv2.imread(label_path), (2074, 1382)) // 255
             label_path = os.path.basename(label_path)
@@ -742,10 +679,7 @@ class PublicDataPreprocessor(object):
         if fix:
             data_dir = os.path.join(self.data_original_dir, dataset_name)
             annotations = sorted(
-                [
-                    os.path.join(data_dir, "annotations", i)
-                    for i in os.listdir(os.path.join(data_dir, "annotations"))
-                ]
+                [os.path.join(data_dir, "annotations", i) for i in os.listdir(os.path.join(data_dir, "annotations"))]
             )
             os.makedirs(os.path.join(data_dir, "new_annotations"))
 
@@ -755,9 +689,7 @@ class PublicDataPreprocessor(object):
                 a[a == 2] = 0
                 a[a == 3] = 2
                 cv2.imwrite(
-                    os.path.join(
-                        data_dir, "new_annotations", os.path.basename(annotation)
-                    ),
+                    os.path.join(data_dir, "new_annotations", os.path.basename(annotation)),
                     a,
                 )
             return
@@ -770,9 +702,7 @@ class PublicDataPreprocessor(object):
         labels = [os.path.basename(p) for p in labels]
 
         # Move the images to the new directory.
-        move_segmentation_dataset(
-            self.data_processed_dir, dataset_name, images, labels, data_dir, data_dir
-        )
+        move_segmentation_dataset(self.data_processed_dir, dataset_name, images, labels, data_dir, data_dir)
 
     def sugarcane_damage_usa(self, dataset_name):
         pass
@@ -812,15 +742,9 @@ class PublicDataPreprocessor(object):
         out_depth_dir = os.path.join(out_dir, "depth_images")
         os.makedirs(out_depth_dir, exist_ok=True)
         for image in tqdm(os.listdir(image_dir), desc="Moving Images", file=sys.stdout):
-            shutil.copyfile(
-                os.path.join(image_dir, image), os.path.join(out_image_dir, image)
-            )
-        for depth in tqdm(
-            os.listdir(depth_dir), desc="Moving Depth Images", file=sys.stdout
-        ):
-            shutil.copyfile(
-                os.path.join(depth_dir, depth), os.path.join(out_depth_dir, depth)
-            )
+            shutil.copyfile(os.path.join(image_dir, image), os.path.join(out_image_dir, image))
+        for depth in tqdm(os.listdir(depth_dir), desc="Moving Depth Images", file=sys.stdout):
+            shutil.copyfile(os.path.join(depth_dir, depth), os.path.join(out_depth_dir, depth))
 
         # Save the annotation file.
         with open(os.path.join(out_dir, "annotations.json"), "w") as f:
@@ -832,12 +756,7 @@ class PublicDataPreprocessor(object):
         classes = os.listdir(dataset_dir)
         all_images = []
         for cls in classes:
-            all_images.extend(
-                [
-                    os.path.join(dataset_dir, cls, i)
-                    for i in os.listdir(os.path.join(dataset_dir, cls))
-                ]
-            )
+            all_images.extend([os.path.join(dataset_dir, cls, i) for i in os.listdir(os.path.join(dataset_dir, cls))])
 
         # Resize all of the images.
         out_dir = os.path.join(self.data_processed_dir, dataset_name)
@@ -855,9 +774,7 @@ class PublicDataPreprocessor(object):
         resize = 1.0
 
         # Read public_datasources.json to get class information
-        datasource_file = os.path.join(
-            os.path.dirname(__file__), "../_assets/public_datasources.json"
-        )
+        datasource_file = os.path.join(os.path.dirname(__file__), "../_assets/public_datasources.json")
         with open(datasource_file) as f:
             data = json.load(f)
             category_info = data[dataset_name]["crop_types"]
@@ -876,15 +793,10 @@ class PublicDataPreprocessor(object):
         # Get image file and xml file
         all_files = get_file_list(ann_dir)
         anno_files = [os.path.join(ann_dir, x) for x in all_files if "xml" in x]
-        img_files = [
-            x.replace(".xml", "hr.jpg").replace("square_annotations1", "images")
-            for x in anno_files
-        ]
+        img_files = [x.replace(".xml", "hr.jpg").replace("square_annotations1", "images") for x in anno_files]
 
         # Process annotation files
-        save_dir_anno = os.path.join(
-            self.data_processed_dir, dataset_name, "annotations"
-        )
+        save_dir_anno = os.path.join(self.data_processed_dir, dataset_name, "annotations")
         create_dir(save_dir_anno)
         output_json_file = os.path.join(save_dir_anno, "instances.json")
 
@@ -935,9 +847,7 @@ class PublicDataPreprocessor(object):
             total=len(valid_annotations),
         ):
             height, width = cv2.imread(os.path.join(image_dir, image_name)).shape[:2]
-            image_coco.append(
-                {"file_name": image_name, "height": height, "width": width, "id": idx}
-            )
+            image_coco.append({"file_name": image_name, "height": height, "width": width, "id": idx})
             image_id_map[image_name] = idx
 
         # Construct the `annotations` part of the COCO JSON.
@@ -990,9 +900,7 @@ class PublicDataPreprocessor(object):
         os.makedirs(processed_img_dir, exist_ok=True)
         for path in tqdm(valid_annotations.keys(), desc="Moving Images"):
             full_path = os.path.join(image_dir, path)
-            shutil.copyfile(
-                full_path, os.path.join(processed_img_dir, os.path.basename(path))
-            )
+            shutil.copyfile(full_path, os.path.join(processed_img_dir, os.path.basename(path)))
         with open(os.path.join(processed_dir, "annotations.json"), "w") as f:
             json.dump(all_annotation_data, f)
 
@@ -1054,9 +962,7 @@ class PublicDataPreprocessor(object):
                     annotations.append(anno)
 
         # Define path to processed annotation files
-        output_json_file = os.path.join(
-            self.data_processed_dir, dataset_name, "annotations.json"
-        )
+        output_json_file = os.path.join(self.data_processed_dir, dataset_name, "annotations.json")
 
         # Create directory for processed image files
         output_img_path = os.path.join(self.data_processed_dir, dataset_name, "images")
@@ -1102,9 +1008,7 @@ class PublicDataPreprocessor(object):
 
         # Save all images as jpg in processed directory
         for img_path in img_paths:
-            processed_path = os.path.join(
-                processed_image_dir, img_path.split("/")[-1].replace(".bmp", ".jpg")
-            )
+            processed_path = os.path.join(processed_image_dir, img_path.split("/")[-1].replace(".bmp", ".jpg"))
             img = cv2.imread(img_path)
             cv2.imwrite(processed_path, img)
 
@@ -1121,9 +1025,7 @@ class PublicDataPreprocessor(object):
         for anno_path in anno_paths:
             img = cv2.imread(anno_path, cv2.IMREAD_GRAYSCALE)
             img = np.where(img[:] == 255, 1, 0)
-            processed_path = os.path.join(
-                processed_annotation_dir, anno_path.split("/")[-1]
-            )
+            processed_path = os.path.join(processed_annotation_dir, anno_path.split("/")[-1])
             cv2.imwrite(processed_path, img)
 
     def ghai_romaine_detection(self, dataset_name):
@@ -1173,9 +1075,7 @@ class PublicDataPreprocessor(object):
 
     def riseholme_strawberry_classification_2021(self, dataset_name):
         # Create processed data directory.
-        original_dir = os.path.join(
-            self.data_original_dir, "Riseholme-2021-main", "Data"
-        )
+        original_dir = os.path.join(self.data_original_dir, "Riseholme-2021-main", "Data")
         processed_dir = os.path.join(self.data_processed_dir, dataset_name)
 
         # Load all of the individual images and keep a mapping to their corresponding directory.
@@ -1235,27 +1135,19 @@ class PublicDataPreprocessor(object):
 
         # Move images
         for image in tqdm(glob.glob(os.path.join(original_dir, "images", "*.png"))):
-            shutil.copyfile(
-                image, os.path.join(processed_image_dir, os.path.basename(image))
-            )
+            shutil.copyfile(image, os.path.join(processed_image_dir, os.path.basename(image)))
 
         # Read annotations
-        for annotation_file in tqdm(
-            glob.glob(os.path.join(original_dir, "annotations", "*.png"))
-        ):
+        for annotation_file in tqdm(glob.glob(os.path.join(original_dir, "annotations", "*.png"))):
             annotation = cv2.imread(annotation_file, cv2.IMREAD_UNCHANGED)
             annotation = np.where(annotation == 255, 1, 0)
             cv2.imwrite(
-                os.path.join(
-                    processed_annotation_dir, os.path.basename(annotation_file)
-                ),
+                os.path.join(processed_annotation_dir, os.path.basename(annotation_file)),
                 annotation,
             )
 
         # Read the CSV file containing the splits
-        split_csv = pd.read_csv(
-            os.path.join(original_dir, "VegAnn_dataset.csv"), sep=";"
-        )
+        split_csv = pd.read_csv(os.path.join(original_dir, "VegAnn_dataset.csv"), sep=";")
 
         # Get the `Name` and `TVT-split{n}` columns for each n, and save the splits to a folder
         splits_folder = os.path.join(processed_dir, ".splits")
@@ -1268,15 +1160,9 @@ class PublicDataPreprocessor(object):
             train_images = columns[columns[column_pair[1]] == "Training"]["Name"]
             test_images = columns[columns[column_pair[1]] == "Test"]["Name"]
             splits[column_pair[1]] = {
-                "train": {
-                    os.path.join("images", i): os.path.join("annotations", i)
-                    for i in train_images
-                },
+                "train": {os.path.join("images", i): os.path.join("annotations", i) for i in train_images},
                 "val": {},
-                "test": {
-                    os.path.join("images", i): os.path.join("annotations", i)
-                    for i in test_images
-                },
+                "test": {os.path.join("images", i): os.path.join("annotations", i) for i in test_images},
             }
 
         # Save each split to a JSON file
@@ -1286,9 +1172,7 @@ class PublicDataPreprocessor(object):
 
             # Check if the directories exist
             if not os.path.exists(images_dir) or not os.path.exists(labels_dir):
-                print(
-                    f"Error: Images or labels directory does not exist in {images_dir} or {labels_dir}"
-                )
+                print(f"Error: Images or labels directory does not exist in {images_dir} or {labels_dir}")
                 continue
 
             # Create output directory for this folder inside the processed folder
@@ -1296,16 +1180,10 @@ class PublicDataPreprocessor(object):
             os.makedirs(output_folder_img_dir, exist_ok=True)
 
             # Process all images and their corresponding YOLO labels
-            for img_file in tqdm(
-                os.listdir(images_dir), desc=f"Processing images for {folder}"
-            ):
+            for img_file in tqdm(os.listdir(images_dir), desc=f"Processing images for {folder}"):
                 if img_file.endswith(("jpg", "jpeg", "png")):
                     image_path = os.path.join(images_dir, img_file)
-                    label_file = (
-                        img_file.replace(".jpg", ".txt")
-                        .replace(".jpeg", ".txt")
-                        .replace(".png", ".txt")
-                    )
+                    label_file = img_file.replace(".jpg", ".txt").replace(".jpeg", ".txt").replace(".png", ".txt")
                     label_path = os.path.join(labels_dir, label_file)
 
                     # Read the image to get its dimensions
@@ -1333,9 +1211,7 @@ class PublicDataPreprocessor(object):
                         for line in lines:
                             elements = line.strip().split()
                             class_id = int(elements[0])  # class_id from YOLO
-                            x_center, y_center, bbox_width, bbox_height = map(
-                                float, elements[1:]
-                            )
+                            x_center, y_center, bbox_width, bbox_height = map(float, elements[1:])
 
                             # Convert to COCO format bounding box
                             bbox = yolo_to_coco_bbox(
@@ -1362,9 +1238,7 @@ class PublicDataPreprocessor(object):
                         print(f"Warning: No label file found for {img_file}")
 
                     # Copy the image to the processed directory
-                    shutil.copyfile(
-                        image_path, os.path.join(output_folder_img_dir, img_file)
-                    )
+                    shutil.copyfile(image_path, os.path.join(output_folder_img_dir, img_file))
 
                     # Increment image ID
                     image_id += 1
@@ -1381,14 +1255,10 @@ class PublicDataPreprocessor(object):
         resize = 1.0
 
         # Read public_datasources.json to get class information
-        datasource_file = os.path.join(
-            os.path.dirname(__file__), "../_assets/public_datasources.json"
-        )
+        datasource_file = os.path.join(os.path.dirname(__file__), "../_assets/public_datasources.json")
         with open(datasource_file) as f:
             data = json.load(f)
-            category_info = data[dataset_name][
-                "classes"
-            ]  # This will give us the class information
+            category_info = data[dataset_name]["classes"]  # This will give us the class information
             labels_str = []
             labels_ids = []
             for info in category_info:
@@ -1397,9 +1267,7 @@ class PublicDataPreprocessor(object):
 
             # No name conversion in this case, unless you need to remap class names
             name_converter = None
-            label2id = dict(
-                zip(labels_str, labels_ids)
-            )  # Map class names to their respective IDs
+            label2id = dict(zip(labels_str, labels_ids))  # Map class names to their respective IDs
 
         # Set paths to dataset and annotations
         dataset_dir = os.path.join(self.data_original_dir)
@@ -1408,9 +1276,7 @@ class PublicDataPreprocessor(object):
         # Get image file and xml file
         all_files = os.listdir(ann_dir)
         anno_files = [os.path.join(ann_dir, x) for x in all_files if x.endswith("xml")]
-        img_files = [
-            x.replace(".xml", ".jpg") for x in anno_files
-        ]  # Assuming images are in JPG format
+        img_files = [x.replace(".xml", ".jpg") for x in anno_files]  # Assuming images are in JPG format
 
         # # Process annotation files
         # save_dir_anno = os.path.join(self.data_processed_dir, dataset_name, 'annotations')
@@ -1432,9 +1298,7 @@ class PublicDataPreprocessor(object):
         }
 
         # Save the COCO JSON file directly in the processed directory
-        output_json_file = os.path.join(
-            self.data_processed_dir, dataset_name, "annotations.json"
-        )
+        output_json_file = os.path.join(self.data_processed_dir, dataset_name, "annotations.json")
 
         # Convert the XML annotations to COCO format using your existing function
         convert_xmls_to_cocojson(
@@ -1642,8 +1506,7 @@ if __name__ == "__main__":
         "--data_dir",
         type=str,
         default="../../data_new",
-        help="The directory containing two sub-directories, "
-        "`original` and `processed`, with the data.",
+        help="The directory containing two sub-directories, " "`original` and `processed`, with the data.",
     )
     ap.add_argument("--dataset", type=str, help="The dataset to process.")
     args = ap.parse_args()

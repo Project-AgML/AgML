@@ -104,8 +104,7 @@ def annotate_semantic_segmentation(image, mask=None, alpha=0.3, border=True):
     image, mask = resolve_tuple_values(
         image,
         mask,
-        custom_error="If `image` is a tuple/list, it should contain "
-        "two values: the image and its mask.",
+        custom_error="If `image` is a tuple/list, it should contain " "two values: the image and its mask.",
     )
     image = format_image(image)
     mask = binary_to_channel_by_channel(format_image(mask, mask=True))
@@ -116,9 +115,7 @@ def annotate_semantic_segmentation(image, mask=None, alpha=0.3, border=True):
     mask = np.transpose(mask, (2, 0, 1))
     for level, label in enumerate(mask):
         label = np.expand_dims(label, axis=-1)
-        label = (label * np.true_divide(255, np.max(label, axis=(0, 1)) + 1e-6)).astype(
-            np.uint8
-        )
+        label = (label * np.true_divide(255, np.max(label, axis=(0, 1)) + 1e-6)).astype(np.uint8)
 
         # Find the given contours and plot them.
         _, thresh = cv2.threshold(label, 127, 255, cv2.THRESH_BINARY)
@@ -131,9 +128,7 @@ def annotate_semantic_segmentation(image, mask=None, alpha=0.3, border=True):
 
             # Draws the actual contour borders to show the segmented blobs.
             if border:
-                image = cv2.polylines(
-                    image, pts=[contour], isClosed=True, color=color, thickness=2
-                )
+                image = cv2.polylines(image, pts=[contour], isClosed=True, color=color, thickness=2)
     return image
 
 
@@ -162,9 +157,7 @@ def show_image_and_overlaid_mask(image, mask=None, alpha=0.3, border=True, **kwa
     The annotated image.
     """
     # Parse the inputs and annotate the image.
-    image = annotate_semantic_segmentation(
-        image=image, mask=mask, alpha=alpha, border=border
-    )
+    image = annotate_semantic_segmentation(image=image, mask=mask, alpha=alpha, border=border)
 
     # Display the annotated image.
     if not kwargs.get("no_show", False):
@@ -196,8 +189,7 @@ def show_image_and_mask(image, mask=None, **kwargs):
     image, mask = resolve_tuple_values(
         image,
         mask,
-        custom_error="If `image` is a tuple/list, it should contain "
-        "two values: the image and its mask.",
+        custom_error="If `image` is a tuple/list, it should contain " "two values: the image and its mask.",
     )
 
     # Prepare the inputs.
@@ -234,18 +226,12 @@ def show_semantic_segmentation_truth_and_prediction(
     )
 
     # Generate the real and predicted images with their segmentation masks.
-    real_image = annotate_semantic_segmentation(
-        image=image, mask=real_mask, alpha=alpha, border=border
-    )
-    predicted_image = annotate_semantic_segmentation(
-        image=image, mask=predicted_mask, alpha=alpha, border=border
-    )
+    real_image = annotate_semantic_segmentation(image=image, mask=real_mask, alpha=alpha, border=border)
+    predicted_image = annotate_semantic_segmentation(image=image, mask=predicted_mask, alpha=alpha, border=border)
 
     # Create two side-by-side figures with the images.
     fig, axes = plt.subplots(1, 2, figsize=(12, 6))
-    for ax, img, label in zip(
-        axes, (real_image, predicted_image), ("Ground Truth Mask", "Predicted Mask")
-    ):
+    for ax, img, label in zip(axes, (real_image, predicted_image), ("Ground Truth Mask", "Predicted Mask")):
         ax.imshow(img)
         ax.set_axis_off()
         ax.set_title(label, fontsize=15)

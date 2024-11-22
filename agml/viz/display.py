@@ -64,8 +64,7 @@ def display_image(image, **kwargs):
                 from google.colab.patches import cv2_imshow
             except ImportError:
                 raise ImportError(
-                    "Can't import cv2_imshow from google.colab.patches. "
-                    "Use the matplotlib backend for `agml.viz`."
+                    "Can't import cv2_imshow from google.colab.patches. " "Use the matplotlib backend for `agml.viz`."
                 )
             cv2_imshow(image)
             return
@@ -91,11 +90,7 @@ def display_image(image, **kwargs):
         #
         # But also, some methods don't have any Matplotlib functions - so
         # for those we bypass this skip just to show the result.
-        if (
-            "google.colab" in sys.modules
-            or notebook
-            and not kwargs.get("force_show", False)
-        ):
+        if "google.colab" in sys.modules or notebook and not kwargs.get("force_show", False):
             return
 
     # Default case is matplotlib, since it is the most modular.

@@ -90,8 +90,7 @@ def show_images_and_labels(images, labels=None, info=None, shape=None, **kwargs)
         shape = _inference_best_shape(len(images))
     if max(shape) > 20:
         raise NotImplementedError(
-            "Length of maximum shape length is greater than 20. "
-            "This method does not support non-rectangular shapes."
+            "Length of maximum shape length is greater than 20. " "This method does not support non-rectangular shapes."
         )
 
     fig, axes = plt.subplots(shape[0], shape[1], figsize=(shape[1] * 2, shape[0] * 2))
@@ -107,9 +106,7 @@ def show_images_and_labels(images, labels=None, info=None, shape=None, **kwargs)
             label = info.num_to_class[label]
         ax.set_xticklabels([])
         ax.set_yticklabels([])
-        ax.tick_params(
-            axis="both", which="both", bottom=False, top=False, left=False, right=False
-        )
+        ax.tick_params(axis="both", which="both", bottom=False, top=False, left=False, right=False)
         plt.setp(ax.spines.values(), visible=False)
         ax.set_xlabel(label)
 

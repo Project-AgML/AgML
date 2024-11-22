@@ -56,14 +56,10 @@ class AgMLModelBase(AgMLSerializable, LightningModule):
     def preprocess_input(self, images: List[str]) -> "torch.Tensor": ...
 
     @overload
-    def preprocess_input(
-        self, images: Union[np.ndarray, torch.Tensor]
-    ) -> "torch.Tensor": ...
+    def preprocess_input(self, images: Union[np.ndarray, torch.Tensor]) -> "torch.Tensor": ...
 
     @overload
-    def preprocess_input(
-        self, images: List[Union[np.ndarray, torch.Tensor]]
-    ) -> "torch.Tensor": ...
+    def preprocess_input(self, images: List[Union[np.ndarray, torch.Tensor]]) -> "torch.Tensor": ...
 
     @abc.abstractmethod
     def preprocess_input(self, *args, **kwargs):
@@ -80,9 +76,7 @@ class AgMLModelBase(AgMLSerializable, LightningModule):
     def predict(self, images: Union[np.ndarray, torch.Tensor]) -> "torch.Tensor": ...
 
     @overload
-    def predict(
-        self, images: List[Union[np.ndarray, torch.Tensor]]
-    ) -> "torch.Tensor": ...
+    def predict(self, images: List[Union[np.ndarray, torch.Tensor]]) -> "torch.Tensor": ...
 
     @abc.abstractmethod
     def predict(self, *args, **kwargs):

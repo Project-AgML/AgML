@@ -73,9 +73,7 @@ def _update_cmake_and_project(lidar_enabled):
     else:
         # Update the imports and CMake file
         cmake_contents = re.sub("lidar;", "", default_cmake_contents)
-        project_contents = re.sub(
-            "#include .LiDAR\\.h.\n", "", default_project_contents
-        )
+        project_contents = re.sub("#include .LiDAR\\.h.\n", "", default_project_contents)
 
         # Comment out the lines referencing LiDAR in the project file
         project_lines = project_contents.split("\n")
@@ -97,9 +95,7 @@ def _update_cmake_and_project(lidar_enabled):
         f.write(project_contents)
 
 
-def _compile_helios_default(
-    cmake_build_type="Release", lidar_enabled=False, parallel=True
-):
+def _compile_helios_default(cmake_build_type="Release", lidar_enabled=False, parallel=True):
     """Compiles the default Helios library upon installation and update."""
     if not os.path.exists(PROJECT_PATH):
         raise NotADirectoryError(
@@ -136,14 +132,9 @@ def _compile_helios_default(
             make_args = ["make", f"-j{os.cpu_count()}"]
 
         # Create the log file and clear the existing one.
-        log_file = os.path.expanduser(
-            f"~/.agml/.helios_compilation_log"
-            f"-{dt.now().strftime('%Y%m%d-%H%M%S')}.log"
-        )
+        log_file = os.path.expanduser(f"~/.agml/.helios_compilation_log" f"-{dt.now().strftime('%Y%m%d-%H%M%S')}.log")
         try:
-            existing_log = glob.glob(
-                os.path.expanduser("~/.agml/.helios_compilation_log-*.log")
-            )[0]
+            existing_log = glob.glob(os.path.expanduser("~/.agml/.helios_compilation_log-*.log"))[0]
             os.remove(existing_log)
         except:
             pass
@@ -230,13 +221,9 @@ def _compile_helios_executable_only(parallel):
         make_args = ["make", f"-j{os.cpu_count()}"]
 
     # Create the log file and clear the existing one.
-    log_file = os.path.expanduser(
-        f"~/.agml/.helios_compilation_log" f"-{dt.now().strftime('%Y%m%d-%H%M%S')}.log"
-    )
+    log_file = os.path.expanduser(f"~/.agml/.helios_compilation_log" f"-{dt.now().strftime('%Y%m%d-%H%M%S')}.log")
     try:
-        existing_log = glob.glob(
-            os.path.expanduser("~/.agml/.helios_compilation_log-*.log")
-        )[0]
+        existing_log = glob.glob(os.path.expanduser("~/.agml/.helios_compilation_log-*.log"))[0]
         os.remove(existing_log)
     except:
         pass
@@ -270,9 +257,7 @@ def _compile_helios_executable_only(parallel):
     _compilation_successful(lidar_enabled=None)
 
 
-def recompile_helios(
-    executable_only=False, debug_mode=False, lidar_enabled=False, parallel=True
-):
+def recompile_helios(executable_only=False, debug_mode=False, lidar_enabled=False, parallel=True):
     """Recompiles the Helios library with the set parameters.
 
     This method can be used by the user in order to recompile Helios, if, for
@@ -298,15 +283,9 @@ def recompile_helios(
         significantly faster compilation, at the cost of high CPU usage.
     """
     if executable_only and lidar_enabled:
-        raise ValueError(
-            "If you want to compile Helios with LiDAR support, "
-            "you cannot compile only the executable."
-        )
+        raise ValueError("If you want to compile Helios with LiDAR support, " "you cannot compile only the executable.")
     if executable_only and debug_mode:
-        raise ValueError(
-            "If you want to compile the build in `Debug` mode, "
-            "you cannot compile only the executable."
-        )
+        raise ValueError("If you want to compile the build in `Debug` mode, " "you cannot compile only the executable.")
     if executable_only:
         _compile_helios_executable_only(parallel=parallel)
     else:

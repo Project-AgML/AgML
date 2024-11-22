@@ -23,3 +23,8 @@ build: $(build.wheel) ## Build the distribution wheel.
 
 test: $(test.python) $(src.python) # Run tests
 	uv run pytest -c=config/pytest.ini $(test.python)
+
+
+.PHONY: format
+format:
+	uv run ruff format --config=./config/ruff.toml $(src.python)

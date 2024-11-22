@@ -60,9 +60,7 @@ class TrainingManager(AgMLSerializable):
     should be applied, allowing for independent train and eval modes.
     """
 
-    serializable = frozenset(
-        ("transform_manager", "resize_manager", "state", "task", "remap_hook", "name")
-    )
+    serializable = frozenset(("transform_manager", "resize_manager", "state", "task", "remap_hook", "name"))
 
     def __init__(self, transform_manager, resize_manager, task=None):
         # Update the general parameters for the loader.
@@ -301,9 +299,7 @@ class TrainingManager(AgMLSerializable):
         elif task == "semantic_segmentation":
             annotations = tf.stack(annotations, axis=0)
         elif task == "object_detection":
-            annotations = [
-                TrainingManager._tf_tensor_coco_convert(a_set) for a_set in annotations
-            ]
+            annotations = [TrainingManager._tf_tensor_coco_convert(a_set) for a_set in annotations]
         return images, annotations
 
     @staticmethod
@@ -326,10 +322,7 @@ class TrainingManager(AgMLSerializable):
         """Converts potential multi-image input batch dicts to tensor dicts."""
         if is_array_like(batch):
             return torch.stack([_convert_image_to_torch(image) for image in batch])
-        return {
-            k: TrainingManager._torch_tensor_image_batch_convert(b)
-            for k, b in batch.items()
-        }
+        return {k: TrainingManager._torch_tensor_image_batch_convert(b) for k, b in batch.items()}
 
     @staticmethod
     def _torch_tensor_convert(contents, task):
@@ -362,10 +355,7 @@ class TrainingManager(AgMLSerializable):
         elif task == "semantic_segmentation":
             annotations = torch.stack([_convert_image_to_torch(a) for a in annotations])
         elif task == "object_detection":
-            annotations = [
-                TrainingManager._torch_tensor_coco_convert(a_set)
-                for a_set in annotations
-            ]
+            annotations = [TrainingManager._torch_tensor_coco_convert(a_set) for a_set in annotations]
         return images, annotations
 
     @staticmethod

@@ -139,25 +139,19 @@ class HeliosDataFormatConverter(object):
 
     def _convert_no_annotation_dataset(self):
         """For datasets with no annotations, this just moves the images."""
-        jpeg_images = glob.glob(
-            os.path.join(self._meta.path, "image*/**/*.jpeg"), recursive=True
-        )
+        jpeg_images = glob.glob(os.path.join(self._meta.path, "image*/**/*.jpeg"), recursive=True)
         self._map_and_move_images(jpeg_images, output_dir=self._meta.path)
 
     def _convert_object_detection_dataset(self):
         """Converts the format of an object detection dataset to COCO JSON."""
         # Get all of the images in the dataset.
-        jpeg_images = glob.glob(
-            os.path.join(self._meta.path, "image*/**/*.jpeg"), recursive=True
-        )
+        jpeg_images = glob.glob(os.path.join(self._meta.path, "image*/**/*.jpeg"), recursive=True)
 
         # For each of the images, get their corresponding annotations.
         image_annotation_map = {}
         for image in jpeg_images:
             image_dir = os.path.dirname(image)
-            image_annotation_map[image] = (
-                self._convert_text_files_to_object_annotations(image_dir)
-            )
+            image_annotation_map[image] = self._convert_text_files_to_object_annotations(image_dir)
 
         # Create a virtual output directory structure and the new filenames.
         self._create_output_directory_structure()
@@ -200,10 +194,7 @@ class HeliosDataFormatConverter(object):
                     image_box_tracker += 1
 
         # Create the category mapping and the meta information.
-        category_coco = [
-            {"name": name, "supercategory": "none", "id": i}
-            for i, name in enumerate(self._meta.labels)
-        ]
+        category_coco = [{"name": name, "supercategory": "none", "id": i} for i, name in enumerate(self._meta.labels)]
         info_coco = {
             "description": f"{self._meta.name}: Helios-generated dataset",
             "url": "None",
@@ -250,12 +241,7 @@ class HeliosDataFormatConverter(object):
 
             # Read the text file and get all of the lines in float format.
             with open(path, "r") as f:
-                annotations = np.array(
-                    [
-                        line.replace("\n", "").strip().split(" ")
-                        for line in f.readlines()
-                    ]
-                )
+                annotations = np.array([line.replace("\n", "").strip().split(" ") for line in f.readlines()])
 
             if len(annotations) > 0:
                 annotations = annotations[:, 1:].astype(np.float32)
@@ -310,9 +296,7 @@ class HeliosDataFormatConverter(object):
     def _convert_semantic_segmentation_dataset(self):
         """Converts the format of a semantic segmentation dataset to AgML's format."""
         # Get all of the images in the dataset.
-        jpeg_images = glob.glob(
-            os.path.join(self._meta.path, "image*/**/*.jpeg"), recursive=True
-        )
+        jpeg_images = glob.glob(os.path.join(self._meta.path, "image*/**/*.jpeg"), recursive=True)
 
         # For each of the images, get their corresponding annotations.
         num_to_label = None
@@ -320,14 +304,10 @@ class HeliosDataFormatConverter(object):
         for image in jpeg_images:
             if num_to_label is None:
                 num_to_label = self._get_number_to_label_map(
-                    os.path.join(
-                        os.path.dirname(image), "semantic_segmentation_ID_mapping.txt"
-                    )
+                    os.path.join(os.path.dirname(image), "semantic_segmentation_ID_mapping.txt")
                 )
-            image_annotation_map[image] = (
-                self._convert_text_to_semantic_segmentation_array(
-                    os.path.join(os.path.dirname(image), "semantic_segmentation.txt")
-                )
+            image_annotation_map[image] = self._convert_text_to_semantic_segmentation_array(
+                os.path.join(os.path.dirname(image), "semantic_segmentation.txt")
             )
 
         # Create a virtual output directory structure and the new filenames.
@@ -346,14 +326,7 @@ class HeliosDataFormatConverter(object):
     @staticmethod
     def _get_number_to_label_map(txt):
         with open(txt, "r") as f:
-            return [
-                {
-                    int(float(v)): k
-                    for k, v in [
-                        i.replace("\n", "").split(" ") for i in f.readlines()[1:]
-                    ]
-                }
-            ]
+            return [{int(float(v)): k for k, v in [i.replace("\n", "").split(" ") for i in f.readlines()[1:]]}]
 
     @staticmethod
     def _convert_text_to_semantic_segmentation_array(file):
@@ -361,9 +334,7 @@ class HeliosDataFormatConverter(object):
         # Get all of the contents of the file, and convert them from strings to arrays.
         with open(file, "r") as f:
             contents = [
-                [i for i in line.replace("\n", "").split(" ") if i != ""]
-                for line in f.readlines()
-                if line != ""
+                [i for i in line.replace("\n", "").split(" ") if i != ""] for line in f.readlines() if line != ""
             ]
             contents = np.array(contents).astype(np.int32)
 
@@ -382,9 +353,7 @@ class HeliosDataFormatConverter(object):
 
     def _remove_existing_image_dirs(self):
         """Removes the original image directories after a successful conversion."""
-        image_dirs = [
-            dir_ for dir_ in get_dir_list(self._meta.path) if dir_[-1].isnumeric()
-        ]
+        image_dirs = [dir_ for dir_ in get_dir_list(self._meta.path) if dir_[-1].isnumeric()]
         for image_dir in image_dirs:
             shutil.rmtree(os.path.join(self._meta.path, image_dir))
 
@@ -407,13 +376,9 @@ class HeliosDataFormatConverter(object):
             "n_images": len(get_file_list(os.path.join(self._meta.path, "images"))),
             "platform": "ground",
             "input_data_format": "jpeg",
-            "annotation_format": "coco_json"
-            if self._meta.annotation_type in ["object_detection"]
-            else "image",
+            "annotation_format": "coco_json" if self._meta.annotation_type in ["object_detection"] else "image",
         }
 
         # Save the info JSON to a file.
-        with open(
-            os.path.join(self._meta.path, ".metadata", "agml_info.json"), "w"
-        ) as f:
+        with open(os.path.join(self._meta.path, ".metadata", "agml_info.json"), "w") as f:
             json.dump(info_json, f)

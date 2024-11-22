@@ -88,13 +88,9 @@ def generate_manual_data(
     else:
         # Still run the project name/path check.
         if project_name is None and project_path is None:
-            raise ValueError(
-                "You need to provide either the project name or project path."
-            )
+            raise ValueError("You need to provide either the project name or project path.")
         if project_name is not None and project_path is not None:
-            raise ValueError(
-                "Do not provide both the project name and path, just use one."
-            )
+            raise ValueError("Do not provide both the project name and path, just use one.")
 
         if project_name is not None and project_path is None:
             project_path = os.path.join(HELIOS_PATH, "projects", project_name)
@@ -116,14 +112,9 @@ def generate_manual_data(
 
     # Check whether Helios needs to be compiled (if any changes have been made).
     cpp_same, cmake_same = False, False
-    if (
-        os.path.exists(os.path.join(SUPER_BASE_DIR, ".last_manual_compilation_cpp.cpp"))
-        and not force_recompile
-    ):
+    if os.path.exists(os.path.join(SUPER_BASE_DIR, ".last_manual_compilation_cpp.cpp")) and not force_recompile:
         # Check if the C++ file has changed.
-        with open(
-            os.path.join(SUPER_BASE_DIR, ".last_manual_compilation_cpp.cpp"), "r"
-        ) as f:
+        with open(os.path.join(SUPER_BASE_DIR, ".last_manual_compilation_cpp.cpp"), "r") as f:
             legacy_cpp = f.read()
         with open(os.path.join(project_path, "main.cpp"), "r") as f:
             current_cpp = f.read()
@@ -131,9 +122,7 @@ def generate_manual_data(
             cpp_same = True
 
         # Check if the CMake file has changed.
-        with open(
-            os.path.join(SUPER_BASE_DIR, ".last_manual_compilation_cmake.txt"), "r"
-        ) as f:
+        with open(os.path.join(SUPER_BASE_DIR, ".last_manual_compilation_cmake.txt"), "r") as f:
             legacy_cmake = f.read()
         with open(os.path.join(project_path, "CMakeLists.txt"), "r") as f:
             current_cmake = f.read()
@@ -230,13 +219,9 @@ def generate_manual_data(
     process.wait()
 
     # Save the existing files for comparison in future runs.
-    with open(
-        os.path.join(SUPER_BASE_DIR, ".last_manual_compilation_cpp.cpp"), "w"
-    ) as f:
+    with open(os.path.join(SUPER_BASE_DIR, ".last_manual_compilation_cpp.cpp"), "w") as f:
         f.write(code)
-    with open(
-        os.path.join(SUPER_BASE_DIR, ".last_manual_compilation_cmake.txt"), "w"
-    ) as f:
+    with open(os.path.join(SUPER_BASE_DIR, ".last_manual_compilation_cmake.txt"), "w") as f:
         f.write(cmake)
 
 
@@ -301,9 +286,7 @@ def process_and_move_files(
 
     # Create the CMake file.
     if cmake is None:
-        cmake_default_path = os.path.join(
-            os.path.dirname(__file__), "synthetic_data_generation", "CMakeLists.txt"
-        )
+        cmake_default_path = os.path.join(os.path.dirname(__file__), "synthetic_data_generation", "CMakeLists.txt")
         with open(cmake_default_path, "r") as f:
             cmake_default = f.read()
         if "lidar" in code:
@@ -316,9 +299,7 @@ def process_and_move_files(
                 'set( PLUGINS "visualizer;canopygenerator;syntheticannotation" )',
                 'set( PLUGINS "visualizer;canopygenerator;syntheticannotation;lidar" )',
             )
-        cmake = cmake_default.replace("generate.cpp", "main.cpp").replace(
-            "SyntheticImageAnnotation", project_name
-        )
+        cmake = cmake_default.replace("generate.cpp", "main.cpp").replace("SyntheticImageAnnotation", project_name)
     else:
         cmake = load_code_from_string_or_file(cmake)
 

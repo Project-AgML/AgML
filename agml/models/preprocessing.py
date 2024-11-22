@@ -101,9 +101,7 @@ class EfficientDetPreprocessor(object):
                 min_visibility=0,
                 label_fields=["labels"],
             ),
-            standard_augmentations=[
-                A.Resize(height=image_size[0], width=image_size[1], p=1)
-            ],
+            standard_augmentations=[A.Resize(height=image_size[0], width=image_size[1], p=1)],
         )
         self._check_and_make_augmentation(augmentation)
 

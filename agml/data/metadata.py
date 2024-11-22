@@ -58,9 +58,7 @@ class _MetadataDict(dict):
 
     def __init__(self, *args, dataset=None, **kwargs):
         if dataset is None:
-            raise ValueError(
-                "Cannot instantiate metadata dictionary without the dataset name."
-            )
+            raise ValueError("Cannot instantiate metadata dictionary without the dataset name.")
         super(_MetadataDict, self).__init__(*args, **kwargs)
         self._dataset = dataset
         self._custom = kwargs.get("custom", False)
@@ -144,17 +142,13 @@ class DatasetMetadata(AgMLSerializable):
                 msg = maybe_you_meant(name, msg)
                 raise ValueError(msg)
             else:
-                logging.log(
-                    f"Interpreted dataset '{name}' as '{name.replace('-', '_')}.'"
-                )
+                logging.log(f"Interpreted dataset '{name}' as '{name.replace('-', '_')}.'")
                 name = name.replace("-", "_")
         self._name = name
         self._metadata = _MetadataDict(**source_info[name], dataset=name)
 
         # Load citation information.
-        self._citation_meta = _MetadataDict(
-            **load_citation_sources()[name], dataset=name
-        )
+        self._citation_meta = _MetadataDict(**load_citation_sources()[name], dataset=name)
 
     def __getattr__(self, key):
         try:
@@ -348,9 +342,7 @@ class CustomDatasetMetadata(DatasetMetadata):
             msg = f"Received invalid public source: '{name}'."
             out_msg = maybe_you_meant(name, msg)
             if out_msg == msg:
-                raise ValueError(
-                    "Expected metadata when creating a custom loader, got None."
-                )
+                raise ValueError("Expected metadata when creating a custom loader, got None.")
             else:
                 raise ValueError(out_msg)
         self._load_info(name, meta)
@@ -362,9 +354,7 @@ class CustomDatasetMetadata(DatasetMetadata):
         if "task" not in meta:
             raise ValueError("Expected a `task` when instantiating a custom loader.")
         if "classes" not in meta:
-            raise ValueError(
-                "Expected a list of classes when instantiating a custom loader."
-            )
+            raise ValueError("Expected a list of classes when instantiating a custom loader.")
 
         # Create a custom dictionary of metadata.
         self._name = name
@@ -372,9 +362,7 @@ class CustomDatasetMetadata(DatasetMetadata):
             {"ml_task": meta["task"], "ag_task": meta.get("ag_task", None), **meta},
             dataset=name,
         )
-        self._metadata["classes"] = {
-            str(i + 1): c for i, c in enumerate(meta["classes"])
-        }
+        self._metadata["classes"] = {str(i + 1): c for i, c in enumerate(meta["classes"])}
 
         # There is no citation information necessary for custom datasets.
         self._citation_meta = None

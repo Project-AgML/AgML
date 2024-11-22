@@ -47,9 +47,7 @@ def show_point_cloud(point_cloud, format="default"):
     # We need to hard-code this check because this method isn't designed to
     # run with regular point cloud arrays, only `point_cloud` objects.
     if not isinstance(point_cloud, PointCloud):
-        raise TypeError(
-            f"`point_cloud` must be a `PointCloud` object, instead got {point_cloud}."
-        )
+        raise TypeError(f"`point_cloud` must be a `PointCloud` object, instead got {point_cloud}.")
 
     # If Open3D is installed, we can just use that.
     if o3d is not None and format in ["open3d", "default"]:

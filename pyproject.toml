@@ -13,7 +13,7 @@ maintainers = [{ name="Amogh Joshi", email="amnjoshi@ucdavis.edu"}]
 license = {text = "Apache 2.0"}
 readme = "README.md"
 packages = [{include = "agml", from = "agml", exclude ='agml/_internal'}]
-version = "0.1.0"
+version = "0.7.0"
 requires-python = ">=3.8,<3.12"
 keywords = []
 classifiers = [

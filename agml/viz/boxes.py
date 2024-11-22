@@ -44,14 +44,10 @@ def _resolve_proportional_bboxes(coords, shape):
         return [int(round(c)) for c in coords]
     elif all(isinstance(i, int) for i in coords):
         return coords
-    raise TypeError(
-        f"Got multiple types for coordinates: " f"{[type(i) for i in coords]}."
-    )
+    raise TypeError(f"Got multiple types for coordinates: " f"{[type(i) for i in coords]}.")
 
 
-def annotate_object_detection(
-    image, bboxes=None, labels=None, inplace=True, info=None, bbox_format=None, **kwargs
-):
+def annotate_object_detection(image, bboxes=None, labels=None, inplace=True, info=None, bbox_format=None, **kwargs):
     """Annotates bounding boxes onto an image.
 
     This method will annotate the given bounding boxes directly onto the image,
@@ -166,9 +162,7 @@ def annotate_object_detection(
         x2, y2 = bbox[2] + x, bbox[3] + y
 
         # Annotate the bounding box onto the image.
-        cv2.rectangle(
-            image, (x, y), (x2, y2), color=cmap[as_scalar(label)], thickness=thickness
-        )
+        cv2.rectangle(image, (x, y), (x2, y2), color=cmap[as_scalar(label)], thickness=thickness)
 
         # If the user passed additional information, annotate it onto the image
         # by putting the text above the bounding box with the corresponding label.
@@ -179,9 +173,7 @@ def annotate_object_detection(
                 text = info[label + 1]
 
             # Get the text size.
-            (label_width, label_height), baseline = cv2.getTextSize(
-                text, cv2.FONT_HERSHEY_SIMPLEX, 0.5, 2
-            )
+            (label_width, label_height), baseline = cv2.getTextSize(text, cv2.FONT_HERSHEY_SIMPLEX, 0.5, 2)
 
             # Calculate the coordinates of the background rectangle of the label.
             x, y = bbox[0], bbox[1] - label_height - baseline
@@ -203,9 +195,7 @@ def annotate_object_detection(
     return image
 
 
-def show_image_and_boxes(
-    image, bboxes=None, labels=None, inplace=True, info=None, bbox_format=None, **kwargs
-):
+def show_image_and_boxes(image, bboxes=None, labels=None, inplace=True, info=None, bbox_format=None, **kwargs):
     """Visualizes an image with annotated bounding boxes."""
     # Annotate the bounding boxes onto the image.
     image = annotate_object_detection(
@@ -282,10 +272,7 @@ def show_object_detection_truth_and_prediction(
     #     annotations, and we need to sift for this in the input arguments.
     #
     # The following checks for all these cases (though not in this specific order).
-    if all(
-        arg is None
-        for arg in (real_boxes, real_labels, predicted_boxes, predicted_labels)
-    ):
+    if all(arg is None for arg in (real_boxes, real_labels, predicted_boxes, predicted_labels)):
         # Check for the case when all arguments are condensed.
         if len(image) == 3:
             image, real_boxes, predicted_boxes = image
@@ -293,12 +280,7 @@ def show_object_detection_truth_and_prediction(
             image, real_boxes, real_labels, predicted_boxes, predicted_labels = image
     else:
         # Otherwise, check that the first three arguments have been passed.
-        if (
-            real_boxes is not None
-            and real_labels is not None
-            and predicted_boxes is None
-            and predicted_labels is None
-        ):
+        if real_boxes is not None and real_labels is not None and predicted_boxes is None and predicted_labels is None:
             if isinstance(real_boxes, dict) and isinstance(real_labels, dict):
                 predicted_boxes = real_labels
                 real_labels = None
@@ -344,9 +326,7 @@ def show_object_detection_truth_and_prediction(
 
     # Create two side-by-side figures with the images.
     fig, axes = plt.subplots(1, 2, figsize=(12, 6))
-    for ax, img, label in zip(
-        axes, (real_image, predicted_image), ("Ground Truth Boxes", "Predicted Boxes")
-    ):
+    for ax, img, label in zip(axes, (real_image, predicted_image), ("Ground Truth Boxes", "Predicted Boxes")):
         ax.imshow(img)
         ax.set_axis_off()
         ax.set_title(label, fontsize=15)

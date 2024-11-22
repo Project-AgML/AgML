@@ -30,12 +30,8 @@ _HELIOS_CHECK_DONE_IN_SESSION = False
 
 # Paths to the Helios module and the relevant C++ files.
 HELIOS_PATH = os.path.join(recursive_dirname(__file__, 2), "_helios/Helios")
-CANOPY_SOURCE = os.path.join(
-    HELIOS_PATH, "plugins/canopygenerator/src/CanopyGenerator.cpp"
-)
-CANOPY_HEADER = os.path.join(
-    HELIOS_PATH, "plugins/canopygenerator/include/CanopyGenerator.h"
-)
+CANOPY_SOURCE = os.path.join(HELIOS_PATH, "plugins/canopygenerator/src/CanopyGenerator.cpp")
+CANOPY_HEADER = os.path.join(HELIOS_PATH, "plugins/canopygenerator/include/CanopyGenerator.h")
 LIDAR_SOURCE = os.path.join(HELIOS_PATH, "plugins/lidar/src/LiDAR.cpp")
 
 # Path to the stored Helios configuration JSON file in root dir.
@@ -95,9 +91,7 @@ def _check_helios_installation():
     _HELIOS_CHECK_DONE_IN_SESSION = True
 
     # Get the path to the Helios installation file.
-    helios_file = os.path.join(
-        os.path.dirname(os.path.dirname(__file__)), "_helios/helios_install.sh"
-    )
+    helios_file = os.path.join(os.path.dirname(os.path.dirname(__file__)), "_helios/helios_install.sh")
     helios_dir = os.path.join(os.path.dirname(helios_file), "Helios")
 
     # Run the installation/update. If the Helios directory is not found,
@@ -119,9 +113,7 @@ def _check_helios_installation():
         # Check if the Git update check has been run in the last 48 hours.
         with open(os.path.expanduser("~/.agml/config.json")) as f:
             contents = json.load(f)
-        last_check = contents.get(
-            "last_helios_check", dt(1970, 1, 1).strftime("%B %d %Y %H:%M:%S")
-        )
+        last_check = contents.get("last_helios_check", dt(1970, 1, 1).strftime("%B %d %Y %H:%M:%S"))
         last_check = dt.strptime(last_check, "%B %d %Y %H:%M:%S")
 
         # If the last check has been run less than 48 hours ago, then
@@ -131,8 +123,7 @@ def _check_helios_installation():
 
         # Check if there is a new version available.
         sys.stderr.write(
-            f"Last check for Helios update: over {(dt.now() - last_check).days} "
-            f"day(s) ago. Checking for update.\n"
+            f"Last check for Helios update: over {(dt.now() - last_check).days} " f"day(s) ago. Checking for update.\n"
         )
 
     # Execute the installation/update script.
@@ -198,9 +189,7 @@ def _get_canopy_params():
     canopy_types = [
         re.match("struct\\s(.*?){\\n", string).group(1).split("Parameters")[0]
         for string in canopy_header_lines
-        if "struct " in string
-        and not string.strip().startswith("/**")
-        and not string.strip().startswith("//")
+        if "struct " in string and not string.strip().startswith("/**") and not string.strip().startswith("//")
     ]
 
     # Generate the canopy parameters.
@@ -241,9 +230,7 @@ def _get_canopy_params():
                 continue
 
             definitions = [
-                s.replace(";", "")
-                for s in re.split("[\\s]{2,}", source)
-                if s != "" and not s.startswith("//")
+                s.replace(";", "") for s in re.split("[\\s]{2,}", source) if s != "" and not s.startswith("//")
             ]
             for d in definitions:
                 # Ignore comments.
@@ -274,13 +261,9 @@ def _get_canopy_params():
                 elif "*" in value:
                     value = value.split("*")
                     if value[0].strip().replace(".", "").isdigit():
-                        value = (
-                            float(value[0]) * canopy_parameters[name][value[1].strip()]
-                        )
+                        value = float(value[0]) * canopy_parameters[name][value[1].strip()]
                     else:
-                        value = canopy_parameters[name][value[0].strip()] * float(
-                            value[1]
-                        )
+                        value = canopy_parameters[name][value[0].strip()] * float(value[1])
 
                 # Convert numerical values to numbers/lists, as necessary.
                 elif value.isnumeric():

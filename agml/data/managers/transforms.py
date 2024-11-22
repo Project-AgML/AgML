@@ -203,9 +203,7 @@ class TransformManager(AgMLSerializable):
                             self._pop_transform(MaskToChannelBasisTransform, kind)
                         transform = MaskToChannelBasisTransform(transform[1])
                 else:
-                    transform = self._maybe_normalization_or_regular_transform(
-                        transform
-                    )
+                    transform = self._maybe_normalization_or_regular_transform(transform)
             else:
                 transform = self._construct_image_and_mask_transform(transform)
         elif self._task == "object_detection":
@@ -257,9 +255,7 @@ class TransformManager(AgMLSerializable):
             if t_(kind) == TransformKind.TargetTransform:
                 annotation = self._apply_to_objects(transform, (annotation,), kind)
             if t_(kind) == TransformKind.DualTransform:
-                image, annotation = self._apply_to_objects(
-                    transform, (image, annotation), kind
-                )
+                image, annotation = self._apply_to_objects(transform, (image, annotation), kind)
 
         # Return the processed image and annotation.
         return image, annotation

@@ -78,10 +78,7 @@ class GenerationInstanceOptions:
 
         valid_labels = ["trunks", "leaves", "fruits", "branches"]
         if not all(i in valid_labels for i in self.labels):
-            raise ValueError(
-                f"Got one or more invalid labels: {self.labels}."
-                f"Valid labels: {[*valid_labels]}."
-            )
+            raise ValueError(f"Got one or more invalid labels: {self.labels}." f"Valid labels: {[*valid_labels]}.")
         if self.canopy in ["Tomato", "Strawberry"] and "trunks" in self.labels:
             raise ValueError(
                 "Tomato and Strawberry canopies do not have any trunks, "
@@ -122,10 +119,7 @@ class HeliosDataGenerator(AgMLSerializable):
         elif options is not None and canopy is None:
             self._options = options
         else:
-            raise ValueError(
-                "The `HeliosDataGenerator` needs either "
-                "a set of `HeliosOptions` or a `canopy`."
-            )
+            raise ValueError("The `HeliosDataGenerator` needs either " "a set of `HeliosOptions` or a `canopy`.")
         self._canopy = self._options._canopy
 
         # Rather than constantly passing the different parameters used during
@@ -158,9 +152,7 @@ class HeliosDataGenerator(AgMLSerializable):
         # appears to generate images with twice the provided resolution,
         # so in order to fix this, we need to divide the resolution in
         # two here so that it is correct during generation.
-        parameters["camera"]["image_resolution"] = [
-            i // 2 for i in parameters["camera"]["image_resolution"]
-        ]
+        parameters["camera"]["image_resolution"] = [i // 2 for i in parameters["camera"]["image_resolution"]]
 
         # Generate the ground parameters.
         ground_params = self._load_ground_parameters()
@@ -206,9 +198,7 @@ class HeliosDataGenerator(AgMLSerializable):
             or self._generation_options.simulation_type == SimulationType.Both
         ):
             for scan_tag in scan_tags:  # noqa
-                scan_tag_contents = ET.parse(
-                    io.StringIO(dict2xml({"scan": scan_tag}))
-                ).getroot()
+                scan_tag_contents = ET.parse(io.StringIO(dict2xml({"scan": scan_tag}))).getroot()
                 ET.indent(scan_tag_contents)
                 root.append(scan_tag_contents)
 
@@ -233,14 +223,9 @@ class HeliosDataGenerator(AgMLSerializable):
         """Converts dictionary int/float parameters to strings."""
         for key, value in d.items():
             for param, param_value in value.items():
-                if isinstance(param_value, Sequence) and not isinstance(
-                    param_value, str
-                ):
+                if isinstance(param_value, Sequence) and not isinstance(param_value, str):
                     if isinstance(param_value[0], Sequence):
-                        param_value = [
-                            str(a).replace(",", "").replace("[", " ").replace("]", "")
-                            for a in param_value
-                        ]
+                        param_value = [str(a).replace(",", "").replace("[", " ").replace("]", "") for a in param_value]
                         value[param] = f' {" ".join(param_value)} '
                     else:
                         value[param] = f' {" ".join([str(a) for a in param_value])} '
@@ -259,10 +244,7 @@ class HeliosDataGenerator(AgMLSerializable):
         if os.path.exists(output_path) and os.path.isdir(output_path):
             if any(os.scandir(output_path)):
                 if clear_existing_files:
-                    log(
-                        f"Existing files found in the output directory "
-                        f"`{output_path}`, clearing the directory."
-                    )
+                    log(f"Existing files found in the output directory " f"`{output_path}`, clearing the directory.")
                     shutil.rmtree(output_path)
                     os.makedirs(output_path)
                 else:
@@ -431,9 +413,7 @@ class HeliosDataGenerator(AgMLSerializable):
 
         # Write the actual configuration file.
         cfg_file = os.path.join(PROJECT_PATH, f"config_{name}.txt")
-        self._write_config(
-            cfg_file=cfg_file, xml_file=os.path.join(XML_PATH, xml_file_base)
-        )
+        self._write_config(cfg_file=cfg_file, xml_file=os.path.join(XML_PATH, xml_file_base))
         self._write_config(
             cfg_file=os.path.join(metadata_dir, f"config_{name}.txt"),
             xml_file=os.path.join(metadata_dir, xml_file_base),
@@ -462,9 +442,7 @@ class HeliosDataGenerator(AgMLSerializable):
                 {
                     "labels": self._generation_options.labels,
                     "image_size": self._options.camera.image_resolution,
-                    "generation_date": datetime.datetime.now().strftime(
-                        "%B %d, %Y %H:%M"
-                    ),
+                    "generation_date": datetime.datetime.now().strftime("%B %d, %Y %H:%M"),
                 },
                 f,
                 indent=4,
@@ -488,9 +466,7 @@ class HeliosDataGenerator(AgMLSerializable):
         # Convert the dataset format.
         if convert_data:
             if len(self.options.annotation_type) > 1:
-                log(
-                    "Cannot convert data into the AgML format for multiple annotation types."
-                )
+                log("Cannot convert data into the AgML format for multiple annotation types.")
                 return
             if self.options.simulation_type == SimulationType.LiDAR:
                 log("Cannot convert data into the AgML format for LiDAR simulations.")

@@ -72,9 +72,7 @@ class DataManager(AgMLSerializable):
 
         # Create the `DataObject`s from the `DataBuilder`.
         if not isinstance(builder, DataBuilder):
-            builder = DataBuilder.from_data(
-                contents=builder, info=DatasetMetadata(name), root=root
-            )
+            builder = DataBuilder.from_data(contents=builder, info=DatasetMetadata(name), root=root)
         self._builder = builder
         self._create_objects(self._builder, task)
 
@@ -135,9 +133,7 @@ class DataManager(AgMLSerializable):
         else:
             contents = contents.items()
         for content in list(contents):
-            self._data_objects.append(
-                DataObject.create(contents=content, task=task, root=self._dataset_root)
-            )
+            self._data_objects.append(DataObject.create(contents=content, task=task, root=self._dataset_root))
 
     def _maybe_shuffle(self, seed=None):
         """Wraps automatic shuffling to see if it is enabled or not."""
@@ -170,9 +166,7 @@ class DataManager(AgMLSerializable):
         `DataBuilder`s and wrapped into new `DataManager`s.
         """
         if self._task == "object_detection":
-            contents = np.array(
-                list(self._builder.get_contents().items()), dtype=object
-            )
+            contents = np.array(list(self._builder.get_contents().items()), dtype=object)
         else:
             contents = np.array(list(self._builder.get_contents().items()))
         try:
@@ -216,9 +210,7 @@ class DataManager(AgMLSerializable):
         overflow = len(self._accessors) - num_splits * batch_size
         extra_items = data_items[-overflow:]
         try:
-            batches = np.array_split(
-                np.array(self._accessors[: num_splits * batch_size]), num_splits
-            )
+            batches = np.array_split(np.array(self._accessors[: num_splits * batch_size]), num_splits)
         except ValueError:
             log(
                 f"There is less data ({len(self._accessors)}) than the provided "
@@ -280,9 +272,7 @@ class DataManager(AgMLSerializable):
 
     def _load_one_image_and_annotation(self, obj):
         """Loads one image and annotation from a `DataObject`."""
-        return self._train_manager.apply(
-            obj=obj, batch_state=self._batch_size is not None
-        )
+        return self._train_manager.apply(obj=obj, batch_state=self._batch_size is not None)
 
     def _load_multiple_items(self, indexes):
         """Loads multiple images and annotations from a set of `DataObject`s."""
@@ -293,11 +283,7 @@ class DataManager(AgMLSerializable):
                 contents.append(self._load_batch(self._accessors[i]))
         else:
             for i in indexes:
-                contents.append(
-                    self._load_one_image_and_annotation(
-                        self._data_objects[self._accessors[i]]
-                    )
-                )
+                contents.append(self._load_one_image_and_annotation(self._data_objects[self._accessors[i]]))
         return contents
 
     def _batch_multi_image_inputs(self, images):
@@ -350,9 +336,7 @@ class DataManager(AgMLSerializable):
         # Get the images and annotations from the data objects.
         images, annotations = [], []
         for index in batch_indexes:
-            image, annotation = self._load_one_image_and_annotation(
-                self._data_objects[index]
-            )
+            image, annotation = self._load_one_image_and_annotation(self._data_objects[index])
             images.append(image)
             annotations.append(annotation)
 
@@ -379,9 +363,7 @@ class DataManager(AgMLSerializable):
         # If there is only one index and the data is not batched,
         # then we just need to return a single `DataObject`.
         if isinstance(indexes, int) and self._batch_size is None:
-            return self._load_one_image_and_annotation(
-                self._data_objects[self._accessors[indexes]]
-            )
+            return self._load_one_image_and_annotation(self._data_objects[self._accessors[indexes]])
 
         # If we have a batch of images, then return the batch.
         if isinstance(indexes, int) and self._batch_size is not None:

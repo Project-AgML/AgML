@@ -49,9 +49,7 @@ class BenchmarkMetadata(AgMLSerializable):
             self._dataset = dataset
             self._meta = load_model_benchmarks()[dataset]
         except KeyError:
-            raise ValueError(
-                f"Could not find a valid benchmark for dataset ({dataset})."
-            )
+            raise ValueError(f"Could not find a valid benchmark for dataset ({dataset}).")
 
     def __str__(self):
         return f"<Benchmark {self._dataset}>({self._meta})"

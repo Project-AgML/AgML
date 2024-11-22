@@ -46,15 +46,11 @@ def install_and_configure_ultralytics():
     pillow_version = importlib.import_module("PIL").__version__
     pillow_version_tuple = tuple(map(int, pillow_version.split(".")))
     if pillow_version_tuple > (9, 5, 0):
-        log(
-            f"Detected Pillow version ({pillow_version}) is too high, downgrading to 9.5.0"
-        )
+        log(f"Detected Pillow version ({pillow_version}) is too high, downgrading to 9.5.0")
         subprocess.run(["pip", "install", '"Pillow<=9.5.0"'])
 
     hf_hub_version = importlib.import_module("huggingface_hub").__version__
     hf_hub_version_tuple = tuple(map(int, hf_hub_version.split(".")))
     if hf_hub_version_tuple > (0, 24, 7):
-        log(
-            f"Detected huggingface-hub version ({hf_hub_version}) is too high, downgrading to 0.24.7"
-        )
+        log(f"Detected huggingface-hub version ({hf_hub_version}) is too high, downgrading to 0.24.7")
         subprocess.run(["pip", "install", '"huggingface-hub==0.24.7"'])

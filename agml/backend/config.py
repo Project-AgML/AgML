@@ -98,10 +98,7 @@ def set_data_save_path(location=None):
         location = os.path.join(SUPER_BASE_DIR, "datasets")
     location = os.path.expanduser(location)
     if not os.path.exists(location) and not os.path.isdir(location):
-        raise NotADirectoryError(
-            f"The provided destination {location} does "
-            f"not exist, or is not a directory."
-        )
+        raise NotADirectoryError(f"The provided destination {location} does " f"not exist, or is not a directory.")
     _update_config("data_path", os.path.realpath(os.path.abspath(location)))
     return
 
@@ -131,10 +128,7 @@ def set_synthetic_save_path(location=None):
         location = os.path.join(SUPER_BASE_DIR, "synthetic")
     location = os.path.expanduser(location)
     if not os.path.exists(location) and not os.path.isdir(location):
-        raise NotADirectoryError(
-            f"The provided destination {location} does "
-            f"not exist, or is not a directory."
-        )
+        raise NotADirectoryError(f"The provided destination {location} does " f"not exist, or is not a directory.")
     _update_config("synthetic_data_path", os.path.realpath(os.path.abspath(location)))
     return
 
@@ -163,10 +157,7 @@ def set_model_save_path(location=None):
         location = os.path.join(SUPER_BASE_DIR, "models")
     location = os.path.expanduser(location)
     if not os.path.exists(location) and not os.path.isdir(location):
-        raise NotADirectoryError(
-            f"The provided destination {location} does "
-            f"not exist, or is not a directory."
-        )
+        raise NotADirectoryError(f"The provided destination {location} does " f"not exist, or is not a directory.")
     _update_config("model_path", os.path.realpath(os.path.abspath(location)))
     return
 
@@ -195,12 +186,7 @@ def clear_all_datasets():
     """Deletes all of the datasets within the AgML local storage."""
     log("Entering AgML interactive dataset deletion mode.", logging.WARNING)
     msg_format = "\033[91m{0}\033[0m"
-    if (
-        not input(
-            msg_format.format("Please confirm that you want to delete datasets: [y|n] ")
-        )
-        == "y"
-    ):
+    if not input(msg_format.format("Please confirm that you want to delete datasets: [y|n] ")) == "y":
         print("Aborting dataset deletion.")
     local_datasets = os.listdir(data_save_path())
     deleted_datasets = []
@@ -217,8 +203,4 @@ def clear_all_datasets():
 
 def downloaded_datasets():
     """Lists downloaded datasets in ~/.agml/datasets"""
-    return [
-        d
-        for d in os.listdir(data_save_path())
-        if os.path.isdir(os.path.join(data_save_path(), d))
-    ]
+    return [d for d in os.listdir(data_save_path()) if os.path.isdir(os.path.join(data_save_path(), d))]

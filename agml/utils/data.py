@@ -35,22 +35,14 @@ def load_public_sources() -> dict:
 @functools.lru_cache(maxsize=None)
 def load_citation_sources() -> dict:
     """Loads the citation sources JSON file."""
-    with open(
-        os.path.join(
-            os.path.dirname(os.path.dirname(__file__)), "_assets/source_citations.json"
-        )
-    ) as f:
+    with open(os.path.join(os.path.dirname(os.path.dirname(__file__)), "_assets/source_citations.json")) as f:
         return json.load(f)
 
 
 @functools.lru_cache(maxsize=None)
 def load_model_benchmarks() -> dict:
     """Loads the citation sources JSON file."""
-    with open(
-        os.path.join(
-            os.path.dirname(os.path.dirname(__file__)), "_assets/model_benchmarks.json"
-        )
-    ) as f:
+    with open(os.path.join(os.path.dirname(os.path.dirname(__file__)), "_assets/model_benchmarks.json")) as f:
         return json.load(f)
 
 
@@ -104,9 +96,7 @@ def copyright_print(name, location=None):
     if license == "":
         license_msg = "This dataset has " + _bold("no license") + ".\n"
     else:
-        license_msg = (
-            "This dataset is licensed under the " + _bold(license) + " license.\n"
-        )
+        license_msg = "This dataset is licensed under the " + _bold(license) + " license.\n"
         license_msg += "To learn more, visit: " + _LICENSE_TO_URL[license] + "\n"
 
     if citation == "":
@@ -116,17 +106,13 @@ def copyright_print(name, location=None):
         citation_msg += citation
 
     docs = load_public_sources()[name]["docs_url"]
-    docs_msg = (
-        "\nYou can find additional information about " "this dataset at:\n" + docs
-    )
+    docs_msg = "\nYou can find additional information about " "this dataset at:\n" + docs
 
     columns = shutil.get_terminal_size((80, 24)).columns
     max_print_length = max(
         min(
             columns,
-            max(
-                [len(i) for i in [*citation_msg.split("\n"), *license_msg.split("\n")]]
-            ),
+            max([len(i) for i in [*citation_msg.split("\n"), *license_msg.split("\n")]]),
         ),
         columns,
     )

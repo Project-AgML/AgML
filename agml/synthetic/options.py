@@ -58,11 +58,7 @@ class Parameters:
 
     def __repr__(self):
         # This is custom-defined to exclude optional unused attributes.
-        defined_values = (
-            (f.name, getattr(self, f.name))
-            for f in fields(self)
-            if getattr(self, f.name) != f.default
-        )
+        defined_values = ((f.name, getattr(self, f.name)) for f in fields(self) if getattr(self, f.name) != f.default)
         value_repr = ", ".join(f"{name}={value}" for name, value in defined_values)
         return f"{self.__class__.__qualname__}({value_repr})"
 
@@ -72,10 +68,7 @@ class Parameters:
             if not hasattr(self, "_block_new_attributes"):
                 super().__setattr__(key, value)
                 return
-            raise AttributeError(
-                f"Cannot assign new attributes '{key}' "
-                f"to class {self.__class__.__name__}."
-            )
+            raise AttributeError(f"Cannot assign new attributes '{key}' " f"to class {self.__class__.__name__}.")
 
         # Check if the type of the value matches that of the key.
         annotation = self.__annotations__[key]
@@ -343,15 +336,9 @@ class HeliosOptions(AgMLSerializable):
         self._canopy = canopy
 
         # Get the parameters and ranges corresponding to the canopy type.
-        self._canopy_parameters = CanopyParameters(
-            **self._default_config["canopy"]["parameters"][canopy]
-        )
-        self._camera_parameters = CameraParameters(
-            **self._default_config["camera"]["parameters"]
-        )
-        self._lidar_parameters = LiDARParameters(
-            **self._default_config["lidar"]["parameters"]
-        )
+        self._canopy_parameters = CanopyParameters(**self._default_config["canopy"]["parameters"][canopy])
+        self._camera_parameters = CameraParameters(**self._default_config["camera"]["parameters"])
+        self._lidar_parameters = LiDARParameters(**self._default_config["lidar"]["parameters"])
 
     @property
     def canopy(self) -> CanopyParameters:
@@ -374,9 +361,7 @@ class HeliosOptions(AgMLSerializable):
         return at if isinstance(at, list) else [at]
 
     @annotation_type.setter
-    def annotation_type(
-        self, value: Union[AnnotationType, str, List[Union[AnnotationType, str]]]
-    ):
+    def annotation_type(self, value: Union[AnnotationType, str, List[Union[AnnotationType, str]]]):
         if isinstance(value, list):
             self._annotation_type = [AnnotationType(v) for v in value]
         else:
@@ -397,9 +382,7 @@ class HeliosOptions(AgMLSerializable):
 
                 sp.check_call("nvidia-smi", stdout=sp.DEVNULL)
             except Exception:
-                raise RuntimeError(
-                    "You must have a CUDA-capable GPU to run LiDAR simulations."
-                )
+                raise RuntimeError("You must have a CUDA-capable GPU to run LiDAR simulations.")
 
     @property
     def labels(self) -> list:
@@ -409,8 +392,7 @@ class HeliosOptions(AgMLSerializable):
     def labels(self, value: Sequence):
         if len(value) == 0:
             raise ValueError(
-                "You cannot have no labels, choose a combination "
-                "of `trunks`, `fruits`, `branches`, and `leaves`."
+                "You cannot have no labels, choose a combination " "of `trunks`, `fruits`, `branches`, and `leaves`."
             )
         self._labels = value
 

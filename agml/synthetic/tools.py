@@ -117,10 +117,7 @@ def generate_environment_map(
         y_pos = np.concatenate([np.sort(-y_pos[:]), y_pos])
 
     # Return the x- and y- positions.
-    return [
-        [[x_pos[x], y_pos[y], plant_height / 2 + origin[2]] for x in range(len(x_pos))]
-        for y in range(len(y_pos))
-    ]
+    return [[[x_pos[x], y_pos[y], plant_height / 2 + origin[2]] for x in range(len(x_pos))] for y in range(len(y_pos))]
 
 
 def generate_camera_positions(
@@ -178,13 +175,10 @@ def generate_camera_positions(
         ], [[0, 0, 1] for _ in range(0, num_views)]
 
     elif camera_type == "linear":
-        camera_pos = np.arange(
-            origin[0], camera_spacing * num_views + origin[0], camera_spacing
-        )
-        return [
-            [camera_pos[x], crop_distance + origin[1], height]
-            for x in range(len(camera_pos))
-        ], [[camera_pos[x], origin[0], height] for x in range(len(camera_pos))]
+        camera_pos = np.arange(origin[0], camera_spacing * num_views + origin[0], camera_spacing)
+        return [[camera_pos[x], crop_distance + origin[1], height] for x in range(len(camera_pos))], [
+            [camera_pos[x], origin[0], height] for x in range(len(camera_pos))
+        ]
 
     elif camera_type == "aerial":
         if aerial_parameters.get("distribution", "") == "sawtooth":
@@ -192,8 +186,7 @@ def generate_camera_positions(
             t = camera_spacing * np.linspace(0, 1, num_views)
             triangle = camera_spacing * sawtooth(1 * np.pi * 5 * t, 0.5)
             return [
-                [t[x] + origin[0], triangle[x] + origin[1], crop_distance + origin[2]]
-                for x in range(len(triangle))
+                [t[x] + origin[0], triangle[x] + origin[1], crop_distance + origin[2]] for x in range(len(triangle))
             ], [
                 [
                     t[x] + origin[0],
@@ -225,19 +218,15 @@ def generate_camera_positions(
                 )
 
             return [[*coord, crop_distance + origin[2]] for coord in coords], [
-                [coord[0], coord[1] + (1 if angled else 0.05), height + origin[2]]
-                for coord in coords
+                [coord[0], coord[1] + (1 if angled else 0.05), height + origin[2]] for coord in coords
             ]
 
     else:
-        raise ValueError(
-            f"Got `camera_type`: ({camera_type}), "
-            f"expected either `circular`, `linear`, or `aerial`."
-        )
+        raise ValueError(f"Got `camera_type`: ({camera_type}), " f"expected either `circular`, `linear`, or `aerial`.")
 
 
 def _is_agml_converted(dataset_path):
     """Returns whether a Helios dataset has been converted to AgML format."""
-    return os.path.exists(
-        os.path.join(dataset_path, ".metadata", "agml_info.json")
-    ) or get_dir_list(dataset_path) == [".metadata"]  # dataset with no annotations
+    return os.path.exists(os.path.join(dataset_path, ".metadata", "agml_info.json")) or get_dir_list(dataset_path) == [
+        ".metadata"
+    ]  # dataset with no annotations

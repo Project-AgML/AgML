@@ -129,9 +129,7 @@ class DetectionModel(AgMLModelBase):
     def _construct_sub_net(num_classes, image_size, pretrained=False):
         cfg = get_efficientdet_config("tf_efficientdet_d4")
         cfg.update({"image_size": image_size})
-        model = create_model_from_config(
-            cfg, pretrained=pretrained, num_classes=num_classes
-        )
+        model = create_model_from_config(cfg, pretrained=pretrained, num_classes=num_classes)
         return DetBenchPredict(model)
 
     def switch_predict(self):
@@ -253,9 +251,7 @@ class DetectionModel(AgMLModelBase):
         """
         images = self._expand_input_images(images)
         shapes = self._get_shapes(images)
-        images = torch.stack(
-            [self._preprocess_image(image, self._image_size) for image in images], dim=0
-        )
+        images = torch.stack([self._preprocess_image(image, self._image_size) for image in images], dim=0)
         if return_shapes:
             return images, shapes
         return images
@@ -282,9 +278,7 @@ class DetectionModel(AgMLModelBase):
 
         # Run weighted boxes fusion. For an exact description of how this
         # works, see the paper: https://arxiv.org/pdf/1910.13302.pdf.
-        (predicted_bboxes, predicted_class_confidences, predicted_class_labels) = (
-            self._wbf(predictions)
-        )
+        (predicted_bboxes, predicted_class_confidences, predicted_class_labels) = self._wbf(predictions)
         return predicted_bboxes, predicted_class_confidences, predicted_class_labels
 
     @staticmethod
@@ -327,9 +321,7 @@ class DetectionModel(AgMLModelBase):
             labels = [prediction["classes"].tolist()]
 
             # Run the actual fusion and update the containers.
-            boxes, scores, labels = weighted_boxes_fusion(
-                boxes, scores, labels, iou_thr=0.44, skip_box_thr=0.43
-            )
+            boxes, scores, labels = weighted_boxes_fusion(boxes, scores, labels, iou_thr=0.44, skip_box_thr=0.43)
             boxes = boxes * (512 - 1)
             bboxes.append(boxes)
             confidences.append(scores)
@@ -491,18 +483,12 @@ class DetectionModel(AgMLModelBase):
         The final calculated mean average precision.
         """
         if not 0 < iou_threshold < 1:
-            raise ValueError(
-                f"The `iou_threshold` must be between 0 and 1, got {iou_threshold}."
-            )
+            raise ValueError(f"The `iou_threshold` must be between 0 and 1, got {iou_threshold}.")
         if method not in ["accumulate", "average"]:
-            raise ValueError(
-                f"Method must be either `accumulate` or `average`, got {method}."
-            )
+            raise ValueError(f"Method must be either `accumulate` or `average`, got {method}.")
 
         # Construct the mean average precision accumulator and run the calculations.
-        mean_ap = MeanAveragePrecision(
-            num_classes=self._num_classes, iou_threshold=iou_threshold
-        )
+        mean_ap = MeanAveragePrecision(num_classes=self._num_classes, iou_threshold=iou_threshold)
         bar = tqdm(loader, desc="Calculating Mean Average Precision")
         if method == "average":
             cumulative_maps = []
@@ -692,9 +678,7 @@ class DetectionModel(AgMLModelBase):
         elif isinstance(optimizer, torch.optim.Optimizer):
             pass  # nothing to do
         else:
-            raise TypeError(
-                f"Expected an optimizer name or a torch optimizer, but got '{type(optimizer)}'."
-            )
+            raise TypeError(f"Expected an optimizer name or a torch optimizer, but got '{type(optimizer)}'.")
 
         scheduler = kwargs.get("lr_scheduler", None)
         if scheduler is not None:
@@ -705,9 +689,7 @@ class DetectionModel(AgMLModelBase):
                     f"it on your own and pass it to the `lr_scheduler` argument. "
                 )
             elif not isinstance(scheduler, torch.optim.lr_scheduler.LRScheduler):
-                raise TypeError(
-                    f"Expected a torch LR scheduler, but got '{type(scheduler)}'."
-                )
+                raise TypeError(f"Expected a torch LR scheduler, but got '{type(scheduler)}'.")
 
         self._optimization_parameters = {
             "optimizer": optimizer,
@@ -733,9 +715,7 @@ class DetectionModel(AgMLModelBase):
 
         # Calculate the mean average precision.
         if not self.trainer.sanity_checking and self.map is not None:
-            boxes, confidences, labels = self._process_detections(
-                self._to_out(detections)
-            )
+            boxes, confidences, labels = self._process_detections(self._to_out(detections))
             if hasattr(boxes, "cpu"):
                 boxes = boxes.cpu()
             if hasattr(annotations["bbox"], "cpu"):
@@ -759,16 +739,12 @@ class DetectionModel(AgMLModelBase):
                 metric_update_values = (
                     dict(
                         boxes=self._to_out(torch.tensor(pred_box, dtype=torch.float32)),
-                        labels=self._to_out(
-                            torch.tensor(pred_label, dtype=torch.int32)
-                        ),
+                        labels=self._to_out(torch.tensor(pred_label, dtype=torch.int32)),
                         scores=self._to_out(torch.tensor(pred_conf)),
                     ),
                     dict(
                         boxes=self._to_out(torch.tensor(true_box, dtype=torch.float32)),
-                        labels=self._to_out(
-                            torch.tensor(true_label, dtype=torch.int32)
-                        ),
+                        labels=self._to_out(torch.tensor(true_label, dtype=torch.int32)),
                     ),
                 )
                 self.map.update(*metric_update_values)
@@ -777,9 +753,7 @@ class DetectionModel(AgMLModelBase):
                 map_ = self.map.compute().detach().cpu().numpy().item()
                 self.log("val_map", map_, prog_bar=True, logger=True, sync_dist=True)
 
-        self.log(
-            "val_loss", outputs["loss"], prog_bar=True, logger=True, sync_dist=True
-        )
+        self.log("val_loss", outputs["loss"], prog_bar=True, logger=True, sync_dist=True)
         return outputs["loss"]
 
     def on_validation_epoch_end(self):
@@ -792,9 +766,7 @@ class DetectionModel(AgMLModelBase):
 
         # Calculate the mean average precision.
         if not self.trainer.sanity_checking and self.map is not None:
-            boxes, confidences, labels = self._process_detections(
-                self._to_out(outputs["detections"])
-            )
+            boxes, confidences, labels = self._process_detections(self._to_out(outputs["detections"]))
             if hasattr(boxes, "cpu"):
                 boxes = boxes.cpu()
             if hasattr(annotations["bbox"], "cpu"):
@@ -818,16 +790,12 @@ class DetectionModel(AgMLModelBase):
                 metric_update_values = (
                     dict(
                         boxes=self._to_out(torch.tensor(pred_box, dtype=torch.float32)),
-                        labels=self._to_out(
-                            torch.tensor(pred_label, dtype=torch.int32)
-                        ),
+                        labels=self._to_out(torch.tensor(pred_label, dtype=torch.int32)),
                         scores=self._to_out(torch.tensor(pred_conf)),
                     ),
                     dict(
                         boxes=self._to_out(torch.tensor(true_box, dtype=torch.float32)),
-                        labels=self._to_out(
-                            torch.tensor(true_label, dtype=torch.int32)
-                        ),
+                        labels=self._to_out(torch.tensor(true_label, dtype=torch.int32)),
                     ),
                 )
                 self.map.update(*metric_update_values)
@@ -836,7 +804,5 @@ class DetectionModel(AgMLModelBase):
                 map_ = self.map.compute().detach().cpu().numpy().item()
                 self.log("test_map", map_, prog_bar=True, logger=True, sync_dist=True)
 
-        self.log(
-            "test_loss", outputs["loss"], prog_bar=True, logger=True, sync_dist=True
-        )
+        self.log("test_loss", outputs["loss"], prog_bar=True, logger=True, sync_dist=True)
         return outputs["loss"]

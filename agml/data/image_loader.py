@@ -41,9 +41,7 @@ class ImageLoader(AgMLSerializable):
         The size to resize the images to. If `None`, the images will not be resized.
     """
 
-    serializable = frozenset(
-        ("accessor_list", "image_size", "grayscale", "return_paths", "transforms")
-    )
+    serializable = frozenset(("accessor_list", "image_size", "grayscale", "return_paths", "transforms"))
 
     def __init__(self, location, image_size=None, **kwargs):
         # Parse the input `location`: this can be either a directory of images,
@@ -98,9 +96,7 @@ class ImageLoader(AgMLSerializable):
             if isinstance(value, int):
                 value = (value, value)
             if len(value) != 2:
-                raise ValueError(
-                    "Cannot use `image_size` with more than two dimensions."
-                )
+                raise ValueError("Cannot use `image_size` with more than two dimensions.")
             value = (value[0], value[1])  # convert to tuples for cv2.resize
         self._image_size = value
 
@@ -137,9 +133,7 @@ class ImageLoader(AgMLSerializable):
                     image_files.extend(nested_file_list(root_path, ext="image"))
                 self._image_files = sorted(image_files)
             else:
-                self._image_files = sorted(
-                    nested_file_list(self._root_path, ext="image")
-                )
+                self._image_files = sorted(nested_file_list(self._root_path, ext="image"))
         elif location in public_data_sources():
             # This is a quick way to run all of the checks regarding the location
             # of the dataset, and download it if it isn't already downloaded.
