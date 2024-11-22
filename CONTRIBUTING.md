@@ -184,3 +184,33 @@ If the dataset has no license or has no citation, leave the corresponding lines 
 Once you've readied the dataset, create a new pull request on the AgML repository.
 We will then review the changes and review next steps for adding the dataset into AgML's public data storage.
 
+
+## Developement Guidelines
+
+
+### Installing uv
+
+Install uv follow the guidelines in  https://docs.astral.sh/uv/getting-started/installation/, it is recommended to use the standalone installation.
+
+
+### Building Project
+
+The build the associated wheels simply run:
+
+```
+uv build
+```
+
+To sync the dependencies simply run:
+
+```
+uv sync
+```
+
+### Running scripts
+
+For running scripts or one using the project's e
+
+```
+uv run python <script>
+```
