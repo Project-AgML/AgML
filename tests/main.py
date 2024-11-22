@@ -29,9 +29,7 @@ _PREEXISTING_DATASETS = []
 def _find_preexisting_datasets():
     global _USED_DATASETS, _PREEXISTING_DATASETS, BASE_PATH
     for dataset in _USED_DATASETS:
-        if os.path.exists(os.path.join(BASE_PATH, dataset)) and os.path.isdir(
-            os.path.join(BASE_PATH, dataset)
-        ):
+        if os.path.exists(os.path.join(BASE_PATH, dataset)) and os.path.isdir(os.path.join(BASE_PATH, dataset)):
             _PREEXISTING_DATASETS.append(dataset)
 
 
