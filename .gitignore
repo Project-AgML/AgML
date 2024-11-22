@@ -141,7 +141,6 @@ __MACOSX
 # Extra directories/files
 /**data*/
 
-**/**test*.*
 !tests/*/*
 agml/_helios
 agml/helios_config.sh
