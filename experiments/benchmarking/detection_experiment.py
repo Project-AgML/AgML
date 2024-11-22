@@ -17,23 +17,34 @@ import argparse
 from experiments.benchmarking.experiment import DetectionExperiment
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     ap = argparse.ArgumentParser()
-    ap.add_argument('--name', help = 'The name of the experiment.', required = True)
-    ap.add_argument('--experiment_dir', help = "The name of the experiment directory.",
-                    required = False, default = None)
-    ap.add_argument('--dataset', nargs = '+', help = "Datasets to use.")
-    ap.add_argument('--batch_size', type = int, default = 4, help = "Batch size.")
-    ap.add_argument('--epochs', type = int, default = 25, help = "Number of epochs.")
-    ap.add_argument('--generalize-detections', action = 'store_true', default = False,
-                    help = "Whether to generalize all model detections to one class.")
-    ap.add_argument('--num_workers', type = int, default = 8,
-                    help = "Number of workers for DataLoaders.")
-    ap.add_argument('--pretrained_weights', type = str, default = None,
-                    help = "Either the pretrained weights or `coco`.")
+    ap.add_argument("--name", help="The name of the experiment.", required=True)
+    ap.add_argument(
+        "--experiment_dir",
+        help="The name of the experiment directory.",
+        required=False,
+        default=None,
+    )
+    ap.add_argument("--dataset", nargs="+", help="Datasets to use.")
+    ap.add_argument("--batch_size", type=int, default=4, help="Batch size.")
+    ap.add_argument("--epochs", type=int, default=25, help="Number of epochs.")
+    ap.add_argument(
+        "--generalize-detections",
+        action="store_true",
+        default=False,
+        help="Whether to generalize all model detections to one class.",
+    )
+    ap.add_argument(
+        "--num_workers", type=int, default=8, help="Number of workers for DataLoaders."
+    )
+    ap.add_argument(
+        "--pretrained_weights",
+        type=str,
+        default=None,
+        help="Either the pretrained weights or `coco`.",
+    )
     args = vars(ap.parse_args())
-    
+
     exp = DetectionExperiment(args)
     exp.train()
-
-

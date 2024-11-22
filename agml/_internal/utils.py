@@ -26,7 +26,10 @@ _PERSONAL_ACCESS_TOKEN = None
 
 
 def shape_info_file_contents():
-    with open(os.path.join(recursive_dirname(__file__, 2), '_assets', 'shape_info.pickle'), 'rb') as f:
+    with open(
+        os.path.join(recursive_dirname(__file__, 2), "_assets", "shape_info.pickle"),
+        "rb",
+    ) as f:
         return pickle.load(f)
 
 

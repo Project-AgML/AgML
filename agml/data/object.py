@@ -38,9 +38,9 @@ class DataObject(AgMLSerializable):
     `AgMLDataLoader`, and objects returned from it are returned as their
     expected contents (NumPy arrays/dictionaries/integers) when necessary.
     """
-    serializable = frozenset(
-        ('image_object', 'annotation_obj', 'dataset_root'))
-    _abstract = frozenset(('_load_image_input', '_parse_annotation'))
+
+    serializable = frozenset(("image_object", "annotation_obj", "dataset_root"))
+    _abstract = frozenset(("_load_image_input", "_parse_annotation"))
 
     def __init__(self, image, annotation, root):
         # The `image` parameter is constant among different tasks.
@@ -70,12 +70,12 @@ class DataObject(AgMLSerializable):
 
     @staticmethod
     def _parse_depth_image(path):
-        with imread_context(os.path.abspath(path), flags = -1) as image:
+        with imread_context(os.path.abspath(path), flags=-1) as image:
             return image.astype(np.int32)
 
     @staticmethod
     def _parse_spectral_image(path):
-        None # noqa, prevents `all abstract methods must be implemented`
+        None  # noqa, prevents `all abstract methods must be implemented`
         raise NotImplementedError("Multi/Hyperspectral images are not yet supported.")
 
     def get(self):
@@ -97,24 +97,24 @@ class DataObject(AgMLSerializable):
         # docstring from this `DataObject` class and updates
         # the derived class' dictionary.
         wrapped_updates = {}
-        self = super(DataObject, cls).__thisclass__ # noqa
+        self = super(DataObject, cls).__thisclass__  # noqa
         for name, method in cls.__dict__.items():
             if name in cls._abstract:
                 wrapped = wraps(getattr(self, name))(method)
                 wrapped_updates[name] = wrapped
-        for name, method in wrapped_updates.items(): # noqa
+        for name, method in wrapped_updates.items():  # noqa
             setattr(cls, name, method)
 
     @staticmethod
     def create(contents, task, root):
         """Creates a new `DataObject` for the corresponding task."""
-        if task == 'image_classification':
+        if task == "image_classification":
             cls = ImageClassificationDataObject
-        elif task == 'image_regression':
+        elif task == "image_regression":
             cls = ImageRegressionDataObject
-        elif task == 'object_detection':
+        elif task == "object_detection":
             cls = ObjectDetectionDataObject
-        elif task == 'semantic_segmentation':
+        elif task == "semantic_segmentation":
             cls = SemanticSegmentationDataObject
         else:
             raise ValueError(f"Unsupported task {task}.")
@@ -142,31 +142,39 @@ class DataObject(AgMLSerializable):
         try:
             obj = int(obj)
         except TypeError:
-            raise Exception(f"Could not convert object {obj} of "
-                            f"type {type(obj)} to a scalar integer "
-                            f"for image classification.")
+            raise Exception(
+                f"Could not convert object {obj} of "
+                f"type {type(obj)} to a scalar integer "
+                f"for image classification."
+            )
         return obj
 
     @staticmethod
     def _parse_coco(obj):
         """Parses a COCO JSON dictionary for an object detection task."""
-        annotation = {'bbox': [], 'category_id': [], 'area': [],
-                      'image_id': "", 'iscrowd': [], 'segmentation': []}
+        annotation = {
+            "bbox": [],
+            "category_id": [],
+            "area": [],
+            "image_id": "",
+            "iscrowd": [],
+            "segmentation": [],
+        }
         for a_set in obj:
-            x, y, w, h = a_set['bbox']
+            x, y, w, h = a_set["bbox"]
             x = int(np.clip(x, 0, None))
             y = int(np.clip(y, 0, None))
-            a_set['bbox'] = [x, y, w, h]
-            annotation['bbox'].append(a_set['bbox'])
-            annotation['category_id'].append(a_set['category_id'])
-            annotation['iscrowd'].append(a_set['iscrowd'])
-            annotation['segmentation'].append(a_set['segmentation'])
-            annotation['area'].append(a_set['area'])
-            annotation['image_id'] = a_set['image_id']
+            a_set["bbox"] = [x, y, w, h]
+            annotation["bbox"].append(a_set["bbox"])
+            annotation["category_id"].append(a_set["category_id"])
+            annotation["iscrowd"].append(a_set["iscrowd"])
+            annotation["segmentation"].append(a_set["segmentation"])
+            annotation["area"].append(a_set["area"])
+            annotation["image_id"] = a_set["image_id"]
         for key, value in annotation.items():
             # Creating nested sequences from ragged arrays (see numpy).
-            if key in ['segmentation']:
-                out = np.array(value, dtype = object)
+            if key in ["segmentation"]:
+                out = np.array(value, dtype=object)
             else:
                 out = np.array(value)
                 if np.isscalar(out):
@@ -180,14 +188,14 @@ class DataObject(AgMLSerializable):
         with imread_context(os.path.realpath(obj)) as image:
             if image.ndim == 3:
                 if not np.all(image[:, :, 0] == image[:, :, 1]):
-                    raise TypeError(
-                        f"Invalid annotation mask of shape {image.shape}.")
+                    raise TypeError(f"Invalid annotation mask of shape {image.shape}.")
                 image = image[:, :, 0]
             return np.squeeze(image)
 
 
 class ImageClassificationDataObject(DataObject):
     """Serves as a `DataObject` for image classification tasks."""
+
     def _load_image_input(self, path):
         return self._parse_image(path)
 
@@ -197,6 +205,7 @@ class ImageClassificationDataObject(DataObject):
 
 class ImageRegressionDataObject(DataObject):
     """Serves as a `DataObject` for image regression tasks."""
+
     def _load_image_input(self, contents):
         # The easy case, when there is only one input image.
         if isinstance(contents, str) and os.path.exists(contents):
@@ -206,9 +215,9 @@ class ImageRegressionDataObject(DataObject):
         # input types, so we need to independently load those.
         images = dict.fromkeys(contents.keys(), None)
         for c_type, path in contents.items():
-            if c_type == 'image':
+            if c_type == "image":
                 images[c_type] = self._parse_image(path)
-            elif c_type == 'depth_image':
+            elif c_type == "depth_image":
                 images[c_type] = self._parse_depth_image(path)
             else:
                 images[c_type] = self._parse_spectral_image(path)
@@ -220,8 +229,9 @@ class ImageRegressionDataObject(DataObject):
 
 class ObjectDetectionDataObject(DataObject):
     """Serves as a `DataObject` from object detection tasks."""
+
     def _load_image_input(self, path):
-        path = os.path.join(self._dataset_root, 'images', path)
+        path = os.path.join(self._dataset_root, "images", path)
         return self._parse_image(path)
 
     def _parse_annotation(self, obj):
@@ -230,11 +240,9 @@ class ObjectDetectionDataObject(DataObject):
 
 class SemanticSegmentationDataObject(DataObject):
     """Serves as a `DataObject` for semantic segmentation tasks."""
+
     def _load_image_input(self, path):
         return self._parse_image(path)
 
     def _parse_annotation(self, obj):
         return self._parse_mask(obj)
-
-
-

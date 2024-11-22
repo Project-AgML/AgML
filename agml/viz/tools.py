@@ -33,26 +33,32 @@ from agml.utils.logging import log
 
 
 # Sets the colormaps used in the other `agml.viz` methods.
-@functools.lru_cache(maxsize = None)
+@functools.lru_cache(maxsize=None)
 def _load_colormaps():
-    with open(os.path.join(os.path.dirname(os.path.dirname(__file__)),
-                           '_assets', 'viz_colormaps.json'), 'r') as f:
+    with open(
+        os.path.join(
+            os.path.dirname(os.path.dirname(__file__)), "_assets", "viz_colormaps.json"
+        ),
+        "r",
+    ) as f:
         cmaps = json.load(f)
     ret_dict = {}
     for map_ in cmaps.items():
         ret_dict[map_[0]] = map_[1] * 5
     return ret_dict
 
+
 _COLORMAPS = _load_colormaps()
-_COLORMAP_CHOICE: str = 'default'
+_COLORMAP_CHOICE: str = "default"
 
 
 # Sets the visualization backend: either `matplotlib` or `cv2`.
-@functools.lru_cache(maxsize = None)
+@functools.lru_cache(maxsize=None)
 def _load_backend():
-    if _get_config('viz_backend') is None:
-        _update_config('viz_backend', 'matplotlib')
-    return _get_config('viz_backend')
+    if _get_config("viz_backend") is None:
+        _update_config("viz_backend", "matplotlib")
+    return _get_config("viz_backend")
+
 
 _BACKEND: str = _load_backend()
 
@@ -85,15 +91,16 @@ def set_colormap(colormap):
     if isinstance(colormap, list):
         if not all(len(i) == 3 for i in colormap):
             raise ValueError(
-                "If you want a custom colormap, then pass a list of RGB values.")
+                "If you want a custom colormap, then pass a list of RGB values."
+            )
     elif isinstance(colormap, str):
         colormap = colormap.lower()
         if colormap not in _COLORMAPS.keys():
             raise ValueError(f"Invalid colormap {colormap} received.")
     else:
         raise TypeError(f"Invalid colormap of type {type(colormap)}.")
-    _COLORMAPS['custom'] = colormap
-    _COLORMAP_CHOICE = 'custom'
+    _COLORMAPS["custom"] = colormap
+    _COLORMAP_CHOICE = "custom"
 
 
 def get_viz_backend():
@@ -104,14 +111,14 @@ def get_viz_backend():
 
 def set_viz_backend(backend):
     """Sets the global AgML visualization backend."""
-    if backend not in ['matplotlib', 'cv2']:
+    if backend not in ["matplotlib", "cv2"]:
         raise ValueError(f"Invalid backend {backend} received.")
     global _BACKEND
-    _update_config('viz_backend', backend)
+    _update_config("viz_backend", backend)
     _BACKEND = backend
 
 
-def format_image(img, mask = False):
+def format_image(img, mask=False):
     """Formats an image to be used in a Matplotlib visualization.
 
     This method takes in one of a number of common image/array types
@@ -148,14 +155,16 @@ def format_image(img, mask = False):
     else:
         raise TypeError(
             f"Expected either an np.ndarray, torch.Tensor, "
-            f"tf.Tensor, or PIL.Image, got {type(img)}.")
+            f"tf.Tensor, or PIL.Image, got {type(img)}."
+        )
 
     # Convert channels_first to channels_last.
     if img.ndim == 4:
         if img.shape[0] > 1:
             raise ValueError(
                 f"Got a batch of images with shape {img.shape}, "
-                f"expected at most a batch of one image.")
+                f"expected at most a batch of one image."
+            )
         img = np.squeeze(img)
     if img.shape[0] <= 3:
         img = np.transpose(img, (1, 2, 0))
@@ -170,29 +179,31 @@ def format_image(img, mask = False):
         img = img.astype(np.uint8)
     else:
         if np.issubdtype(img.dtype, np.inexact):
-            if not img.max() <= 1: # noqa
+            if not img.max() <= 1:  # noqa
                 img = img.astype(np.uint8)
             else:
                 img = (img * 255).astype(np.uint8)
 
         # Convert 64-bit integer to unsigned 8-bit.
         if img.dtype == np.int64:
-            log("Converting image of dtype `np.int64` to `np.uint8` for display. "
-                "This may cause a loss in precision/invalid result.")
+            log(
+                "Converting image of dtype `np.int64` to `np.uint8` for display. "
+                "This may cause a loss in precision/invalid result."
+            )
             img = img.astype(np.uint8)
 
     # Return the formatted image.
     return np.ascontiguousarray(img)
 
 
-def convert_figure_to_image(fig = None):
+def convert_figure_to_image(fig=None):
     """This method is used to convert a Matplotlib figure to an image array."""
     # Use PIL to get the image, then convert to an array.
     buf = io.BytesIO()
     fig = fig if fig is not None else plt.gcf()
-    fig.savefig(buf, format = 'png')
+    fig.savefig(buf, format="png")
     buf.seek(0)
-    arr = np.fromstring(buf.read(), dtype = np.uint8)
+    arr = np.fromstring(buf.read(), dtype=np.uint8)
     return cv2.imdecode(arr, cv2.IMREAD_COLOR)
 
 

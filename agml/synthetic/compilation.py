@@ -25,90 +25,95 @@ from agml.backend.config import _update_config, _get_config
 from agml.synthetic.config import HELIOS_PATH
 
 # Helios build and compilation paths.
-PROJECT_PATH = os.path.join(
-    HELIOS_PATH, 'projects/SyntheticImageAnnotation')
-HELIOS_BUILD = os.path.join(
-    PROJECT_PATH, 'build')
-HELIOS_EXECUTABLE = os.path.join(
-    PROJECT_PATH, 'build', 'SyntheticImageAnnotation')
+PROJECT_PATH = os.path.join(HELIOS_PATH, "projects/SyntheticImageAnnotation")
+HELIOS_BUILD = os.path.join(PROJECT_PATH, "build")
+HELIOS_EXECUTABLE = os.path.join(PROJECT_PATH, "build", "SyntheticImageAnnotation")
 
 # Helios parameter paths.
-XML_PATH = os.path.join(PROJECT_PATH, 'xml')
+XML_PATH = os.path.join(PROJECT_PATH, "xml")
 
 
 def _update_cmake_and_project(lidar_enabled):
     """Updates the CMake + project file to enable or disable LiDAR compilation."""
-    cmake_file = os.path.join(PROJECT_PATH, 'CMakeLists.txt')
-    project_file = os.path.join(PROJECT_PATH, 'generate.cpp')
-    with open(cmake_file, 'r') as f:
+    cmake_file = os.path.join(PROJECT_PATH, "CMakeLists.txt")
+    project_file = os.path.join(PROJECT_PATH, "generate.cpp")
+    with open(cmake_file, "r") as f:
         default_cmake_contents = f.read()
-    with open(project_file, 'r') as f:
+    with open(project_file, "r") as f:
         default_project_contents = f.read()
     if lidar_enabled:
         # Update the imports and CMake file
-        if 'lidar' not in default_cmake_contents:  # add LiDAR to plugins
-            cmake_contents = re.sub(r'(set\s*\(\s*PLUGINS\s*")(\S*)("\s*\))', r'\1lidar;\2\3',
-                                    default_cmake_contents, flags=re.IGNORECASE)
+        if "lidar" not in default_cmake_contents:  # add LiDAR to plugins
+            cmake_contents = re.sub(
+                r'(set\s*\(\s*PLUGINS\s*")(\S*)("\s*\))',
+                r"\1lidar;\2\3",
+                default_cmake_contents,
+                flags=re.IGNORECASE,
+            )
         else:
             cmake_contents = default_cmake_contents
 
-        if '#include <LiDAR.h>' not in default_project_contents:
+        if "#include <LiDAR.h>" not in default_project_contents:
             project_contents = default_project_contents.replace(
-                '#include <Visualizer.h>',
-                '#include <Visualizer.h>\n#include <LiDAR.h>'
+                "#include <Visualizer.h>", "#include <Visualizer.h>\n#include <LiDAR.h>"
             )
         else:
             project_contents = default_project_contents
 
         # Uncomment the lines referencing LiDAR in the project file
-        project_lines = project_contents.split('\n')
+        project_lines = project_contents.split("\n")
         processed_project_lines = []
         for line in project_lines:
-            if 'lidar' in line.lower():
-                processed_project_lines.append(line.replace('// ', ''))
+            if "lidar" in line.lower():
+                processed_project_lines.append(line.replace("// ", ""))
             else:
                 processed_project_lines.append(line)
-        project_contents = '\n'.join(processed_project_lines)
+        project_contents = "\n".join(processed_project_lines)
 
     else:
         # Update the imports and CMake file
-        cmake_contents = re.sub('lidar;', '', default_cmake_contents)
-        project_contents = re.sub("#include .LiDAR\\.h.\n", '', default_project_contents)
+        cmake_contents = re.sub("lidar;", "", default_cmake_contents)
+        project_contents = re.sub(
+            "#include .LiDAR\\.h.\n", "", default_project_contents
+        )
 
         # Comment out the lines referencing LiDAR in the project file
-        project_lines = project_contents.split('\n')
+        project_lines = project_contents.split("\n")
         processed_project_lines = []
         for line in project_lines:
-            if (re.search('[^\\"]lidarcloud[^\\"]', line)
-                    and not line.lstrip().startswith('//')
-                    and 'contains' not in line):
-                processed_project_lines.append('// ' + line)
+            if (
+                re.search('[^\\"]lidarcloud[^\\"]', line)
+                and not line.lstrip().startswith("//")
+                and "contains" not in line
+            ):
+                processed_project_lines.append("// " + line)
             else:
                 processed_project_lines.append(line)
-        project_contents = '\n'.join(processed_project_lines)
+        project_contents = "\n".join(processed_project_lines)
 
-    with open(cmake_file, 'w') as f:
+    with open(cmake_file, "w") as f:
         f.write(cmake_contents)
-    with open(project_file, 'w') as f:
+    with open(project_file, "w") as f:
         f.write(project_contents)
 
 
-def _compile_helios_default(cmake_build_type='Release',
-                            lidar_enabled=False,
-                            parallel=True):
+def _compile_helios_default(
+    cmake_build_type="Release", lidar_enabled=False, parallel=True
+):
     """Compiles the default Helios library upon installation and update."""
     if not os.path.exists(PROJECT_PATH):
         raise NotADirectoryError(
             f"The expected project path {PROJECT_PATH} does not exist. "
             f"There may have been an error in installing Helios. Try "
-            f"re-installing it, or raise an issue with the AgML team.")
+            f"re-installing it, or raise an issue with the AgML team."
+        )
 
     # If there is an existing compiled version of Helios, then cache it
     # temporarily until the new compilation is complete. If an error is
     # encountered during the compilation, then we want to have a backup.
     os.makedirs(HELIOS_BUILD, exist_ok=True)
     temp_dir = tempfile.TemporaryDirectory()
-    helios_temp_dir = os.path.join(temp_dir.name, 'helios_build')
+    helios_temp_dir = os.path.join(temp_dir.name, "helios_build")
     shutil.move(HELIOS_BUILD, helios_temp_dir)
 
     try:
@@ -116,22 +121,29 @@ def _compile_helios_default(cmake_build_type='Release',
         _update_cmake_and_project(lidar_enabled=lidar_enabled)
 
         # Construct arguments for the compilation.
-        generator = 'NMake' if sys.platform == 'win32' else 'Unix'
-        cmake_args = ['cmake', '..', '-G', generator + ' Makefiles',
-                      f'-DCMAKE_LIBRARY_OUTPUT_DIRECTORY={HELIOS_BUILD}',
-                      f'-DCMAKE_BUILD_TYPE={cmake_build_type}']
-        if not parallel or sys.platform == 'win32':
-            make_args = ['cmake', '--build', '.']
+        generator = "NMake" if sys.platform == "win32" else "Unix"
+        cmake_args = [
+            "cmake",
+            "..",
+            "-G",
+            generator + " Makefiles",
+            f"-DCMAKE_LIBRARY_OUTPUT_DIRECTORY={HELIOS_BUILD}",
+            f"-DCMAKE_BUILD_TYPE={cmake_build_type}",
+        ]
+        if not parallel or sys.platform == "win32":
+            make_args = ["cmake", "--build", "."]
         else:
-            make_args = ['make', f'-j{os.cpu_count()}']
+            make_args = ["make", f"-j{os.cpu_count()}"]
 
         # Create the log file and clear the existing one.
         log_file = os.path.expanduser(
             f"~/.agml/.helios_compilation_log"
-            f"-{dt.now().strftime('%Y%m%d-%H%M%S')}.log")
+            f"-{dt.now().strftime('%Y%m%d-%H%M%S')}.log"
+        )
         try:
-            existing_log = glob.glob(os.path.expanduser(
-                '~/.agml/.helios_compilation_log-*.log'))[0]
+            existing_log = glob.glob(
+                os.path.expanduser("~/.agml/.helios_compilation_log-*.log")
+            )[0]
             os.remove(existing_log)
         except:
             pass
@@ -142,44 +154,56 @@ def _compile_helios_default(cmake_build_type='Release',
         # Compile the CMake files.
         cmake_log = ""
         sys.stderr.write("Compiling Helios with CMake.\n\n")
-        cmake_process = sp.Popen(cmake_args, stdout=sp.PIPE, cwd=HELIOS_BUILD,
-                                 stderr=sp.STDOUT, universal_newlines=True)
+        cmake_process = sp.Popen(
+            cmake_args,
+            stdout=sp.PIPE,
+            cwd=HELIOS_BUILD,
+            stderr=sp.STDOUT,
+            universal_newlines=True,
+        )
         for line in iter(cmake_process.stdout.readline, ""):
             cmake_log += line
             sys.stderr.write(line)
         cmake_process.stdout.close()
-        with open(log_file, 'a') as f:
+        with open(log_file, "a") as f:
             f.write(cmake_log)
         cmake_return = cmake_process.wait()
         if cmake_return != 0:
             sys.stderr.write(
-                f'\nEncountered an error when attempting to compile '
-                f'Helios with CMake. Please report this traceback to '
-                f'the AgML team. A full traceback of the compilation '
-                f'process can be found at "{log_file}".')
+                f"\nEncountered an error when attempting to compile "
+                f"Helios with CMake. Please report this traceback to "
+                f"the AgML team. A full traceback of the compilation "
+                f'process can be found at "{log_file}".'
+            )
             _compilation_failed(helios_temp_dir, temp_dir)
-        sys.stdout.write('\n')
-        sys.stderr.write('\n')
+        sys.stdout.write("\n")
+        sys.stderr.write("\n")
 
         # Generate the main executable.
         cmake_log = "\n"
         sys.stderr.write("Building Helios executable with CMake.\n\n")
-        make_process = sp.Popen(make_args, stdout=sp.PIPE, cwd=HELIOS_BUILD,
-                                stderr=sp.STDOUT, universal_newlines=True)
+        make_process = sp.Popen(
+            make_args,
+            stdout=sp.PIPE,
+            cwd=HELIOS_BUILD,
+            stderr=sp.STDOUT,
+            universal_newlines=True,
+        )
         for line in iter(make_process.stdout.readline, ""):
             cmake_log += line
             sys.stderr.write(line)
         make_process.stdout.close()
-        with open(log_file, 'a') as f:
+        with open(log_file, "a") as f:
             f.write(cmake_log)
         make_return = make_process.wait()
 
         if make_return != 0:
             sys.stderr.write(
-                f'\nEncountered an error when attempting to compile '
-                f'Helios with CMake. Please report this traceback to '
-                f'the AgML team. A full traceback of the compilation '
-                f'process can be found at "{log_file}".')
+                f"\nEncountered an error when attempting to compile "
+                f"Helios with CMake. Please report this traceback to "
+                f"the AgML team. A full traceback of the compilation "
+                f'process can be found at "{log_file}".'
+            )
             _compilation_failed(helios_temp_dir, temp_dir)
 
         # Print the final message.
@@ -196,21 +220,23 @@ def _compile_helios_executable_only(parallel):
         raise NotADirectoryError(
             f"The expected project path {PROJECT_PATH} does not exist. "
             f"There may have been an error in installing Helios. Try "
-            f"re-installing it, or raise an issue with the AgML team.")
+            f"re-installing it, or raise an issue with the AgML team."
+        )
 
     # Construct arguments for the compilation.
-    if not parallel or sys.platform == 'win32':
-        make_args = ['cmake', '--build', '.']
+    if not parallel or sys.platform == "win32":
+        make_args = ["cmake", "--build", "."]
     else:
-        make_args = ['make', f'-j{os.cpu_count()}']
+        make_args = ["make", f"-j{os.cpu_count()}"]
 
     # Create the log file and clear the existing one.
     log_file = os.path.expanduser(
-        f"~/.agml/.helios_compilation_log"
-        f"-{dt.now().strftime('%Y%m%d-%H%M%S')}.log")
+        f"~/.agml/.helios_compilation_log" f"-{dt.now().strftime('%Y%m%d-%H%M%S')}.log"
+    )
     try:
-        existing_log = glob.glob(os.path.expanduser(
-            '~/.agml/.helios_compilation_log-*.log'))[0]
+        existing_log = glob.glob(
+            os.path.expanduser("~/.agml/.helios_compilation_log-*.log")
+        )[0]
         os.remove(existing_log)
     except:
         pass
@@ -218,30 +244,35 @@ def _compile_helios_executable_only(parallel):
     # Generate the main executable.
     cmake_log = "\n"
     sys.stderr.write("Building Helios executable with CMake.\n\n")
-    make_process = sp.Popen(make_args, stdout=sp.PIPE, cwd=HELIOS_BUILD,
-                            stderr=sp.STDOUT, universal_newlines=True)
+    make_process = sp.Popen(
+        make_args,
+        stdout=sp.PIPE,
+        cwd=HELIOS_BUILD,
+        stderr=sp.STDOUT,
+        universal_newlines=True,
+    )
     for line in iter(make_process.stdout.readline, ""):
         cmake_log += line
         sys.stderr.write(line)
     make_process.stdout.close()
-    with open(log_file, 'a') as f:
+    with open(log_file, "a") as f:
         f.write(cmake_log)
     make_return = make_process.wait()
     if make_return != 0:
         sys.stderr.write(
-            f'\nEncountered an error when attempting to compile '
-            f'Helios with CMake. Please report this traceback to '
-            f'the AgML team. A full traceback of the compilation '
-            f'process can be found at "{log_file}".')
+            f"\nEncountered an error when attempting to compile "
+            f"Helios with CMake. Please report this traceback to "
+            f"the AgML team. A full traceback of the compilation "
+            f'process can be found at "{log_file}".'
+        )
 
     # Print the final message.
     _compilation_successful(lidar_enabled=None)
 
 
-def recompile_helios(executable_only=False,
-                     debug_mode=False,
-                     lidar_enabled=False,
-                     parallel=True):
+def recompile_helios(
+    executable_only=False, debug_mode=False, lidar_enabled=False, parallel=True
+):
     """Recompiles the Helios library with the set parameters.
 
     This method can be used by the user in order to recompile Helios, if, for
@@ -267,34 +298,40 @@ def recompile_helios(executable_only=False,
         significantly faster compilation, at the cost of high CPU usage.
     """
     if executable_only and lidar_enabled:
-        raise ValueError("If you want to compile Helios with LiDAR support, "
-                         "you cannot compile only the executable.")
+        raise ValueError(
+            "If you want to compile Helios with LiDAR support, "
+            "you cannot compile only the executable."
+        )
     if executable_only and debug_mode:
-        raise ValueError("If you want to compile the build in `Debug` mode, "
-                         "you cannot compile only the executable.")
+        raise ValueError(
+            "If you want to compile the build in `Debug` mode, "
+            "you cannot compile only the executable."
+        )
     if executable_only:
         _compile_helios_executable_only(parallel=parallel)
     else:
-        cmake_build_type = 'Debug' if debug_mode else 'Release'
-        _compile_helios_default(cmake_build_type=cmake_build_type,
-                                lidar_enabled=lidar_enabled,
-                                parallel=parallel)
+        cmake_build_type = "Debug" if debug_mode else "Release"
+        _compile_helios_default(
+            cmake_build_type=cmake_build_type,
+            lidar_enabled=lidar_enabled,
+            parallel=parallel,
+        )
 
 
 def _compilation_successful(lidar_enabled):
     """Updates after successful Helios compilation."""
-    sys.stdout.write('\n')
-    sys.stderr.write('\nHelios compilation successful!\n')
+    sys.stdout.write("\n")
+    sys.stderr.write("\nHelios compilation successful!\n")
     if lidar_enabled is not None:
-        _update_config('lidar_enabled', lidar_enabled)
+        _update_config("lidar_enabled", lidar_enabled)
 
 
 def is_helios_compiled_with_lidar():
     """Returns whether Helios was compiled with LiDAR support enabled."""
     try:
-        return _get_config('lidar_enabled')
+        return _get_config("lidar_enabled")
     except:
-        _update_config('lidar_enabled', False)
+        _update_config("lidar_enabled", False)
         return False
 
 

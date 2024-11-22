@@ -50,20 +50,20 @@ class AgMLModelBase(AgMLSerializable, LightningModule):
         return self.net.base
 
     @overload
-    def preprocess_input(self, images: str) -> "torch.Tensor":
-        ...
+    def preprocess_input(self, images: str) -> "torch.Tensor": ...
 
     @overload
-    def preprocess_input(self, images: List[str]) -> "torch.Tensor":
-        ...
+    def preprocess_input(self, images: List[str]) -> "torch.Tensor": ...
 
     @overload
-    def preprocess_input(self, images: Union[np.ndarray, torch.Tensor]) -> "torch.Tensor":
-        ...
+    def preprocess_input(
+        self, images: Union[np.ndarray, torch.Tensor]
+    ) -> "torch.Tensor": ...
 
     @overload
-    def preprocess_input(self, images: List[Union[np.ndarray, torch.Tensor]]) -> "torch.Tensor":
-        ...
+    def preprocess_input(
+        self, images: List[Union[np.ndarray, torch.Tensor]]
+    ) -> "torch.Tensor": ...
 
     @abc.abstractmethod
     def preprocess_input(self, *args, **kwargs):
@@ -71,20 +71,18 @@ class AgMLModelBase(AgMLSerializable, LightningModule):
         raise NotImplementedError
 
     @overload
-    def predict(self, images: str) -> "torch.Tensor":
-        ...
+    def predict(self, images: str) -> "torch.Tensor": ...
 
     @overload
-    def predict(self, images: List[str]) -> "torch.Tensor":
-        ...
+    def predict(self, images: List[str]) -> "torch.Tensor": ...
 
     @overload
-    def predict(self, images: Union[np.ndarray, torch.Tensor]) -> "torch.Tensor":
-        ...
+    def predict(self, images: Union[np.ndarray, torch.Tensor]) -> "torch.Tensor": ...
 
     @overload
-    def predict(self, images: List[Union[np.ndarray, torch.Tensor]]) -> "torch.Tensor":
-        ...
+    def predict(
+        self, images: List[Union[np.ndarray, torch.Tensor]]
+    ) -> "torch.Tensor": ...
 
     @abc.abstractmethod
     def predict(self, *args, **kwargs):
@@ -105,7 +103,9 @@ class AgMLModelBase(AgMLSerializable, LightningModule):
         # First check for a path or a list of paths, for speed.
         if isinstance(images, str):
             with imread_context(images) as image:
-                return [cv2.cvtColor(image, cv2.COLOR_BGR2RGB), ]
+                return [
+                    cv2.cvtColor(image, cv2.COLOR_BGR2RGB),
+                ]
         elif isinstance(images, list) and isinstance(images[0], str):
             parsed_images = []
             for path in images:
@@ -119,7 +119,9 @@ class AgMLModelBase(AgMLSerializable, LightningModule):
             # Check if there is one single input image, or a batch of input
             # images. If there is a single input image, just return this.
             if images.ndim == 3:
-                return [images, ]
+                return [
+                    images,
+                ]
 
             # Check if we have a batch of images first. This check is
             # done by seeing if the input is 4-dimensional.
@@ -135,7 +137,8 @@ class AgMLModelBase(AgMLSerializable, LightningModule):
         raise TypeError(
             "Expected an input of a list of paths or images, a "
             "single path or image, or a batched image tensor for "
-            f"preprocessing inputs, instead got {type(images)}.")
+            f"preprocessing inputs, instead got {type(images)}."
+        )
 
     @staticmethod
     def _to_out(tensor: "torch.Tensor") -> "torch.Tensor":
@@ -149,9 +152,9 @@ class AgMLModelBase(AgMLSerializable, LightningModule):
             if image.ndim == 2:
                 shapes.append(image.shape)
                 continue
-            if image.shape[0] <= 3: # channels first
+            if image.shape[0] <= 3:  # channels first
                 shapes.append(image.shape[1:])
-            else: # channels last
+            else:  # channels last
                 shapes.append(image.shape[:2])
         return shapes
 
@@ -168,12 +171,12 @@ class AgMLModelBase(AgMLSerializable, LightningModule):
     def _get_benchmark(name):
         """Returns the `state_dict` for a pretrained model benchmark."""
         # Check if the benchmark exists; if not, download it.
-        benchmark_path = os.path.join(model_save_path(), name + '.pth')
+        benchmark_path = os.path.join(model_save_path(), name + ".pth")
         if not os.path.exists(benchmark_path):
             download_model(name, os.path.dirname(benchmark_path))
 
         # Load the benchmark.
-        return torch.load(benchmark_path, map_location = 'cpu')
+        return torch.load(benchmark_path, map_location="cpu")
 
     @abc.abstractmethod
     def load_benchmark(self, dataset: str):
@@ -191,28 +194,25 @@ class AgMLModelBase(AgMLSerializable, LightningModule):
         raise NotImplementedError
 
     def on_train_epoch_end(self):
-        if self._ml_task != 'object_detection':
+        if self._ml_task != "object_detection":
             for _, metric in self._metrics:
                 metric.reset()
 
     def on_validation_epoch_end(self):
-        if self._ml_task != 'object_detection':
+        if self._ml_task != "object_detection":
             for _, metric in self._metrics:
                 metric.reset()
 
     def get_progress_bar_dict(self):
-        if not hasattr(super(), 'get_progress_bar_dict'):
+        if not hasattr(super(), "get_progress_bar_dict"):
             return
         tqdm_dict = super().get_progress_bar_dict()
-        tqdm_dict.pop('v_num', None)
+        tqdm_dict.pop("v_num", None)
         return tqdm_dict
 
     def get_metrics(self):
-        if not hasattr(super(), 'get_metrics'):
+        if not hasattr(super(), "get_metrics"):
             return
         tqdm_dict = super().get_metrics()
-        tqdm_dict.pop('v_num', None)
+        tqdm_dict.pop("v_num", None)
         return tqdm_dict
-
-
-

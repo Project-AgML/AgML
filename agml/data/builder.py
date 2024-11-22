@@ -36,22 +36,22 @@ class DataBuilder(AgMLSerializable):
     it creates a mapping between the images and annotations which is
     used by the `DataManager` inside the `AgMLDataLoader`.
     """
+
     serializable = frozenset(
-        ('name', 'labels_for_image', 'data',
-         'info', 'dataset_root', 'data_length'))
+        ("name", "labels_for_image", "data", "info", "dataset_root", "data_length")
+    )
 
     def __init__(self, info, dataset_path, overwrite):
         # Attempt to locate or download the dataset.
         self._info = info
         self._name = info.name
-        self._configure_dataset(
-            dataset_path = dataset_path, overwrite = overwrite)
+        self._configure_dataset(dataset_path=dataset_path, overwrite=overwrite)
         self._data = None
         self._data_length = None
         self._labels_for_image = None
 
     @classmethod
-    def from_data(cls, contents, info, root, builder = None):
+    def from_data(cls, contents, info, root, builder=None):
         """Initializes the `DataBuilder` from a pre-built set of data.
 
         This is mainly used when running `AgMLDataLoader.split`, to create
@@ -67,9 +67,12 @@ class DataBuilder(AgMLSerializable):
         obj._data_length = len(obj._data)
         obj._labels_for_image = contents[1]
         if builder is not None:
-            if hasattr(builder, '_default_coco_annotations'):
-                obj._default_coco_annotations = DataBuilder._regenerate_coco_annotations(
-                    builder._default_coco_annotations, obj._data)
+            if hasattr(builder, "_default_coco_annotations"):
+                obj._default_coco_annotations = (
+                    DataBuilder._regenerate_coco_annotations(
+                        builder._default_coco_annotations, obj._data
+                    )
+                )
         return obj
 
     @staticmethod
@@ -80,22 +83,22 @@ class DataBuilder(AgMLSerializable):
         image_id_tracker = 0
 
         # Update the list of image paths.
-        for c in coco['images']:
-            if c['file_name'] in list(data.keys()):
-                c['image_id'] = image_id_tracker
+        for c in coco["images"]:
+            if c["file_name"] in list(data.keys()):
+                c["image_id"] = image_id_tracker
                 image_coco.append(c)
                 image_id_tracker += 1
 
         # Update the image IDs for the annotations
         for image_id, (_, annotation) in enumerate(data.items()):
             for a in annotation:
-                a['id'] = image_id
+                a["id"] = image_id
             annotation_coco.extend(annotation)
 
         # Update the complete COCO dictionary.
         ret_coco = coco.copy()
-        ret_coco['images'] = image_coco
-        ret_coco['annotations'] = annotation_coco
+        ret_coco["images"] = image_coco
+        ret_coco["annotations"] = annotation_coco
         return ret_coco
 
     @property
@@ -106,10 +109,11 @@ class DataBuilder(AgMLSerializable):
         """Finds and configures the dataset into the loader."""
         # Check if the user wants to overwrite the existing dataset,
         # and resolve the potentially provided custom dataset path.
-        overwrite = kwargs.get('overwrite', False)
-        if kwargs.get('dataset_path', None):
-            kwargs['dataset_path'] = os.path.realpath(
-                os.path.expanduser(kwargs['dataset_path']))
+        overwrite = kwargs.get("overwrite", False)
+        if kwargs.get("dataset_path", None):
+            kwargs["dataset_path"] = os.path.realpath(
+                os.path.expanduser(kwargs["dataset_path"])
+            )
 
         # If a custom dataset has been provided, then we assume the directory
         # provided is the root of the dataset, e.g., if /root/datasets/dir
@@ -120,22 +124,21 @@ class DataBuilder(AgMLSerializable):
         #
         # No downloading phase for custom datasets, as there is nothing to do.
         if self._info.is_custom_dataset:
-            if kwargs.get('dataset_path', False):
-                path = kwargs.get('dataset_path')
+            if kwargs.get("dataset_path", False):
+                path = kwargs.get("dataset_path")
                 if os.path.exists(path):
                     self._dataset_root = path
                     return
 
-            elif os.path.exists(os.path.join(
-                    data_save_path(), self._name)):
-                self._dataset_root = os.path.join(
-                    data_save_path(), self._name)
+            elif os.path.exists(os.path.join(data_save_path(), self._name)):
+                self._dataset_root = os.path.join(data_save_path(), self._name)
                 return
 
             # Otherwise, we don't know what to do.
             raise OSError(
                 f"Could not find a directory for the dataset {self._name}. "
-                f"Dataset path given: {kwargs.get('dataset_path', None)}")
+                f"Dataset path given: {kwargs.get('dataset_path', None)}"
+            )
 
         # If the user doesn't want to overwrite the existing contents,
         # first check whether the dataset already exists. If so, then set
@@ -146,57 +149,57 @@ class DataBuilder(AgMLSerializable):
         # then we pop '<name>' from the end of the path in order to prevent
         # the dataset from being downloaded to `/root/datasets/<name>/<name>`.
         if not overwrite:
-            if kwargs.get('dataset_path', False):
-                path = kwargs.get('dataset_path')
-                if (os.path.basename(path) == self._name
-                    and os.path.exists(path)) or \
-                        os.path.exists(os.path.join(path, self._name)):
+            if kwargs.get("dataset_path", False):
+                path = kwargs.get("dataset_path")
+                if (
+                    os.path.basename(path) == self._name and os.path.exists(path)
+                ) or os.path.exists(os.path.join(path, self._name)):
                     if os.path.basename(path) != self._name:
                         path = os.path.join(path, self._name)
                     self._dataset_root = path
                     return
 
-            elif os.path.exists(os.path.join(
-                    data_save_path(), self._name)):
-                self._dataset_root = os.path.join(
-                    data_save_path(), self._name)
+            elif os.path.exists(os.path.join(data_save_path(), self._name)):
+                self._dataset_root = os.path.join(data_save_path(), self._name)
                 return
 
         # If the user wants to overwrite, or the dataset doesn't exist
         # at the path, then we create the root in the same way, except
         # we just also download the dataset to the path.
         else:
-            if kwargs.get('dataset_path', False):
-                path = kwargs.get('dataset_path')
-                if (os.path.basename(path) == self._name
-                    and os.path.exists(path)) or \
-                        os.path.exists(os.path.join(path, self._name)):
+            if kwargs.get("dataset_path", False):
+                path = kwargs.get("dataset_path")
+                if (
+                    os.path.basename(path) == self._name and os.path.exists(path)
+                ) or os.path.exists(os.path.join(path, self._name)):
                     if os.path.basename(path) != self._name:
                         path = os.path.join(path, self._name)
-                    print(f'[AgML Download]: Overwriting dataset at '
-                          f'{os.path.join(path)}')
+                    print(
+                        f"[AgML Download]: Overwriting dataset at "
+                        f"{os.path.join(path)}"
+                    )
                     if os.path.basename(path) != self._name:
                         path = os.path.join(path, self._name)
                     self._dataset_root = path
 
-            elif os.path.exists(os.path.join(
-                    data_save_path(), self._name)):
-                self._dataset_root = os.path.join(
-                    data_save_path(), self._name)
+            elif os.path.exists(os.path.join(data_save_path(), self._name)):
+                self._dataset_root = os.path.join(data_save_path(), self._name)
                 sys.stderr.write(
-                    f'[AgML Download]: Overwriting dataset at '
-                    f'{os.path.join(self._dataset_root)}')
+                    f"[AgML Download]: Overwriting dataset at "
+                    f"{os.path.join(self._dataset_root)}"
+                )
 
         # Performs the actual downloading of the dataset.
-        if kwargs.get('dataset_path', False):
-            download_path = kwargs['dataset_path']
+        if kwargs.get("dataset_path", False):
+            download_path = kwargs["dataset_path"]
             if os.path.basename(download_path) != self._name:
                 download_path = os.path.join(download_path, self._name)
         else:
             download_path = os.path.join(data_save_path(), self._name)
         sys.stderr.write(
             f"[AgML Download]: Downloading dataset "
-            f"`{self._name}` to {download_path}.")
+            f"`{self._name}` to {download_path}."
+        )
         download_dataset(self._name, download_path)
         self._dataset_root = download_path
 
@@ -204,11 +207,11 @@ class DataBuilder(AgMLSerializable):
         """Dispatches to a content generation method for the provided task."""
         if self._data is not None:
             return
-        if task == 'image_classification':
+        if task == "image_classification":
             self._generate_image_classification_data()
-        elif task == 'image_regression':
+        elif task == "image_regression":
             self._generate_image_regression_data()
-        elif task == 'object_detection':
+        elif task == "object_detection":
             self._generate_object_detection_data()
         else:
             self._generate_semantic_segmentation_data()
@@ -221,8 +224,8 @@ class DataBuilder(AgMLSerializable):
         # Update the length of the data in the metadata dictionary for
         # custom datasets, since they may not be providing the total number.
         self._data_length = len(self._data)
-        if self._info._metadata.get('n_images', None) is None:
-            self._info._metadata['n_images'] = str(self._data_length)
+        if self._info._metadata.get("n_images", None) is None:
+            self._info._metadata["n_images"] = str(self._data_length)
         return self._data
 
     def export_contents(self, export_format):
@@ -231,10 +234,9 @@ class DataBuilder(AgMLSerializable):
         contents = self.get_contents()
 
         # For a COCO JSON dictionary, we have to make the full paths.
-        if self._info.tasks.ml == 'object_detection':
+        if self._info.tasks.ml == "object_detection":
             paths, coco = contents.keys(), contents.values()
-            paths = [os.path.join(
-                self._dataset_root, 'images', i) for i in paths]
+            paths = [os.path.join(self._dataset_root, "images", i) for i in paths]
             contents = dict({k: v for k, v in zip(paths, coco)})
 
         # If the export format is `None`, we return the default mapping.
@@ -243,14 +245,15 @@ class DataBuilder(AgMLSerializable):
 
         # If the export format is `arrays`, return the keys and
         # the values of the mapping as two independent arrays.
-        if export_format == 'arrays':
+        if export_format == "arrays":
             return list(contents.keys()), list(contents.values())
 
         # A special case for COCO JSON dictionaries.
-        if export_format == 'coco':
-            if self._info.tasks.ml != 'object_detection':
-                raise ValueError("The `coco` export format is "
-                                 "only for object detection tasks.")
+        if export_format == "coco":
+            if self._info.tasks.ml != "object_detection":
+                raise ValueError(
+                    "The `coco` export format is " "only for object detection tasks."
+                )
             return self._default_coco_annotations
 
     # The following methods actually generate the content mappings for
@@ -268,7 +271,7 @@ class DataBuilder(AgMLSerializable):
         image_label_mapping = {}
         candidate_dirs = get_dir_list(self._dataset_root)
         for dir_ in candidate_dirs:
-            if dir_.startswith('.'):
+            if dir_.startswith("."):
                 continue
             dir_path = os.path.join(self._dataset_root, dir_)
             if len(get_file_list(dir_path)) == 0:
@@ -285,23 +288,27 @@ class DataBuilder(AgMLSerializable):
         well as other image formats in other various `*_images` folders,
         and an `annotations.json` file containing the regression outputs.
         """
-        with open(os.path.join(self._dataset_root, 'annotations.json'), 'r') as f:
+        with open(os.path.join(self._dataset_root, "annotations.json"), "r") as f:
             annotations = json.load(f)
-        content_mapping = {'inputs': [], 'outputs': []}
+        content_mapping = {"inputs": [], "outputs": []}
         annotation_types = set(list(self._info.class_to_num.keys()))
-        annotation_types.remove('regression')
+        annotation_types.remove("regression")
         for sample in annotations:
             for k, v in sample.items():
                 if is_image_file(v):
-                    sample[k] = os.path.join(self._dataset_root, f'{k}s', v)
-            content_mapping['inputs'].append({
-                k: v for k, v in sample.items()
-                if re.match('(.*?)image', k)})
-            out = {'regression': list(sample['outputs']['regression'].values())}
-            out.update({
-                k: self._info.class_to_num[k][v] for k, v in sample['outputs'].items()
-                if k in annotation_types})
-            content_mapping['outputs'].append(out)
+                    sample[k] = os.path.join(self._dataset_root, f"{k}s", v)
+            content_mapping["inputs"].append(
+                {k: v for k, v in sample.items() if re.match("(.*?)image", k)}
+            )
+            out = {"regression": list(sample["outputs"]["regression"].values())}
+            out.update(
+                {
+                    k: self._info.class_to_num[k][v]
+                    for k, v in sample["outputs"].items()
+                    if k in annotation_types
+                }
+            )
+            content_mapping["outputs"].append(out)
         self._data = content_mapping
 
     def _generate_semantic_segmentation_data(self):
@@ -310,14 +317,17 @@ class DataBuilder(AgMLSerializable):
         Image data is loaded from an `images` directory, and pixel-wise
         annotated images are loaded from an `annotations` directory.
         """
-        image_dir = os.path.join(self._dataset_root, 'images')
-        annotation_dir = os.path.join(self._dataset_root, 'annotations')
-        images, annotations = sorted(get_file_list(image_dir)), \
-                              sorted(get_file_list(annotation_dir))
+        image_dir = os.path.join(self._dataset_root, "images")
+        annotation_dir = os.path.join(self._dataset_root, "annotations")
+        images, annotations = (
+            sorted(get_file_list(image_dir)),
+            sorted(get_file_list(annotation_dir)),
+        )
         image_annotation_map = {}
         for image_path, annotation_path in zip(images, annotations):
-            image_annotation_map[os.path.join(image_dir, image_path)] \
-                = os.path.join(annotation_dir, annotation_path)
+            image_annotation_map[os.path.join(image_dir, image_path)] = os.path.join(
+                annotation_dir, annotation_path
+            )
         self._data = image_annotation_map
 
     def _generate_object_detection_data(self):
@@ -326,18 +336,18 @@ class DataBuilder(AgMLSerializable):
         Image data is loaded from an `images` directory, and the COCO
         JSON annotations are loaded from an `annotations.json` file.
         """
-        with open(os.path.join(self._dataset_root, 'annotations.json')) as f:
+        with open(os.path.join(self._dataset_root, "annotations.json")) as f:
             self._default_coco_annotations = json.load(f)
         coco_annotations = self._default_coco_annotations
         image_id_mapping = {}
-        for img_meta in coco_annotations['images']:
-            image_id_mapping[img_meta['id']] = img_meta['file_name']
+        for img_meta in coco_annotations["images"]:
+            image_id_mapping[img_meta["id"]] = img_meta["file_name"]
         coco_map = {fname: [] for fname in image_id_mapping.values()}
         image_category_map = {k: [] for k in coco_map.keys()}
-        for a_meta in coco_annotations['annotations']:
-            image_category_map[image_id_mapping[a_meta['image_id']]] \
-                .append(a_meta['category_id'])
-            coco_map[image_id_mapping[a_meta['image_id']]].append(a_meta)
+        for a_meta in coco_annotations["annotations"]:
+            image_category_map[image_id_mapping[a_meta["image_id"]]].append(
+                a_meta["category_id"]
+            )
+            coco_map[image_id_mapping[a_meta["image_id"]]].append(a_meta)
         self._labels_for_image = image_category_map
         self._data = coco_map
-

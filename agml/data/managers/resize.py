@@ -60,15 +60,24 @@ class ImageResizeManager(AgMLSerializable):
     Note: Images will be resized *before* being passed into
     a transformation pipeline. This is to prevent data loss.
     """
+
     serializable = frozenset(
-        ('task', 'dataset_name', 'dataset_root', 'auto_enabled',
-         'resize_type', 'image_size', 'interpolation'))
+        (
+            "task",
+            "dataset_name",
+            "dataset_root",
+            "auto_enabled",
+            "resize_type",
+            "image_size",
+            "interpolation",
+        )
+    )
 
     # Stores the path to the local file which contains the
     # information on the image shapes in all of the datasets.
     _shape_info_file = os.path.join(
-        recursive_dirname(__file__, 3),
-        '_assets', 'shape_info.pickle')
+        recursive_dirname(__file__, 3), "_assets", "shape_info.pickle"
+    )
 
     # Stores the default image size if it is not inferenced.
     _default_size = (512, 512)
@@ -81,7 +90,7 @@ class ImageResizeManager(AgMLSerializable):
         self._dataset_name = dataset
         self._dataset_root = root
 
-        self._resize_type = 'default'
+        self._resize_type = "default"
         self._image_size = None
         self._interpolation = cv2.INTER_LINEAR
 
@@ -109,58 +118,59 @@ class ImageResizeManager(AgMLSerializable):
 
     def assign(self, kind, method=None):
         """Assigns the resize parameter (and does necessary calculations)."""
-        if kind == 'default':
-            self._resize_type = 'default'
+        if kind == "default":
+            self._resize_type = "default"
             self._image_size = None
-        elif kind == 'train':
-            self._resize_type = 'train'
+        elif kind == "train":
+            self._resize_type = "train"
             self._image_size = self._default_size
-        elif kind == 'imagenet':
-            self._resize_type = 'imagenet'
+        elif kind == "imagenet":
+            self._resize_type = "imagenet"
             self._image_size = self._imagenet_size
         elif isinstance(kind, (list, tuple, np.ndarray, set)):
             if not len(kind) == 2:
                 raise ValueError(
                     f"Got a sequence {kind}, expected two values for "
-                    f"the height and width but got {len(kind)} values.")
-            self._resize_type = 'custom_size'
+                    f"the height and width but got {len(kind)} values."
+                )
+            self._resize_type = "custom_size"
             self._image_size = tuple([i for i in kind])
-        elif 'auto' in kind:
+        elif "auto" in kind:
             # This means that the dataloader has been exported in some format.
             # First, we check whether a different size has automatically been
             # set, since if it has, we don't want to override that size.
-            if kind == 'train-auto':
+            if kind == "train-auto":
                 if not self._auto_enabled:
-                    self._resize_type = 'train'
+                    self._resize_type = "train"
                     self._image_size = self._default_size
-                elif self._resize_type == 'default':
+                elif self._resize_type == "default":
                     info = self._maybe_load_shape_info()
                     if info is None:
                         shape = self._random_inference_shape()
                     else:
                         shape = self._inference_shape(info)
-                    self._resize_type = 'auto'
+                    self._resize_type = "auto"
                     self._image_size = resolve_tuple(shape)
 
         # Check interpolation method independently.
         if method is not None:
             method = method.lower()
-            if method not in ['bilinear', 'area', 'nearest', 'cubic']:
+            if method not in ["bilinear", "area", "nearest", "cubic"]:
                 raise ValueError(f"Invalid interpolation method: {method}.")
             self._interpolation = {
-                'bilinear': cv2.INTER_LINEAR,
-                'area': cv2.INTER_AREA,
-                'nearest': cv2.INTER_NEAREST,
-                'cubic': cv2.INTER_CUBIC
+                "bilinear": cv2.INTER_LINEAR,
+                "area": cv2.INTER_AREA,
+                "nearest": cv2.INTER_NEAREST,
+                "cubic": cv2.INTER_CUBIC,
             }[method]
 
     def apply(self, contents):
         """Applies the resizing operation to the input data."""
-        if self._task in ['image_classification', 'image_regression']:
+        if self._task in ["image_classification", "image_regression"]:
             return self._resize_image_input(contents, self._image_size)
-        elif self._task == 'object_detection':
+        elif self._task == "object_detection":
             return self._resize_image_and_coco(contents, self._image_size)
-        elif self._task == 'semantic_segmentation':
+        elif self._task == "semantic_segmentation":
             return self._resize_image_and_mask(contents, self._image_size)
 
     def _inference_shape(self, info):
@@ -208,8 +218,10 @@ class ImageResizeManager(AgMLSerializable):
             two_pluralities = shapes[np.where(count_proportions >= 0.35)[0]]
             if len(two_pluralities) != 2:
                 return self._get_log_default_shape()
-            outs = (self._tuple_euclidean(two_pluralities[0], self._default_size),
-                    self._tuple_euclidean(two_pluralities[1], self._default_size))
+            outs = (
+                self._tuple_euclidean(two_pluralities[0], self._default_size),
+                self._tuple_euclidean(two_pluralities[1], self._default_size),
+            )
             return two_pluralities[outs.index(max(outs))][0].tolist()
 
         return self._get_log_default_shape()
@@ -224,10 +236,12 @@ class ImageResizeManager(AgMLSerializable):
         would do in the regular shape inference method, only with a
         random sample instead of the entire dataset for reference.
         """
-        log(f"Could not find shape information for {self._dataset_name}. "
-            f"Attempting to randomly inference the dataset shape.")
+        log(
+            f"Could not find shape information for {self._dataset_name}. "
+            f"Attempting to randomly inference the dataset shape."
+        )
 
-        image_path = os.path.join(self._dataset_root, 'images')
+        image_path = os.path.join(self._dataset_root, "images")
         images = np.random.choice(os.listdir(image_path), size=25)
 
         # Get all of the shapes from the random sample of images.
@@ -245,21 +259,24 @@ class ImageResizeManager(AgMLSerializable):
     def _maybe_load_shape_info(self):
         """Loads the contents of the shape information file."""
         try:
-            with open(self._shape_info_file, 'rb') as f:
+            with open(self._shape_info_file, "rb") as f:
                 contents = pickle.load(f)
                 return contents.get(self._dataset_name, None)
         except OSError:
             raise EnvironmentError(
                 f"Could not find the local file {self._shape_info_file} "
                 f"containing shape information. There was likely a problem "
-                f"when building AgML. Please re-install it.")
+                f"when building AgML. Please re-install it."
+            )
 
     def _get_log_default_shape(self):
         """Returns the default shape and warns that no shape could be inferenced."""
-        log(f"No specific shape could be inferenced for the dataset "
+        log(
+            f"No specific shape could be inferenced for the dataset "
             f"{self._dataset_name}. Using the default shape of (512, "
             f"512). Please use this instead of 'auto'. You can set this "
-            f"shape by default by using the parameter 'train'.")
+            f"shape by default by using the parameter 'train'."
+        )
         return self._default_size
 
     # The following methods conduct the actual resizing of the images
@@ -273,7 +290,8 @@ class ImageResizeManager(AgMLSerializable):
         if image_size is not None:
             return {
                 k: self._method_resize(i.astype(np.uint16), image_size).astype(np.int32)
-                for k, i in image.items()}, label
+                for k, i in image.items()
+            }, label
         return image, label
 
     def _resize_single_image(self, contents, image_size):
@@ -288,13 +306,13 @@ class ImageResizeManager(AgMLSerializable):
         if image_size is not None:
             # Extract the original size of the bounding boxes.
             y_scale, x_scale = image.shape[0:2]
-            bboxes = coco['bbox']
+            bboxes = coco["bbox"]
             processed_bboxes = []
             for bbox in bboxes:
                 x1, y1, width, height = bbox
-                processed_bboxes.append([
-                    x1 / x_scale, y1 / y_scale,
-                    width / x_scale, height / y_scale])
+                processed_bboxes.append(
+                    [x1 / x_scale, y1 / y_scale, width / x_scale, height / y_scale]
+                )
 
             # Clip the bounding boxes (There might be a case where
             # the bounding box is on the edge, but goes to just over 1.0
@@ -311,15 +329,17 @@ class ImageResizeManager(AgMLSerializable):
             for bbox in processed_bboxes:
                 x1, y1, width, height = bbox
                 new_bbox = [
-                    int(x1 * x_new), int(y1 * y_new),
-                    int(width * x_new), int(height * y_new)]
+                    int(x1 * x_new),
+                    int(y1 * y_new),
+                    int(width * x_new),
+                    int(height * y_new),
+                ]
                 final_processed_bboxes.append(new_bbox)
                 areas.append(new_bbox[2] * new_bbox[3])
-            final_processed_bboxes = \
-                np.array(final_processed_bboxes).astype(np.int32)
-            coco['bbox'] = final_processed_bboxes
+            final_processed_bboxes = np.array(final_processed_bboxes).astype(np.int32)
+            coco["bbox"] = final_processed_bboxes
             areas = np.array(areas).astype(np.int32)
-            coco['area'] = areas
+            coco["area"] = areas
         return image, coco
 
     def _resize_image_and_mask(self, contents, image_size):
@@ -329,9 +349,3 @@ class ImageResizeManager(AgMLSerializable):
             image = self._method_resize(image, image_size)
             mask = cv2.resize(mask, image_size, cv2.INTER_NEAREST)
         return image, mask
-
-
-
-
-
-

@@ -15,13 +15,9 @@
 from .loader import AgMLDataLoader
 from .image_loader import ImageLoader
 from .point_cloud import PointCloud
-from .public import (
-    public_data_sources, source
-)
+from .public import public_data_sources, source
 from .public import download_public_dataset
-from .tools import (
-    coco_to_bboxes, convert_bbox_format
-)
+from .tools import coco_to_bboxes, convert_bbox_format
 from . import experimental
 from . import exporters
 from . import extensions

@@ -27,48 +27,50 @@ from tqdm import tqdm
 
 # Parse input arguments (get the datasets to re-generate).
 ap = argparse.ArgumentParser()
-ap.add_argument('--datasets', nargs = '+', required = True,
-                help = 'The datasets you want to generate (or re-generate) shape information '
-                       'for. These should be in the `public_datasources.json` file, and if it is'
-                       'a new dataset, the folder should be in `~/.agml/datasets`. To re-generate'
-                       'shape information for all datasets, use the "all" command. ')
+ap.add_argument(
+    "--datasets",
+    nargs="+",
+    required=True,
+    help="The datasets you want to generate (or re-generate) shape information "
+    "for. These should be in the `public_datasources.json` file, and if it is"
+    "a new dataset, the folder should be in `~/.agml/datasets`. To re-generate"
+    'shape information for all datasets, use the "all" command. ',
+)
 datasets = ap.parse_args().datasets
 
 # Load in the original contents of the shape info file.
 shape_info_file = os.path.join(
-        os.path.dirname(os.path.dirname(__file__)),
-        'agml', '_assets', 'shape_info.pickle')
+    os.path.dirname(os.path.dirname(__file__)), "agml", "_assets", "shape_info.pickle"
+)
 if os.path.exists(shape_info_file):
-    with open(shape_info_file, 'rb') as f:
+    with open(shape_info_file, "rb") as f:
         shape_contents = pickle.load(f)
 else:
     shape_contents = {}
 
 # Determine which datasets to download.
-if datasets[0] == 'all':
+if datasets[0] == "all":
     datasets = agml.data.public_data_sources()
 
 # Parse through and update the shape contents.
-for ds in tqdm(datasets, desc = 'Processing Datasets'):
-    if hasattr(ds, 'name'):
+for ds in tqdm(datasets, desc="Processing Datasets"):
+    if hasattr(ds, "name"):
         ds = ds.name
     current_shapes, leave = [], True
-    if not os.path.exists(os.path.join(
-            os.path.expanduser('~'), '.agml', 'datasets', ds)):
+    if not os.path.exists(
+        os.path.join(os.path.expanduser("~"), ".agml", "datasets", ds)
+    ):
         leave = False
     loader = agml.data.AgMLDataLoader(ds)
-    for contents in tqdm(loader, desc = 'Loader Iteration', leave = False):
+    for contents in tqdm(loader, desc="Loader Iteration", leave=False):
         image, _ = contents
         if isinstance(image, dict):
-            image = image['image']
+            image = image["image"]
         current_shapes.append(image.shape)
-    shape_contents[loader.name] = np.unique(
-        current_shapes, return_counts = True, axis = 0)
+    shape_contents[loader.name] = np.unique(current_shapes, return_counts=True, axis=0)
     if not leave:
         shutil.rmtree(loader.dataset_root)
 
 # Save the contents once again.
-with open(shape_info_file, 'wb') as f:
+with open(shape_info_file, "wb") as f:
     pickle.dump(shape_contents, f)
-
-

@@ -37,8 +37,8 @@ def placeholder(obj):
 
 def to_camel_case(s):
     """Converts a given string `s` to camel case."""
-    s = re.sub(r"(_|-)+", " ", s).title().replace(" ", "") # noqa
-    return ''.join(s)
+    s = re.sub(r"(_|-)+", " ", s).title().replace(" ", "")  # noqa
+    return "".join(s)
 
 
 def resolve_list_value(val):
@@ -48,21 +48,31 @@ def resolve_list_value(val):
     return val
 
 
-def resolve_tuple_values(*inputs, custom_error = None):
-    """Determines whether values are distributed amongst the values in `inputs`. """
+def resolve_tuple_values(*inputs, custom_error=None):
+    """Determines whether values are distributed amongst the values in `inputs`."""
     if isinstance(inputs[0], (list, tuple)) and all(c is None for c in inputs[1:]):
         if len(inputs[0]) != len(inputs):
             # special case for COCO JSON
-            if len(inputs) == 3 and len(inputs[0]) == 2 and isinstance(inputs[0][1], dict):
+            if (
+                len(inputs) == 3
+                and len(inputs[0]) == 2
+                and isinstance(inputs[0][1], dict)
+            ):
                 try:
-                    return inputs[0][0], inputs[0][1]['bbox'], inputs[0][1]['category_id']
+                    return (
+                        inputs[0][0],
+                        inputs[0][1]["bbox"],
+                        inputs[0][1]["category_id"],
+                    )
                 except KeyError:
-                    return inputs[0][0], inputs[0][1]['bboxes'], inputs[0][1]['labels']
+                    return inputs[0][0], inputs[0][1]["bboxes"], inputs[0][1]["labels"]
             if custom_error is not None:
                 raise ValueError(custom_error)
             else:
-                raise ValueError(f"Expected either a tuple with {len(inputs)} values "
-                                 f"or {len(inputs)} values across two arguments.")
+                raise ValueError(
+                    f"Expected either a tuple with {len(inputs)} values "
+                    f"or {len(inputs)} values across two arguments."
+                )
         else:
             return inputs[0]
     return inputs
@@ -89,9 +99,11 @@ def as_scalar(inp):
     if isinstance(inp, np.ndarray):
         return inp.item()
     from agml.backend.tftorch import torch
+
     if isinstance(inp, torch.Tensor):
         return inp.item()
     from agml.backend.tftorch import tf
+
     if isinstance(inp, tf.Tensor):
         return inp.numpy()
     raise TypeError(f"Unsupported variable type {type(inp)}.")
@@ -107,9 +119,11 @@ def is_array_like(inp):
     if isinstance(inp, np.ndarray):
         return True
     from agml.backend.tftorch import torch
+
     if isinstance(inp, torch.Tensor):
         return True
     from agml.backend.tftorch import tf
+
     if isinstance(inp, tf.Tensor):
         return True
     return False
@@ -118,17 +132,17 @@ def is_array_like(inp):
 def shapes(seq):
     """Returns the shapes (or lengths) of all of the objects in the sequence."""
     try:
-        return [getattr(obj, 'shape', len(obj)) for obj in seq]
+        return [getattr(obj, "shape", len(obj)) for obj in seq]
     except:
         raise ValueError(f"One or more of the objects has no shape or length: {seq}.")
 
 
-def weak_squeeze(arr, ndims = 2):
+def weak_squeeze(arr, ndims=2):
     """Performs a 'weak squeeze', adding a dimension back if necessary."""
     if isinstance(arr, np.ndarray):
         arr = np.squeeze(arr)
         while arr.ndim < ndims:
-            arr = np.expand_dims(arr, axis = 0)
+            arr = np.expand_dims(arr, axis=0)
     if isinstance(arr, list):
         while len(arr) < ndims:
             arr = [arr]
@@ -137,8 +151,13 @@ def weak_squeeze(arr, ndims = 2):
 
 def is_float(num):
     """Determines if a number is a float."""
-    is_ = isinstance(num, float) or isinstance(num, np.float32) or isinstance(num, np.float64)
-    if is_: return True
+    is_ = (
+        isinstance(num, float)
+        or isinstance(num, np.float32)
+        or isinstance(num, np.float64)
+    )
+    if is_:
+        return True
     try:
         float(num)
     except ValueError:
@@ -149,7 +168,8 @@ def is_float(num):
 def is_int(num):
     """Determines if a number is an int."""
     is_ = isinstance(num, int) or isinstance(num, np.int32) or isinstance(num, np.int64)
-    if is_: return True
+    if is_:
+        return True
     try:
         int(num)
     except ValueError:

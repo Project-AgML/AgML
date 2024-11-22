@@ -35,7 +35,8 @@ def dice_loss(y_pred, y):
     try:  # Multi-class segmentation
         c, h, w = y.shape[1:]
     except:  # Binary segmentation
-        h, w = y.shape[1:]; c = 1 # noqa
+        h, w = y.shape[1:]
+        c = 1  # noqa
 
     # Sigmoid for the outputs (since this is automatically done by binary
     # cross-entropy loss with logits, the actual base model for semantic
@@ -46,13 +47,11 @@ def dice_loss(y_pred, y):
     # Run the dice loss calculations.
     pred_flat = torch.reshape(y_pred, [-1, c * h * w])
     y_flat = torch.reshape(y, [-1, c * h * w])
-    intersection = 2.0 * torch.sum(pred_flat * y_flat, dim = 1) + 1e-6
-    denominator = (torch.sum(pred_flat, dim = 1)
-                   + torch.sum(y_flat, dim = 1) + 1e-6)
-    return 1. - torch.mean(intersection / denominator)
+    intersection = 2.0 * torch.sum(pred_flat * y_flat, dim=1) + 1e-6
+    denominator = torch.sum(pred_flat, dim=1) + torch.sum(y_flat, dim=1) + 1e-6
+    return 1.0 - torch.mean(intersection / denominator)
 
 
 class DiceLoss(nn.Module):
-    def forward(self, x, target, **kwargs): # noqa
+    def forward(self, x, target, **kwargs):  # noqa
         return dice_loss(x, target)
-

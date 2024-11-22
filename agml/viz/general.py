@@ -48,24 +48,28 @@ def show_sample(loader, image_only=False, num_images=1, **kwargs):
     if image_only:
         return show_images([sample[0] for sample in samples])
 
-    if loader.task == 'object_detection':
-        return [show_image_and_boxes(
-            sample, info=loader.info,
-            no_show=kwargs.get('no_show', False),
-            num_to_class=kwargs.get('num_to_class', None))
-            for sample in samples]
-    elif loader.task == 'semantic_segmentation':
-        return [show_image_and_overlaid_mask(
-            sample, no_show=kwargs.get('no_show', False))
-            for sample in samples]
-    elif loader.task == 'image_classification':
+    if loader.task == "object_detection":
+        return [
+            show_image_and_boxes(
+                sample,
+                info=loader.info,
+                no_show=kwargs.get("no_show", False),
+                num_to_class=kwargs.get("num_to_class", None),
+            )
+            for sample in samples
+        ]
+    elif loader.task == "semantic_segmentation":
+        return [
+            show_image_and_overlaid_mask(sample, no_show=kwargs.get("no_show", False))
+            for sample in samples
+        ]
+    elif loader.task == "image_classification":
         return show_images_and_labels(
-            samples, info=loader.info, no_show=kwargs.get('no_show', False))
+            samples, info=loader.info, no_show=kwargs.get("no_show", False)
+        )
 
 
-def show_images(images,
-                shape = None,
-                **kwargs):
+def show_images(images, shape=None, **kwargs):
     """Shows multiple images in a grid format with the given shape.
 
     Given a set of images, this method will generate a grid for the
@@ -92,7 +96,7 @@ def show_images(images,
     if not isinstance(images, (list, tuple)):
         if is_array_like(images):
             images = format_image(images)
-            if not kwargs.get('no_show', False):
+            if not kwargs.get("no_show", False):
                 display_image(images)
             return images
 
@@ -105,13 +109,13 @@ def show_images(images,
     if max(shape) > 20:
         raise NotImplementedError(
             "Length of maximum shape length is greater than 20. "
-            "This method does not support non-rectangular shapes.")
+            "This method does not support non-rectangular shapes."
+        )
 
-    fig, axes = plt.subplots(
-        shape[0], shape[1], figsize = (shape[1] * 2, shape[0] * 2))
+    fig, axes = plt.subplots(shape[0], shape[1], figsize=(shape[1] * 2, shape[0] * 2))
     try:
         iter_ax = axes.flat
-    except AttributeError: # If showing only a single image.
+    except AttributeError:  # If showing only a single image.
         iter_ax = [axes]
     for image, ax in zip(images, iter_ax):
         ax.imshow(format_image(image))
@@ -119,15 +123,13 @@ def show_images(images,
         ax.set_xticklabels([])
         ax.set_yticklabels([])
         ax.tick_params(
-            axis = 'both', which = 'both', bottom = False,
-            top = False, left = False, right = False
+            axis="both", which="both", bottom=False, top=False, left=False, right=False
         )
-        plt.setp(ax.spines.values(), visible = False)
+        plt.setp(ax.spines.values(), visible=False)
     fig.tight_layout()
 
     # Display and return the image.
     image = convert_figure_to_image()
-    if not kwargs.get('no_show', False):
+    if not kwargs.get("no_show", False):
         display_image(image)
     return image
-

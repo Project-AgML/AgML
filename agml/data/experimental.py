@@ -15,12 +15,13 @@
 """
 Experimental data utilities that are in development.
 """
+
 import functools
 
 import numpy as np
 
 
-__all__ = ['generate_keras_segmentation_dual_transform']
+__all__ = ["generate_keras_segmentation_dual_transform"]
 
 
 def generate_keras_segmentation_dual_transform(*layers):
@@ -59,6 +60,7 @@ def generate_keras_segmentation_dual_transform(*layers):
     -------
     """
     import tensorflow as tf
+
     if len(layers) == 1:
         if isinstance(layers[0], tf.keras.Sequential):
             layers = layers[0].layers
@@ -70,35 +72,32 @@ def generate_keras_segmentation_dual_transform(*layers):
             instantiated_layer = functools.partial(layer_, **build_dict)
             seed_update = {}
             if seed is not None:
-                seed_update['seed'] = seed
+                seed_update["seed"] = seed
             image = instantiated_layer(**seed_update)(image)
             annotation = instantiated_layer(**seed_update)(annotation)
             return image, annotation
+
         return _internal
 
     preprocessing_methods, use_seeds = [], []
     for layer in layers:
         config = layer.get_config()
-        if 'seed' in config:
-            config.pop('seed')
+        if "seed" in config:
+            config.pop("seed")
             use_seeds.append(True)
         else:
             use_seeds.append(False)
         preprocessing_methods.append(
-            _single_preprocessing_layer_base(layer.__class__, config))
+            _single_preprocessing_layer_base(layer.__class__, config)
+        )
 
     def _execute_preprocessing(layers_, use_seeds_):
         def _execute(image, annotation):
             for p_layer, seed_ in zip(layers_, use_seeds_):
                 seed = np.random.randint(2147483647) if seed_ else None
-                image, annotation = p_layer(image, annotation, seed = seed)
+                image, annotation = p_layer(image, annotation, seed=seed)
             return image, annotation
+
         return _execute
+
     return _execute_preprocessing(preprocessing_methods, use_seeds)
-
-
-
-
-
-
-

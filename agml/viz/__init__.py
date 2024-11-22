@@ -18,7 +18,7 @@ from .tools import (
     get_colormap,
     convert_figure_to_image,
     set_viz_backend,
-    get_viz_backend
+    get_viz_backend,
 )
 from .masks import (
     convert_mask_to_colored_image,
@@ -30,20 +30,10 @@ from .masks import (
 from .boxes import (
     annotate_object_detection,
     show_image_and_boxes,
-    show_object_detection_truth_and_prediction
+    show_object_detection_truth_and_prediction,
 )
-from .labels import (
-    show_images_and_labels
-)
-from .general import (
-    show_sample,
-    show_images
-)
-from .inspection import (
-    plot_synthetic_camera_positions,
-    visualize_all_views
-)
-from .point_clouds import (
-    show_point_cloud
-)
+from .labels import show_images_and_labels
+from .general import show_sample, show_images
+from .inspection import plot_synthetic_camera_positions, visualize_all_views
+from .point_clouds import show_point_cloud
 from .display import display_image

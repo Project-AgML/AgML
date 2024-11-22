@@ -22,11 +22,11 @@ from agml.utils.io import (
     get_dir_list as _get_dir_list,
     nested_file_list as _get_nested_file_list,
     nested_dir_list as _get_nested_dir_list,
-    recursive_dirname as _recursive_dirname
+    recursive_dirname as _recursive_dirname,
 )
 
 
-def get_file_list(path, ext = None, nested = False):
+def get_file_list(path, ext=None, nested=False):
     """Returns a list of files in a directory.
 
     This function returns a list of files in a directory, optionally
@@ -45,11 +45,11 @@ def get_file_list(path, ext = None, nested = False):
             extension.
     """
     if nested:
-        return _get_nested_file_list(path, ext = ext)
-    return _get_file_list(path, ext = ext)
+        return _get_nested_file_list(path, ext=ext)
+    return _get_file_list(path, ext=ext)
 
 
-def get_dir_list(path, nested = False):
+def get_dir_list(path, nested=False):
     """Returns a list of directories in a directory.
 
     This function returns a list of directories in a directory,
@@ -68,7 +68,7 @@ def get_dir_list(path, nested = False):
     return _get_dir_list(path)
 
 
-def recursive_dirname(path, depth = 1):
+def recursive_dirname(path, depth=1):
     """Returns the directory name of a path.
 
     This function returns the directory name of a path, optionally
@@ -84,7 +84,7 @@ def recursive_dirname(path, depth = 1):
     Returns:
         str: The directory name of the path.
     """
-    return _recursive_dirname(path, level = depth)
+    return _recursive_dirname(path, level=depth)
 
 
 def parent_path(depth):
@@ -98,7 +98,7 @@ def parent_path(depth):
     """
     frame = inspect.stack()[1]
     fname = inspect.getmodule(frame[0]).__file__
-    return _recursive_dirname(fname, level = depth)
+    return _recursive_dirname(fname, level=depth)
 
 
 def random_file(path, **kwargs):
@@ -125,4 +125,3 @@ def read_image(path, **kwargs):
         numpy.ndarray: The image.
     """
     return cv2.imread(path, **kwargs)
-

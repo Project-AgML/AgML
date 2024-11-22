@@ -17,6 +17,7 @@ This part of the backend controls the AgML methods where either
 TensorFlow or PyTorch methods can be used, and prevents unnecessary
 importing of either library (which takes a significant amount of time).
 """
+
 import types
 import inspect
 import logging
@@ -31,16 +32,20 @@ from agml.utils.image import consistent_shapes
 
 # Suppress any irrelevant warnings which will pop up from either backend.
 import warnings
+
 warnings.filterwarnings(
-    'ignore', category = UserWarning, message = '.*Named tensors.*Triggered internally.*')
+    "ignore", category=UserWarning, message=".*Named tensors.*Triggered internally.*"
+)
 
 
 class StrictBackendError(ValueError):
-    def __init__(self, message = None, change = None, obj = None):
+    def __init__(self, message=None, change=None, obj=None):
         if message is None:
-            message = f"Backend was manually set to " \
-                      f"'{get_backend()}', but got an object " \
-                      f"from backend '{change}': {obj}."
+            message = (
+                f"Backend was manually set to "
+                f"'{get_backend()}', but got an object "
+                f"from backend '{change}': {obj}."
+            )
         super(StrictBackendError, self).__init__(message)
 
 
@@ -49,7 +54,7 @@ _HAS_TENSORFLOW: bool
 _HAS_TORCH: bool
 
 
-@functools.lru_cache(maxsize = None)
+@functools.lru_cache(maxsize=None)
 def _check_tf_torch():
     global _HAS_TENSORFLOW, _HAS_TORCH
     try:
@@ -90,9 +95,9 @@ def set_backend(backend):
     global _USER_SET_BACKEND, _BACKEND
     # Check whether the user has modified the backend.
     mod = inspect.getmodule(inspect.stack()[1][0])
-    if mod is None: # IPython shell
+    if mod is None:  # IPython shell
         _USER_SET_BACKEND = True
-    elif 'agml.' not in mod.__name__:
+    elif "agml." not in mod.__name__:
         _USER_SET_BACKEND = True
 
     # If the backend is the same, don't do anything.
@@ -100,22 +105,24 @@ def set_backend(backend):
         return
 
     _check_tf_torch()
-    if backend not in ['tensorflow', 'tf', 'torch', 'pytorch']:
+    if backend not in ["tensorflow", "tf", "torch", "pytorch"]:
         raise ValueError(f"Invalid backend: {backend}.")
-    if backend in ['tensorflow', 'tf'] and _BACKEND != 'tensorflow':
+    if backend in ["tensorflow", "tf"] and _BACKEND != "tensorflow":
         if not _HAS_TENSORFLOW:
             raise ImportError(
                 "TensorFlow not found on system, cannot be used as "
-                "backend. Try running `pip install tensorflow`.")
-        _BACKEND = 'tf'
-        log("Switched backend to TensorFlow.", level = logging.INFO)
-    elif backend in ['torch', 'pytorch'] and _BACKEND != 'torch':
+                "backend. Try running `pip install tensorflow`."
+            )
+        _BACKEND = "tf"
+        log("Switched backend to TensorFlow.", level=logging.INFO)
+    elif backend in ["torch", "pytorch"] and _BACKEND != "torch":
         if not _HAS_TORCH:
             raise ImportError(
                 "PyTorch not found on system, cannot be used as "
-                "backend. Try running `pip install torch`.")
-        _BACKEND = 'torch'
-        log("Switched backend to PyTorch.", level = logging.INFO)
+                "backend. Try running `pip install torch`."
+            )
+        _BACKEND = "torch"
+        log("Switched backend to PyTorch.", level=logging.INFO)
 
 
 def user_changed_backend():
@@ -125,41 +132,43 @@ def user_changed_backend():
 
 # Ported from https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/util/lazy_loader.py
 class LazyLoader(types.ModuleType):
-  """Lazily import a module, mainly to avoid pulling in large dependencies.  """
-  def __init__(self, local_name, parent_module_globals, name):
-    self._local_name = local_name
-    self._parent_module_globals = parent_module_globals
-    super(LazyLoader, self).__init__(name)
+    """Lazily import a module, mainly to avoid pulling in large dependencies."""
 
-  def _load(self):
-    """Load the module and insert it into the parent's globals."""
-    # Import the target module and insert it into the parent's namespace.
-    module = importlib.import_module(self.__name__)
-    self._parent_module_globals[self._local_name] = module
+    def __init__(self, local_name, parent_module_globals, name):
+        self._local_name = local_name
+        self._parent_module_globals = parent_module_globals
+        super(LazyLoader, self).__init__(name)
 
-    # Update this object's dict so that if someone keeps a reference to the
-    #   LazyLoader, lookups are efficient (__getattr__ is only called on lookups
-    #   that fail).
-    self.__dict__.update(module.__dict__)
-    return module
+    def _load(self):
+        """Load the module and insert it into the parent's globals."""
+        # Import the target module and insert it into the parent's namespace.
+        module = importlib.import_module(self.__name__)
+        self._parent_module_globals[self._local_name] = module
 
-  def __getattr__(self, item):
-    module = self._load()
-    return getattr(module, item)
+        # Update this object's dict so that if someone keeps a reference to the
+        #   LazyLoader, lookups are efficient (__getattr__ is only called on lookups
+        #   that fail).
+        self.__dict__.update(module.__dict__)
+        return module
 
-  def __dir__(self):
-    module = self._load()
-    return dir(module)
+    def __getattr__(self, item):
+        module = self._load()
+        return getattr(module, item)
+
+    def __dir__(self):
+        module = self._load()
+        return dir(module)
 
 
 # Load TensorFlow and PyTorch lazily to prevent pulling them in when unnecessary.
-torch = LazyLoader('torch', globals(), 'torch')
-torch_data = LazyLoader('torch_data', globals(), 'torch.utils.data')
-torchvision = LazyLoader('torchvision', globals(), 'torchvision')
-tf = LazyLoader('tensorflow', globals(), 'tensorflow')
+torch = LazyLoader("torch", globals(), "torch")
+torch_data = LazyLoader("torch_data", globals(), "torch.utils.data")
+torchvision = LazyLoader("torchvision", globals(), "torchvision")
+tf = LazyLoader("tensorflow", globals(), "tensorflow")
 
 
 ######### GENERAL METHODS #########
+
 
 def _convert_image_to_torch(image):
     """Converts an image (np.ndarray) to a torch Tensor."""
@@ -207,9 +216,9 @@ def scalar_unpack(inp):
     return [as_scalar(item) for item in inp]
 
 
-def is_array_like(inp, no_list = False):
+def is_array_like(inp, no_list=False):
     """Determines if an input is a np.ndarray, torch.Tensor, or tf.Tensor."""
-    if isinstance(inp, (list, tuple)): # no need to import tensorflow for this
+    if isinstance(inp, (list, tuple)):  # no need to import tensorflow for this
         if no_list:
             return False
         return True
@@ -231,10 +240,12 @@ def convert_to_batch(images):
     # NumPy Arrays.
     if isinstance(images[0], np.ndarray):
         if not consistent_shapes(images):
-            images = np.array(images, dtype = object)
-            log("Created a batch of images with different "
+            images = np.array(images, dtype=object)
+            log(
+                "Created a batch of images with different "
                 "shapes. If you want the shapes to be consistent, "
-                "run `loader.resize_images('auto')`.")
+                "run `loader.resize_images('auto')`."
+            )
         else:
             images = np.array(images)
         return images
@@ -243,10 +254,12 @@ def convert_to_batch(images):
     if isinstance(images[0], torch.Tensor):
         if not consistent_shapes(images):
             images = [image.numpy() for image in images]
-            images = np.array(images, dtype = object)
-            log("Created a batch of images with different "
+            images = np.array(images, dtype=object)
+            log(
+                "Created a batch of images with different "
                 "shapes. If you want the shapes to be consistent, "
-                "run `loader.resize_images('auto')`.")
+                "run `loader.resize_images('auto')`."
+            )
         else:
             images = torch.stack(images)
         return images
@@ -255,15 +268,18 @@ def convert_to_batch(images):
     if isinstance(images[0], tf.Tensor):
         if not consistent_shapes(images):
             images = tf.ragged.stack(images)
-            log("Created a batch of images with different "
+            log(
+                "Created a batch of images with different "
                 "shapes. If you want the shapes to be consistent, "
-                "run `loader.resize_images('auto')`.")
+                "run `loader.resize_images('auto')`."
+            )
         else:
             images = tf.stack(images)
         return images
 
 
 ######### AGMLDATALOADER METHODS #########
+
 
 class AgMLObject(object):
     """Base class for the `AgMLDataLoader` to enable inheritance.
@@ -282,23 +298,23 @@ def _add_dataset_to_mro(inst, mode):
     This allows for the loader to dynamically inherent from the
     `tf.keras.utils.Sequence` and `torch.utils.data.Dataset`.
     """
-    if mode == 'tf':
-        if not get_backend() == 'tf':
+    if mode == "tf":
+        if not get_backend() == "tf":
             if user_changed_backend():
-                raise StrictBackendError(change = 'tf', obj = inst)
-            set_backend('tf')
+                raise StrictBackendError(change="tf", obj=inst)
+            set_backend("tf")
         if tf.keras.utils.Sequence not in inst.__class__.__bases__:
-            inst.__class__.__bases__ += (tf.keras.utils.Sequence, )
-    if mode == 'torch':
-        if not get_backend() == 'torch':
+            inst.__class__.__bases__ += (tf.keras.utils.Sequence,)
+    if mode == "torch":
+        if not get_backend() == "torch":
             if user_changed_backend():
-                raise StrictBackendError(change = 'torch', obj = inst)
+                raise StrictBackendError(change="torch", obj=inst)
         if torch_data.Dataset not in inst.__class__.__bases__:
             inst.__class__.__bases__ += (torch_data.Dataset,)
 
 
 def collate_fn_basic(batch):
-    images = torch.stack([i[0] for i in batch], dim = 0)
+    images = torch.stack([i[0] for i in batch], dim=0)
     coco = tuple(zip(*[i[1] for i in batch]))
     return images, coco
 
@@ -315,6 +331,9 @@ def collate_fn_efficientdet(batch):
     img_scale = torch.stack([target["img_scale"] for target in targets]).float()
 
     annotations = {
-        "bbox": boxes, "cls": labels,
-        "img_size": img_size, "img_scale": img_scale}
+        "bbox": boxes,
+        "cls": labels,
+        "img_size": img_size,
+        "img_scale": img_scale,
+    }
     return images, annotations, targets

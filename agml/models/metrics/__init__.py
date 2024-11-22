@@ -12,12 +12,5 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .map import (
-    mean_average_precision,
-    MeanAveragePrecision
-)
-from .accuracy import (
-    accuracy,
-    Accuracy
-)
-
+from .map import mean_average_precision, MeanAveragePrecision
+from .accuracy import accuracy, Accuracy

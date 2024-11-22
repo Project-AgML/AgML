@@ -30,7 +30,7 @@ import torch
 from collections import Counter
 
 
-def intersection_over_union(boxes_preds, boxes_labels, box_format = "midpoint"):
+def intersection_over_union(boxes_preds, boxes_labels, box_format="midpoint"):
     """
     Calculates intersection over union
     Parameters:
@@ -79,8 +79,12 @@ def intersection_over_union(boxes_preds, boxes_labels, box_format = "midpoint"):
 
 
 def mean_average_precision(
-        pred_boxes, true_boxes, iou_threshold = 0.5,
-        box_format = "midpoint", num_classes = 20, use_bar = False
+    pred_boxes,
+    true_boxes,
+    iou_threshold=0.5,
+    box_format="midpoint",
+    num_classes=20,
+    use_bar=False,
 ):
     """
     Calculates mean average precision
@@ -108,7 +112,7 @@ def mean_average_precision(
 
     classes = range(num_classes)
     if use_bar:
-        classes = tqdm(classes, leave = False)
+        classes = tqdm(classes, leave=False)
 
     for c in classes:
         detections = []
@@ -139,7 +143,7 @@ def mean_average_precision(
             amount_bboxes[key] = torch.zeros(val)
 
         # sort by box probabilities which is index 2
-        detections.sort(key = lambda x: x[2], reverse = True)
+        detections.sort(key=lambda x: x[2], reverse=True)
         TP = torch.zeros((len(detections)))
         FP = torch.zeros((len(detections)))
         total_true_bboxes = len(ground_truths)
@@ -162,7 +166,7 @@ def mean_average_precision(
                 iou = intersection_over_union(
                     torch.tensor(detection[3:]),
                     torch.tensor(gt[3:]),
-                    box_format = box_format,
+                    box_format=box_format,
                 )
 
                 if iou > best_iou:
@@ -182,8 +186,8 @@ def mean_average_precision(
             else:
                 FP[detection_idx] = 1
 
-        TP_cumsum = torch.cumsum(TP, dim = 0)
-        FP_cumsum = torch.cumsum(FP, dim = 0)
+        TP_cumsum = torch.cumsum(TP, dim=0)
+        FP_cumsum = torch.cumsum(FP, dim=0)
         recalls = TP_cumsum / (total_true_bboxes + epsilon)
         precisions = TP_cumsum / (TP_cumsum + FP_cumsum + epsilon)
         precisions = torch.cat((torch.tensor([1]), precisions))
@@ -199,7 +203,7 @@ def mean_average_precision(
 class MeanAveragePrecision(object):
     """Stores and calculates the mean average precision over data."""
 
-    def __init__(self, num_classes = 1, use_bar = False):
+    def __init__(self, num_classes=1, use_bar=False):
         self._num_classes = num_classes
 
         # Store all of the ground truth and prediction data.
@@ -233,14 +237,16 @@ class MeanAveragePrecision(object):
         """
         # Get the relevant data from the input arguments.
         if isinstance(pred_data, dict):
-            pred_boxes, pred_labels, pred_scores = \
-                pred_data['boxes'], pred_data['labels'], pred_data['scores']
+            pred_boxes, pred_labels, pred_scores = (
+                pred_data["boxes"],
+                pred_data["labels"],
+                pred_data["scores"],
+            )
         else:
             pred_boxes, pred_labels, pred_scores = pred_data
 
         if isinstance(gt_data, dict):
-            gt_boxes, gt_labels = \
-                gt_data['boxes'], gt_data['labels']
+            gt_boxes, gt_labels = gt_data["boxes"], gt_data["labels"]
         else:
             gt_boxes, gt_labels = gt_data
 
@@ -248,22 +254,23 @@ class MeanAveragePrecision(object):
         pred_boxes = np.squeeze(pred_boxes)
         pred_labels = np.squeeze(pred_labels)
         pred_scores = np.squeeze(pred_scores)
-        pred_labels, gt_labels, pred_scores = \
-            _scalar_to_array(pred_labels, gt_labels, pred_scores)
+        pred_labels, gt_labels, pred_scores = _scalar_to_array(
+            pred_labels, gt_labels, pred_scores
+        )
         if pred_boxes.ndim == 1:
-            pred_boxes = np.expand_dims(pred_boxes, axis = 0)
+            pred_boxes = np.expand_dims(pred_boxes, axis=0)
         if gt_boxes.ndim == 1:
-            gt_boxes = np.expand_dims(gt_boxes, axis = 0)
+            gt_boxes = np.expand_dims(gt_boxes, axis=0)
 
         # Create the data in the proper format.
         for bbox, label in zip(gt_boxes, gt_labels):
-            self._ground_truth_data.append(
-                [self._num_updates, int(label - 1), *bbox])
+            self._ground_truth_data.append([self._num_updates, int(label - 1), *bbox])
         if pred_boxes.ndim == 1:
-            pred_boxes = np.expand_dims(pred_boxes, axis = 0)
+            pred_boxes = np.expand_dims(pred_boxes, axis=0)
         for bbox, label, score in zip(pred_boxes, pred_labels, pred_scores):
             self._prediction_data.append(
-                [self._num_updates, int(label - 1), score, *bbox])
+                [self._num_updates, int(label - 1), score, *bbox]
+            )
 
         # Increment the update number.
         self._num_updates += 1
@@ -273,14 +280,15 @@ class MeanAveragePrecision(object):
         """Returns historical mAP over past data."""
         return self._prior_maps
 
-    def compute(self, iou_threshold = 0.5):
+    def compute(self, iou_threshold=0.5):
         """Computes the mAP with the data."""
         ap = mean_average_precision(
             self._prediction_data,
             self._ground_truth_data,
-            num_classes = self._num_classes,
-            iou_threshold = iou_threshold,
-            use_bar = self._use_bar)
+            num_classes=self._num_classes,
+            iou_threshold=iou_threshold,
+            use_bar=self._use_bar,
+        )
         self._prior_maps[self._num_updates] = ap
         return ap
 
@@ -291,12 +299,3 @@ class MeanAveragePrecision(object):
         self._prediction_data = []
         self._ground_truth_data = []
         self._num_updates = 0
-
-
-
-
-
-
-
-
-

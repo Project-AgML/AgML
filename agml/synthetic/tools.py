@@ -26,12 +26,13 @@ from agml.utils.io import get_dir_list
 
 
 def generate_environment_map(
-        origin: List[Union[int, float]],
-        plant_spacing: int = 1,
-        row_spacing: int = 4,
-        trees_per_row: int = 1,
-        rows: int = 1,
-        plant_height: int = 1) -> list:
+    origin: List[Union[int, float]],
+    plant_spacing: int = 1,
+    row_spacing: int = 4,
+    trees_per_row: int = 1,
+    rows: int = 1,
+    plant_height: int = 1,
+) -> list:
     """Generates an environment map in the Helios format.
 
     This method returns a list of NumPy arrays which contain coordinates
@@ -61,47 +62,76 @@ def generate_environment_map(
     # If there is only one row and only one tree in the row, then there
     # is only one plant whose coordinates needs to be generated.
     if trees_per_row == 1 and rows == 1:
-        return [[np.concatenate([np.array([origin[0]]), np.array([origin[1]]),
-                                 plant_height / 2 + np.array([origin[2]])])]]
+        return [
+            [
+                np.concatenate(
+                    [
+                        np.array([origin[0]]),
+                        np.array([origin[1]]),
+                        plant_height / 2 + np.array([origin[2]]),
+                    ]
+                )
+            ]
+        ]
 
     # Calculate the x- positions for the trees.
     if trees_per_row % 2 != 0 and trees_per_row > 1:  # odd number
         x_pos = np.concatenate(
-            [np.array([origin[0]]), np.linspace(
-                origin[0] + plant_spacing, trees_per_row / 2 * plant_spacing -
-                plant_spacing / 2, int(trees_per_row / 2))])
+            [
+                np.array([origin[0]]),
+                np.linspace(
+                    origin[0] + plant_spacing,
+                    trees_per_row / 2 * plant_spacing - plant_spacing / 2,
+                    int(trees_per_row / 2),
+                ),
+            ]
+        )
         x_pos = np.concatenate([np.sort(-x_pos[1:]), x_pos])
     else:  # even number
-        x_pos = np.linspace(origin[0] + (plant_spacing / 2),
-                            trees_per_row / 2 * plant_spacing - plant_spacing / 2,
-                            int(trees_per_row / 2))
+        x_pos = np.linspace(
+            origin[0] + (plant_spacing / 2),
+            trees_per_row / 2 * plant_spacing - plant_spacing / 2,
+            int(trees_per_row / 2),
+        )
         x_pos = np.concatenate([np.sort(-x_pos[:]), x_pos])
 
     # Calculate the y- positions for the trees.
     if rows % 2 != 0:  # odd number
         y_pos = np.concatenate(
-            [np.array([origin[0]]), np.linspace(
-                origin[1] + row_spacing, rows / 2 * row_spacing -
-                row_spacing / 2, int(rows / 2))])
+            [
+                np.array([origin[0]]),
+                np.linspace(
+                    origin[1] + row_spacing,
+                    rows / 2 * row_spacing - row_spacing / 2,
+                    int(rows / 2),
+                ),
+            ]
+        )
         y_pos = np.concatenate([np.sort(-y_pos[1:]), y_pos])
     else:
-        y_pos = np.linspace(origin[1] + (row_spacing / 2),
-                            rows / 2 * row_spacing - row_spacing / 2, int(rows / 2))
+        y_pos = np.linspace(
+            origin[1] + (row_spacing / 2),
+            rows / 2 * row_spacing - row_spacing / 2,
+            int(rows / 2),
+        )
         y_pos = np.concatenate([np.sort(-y_pos[:]), y_pos])
 
     # Return the x- and y- positions.
-    return [[[x_pos[x], y_pos[y], plant_height / 2 + origin[2]]
-             for x in range(len(x_pos))] for y in range(len(y_pos))]
+    return [
+        [[x_pos[x], y_pos[y], plant_height / 2 + origin[2]] for x in range(len(x_pos))]
+        for y in range(len(y_pos))
+    ]
 
 
 def generate_camera_positions(
-        camera_type: str,
-        num_views: int,
-        origin: List[Union[int, float]] = None,
-        camera_spacing: int = 2,
-        crop_distance: int = 4,
-        height: int = 1,
-        aerial_parameters: dict = {}) -> Tuple:
+    camera_type: str,
+    num_views: int,
+    origin: List[Union[int, float]] = None,
+    camera_spacing: int = 2,
+    crop_distance: int = 4,
+    height: int = 1,
+    aerial_parameters: dict = {},
+) -> Tuple:
     """Generates camera placement and lookat positions in the Helios format.
     This method, given the origin and a number of camera positions to generate
     (as specified in `num_views`), returns the 3-d coordinates of the camera
@@ -137,53 +167,77 @@ def generate_camera_positions(
     if origin is None:
         origin = [0, 0, 0]
 
-    if camera_type == 'circular':
-        return [[math.cos(2 * math.pi / num_views * x) * crop_distance, 
-                  math.sin(2 * math.pi / num_views * x) * crop_distance, height] 
-                 for x in range(0, num_views)], [[0, 0, 1] for _ in range(0, num_views)]
+    if camera_type == "circular":
+        return [
+            [
+                math.cos(2 * math.pi / num_views * x) * crop_distance,
+                math.sin(2 * math.pi / num_views * x) * crop_distance,
+                height,
+            ]
+            for x in range(0, num_views)
+        ], [[0, 0, 1] for _ in range(0, num_views)]
 
-    elif camera_type == 'linear':
+    elif camera_type == "linear":
         camera_pos = np.arange(
-            origin[0], camera_spacing * num_views + origin[0], camera_spacing)
-        return [[camera_pos[x], crop_distance + origin[1], height]
-                for x in range(len(camera_pos))], \
-                [[camera_pos[x], origin[0], height] for x in range(len(camera_pos))]
+            origin[0], camera_spacing * num_views + origin[0], camera_spacing
+        )
+        return [
+            [camera_pos[x], crop_distance + origin[1], height]
+            for x in range(len(camera_pos))
+        ], [[camera_pos[x], origin[0], height] for x in range(len(camera_pos))]
 
-    elif camera_type == 'aerial':
-        if aerial_parameters.get('distribution', '') == 'sawtooth':
-            angled = aerial_parameters.get('angled', False)
+    elif camera_type == "aerial":
+        if aerial_parameters.get("distribution", "") == "sawtooth":
+            angled = aerial_parameters.get("angled", False)
             t = camera_spacing * np.linspace(0, 1, num_views)
             triangle = camera_spacing * sawtooth(1 * np.pi * 5 * t, 0.5)
-            return [[t[x] + origin[0], triangle[x] + origin[1],
-                      crop_distance + origin[2]] for x in range(len(triangle))], \
-                    [[t[x] + origin[0], triangle[x] + origin[1] + (1 if angled else 0.05),
-                      height + origin[2]] for x in range(len(triangle))]
-        else: # distribution is circular around the center
-            angled = aerial_parameters.get('angled', False)
+            return [
+                [t[x] + origin[0], triangle[x] + origin[1], crop_distance + origin[2]]
+                for x in range(len(triangle))
+            ], [
+                [
+                    t[x] + origin[0],
+                    triangle[x] + origin[1] + (1 if angled else 0.05),
+                    height + origin[2],
+                ]
+                for x in range(len(triangle))
+            ]
+        else:  # distribution is circular around the center
+            angled = aerial_parameters.get("angled", False)
             center_coord = [[origin[0], origin[1]]]
             if num_views == 1:
                 coords = center_coord
             elif num_views == 2:
                 coords = [center_coord[0], [origin[0], origin[1] + 0.5]]
             elif num_views == 3:
-                coords = [center_coord[0], [origin[0], origin[1] - 0.5],
-                          [origin[0], origin[1] + 0.5]]
+                coords = [
+                    center_coord[0],
+                    [origin[0], origin[1] - 0.5],
+                    [origin[0], origin[1] + 0.5],
+                ]
             else:
                 coords = center_coord
                 coords.extend(
-                    [[origin[0] + np.cos(theta), origin[1] + np.sin(theta)]
-                     for theta in np.linspace(0, 2 * np.pi, num_views)])
+                    [
+                        [origin[0] + np.cos(theta), origin[1] + np.sin(theta)]
+                        for theta in np.linspace(0, 2 * np.pi, num_views)
+                    ]
+                )
 
-            return [[*coord, crop_distance + origin[2]] for coord in coords], \
-                   [[coord[0], coord[1] + (1 if angled else 0.05),
-                     height + origin[2]] for coord in coords]
+            return [[*coord, crop_distance + origin[2]] for coord in coords], [
+                [coord[0], coord[1] + (1 if angled else 0.05), height + origin[2]]
+                for coord in coords
+            ]
 
     else:
-        raise ValueError(f"Got `camera_type`: ({camera_type}), "
-                         f"expected either `circular`, `linear`, or `aerial`.")
+        raise ValueError(
+            f"Got `camera_type`: ({camera_type}), "
+            f"expected either `circular`, `linear`, or `aerial`."
+        )
 
 
 def _is_agml_converted(dataset_path):
     """Returns whether a Helios dataset has been converted to AgML format."""
-    return os.path.exists(os.path.join(dataset_path, '.metadata', 'agml_info.json')) \
-            or get_dir_list(dataset_path) == ['.metadata'] # dataset with no annotations
+    return os.path.exists(
+        os.path.join(dataset_path, ".metadata", "agml_info.json")
+    ) or get_dir_list(dataset_path) == [".metadata"]  # dataset with no annotations

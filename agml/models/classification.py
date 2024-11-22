@@ -20,9 +20,11 @@ import torch.nn as nn
 try:
     from torchvision.models import efficientnet_b4
 except ImportError:
-    raise ImportError("To use image classification models in `agml.models`, you "
-                      "need to install Torchvision first. You can do this by "
-                      "running `pip install torchvision`.")
+    raise ImportError(
+        "To use image classification models in `agml.models`, you "
+        "need to install Torchvision first. You can do this by "
+        "running `pip install torchvision`."
+    )
 
 from agml.models.base import AgMLModelBase
 from agml.models.tools import auto_move_data, imagenet_style_process
@@ -32,15 +34,16 @@ from agml.utils.general import has_func
 
 class EfficientNetB4Transfer(nn.Module):
     """Wraps an EfficientDetB4 model with a classification head."""
+
     def __init__(self, num_classes):
         super(EfficientNetB4Transfer, self).__init__()
-        self.base = efficientnet_b4(pretrained = False)
+        self.base = efficientnet_b4(pretrained=False)
         self.l1 = nn.Linear(1000, 256)
         self.dropout = nn.Dropout(0.1)
         self.relu = nn.ReLU()
         self.l2 = nn.Linear(256, num_classes)
 
-    def forward(self, x, **kwargs): # noqa
+    def forward(self, x, **kwargs):  # noqa
         x = self.base(x)
         x = x.view(x.size(0), -1)
         x = self.dropout(self.relu(self.l1(x)))
@@ -69,16 +72,17 @@ class ClassificationModel(AgMLModelBase):
     parameter `net`, and you'll need to implement methods like `training_step`,
     `configure_optimizers`, etc. See PyTorch Lightning for more information.
     """
+
     serializable = frozenset(("model", "regression"))
     state_override = frozenset(("model",))
 
-    _ml_task = 'image_classification'
+    _ml_task = "image_classification"
 
-    def __init__(self, num_classes = None, regression = False, **kwargs):
+    def __init__(self, num_classes=None, regression=False, **kwargs):
         # Construct the network and load in pretrained weights.
         super(ClassificationModel, self).__init__()
         self._regression = regression
-        if not kwargs.get('model_initialized', False):
+        if not kwargs.get("model_initialized", False):
             self._num_classes = num_classes
             self.net = self._construct_sub_net(num_classes)
 
@@ -111,7 +115,7 @@ class ClassificationModel(AgMLModelBase):
         return imagenet_style_process(image, **kwargs)
 
     @staticmethod
-    def preprocess_input(images = None, **kwargs) -> "torch.Tensor":
+    def preprocess_input(images=None, **kwargs) -> "torch.Tensor":
         """Preprocesses the input image to the specification of the model.
 
         This method takes in a set of inputs and preprocesses them into the
@@ -149,8 +153,12 @@ class ClassificationModel(AgMLModelBase):
         """
         images = ClassificationModel._expand_input_images(images)
         return torch.stack(
-            [ClassificationModel._preprocess_image(
-                image, **kwargs) for image in images], dim = 0)
+            [
+                ClassificationModel._preprocess_image(image, **kwargs)
+                for image in images
+            ],
+            dim=0,
+        )
 
     @torch.no_grad()
     def predict(self, images, **kwargs):
@@ -180,9 +188,9 @@ class ClassificationModel(AgMLModelBase):
         """
         images = self.preprocess_input(images, **kwargs)
         out = self.forward(images)
-        if not self._regression: # standard classification
+        if not self._regression:  # standard classification
             out = torch.argmax(out, 1)
-        if not kwargs.get('return_tensor_output', False):
+        if not kwargs.get("return_tensor_output", False):
             return self._to_out(torch.squeeze(out))
         return out
 
@@ -202,34 +210,36 @@ class ClassificationModel(AgMLModelBase):
         """
         # Construct the metric and run the calculations.
         acc = Accuracy()
-        bar = tqdm(loader, desc = "Calculating Accuracy")
+        bar = tqdm(loader, desc="Calculating Accuracy")
         for sample in bar:
             image, truth = sample
-            pred_label = self.predict(image, return_tensor_out = True, **kwargs)
+            pred_label = self.predict(image, return_tensor_out=True, **kwargs)
             acc.update(pred_label, truth)
-            bar.set_postfix({'accuracy': acc.compute().numpy().item()})
+            bar.set_postfix({"accuracy": acc.compute().numpy().item()})
 
         # Compute the final accuracy.
         return acc.compute().numpy().item()
 
-    def run_training(self,
-                     dataset=None,
-                     *,
-                     epochs=50,
-                     loss=None,
-                     metrics=None,
-                     optimizer=None,
-                     lr_scheduler=None,
-                     lr=None,
-                     batch_size=8,
-                     loggers=None,
-                     train_dataloader=None,
-                     val_dataloader=None,
-                     test_dataloader=None,
-                     use_cpu=False,
-                     save_dir=None,
-                     experiment_name=None,
-                     **kwargs):
+    def run_training(
+        self,
+        dataset=None,
+        *,
+        epochs=50,
+        loss=None,
+        metrics=None,
+        optimizer=None,
+        lr_scheduler=None,
+        lr=None,
+        batch_size=8,
+        loggers=None,
+        train_dataloader=None,
+        val_dataloader=None,
+        test_dataloader=None,
+        use_cpu=False,
+        save_dir=None,
+        experiment_name=None,
+        **kwargs,
+    ):
         """Trains an image classification model.
 
         This method can be used to train an image classification model on a given
@@ -319,33 +329,29 @@ class ClassificationModel(AgMLModelBase):
 
         return train_classification(
             self,
-            dataset = dataset,
-            epochs = epochs,
-            loss = loss,
-            metrics = metrics,
-            optimizer = optimizer,
-            lr_scheduler = lr_scheduler,
-            lr = lr,
+            dataset=dataset,
+            epochs=epochs,
+            loss=loss,
+            metrics=metrics,
+            optimizer=optimizer,
+            lr_scheduler=lr_scheduler,
+            lr=lr,
             batch_size=batch_size,
-            loggers = loggers,
-            train_dataloader = train_dataloader,
-            val_dataloader = val_dataloader,
-            test_dataloader = test_dataloader,
-            use_cpu = use_cpu,
-            save_dir = save_dir,
-            experiment_name = experiment_name,
-            **kwargs
+            loggers=loggers,
+            train_dataloader=train_dataloader,
+            val_dataloader=val_dataloader,
+            test_dataloader=test_dataloader,
+            use_cpu=use_cpu,
+            save_dir=save_dir,
+            experiment_name=experiment_name,
+            **kwargs,
         )
 
-    def _prepare_for_training(self,
-                              loss = 'ce',
-                              metrics = (),
-                              optimizer = None,
-                              **kwargs):
+    def _prepare_for_training(self, loss="ce", metrics=(), optimizer=None, **kwargs):
         """Prepares this classification model for training."""
 
         # Initialize the loss
-        if loss == 'ce':
+        if loss == "ce":
             # either binary or multiclass, binary is likely never used
             if self._num_classes == 1:
                 self.loss = nn.BCEWithLogitsLoss()
@@ -354,7 +360,8 @@ class ClassificationModel(AgMLModelBase):
         else:
             if not isinstance(loss, nn.Module) or not callable(loss):
                 raise TypeError(
-                    f"Expected a callable loss function, but got '{type(loss)}'.")
+                    f"Expected a callable loss function, but got '{type(loss)}'."
+                )
 
         # Initialize the metrics.
         metric_collection = []
@@ -368,24 +375,31 @@ class ClassificationModel(AgMLModelBase):
                         raise ImportError(
                             "Received the name of a metric. If you want to use named "
                             "metrics, then you need to have `torchmetrics` installed. "
-                            "You can do this by running `pip install torchmetrics`.")
+                            "You can do this by running `pip install torchmetrics`."
+                        )
 
                     # Check if `torchmetrics.classification` has the metric.
                     if has_func(class_metrics, metric):
                         # accuracy is a special case, we use our own accuracy
-                        if metric == 'accuracy':
+                        if metric == "accuracy":
                             from agml.models.metrics.accuracy import Accuracy
-                            metric_collection.append(['accuracy', Accuracy()])
+
+                            metric_collection.append(["accuracy", Accuracy()])
 
                         # convert to camel case
                         else:
-                            metric = ''.join([word.capitalize() for word in metric.split('_')])
-                            metric_collection.append([metric, getattr(class_metrics, metric)()])
+                            metric = "".join(
+                                [word.capitalize() for word in metric.split("_")]
+                            )
+                            metric_collection.append(
+                                [metric, getattr(class_metrics, metric)()]
+                            )
                     else:
                         raise ValueError(
                             f"Expected a valid metric torchmetrics metric name, "
                             f"but got '{metric}'. Check `torchmetrics.classification` "
-                            f"for a list of valid image classification metrics.")
+                            f"for a list of valid image classification metrics."
+                        )
 
                 # Check if it is any other class.
                 elif isinstance(metric, nn.Module):
@@ -394,7 +408,8 @@ class ClassificationModel(AgMLModelBase):
                 # Otherwise, raise an error.
                 else:
                     raise TypeError(
-                        f"Expected a metric name or a metric class, but got '{type(metric)}'.")
+                        f"Expected a metric name or a metric class, but got '{type(metric)}'."
+                    )
         self._metrics = metric_collection
 
         # Initialize the optimizer/learning rate scheduler.
@@ -403,40 +418,45 @@ class ClassificationModel(AgMLModelBase):
             if not has_func(torch.optim, optimizer_class):
                 raise ValueError(
                     f"Expected a valid optimizer name, but got '{optimizer_class}'. "
-                    f"Check `torch.optim` for a list of valid optimizers.")
+                    f"Check `torch.optim` for a list of valid optimizers."
+                )
 
             optimizer = getattr(torch.optim, optimizer_class)(
-                self.parameters(), lr = kwargs.get('lr', 1e-3))
+                self.parameters(), lr=kwargs.get("lr", 1e-3)
+            )
         elif isinstance(optimizer, torch.optim.Optimizer):
             pass  # nothing to do
         else:
             raise TypeError(
-                f"Expected an optimizer name or a torch optimizer, but got '{type(optimizer)}'.")
+                f"Expected an optimizer name or a torch optimizer, but got '{type(optimizer)}'."
+            )
 
-        scheduler = kwargs.get('lr_scheduler', None)
+        scheduler = kwargs.get("lr_scheduler", None)
         if scheduler is not None:
             # No string auto-initialization, the LR scheduler must be pre-configured.
             if isinstance(scheduler, str):
                 raise ValueError(
                     f"If you want to use a learning rate scheduler, you must initialize "
-                    f"it on your own and pass it to the `lr_scheduler` argument. ")
+                    f"it on your own and pass it to the `lr_scheduler` argument. "
+                )
             elif not isinstance(scheduler, torch.optim.lr_scheduler.LRScheduler):
                 raise TypeError(
-                    f"Expected a torch LR scheduler, but got '{type(scheduler)}'.")
+                    f"Expected a torch LR scheduler, but got '{type(scheduler)}'."
+                )
 
         self._optimization_parameters = {
-            'optimizer': optimizer,
-            'lr_scheduler': scheduler
+            "optimizer": optimizer,
+            "lr_scheduler": scheduler,
         }
 
     def configure_optimizers(self):
-        opt = self._optimization_parameters['optimizer']
-        scheduler = self._optimization_parameters['lr_scheduler']
+        opt = self._optimization_parameters["optimizer"]
+        scheduler = self._optimization_parameters["lr_scheduler"]
         if scheduler is None:
             return opt
         return [opt], [scheduler]
 
-    def training_step(self, batch, *args, **kwargs): # noqa
+    def training_step(self, batch, *args, **kwargs):  # noqa
         x, y = batch
         y_pred = self(x)
 
@@ -444,26 +464,30 @@ class ClassificationModel(AgMLModelBase):
         loss = self.loss(y_pred, y)
         for metric_name, metric in self._metrics:
             metric.update(y_pred, y)
-            self.log(metric_name, self._to_out(metric.compute()).item(), prog_bar = True)
+            self.log(metric_name, self._to_out(metric.compute()).item(), prog_bar=True)
 
         return {
-            'loss': loss,
+            "loss": loss,
         }
 
-    def validation_step(self, batch, *args, **kwargs): # noqa
+    def validation_step(self, batch, *args, **kwargs):  # noqa
         x, y = batch
         y_pred = self.net(x)
 
         # Compute metrics and loss.
         val_loss = self.loss(y_pred, y)
-        self.log('val_loss', val_loss.item(), prog_bar = True)
+        self.log("val_loss", val_loss.item(), prog_bar=True)
         for metric_name, metric in self._metrics:
             metric.to(self.device)
             metric.update(y_pred, y)
-            self.log('val_' + metric_name, self._to_out(metric.compute()).item(), prog_bar = True)
+            self.log(
+                "val_" + metric_name,
+                self._to_out(metric.compute()).item(),
+                prog_bar=True,
+            )
 
         return {
-            'val_loss': val_loss,
+            "val_loss": val_loss,
         }
 
     def test_step(self, batch, *args, **kwargs):
@@ -472,18 +496,16 @@ class ClassificationModel(AgMLModelBase):
 
         # Compute metrics and loss.
         test_loss = self.loss(y_pred, y)
-        self.log('test_loss', test_loss.item(), prog_bar = True)
+        self.log("test_loss", test_loss.item(), prog_bar=True)
         for metric_name, metric in self._metrics:
             metric.update(y_pred, y)
 
-            self.log('test_' + metric_name, self._to_out(metric.compute()).item(), prog_bar = True)
+            self.log(
+                "test_" + metric_name,
+                self._to_out(metric.compute()).item(),
+                prog_bar=True,
+            )
 
         return {
-            'test_loss': test_loss,
+            "test_loss": test_loss,
         }
-
-
-
-
-
-

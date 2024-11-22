@@ -32,7 +32,7 @@ from .config import (
     model_save_path,
     set_model_save_path,
     clear_all_datasets,
-    downloaded_datasets
+    downloaded_datasets,
 )
 from .tftorch import get_backend, set_backend
 from .random import set_seed

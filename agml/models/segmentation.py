@@ -22,9 +22,11 @@ import torch.nn.functional as F
 try:
     from torchvision.models.segmentation import deeplabv3_resnet50
 except ImportError:
-    raise ImportError("To use image classification models in `agml.models`, you "
-                      "need to install Torchvision first. You can do this by "
-                      "running `pip install torchvision`.")
+    raise ImportError(
+        "To use image classification models in `agml.models`, you "
+        "need to install Torchvision first. You can do this by "
+        "running `pip install torchvision`."
+    )
 
 from agml.models.base import AgMLModelBase
 from agml.models.benchmarks import BenchmarkMetadata
@@ -43,14 +45,13 @@ from torchmetrics import JaccardIndex as IoU
 
 class DeepLabV3Transfer(nn.Module):
     """Wraps a DeepLabV3 model with the right number of classes."""
+
     def __init__(self, num_classes):
         super(DeepLabV3Transfer, self).__init__()
-        self.base = deeplabv3_resnet50(
-            pretrained = False,
-            num_classes = num_classes)
-        
-    def forward(self, x, **kwargs): # noqa
-        return self.base(x)['out']
+        self.base = deeplabv3_resnet50(pretrained=False, num_classes=num_classes)
+
+    def forward(self, x, **kwargs):  # noqa
+        return self.base(x)["out"]
 
 
 class SegmentationModel(AgMLModelBase):
@@ -75,31 +76,28 @@ class SegmentationModel(AgMLModelBase):
     parameter `net`, and you'll need to implement methods like `training_step`,
     `configure_optimizers`, etc. See PyTorch Lightning for more information.
     """
-    serializable = frozenset((
-        "net", "num_classes", "conf_thresh", "image_size"))
+
+    serializable = frozenset(("net", "num_classes", "conf_thresh", "image_size"))
     state_override = frozenset(("net",))
 
-    _ml_task = 'semantic_segmentation'
+    _ml_task = "semantic_segmentation"
 
-    def __init__(self,
-                 num_classes = 1,
-                 image_size = 512,
-                 **kwargs):
+    def __init__(self, num_classes=1, image_size=512, **kwargs):
         # Construct the network and load in pretrained weights.
         super(SegmentationModel, self).__init__()
 
         # If being initialized by a subclass, then don't do any of
         # model construction logic (since that's already been done).
-        if not kwargs.get('model_initialized', False):
+        if not kwargs.get("model_initialized", False):
             self._num_classes = num_classes
             self._image_size = resolve_image_size(image_size)
             self.net = self._construct_sub_net(num_classes)
             if self._num_classes == 1:
-                conf_threshold = kwargs.get('conf_threshold', 0.2)
+                conf_threshold = kwargs.get("conf_threshold", 0.2)
                 if not 0 < conf_threshold < 1:
                     raise ValueError(
-                        "The given confidence threshold "
-                        "must be between 0 and 1.")
+                        "The given confidence threshold " "must be between 0 and 1."
+                    )
                 self._conf_thresh = conf_threshold
 
         # By default, the model starts in inference mode.
@@ -131,9 +129,9 @@ class SegmentationModel(AgMLModelBase):
         as well as other intermediate steps such as adding a channel
         dimension for two-channel inputs, for example.
         """
-        return imagenet_style_process(image, size = image_size, **kwargs)
+        return imagenet_style_process(image, size=image_size, **kwargs)
 
-    def preprocess_input(self, images, return_shapes = False, **kwargs):
+    def preprocess_input(self, images, return_shapes=False, **kwargs):
         """Preprocesses the input image to the specification of the model.
 
         This method takes in a set of inputs and preprocesses them into the
@@ -175,8 +173,12 @@ class SegmentationModel(AgMLModelBase):
         images = self._expand_input_images(images)
         shapes = self._get_shapes(images)
         images = torch.stack(
-            [self._preprocess_image(
-                image, self._image_size, **kwargs) for image in images], dim = 0)
+            [
+                self._preprocess_image(image, self._image_size, **kwargs)
+                for image in images
+            ],
+            dim=0,
+        )
         if return_shapes:
             return images, shapes
         return images
@@ -208,27 +210,35 @@ class SegmentationModel(AgMLModelBase):
         A list of `np.ndarray`s with resized output masks.
         """
         # Process the images and run inference.
-        images, shapes = self.preprocess_input(images, return_shapes = True, **kwargs)
+        images, shapes = self.preprocess_input(images, return_shapes=True, **kwargs)
         out = torch.sigmoid(self.forward(images))
 
         # Post-process the output masks to a valid format.
         if out.shape[1] == 1:  # binary class predictions
             out[out >= self._conf_thresh] = 1
             out[out != 1] = 0
-            out = torch.squeeze(out, dim = 1)
-        else: # multi-class predictions to integer labels
+            out = torch.squeeze(out, dim=1)
+        else:  # multi-class predictions to integer labels
             out = torch.argmax(out, 1)
 
         # Resize the masks to their original shapes.
         masks = []
         for mask, shape in zip(
-                torch.index_select(out, 0, torch.arange(len(out))), shapes):
-            masks.append(self._to_out(torch.squeeze(F.interpolate(
-                torch.unsqueeze(torch.unsqueeze(mask, 0), 0).float(),
-                size = shape).int())))
+            torch.index_select(out, 0, torch.arange(len(out))), shapes
+        ):
+            masks.append(
+                self._to_out(
+                    torch.squeeze(
+                        F.interpolate(
+                            torch.unsqueeze(torch.unsqueeze(mask, 0), 0).float(),
+                            size=shape,
+                        ).int()
+                    )
+                )
+            )
         return resolve_list_value(masks)
 
-    def show_prediction(self, image, overlay = False, **kwargs):
+    def show_prediction(self, image, overlay=False, **kwargs):
         """Shows the output predictions for one input image.
 
         This method is useful for instantly visualizing the predictions
@@ -276,18 +286,20 @@ class SegmentationModel(AgMLModelBase):
         If the benchmark has a different number of classes than this input model, then
         this method will raise an error. This issue may be adapted in the future.
         """
-        if source(dataset).tasks.ml != 'semantic_segmentation':
+        if source(dataset).tasks.ml != "semantic_segmentation":
             raise ValueError(
                 f"You are trying to load a benchmark for a "
                 f"{source(dataset).tasks.ml} task ({dataset}) "
-                f"in a semantic segmentation model.")
+                f"in a semantic segmentation model."
+            )
 
         # Number of classes must be the same for semantic segmentation.
         if source(dataset).num_classes != self._num_classes:
             raise ValueError(
                 f"You cannot load a benchmark for a dataset '{dataset}' "
                 f"with {source(dataset).num_classes} classes, while your "
-                f"model has {self._num_classes} classes.")
+                f"model has {self._num_classes} classes."
+            )
 
         # Load the benchmark.
         state = self._get_benchmark(dataset)
@@ -310,39 +322,43 @@ class SegmentationModel(AgMLModelBase):
         The final calculated mIoU.
         """
         # Construct the metric and run the calculations.
-        iou = IoU(num_classes = self._num_classes + 1, task="binary")
-        bar = tqdm(loader, desc = "Calculating Mean Intersection Over Union")
+        iou = IoU(num_classes=self._num_classes + 1, task="binary")
+        bar = tqdm(loader, desc="Calculating Mean Intersection Over Union")
         for sample in bar:
             image, truth = sample
             pred_mask = self.predict(image, **kwargs)
             if pred_mask.ndim == 3:
                 pred_mask = np.transpose(pred_mask, (2, 0, 1))
                 truth = np.transpose(truth, (2, 0, 1))
-            iou(torch.from_numpy(pred_mask).int().unsqueeze(0),
-                torch.from_numpy(truth).unsqueeze(0))
-            bar.set_postfix({'miou': iou.compute().numpy().item()})
+            iou(
+                torch.from_numpy(pred_mask).int().unsqueeze(0),
+                torch.from_numpy(truth).unsqueeze(0),
+            )
+            bar.set_postfix({"miou": iou.compute().numpy().item()})
 
         # Compute the final mIoU.
         return iou.compute().numpy().item()
 
-    def run_training(self,
-                     dataset=None,
-                     *,
-                     epochs=50,
-                     loss=None,
-                     metrics=None,
-                     optimizer=None,
-                     lr_scheduler=None,
-                     lr=None,
-                     batch_size=8,
-                     loggers=None,
-                     train_dataloader=None,
-                     val_dataloader=None,
-                     test_dataloader=None,
-                     use_cpu=False,
-                     save_dir=None,
-                     experiment_name=None,
-                     **kwargs):
+    def run_training(
+        self,
+        dataset=None,
+        *,
+        epochs=50,
+        loss=None,
+        metrics=None,
+        optimizer=None,
+        lr_scheduler=None,
+        lr=None,
+        batch_size=8,
+        loggers=None,
+        train_dataloader=None,
+        val_dataloader=None,
+        test_dataloader=None,
+        use_cpu=False,
+        save_dir=None,
+        experiment_name=None,
+        **kwargs,
+    ):
         """Trains a semantic segmentation model.
 
         This method can be used to train a semantic segmentation model on a given
@@ -432,46 +448,43 @@ class SegmentationModel(AgMLModelBase):
 
         return train_segmentation(
             self,
-            dataset = dataset,
-            epochs = epochs,
-            loss = loss,
-            metrics = metrics,
-            optimizer = optimizer,
-            lr_scheduler = lr_scheduler,
-            lr = lr,
+            dataset=dataset,
+            epochs=epochs,
+            loss=loss,
+            metrics=metrics,
+            optimizer=optimizer,
+            lr_scheduler=lr_scheduler,
+            lr=lr,
             batch_size=batch_size,
-            loggers = loggers,
-            train_dataloader = train_dataloader,
-            val_dataloader = val_dataloader,
-            test_dataloader = test_dataloader,
-            use_cpu = use_cpu,
-            save_dir = save_dir,
-            experiment_name = experiment_name,
-            **kwargs
+            loggers=loggers,
+            train_dataloader=train_dataloader,
+            val_dataloader=val_dataloader,
+            test_dataloader=test_dataloader,
+            use_cpu=use_cpu,
+            save_dir=save_dir,
+            experiment_name=experiment_name,
+            **kwargs,
         )
 
-    def _prepare_for_training(self,
-                              loss = 'ce',
-                              metrics = (),
-                              optimizer = None,
-                              **kwargs):
+    def _prepare_for_training(self, loss="ce", metrics=(), optimizer=None, **kwargs):
         """Prepares the model for training."""
 
         # Initialize the loss
-        if loss == 'ce':
+        if loss == "ce":
             # either binary or multiclass, binary is likely never used
             if self._num_classes == 1:
                 self.loss = nn.BCEWithLogitsLoss()
             else:
                 self.loss = nn.CrossEntropyLoss()
-        elif loss == 'dice':
+        elif loss == "dice":
             if self._num_classes == 1:
                 log("Dice loss is not necessarily supported for binary classification.")
             self.loss = DiceLoss()
         else:
             if not isinstance(loss, nn.Module) or not callable(loss):
                 raise TypeError(
-                    f"Expected a callable loss function, but got '{type(loss)}'.")
+                    f"Expected a callable loss function, but got '{type(loss)}'."
+                )
 
         # Initialize the metrics.
         metric_collection = []
@@ -485,26 +498,39 @@ class SegmentationModel(AgMLModelBase):
                         raise ImportError(
                             "Received the name of a metric. If you want to use named "
                             "metrics, then you need to have `torchmetrics` installed. "
-                            "You can do this by running `pip install torchmetrics`.")
+                            "You can do this by running `pip install torchmetrics`."
+                        )
 
                     # Check if `torchmetrics.classification` has the metric.
                     if has_func(class_metrics, metric):
                         # iou/miou is a special case
-                        if metric == 'iou' or metric == 'miou':
+                        if metric == "iou" or metric == "miou":
                             metric_collection.append(
-                                [metric, IoU(
-                                    task = 'multiclass' if self._num_classes > 1 else 'binary',  # noqa
-                                    num_classes = self._num_classes + 1)])
+                                [
+                                    metric,
+                                    IoU(
+                                        task="multiclass"
+                                        if self._num_classes > 1
+                                        else "binary",  # noqa
+                                        num_classes=self._num_classes + 1,
+                                    ),
+                                ]
+                            )
 
                         # convert to camel case
                         else:
-                            metric = ''.join([word.capitalize() for word in metric.split('_')])
-                            metric_collection.append([metric, getattr(class_metrics, metric)()])
+                            metric = "".join(
+                                [word.capitalize() for word in metric.split("_")]
+                            )
+                            metric_collection.append(
+                                [metric, getattr(class_metrics, metric)()]
+                            )
                     else:
                         raise ValueError(
                             f"Expected a valid metric torchmetrics metric name, "
                             f"but got '{metric}'. Check `torchmetrics.classification` "
-                            f"for a list of valid image classification metrics.")
+                            f"for a list of valid image classification metrics."
+                        )
 
                 # Check if it is any other class.
                 elif isinstance(metric, nn.Module):
@@ -513,7 +539,8 @@ class SegmentationModel(AgMLModelBase):
                 # Otherwise, raise an error.
                 else:
                     raise TypeError(
-                        f"Expected a metric name or a metric class, but got '{type(metric)}'.")
+                        f"Expected a metric name or a metric class, but got '{type(metric)}'."
+                    )
         self._metrics = metric_collection
 
         # Initialize the optimizer/learning rate scheduler.
@@ -522,40 +549,45 @@ class SegmentationModel(AgMLModelBase):
             if not has_func(torch.optim, optimizer_class):
                 raise ValueError(
                     f"Expected a valid optimizer name, but got '{optimizer_class}'. "
-                    f"Check `torch.optim` for a list of valid optimizers.")
+                    f"Check `torch.optim` for a list of valid optimizers."
+                )
 
             optimizer = getattr(torch.optim, optimizer_class)(
-                self.parameters(), lr = kwargs.get('lr', 2e-3))
+                self.parameters(), lr=kwargs.get("lr", 2e-3)
+            )
         elif isinstance(optimizer, torch.optim.Optimizer):
             pass  # nothing to do
         else:
             raise TypeError(
-                f"Expected an optimizer name or a torch optimizer, but got '{type(optimizer)}'.")
+                f"Expected an optimizer name or a torch optimizer, but got '{type(optimizer)}'."
+            )
 
-        scheduler = kwargs.get('lr_scheduler', None)
+        scheduler = kwargs.get("lr_scheduler", None)
         if scheduler is not None:
             # No string auto-initialization, the LR scheduler must be pre-configured.
             if isinstance(scheduler, str):
                 raise ValueError(
                     f"If you want to use a learning rate scheduler, you must initialize "
-                    f"it on your own and pass it to the `lr_scheduler` argument. ")
+                    f"it on your own and pass it to the `lr_scheduler` argument. "
+                )
             elif not isinstance(scheduler, torch.optim.lr_scheduler.LRScheduler):
                 raise TypeError(
-                    f"Expected a torch LR scheduler, but got '{type(scheduler)}'.")
+                    f"Expected a torch LR scheduler, but got '{type(scheduler)}'."
+                )
 
         self._optimization_parameters = {
-            'optimizer': optimizer,
-            'lr_scheduler': scheduler
+            "optimizer": optimizer,
+            "lr_scheduler": scheduler,
         }
 
     def configure_optimizers(self):
-        opt = self._optimization_parameters['optimizer']
-        scheduler = self._optimization_parameters['lr_scheduler']
+        opt = self._optimization_parameters["optimizer"]
+        scheduler = self._optimization_parameters["lr_scheduler"]
         if scheduler is None:
             return opt
         return [opt], [scheduler]
 
-    def training_step(self, batch, *args, **kwargs): # noqa
+    def training_step(self, batch, *args, **kwargs):  # noqa
         x, y = batch
         y = y.float()
         y_pred = self(x).float().squeeze()
@@ -564,27 +596,31 @@ class SegmentationModel(AgMLModelBase):
         loss = self.loss(y_pred, y)
         for metric_name, metric in self._metrics:
             metric.update(y_pred, y)
-            self.log(metric_name, self._to_out(metric.compute()).item(), prog_bar = True)
+            self.log(metric_name, self._to_out(metric.compute()).item(), prog_bar=True)
 
         return {
-            'loss': loss,
+            "loss": loss,
         }
 
-    def validation_step(self, batch, *args, **kwargs): # noqa
+    def validation_step(self, batch, *args, **kwargs):  # noqa
         x, y = batch
         y = y.float()
         y_pred = self(x).float().squeeze()
 
         # Compute metrics and loss.
         val_loss = self.loss(y_pred, y)
-        self.log('val_loss', val_loss.item(), prog_bar = True)
+        self.log("val_loss", val_loss.item(), prog_bar=True)
         for metric_name, metric in self._metrics:
             metric.to(self.device)
             metric.update(y_pred, y)
-            self.log('val_' + metric_name, self._to_out(metric.compute()).item(), prog_bar = True)
+            self.log(
+                "val_" + metric_name,
+                self._to_out(metric.compute()).item(),
+                prog_bar=True,
+            )
 
         return {
-            'val_loss': val_loss,
+            "val_loss": val_loss,
         }
 
     def test_step(self, batch, *args, **kwargs):
@@ -594,14 +630,16 @@ class SegmentationModel(AgMLModelBase):
 
         # Compute metrics and loss.
         test_loss = self.loss(y_pred, y)
-        self.log('test_loss', test_loss.item(), prog_bar = True)
+        self.log("test_loss", test_loss.item(), prog_bar=True)
         for metric_name, metric in self._metrics:
             metric.update(y_pred, y)
 
-            self.log('test_' + metric_name, self._to_out(metric.compute()).item(), prog_bar = True)
+            self.log(
+                "test_" + metric_name,
+                self._to_out(metric.compute()).item(),
+                prog_bar=True,
+            )
 
         return {
-            'test_loss': test_loss,
+            "test_loss": test_loss,
         }
-
-
