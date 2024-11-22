@@ -1,11 +1,18 @@
+# simplest build system
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+
 [project]
 name = "agml"
 description = "A comprehensive library for agricultural deep learning"
-authors = [{name = "UC Davis Plant AI and Biophysics Lab", email = "jmearles@ucdavis.edu"},
-{ name="Amogh Joshi", email="amnjoshi@ucdavis.edu"}]
+authors = [{name = "UC Davis Plant AI and Biophysics Lab", email = "jmearles@ucdavis.edu"}]
+maintainers = [{ name="Amogh Joshi", email="amnjoshi@ucdavis.edu"}]
+
 license = {text = "Apache 2.0"}
 readme = "README.md"
-packages = [{include = "agml", from = "agml",exclude ='agml/_internal'}]
+packages = [{include = "agml", from = "agml", exclude ='agml/_internal'}]
 version = "0.1.0"
 requires-python = ">=3.8,<3.12"
 keywords = []
@@ -27,6 +34,10 @@ classifiers = [
     "Topic :: Utilities",
     "Typing :: Typed",
 ]
+
+
+
+# managed by uv
 dependencies = [
     "matplotlib>=3.7.5",
     "numpy>=1.24.4",
@@ -45,9 +56,6 @@ dependencies = [
 [project.scripts]
 
 
-[build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
 
 [tool.uv]
 dev-dependencies = [
