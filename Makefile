@@ -26,6 +26,10 @@ test: $(test.python) $(src.python) ## Run tests
 
 # Quality Checks
 
+.PHONY: checks
+checks: check-format lint check-types docstring-coverage
+
+
 .PHONY: check-types
 check-types: ## Run mypy to check type definitions.
 	uv run mypy --config=config/mypy.ini $(src.python) $(test.python)
