@@ -12,10 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from tqdm import tqdm
-
 import torch
 import torch.nn as nn
+from tqdm import tqdm
 
 try:
     from torchvision.models import efficientnet_b4
@@ -27,8 +26,8 @@ except ImportError:
     )
 
 from agml.models.base import AgMLModelBase
-from agml.models.tools import auto_move_data, imagenet_style_process
 from agml.models.metrics.accuracy import Accuracy
+from agml.models.tools import auto_move_data, imagenet_style_process
 from agml.utils.general import has_func
 
 

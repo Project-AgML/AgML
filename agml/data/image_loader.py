@@ -17,9 +17,9 @@ import os
 import cv2
 import numpy as np
 
-from agml.framework import AgMLSerializable
 from agml.data.loader import AgMLDataLoader
 from agml.data.public import public_data_sources
+from agml.framework import AgMLSerializable
 from agml.utils.io import nested_file_list
 from agml.utils.random import inject_random_state
 

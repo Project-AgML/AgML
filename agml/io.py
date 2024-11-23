@@ -12,18 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import random
 import inspect
+import random
 
 import cv2
 
-from agml.utils.io import (
-    get_file_list as _get_file_list,
-    get_dir_list as _get_dir_list,
-    nested_file_list as _get_nested_file_list,
-    nested_dir_list as _get_nested_dir_list,
-    recursive_dirname as _recursive_dirname,
-)
+from agml.utils.io import get_dir_list as _get_dir_list
+from agml.utils.io import get_file_list as _get_file_list
+from agml.utils.io import nested_dir_list as _get_nested_dir_list
+from agml.utils.io import nested_file_list as _get_nested_file_list
+from agml.utils.io import recursive_dirname as _recursive_dirname
 
 
 def get_file_list(path, ext=None, nested=False):

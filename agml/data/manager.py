@@ -14,19 +14,18 @@
 
 import numpy as np
 
-from agml.framework import AgMLSerializable
-from agml.data.object import DataObject
+from agml.backend.tftorch import convert_to_batch, is_array_like
 from agml.data.builder import DataBuilder
-from agml.data.metadata import DatasetMetadata
-from agml.data.managers.transforms import TransformManager
 from agml.data.managers.resize import ImageResizeManager
 from agml.data.managers.training import TrainingManager
-
+from agml.data.managers.transforms import TransformManager
+from agml.data.metadata import DatasetMetadata
+from agml.data.object import DataObject
+from agml.framework import AgMLSerializable
 from agml.utils.general import NoArgument
-from agml.backend.tftorch import convert_to_batch, is_array_like
-from agml.utils.random import seed_context
 from agml.utils.image import consistent_shapes
 from agml.utils.logging import log
+from agml.utils.random import seed_context
 
 
 class DataManager(AgMLSerializable):

@@ -17,18 +17,18 @@ A tools module for `agml.viz`, which also serves as almost a
 mini-backend to control ops such as the colormap being used.
 """
 
-import os
+import functools
 import io
 import json
-import functools
+import os
 
 import cv2
+import matplotlib.pyplot as plt
 import numpy as np
 from PIL import Image
-import matplotlib.pyplot as plt
 
-from agml.backend.tftorch import tf, torch
 from agml.backend.config import _get_config, _update_config
+from agml.backend.tftorch import tf, torch
 from agml.utils.logging import log
 
 

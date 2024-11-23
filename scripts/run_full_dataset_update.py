@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding = utf-8 -*-
-import os
 import json
+import os
 
 import agml
-
 
 # Check whether any dataset has been added that needs information updated (we do this
 # by checking for any datasets in the `public_datasources.json` file that don't have

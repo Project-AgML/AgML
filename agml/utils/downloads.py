@@ -16,8 +16,8 @@ import os
 import shutil
 import zipfile
 
-from agml.utils.data import load_public_sources, maybe_you_meant, copyright_print
-from agml.utils.logging import tqdm, log
+from agml.utils.data import copyright_print, load_public_sources, maybe_you_meant
+from agml.utils.logging import log, tqdm
 
 
 def download_dataset(dataset_name, dest_dir, redownload=False):

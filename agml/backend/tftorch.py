@@ -18,20 +18,19 @@ TensorFlow or PyTorch methods can be used, and prevents unnecessary
 importing of either library (which takes a significant amount of time).
 """
 
-import types
+import functools
+import importlib
 import inspect
 import logging
-import importlib
-import functools
-
-import numpy as np
-
-from agml.utils.logging import log
-from agml.utils.image import consistent_shapes
-
+import types
 
 # Suppress any irrelevant warnings which will pop up from either backend.
 import warnings
+
+import numpy as np
+
+from agml.utils.image import consistent_shapes
+from agml.utils.logging import log
 
 warnings.filterwarnings("ignore", category=UserWarning, message=".*Named tensors.*Triggered internally.*")
 

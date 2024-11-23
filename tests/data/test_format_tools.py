@@ -12,10 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import numpy as np
 import pytest
 
 import agml.data as agdata
-import numpy as np
 
 
 @pytest.fixture

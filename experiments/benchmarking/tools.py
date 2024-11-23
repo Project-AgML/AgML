@@ -15,10 +15,9 @@
 import os
 import sys
 from functools import wraps
-from typing import Dict, Callable
+from typing import Callable, Dict
 
 import pandas as pd
-
 import torch
 from torchmetrics import Metric
 

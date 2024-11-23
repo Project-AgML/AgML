@@ -12,12 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
 import importlib
+import os
 import subprocess
 
 from agml.utils.logging import log
-
 
 # Only install the packages that are not already installed, and ignore
 # the ones that are not needed for basic YOLO training (minimize environment).

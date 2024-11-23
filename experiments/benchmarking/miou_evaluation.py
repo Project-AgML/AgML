@@ -12,19 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
 import argparse
+import os
 
 import pandas as pd
+import pytorch_lightning as pl
+import torch
+from segmentation_lightning import SegmentationBenchmark
+from torchmetrics import IoU
 from tqdm import tqdm
 
-import torch
-import pytorch_lightning as pl
-
 import agml
-from torchmetrics import IoU
-from segmentation_lightning import SegmentationBenchmark
-
 
 # Define device.
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")

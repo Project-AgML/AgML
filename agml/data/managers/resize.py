@@ -19,10 +19,10 @@ import cv2
 import numpy as np
 
 from agml.framework import AgMLSerializable
-from agml.utils.logging import log
-from agml.utils.image import imread_context
 from agml.utils.general import resolve_tuple
+from agml.utils.image import imread_context
 from agml.utils.io import recursive_dirname
+from agml.utils.logging import log
 
 
 class ImageResizeManager(AgMLSerializable):

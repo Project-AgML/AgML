@@ -12,22 +12,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
 import abc
+import os
 from typing import List, Union, overload
 
 import cv2
 import numpy as np
-
 import torch
 from pytorch_lightning import LightningModule
 
-from agml.framework import AgMLSerializable
 from agml.backend.config import model_save_path
 from agml.backend.tftorch import is_array_like
-from agml.utils.image import imread_context
-from agml.utils.downloads import download_model
+from agml.framework import AgMLSerializable
 from agml.models.benchmarks import BenchmarkMetadata
+from agml.utils.downloads import download_model
+from agml.utils.image import imread_context
 
 
 class AgMLModelBase(AgMLSerializable, LightningModule):

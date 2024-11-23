@@ -12,32 +12,32 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
-import json
-import types
 import collections
-from typing import Union
+import json
+import os
+import types
 from decimal import Decimal, getcontext
+from typing import Union
 
 import numpy as np
 
-from agml.framework import AgMLSerializable
-from agml.data.metadata import DatasetMetadata
-from agml.data.loader import AgMLDataLoader
-from agml.data.exporters.yolo import export_yolo
-from agml.utils.general import resolve_list_value, NoArgument
-from agml.utils.random import seed_context, inject_random_state
-from agml.utils.image import consistent_shapes
-from agml.utils.logging import log
 from agml.backend.config import SUPER_BASE_DIR
 from agml.backend.tftorch import (
+    StrictBackendError,
+    convert_to_batch,
     get_backend,
+    is_array_like,
     set_backend,
     user_changed_backend,
-    StrictBackendError,
-    is_array_like,
-    convert_to_batch,
 )
+from agml.data.exporters.yolo import export_yolo
+from agml.data.loader import AgMLDataLoader
+from agml.data.metadata import DatasetMetadata
+from agml.framework import AgMLSerializable
+from agml.utils.general import NoArgument, resolve_list_value
+from agml.utils.image import consistent_shapes
+from agml.utils.logging import log
+from agml.utils.random import inject_random_state, seed_context
 from agml.viz.general import show_sample
 
 
@@ -1583,8 +1583,9 @@ class AgMLMultiDatasetLoader(AgMLSerializable):
         -------
         A `torch.utils.data.DataLoader` enclosing a copy of this loader.
         """
-        from agml.backend.tftorch import torch
         from torch.utils.data import DataLoader
+
+        from agml.backend.tftorch import torch
 
         if get_backend() != "torch":
             if user_changed_backend():

@@ -1,6 +1,7 @@
 import os
-import yaml
 import shutil
+
+import yaml
 
 import agml
 from agml.utils.general import flatten

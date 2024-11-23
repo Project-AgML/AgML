@@ -12,17 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List, Union, Any
-
-import numpy as np
-from PIL import Image
+from typing import Any, List, Union
 
 import albumentations as A
-from albumentations.pytorch import ToTensorV2
-
-import torch
-from torch.utils.data import Dataset, DataLoader
+import numpy as np
 import pytorch_lightning as pl
+import torch
+from PIL import Image
+from albumentations.pytorch import ToTensorV2
+from torch.utils.data import DataLoader, Dataset
 
 import agml
 

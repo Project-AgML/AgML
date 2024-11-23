@@ -12,20 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
-import glob
 import argparse
+import glob
+import os
 
 import numpy as np
 import pandas as pd
-from tqdm import tqdm
-
-import torch
 import pytorch_lightning as pl
-
-import agml
+import torch
 from detection_lightning import AgMLDatasetAdaptor, EfficientDetModel
 from mean_average_precision_torch import MeanAveragePrecision
+from tqdm import tqdm
+
+import agml
 
 
 def run_evaluation(model, name):

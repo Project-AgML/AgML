@@ -14,24 +14,18 @@
 
 from typing import List, Union
 
-import numpy as np
-from PIL import Image
-
-import torch
-from torch.utils.data import Dataset, DataLoader
-import pytorch_lightning as pl
-from mean_average_precision_torch import MeanAveragePrecision as MAP
-
 import albumentations as A
+import numpy as np
+import pytorch_lightning as pl
+import torch
+from PIL import Image
 from albumentations.pytorch import ToTensorV2
-
-from effdet import get_efficientdet_config, DetBenchTrain, create_model_from_config
+from effdet import DetBenchTrain, create_model_from_config, get_efficientdet_config
 from effdet.efficientdet import HeadNet
-
 from ensemble_boxes import ensemble_boxes_wbf
-
+from mean_average_precision_torch import MeanAveragePrecision as MAP
 from tools import auto_move_data
-
+from torch.utils.data import DataLoader, Dataset
 
 # Constants
 IMAGE_SIZE = 512

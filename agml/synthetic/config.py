@@ -12,18 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import functools
+import json
+import math
 import os
 import re
-import sys
-import math
-import json
 import shutil
-import functools
 import subprocess as sp
+import sys
 from datetime import datetime as dt
 
 from agml.utils.io import recursive_dirname
-
 
 # If this file is imported multiple times, only run the check once.
 _HELIOS_CHECK_DONE_IN_SESSION = False
@@ -144,10 +143,7 @@ def _check_helios_installation():
         os.makedirs(os.path.join(output_dir, "xml"), exist_ok=True)
 
     # Recompile Helios (with the prior configuration).
-    from agml.synthetic.compilation import (
-        _compile_helios_default,
-        is_helios_compiled_with_lidar,
-    )
+    from agml.synthetic.compilation import _compile_helios_default, is_helios_compiled_with_lidar
 
     _compile_helios_default(lidar_enabled=is_helios_compiled_with_lidar())
 

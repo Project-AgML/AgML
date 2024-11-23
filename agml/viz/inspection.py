@@ -12,18 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
 import glob
+import os
 
 import cv2
-
 import matplotlib.pyplot as plt
 from matplotlib.patches import FancyArrowPatch
 from mpl_toolkits.mplot3d import proj3d
 
-from agml.viz.labels import _inference_best_shape
 from agml.synthetic.tools import _is_agml_converted
 from agml.utils.image import imread_context
+from agml.viz.labels import _inference_best_shape
 
 
 class Arrow3D(FancyArrowPatch):

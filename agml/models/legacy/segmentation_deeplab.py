@@ -13,11 +13,10 @@
 # limitations under the License.
 
 import numpy as np
-from tqdm import tqdm
-
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from tqdm import tqdm
 
 try:
     from torchvision.models.segmentation import deeplabv3_resnet50
@@ -28,19 +27,19 @@ except ImportError:
         "running `pip install torchvision`."
     )
 
-from agml.models.base import AgMLModelBase
-from agml.models.benchmarks import BenchmarkMetadata
-from agml.models.tools import auto_move_data, imagenet_style_process
-from agml.models.losses import DiceLoss
-from agml.data.public import source
-from agml.utils.general import resolve_list_value, has_func
-from agml.utils.image import resolve_image_size
-from agml.utils.logging import log
-from agml.viz.masks import show_image_and_overlaid_mask, show_image_and_mask
-
 # This is last since `agml.models.base` will check for PyTorch Lightning,
 # and PyTorch Lightning automatically installed torchmetrics with it.
 from torchmetrics import JaccardIndex as IoU
+
+from agml.data.public import source
+from agml.models.base import AgMLModelBase
+from agml.models.benchmarks import BenchmarkMetadata
+from agml.models.losses import DiceLoss
+from agml.models.tools import auto_move_data, imagenet_style_process
+from agml.utils.general import has_func, resolve_list_value
+from agml.utils.image import resolve_image_size
+from agml.utils.logging import log
+from agml.viz.masks import show_image_and_mask, show_image_and_overlaid_mask
 
 
 class DeepLabV3Transfer(nn.Module):

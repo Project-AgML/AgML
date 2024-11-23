@@ -13,12 +13,12 @@
 # limitations under the License.
 
 import cv2
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 
 from agml.utils.general import resolve_tuple_values
-from agml.viz.tools import get_colormap, format_image, convert_figure_to_image
 from agml.viz.display import display_image
+from agml.viz.tools import convert_figure_to_image, format_image, get_colormap
 
 
 def binary_to_channel_by_channel(mask, num_classes=None):

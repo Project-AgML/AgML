@@ -16,10 +16,10 @@ import functools
 
 import numpy as np
 
-from agml.utils.downloads import download_dataset as _download  # noqa
-from agml.utils.data import load_public_sources
-from agml.data.metadata import DatasetMetadata
 from agml.backend.config import data_save_path
+from agml.data.metadata import DatasetMetadata
+from agml.utils.data import load_public_sources
+from agml.utils.downloads import download_dataset as _download  # noqa
 
 
 class _PublicSourceFilter(object):

@@ -15,7 +15,6 @@
 
 from agml.framework import AgMLSerializable
 
-
 __all__ = ["allow_nested_data_splitting"]
 
 

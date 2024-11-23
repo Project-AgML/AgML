@@ -17,7 +17,6 @@ import collections
 from agml.framework import AgMLSerializable
 from agml.utils.data import load_model_benchmarks
 
-
 # Named tuples which are used by the metadata.
 Metric = collections.namedtuple("Metric", ["name", "value"])
 

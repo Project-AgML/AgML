@@ -12,28 +12,26 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
+import datetime
 import gc
+import importlib
 import json
+import os
 import shutil
 import warnings
-import datetime
-import importlib
 
 import numpy as np
 import torch
 
-from agml.framework import AgMLSerializable
 from agml.backend.config import model_save_path
-from agml.utils.logging import log
+from agml.data.public import public_data_sources, source
+from agml.data.tools import convert_bbox_format
+from agml.framework import AgMLSerializable
+from agml.models.extensions.ultralytics import install_and_configure_ultralytics
 from agml.utils.data import load_detector_benchmarks
 from agml.utils.downloads import download_detector
+from agml.utils.logging import log
 from agml.viz.boxes import show_image_and_boxes
-
-from agml.data.public import source
-from agml.data.public import public_data_sources
-from agml.data.tools import convert_bbox_format
-from agml.models.extensions.ultralytics import install_and_configure_ultralytics
 
 try:
     warnings.filterwarnings("ignore", message=".*Python>=3.10 is required")

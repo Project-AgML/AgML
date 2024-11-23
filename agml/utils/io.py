@@ -14,7 +14,6 @@
 
 import os
 
-
 # Files which shouldn't be included in a file list.
 EXCLUDED_FILES: list = [".DS_Store"]
 

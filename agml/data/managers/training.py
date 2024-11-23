@@ -16,18 +16,18 @@ from enum import Enum
 
 import numpy as np
 
-from agml.framework import AgMLSerializable
-from agml.utils.image import needs_batch_dim
 from agml.backend.tftorch import (
-    tf,
-    torch,
-    set_backend,
-    get_backend,
-    user_changed_backend,
     StrictBackendError,
     _convert_image_to_torch,
+    get_backend,
     is_array_like,
+    set_backend,
+    tf,
+    torch,
+    user_changed_backend,
 )
+from agml.framework import AgMLSerializable
+from agml.utils.image import needs_batch_dim
 
 
 class TrainState(Enum):

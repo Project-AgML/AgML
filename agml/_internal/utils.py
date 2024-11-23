@@ -21,7 +21,6 @@ import pickle
 
 from agml.utils.io import recursive_dirname
 
-
 _PERSONAL_ACCESS_TOKEN = None
 
 

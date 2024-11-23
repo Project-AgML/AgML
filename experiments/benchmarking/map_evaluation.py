@@ -1,6 +1,5 @@
-import torch
 import numpy as np
-
+import torch
 from tqdm import tqdm
 
 
@@ -26,8 +25,9 @@ def _add_truth_scores_to_annotations(annotations):
         a[idx] = [*prior, 1.0, *after]
 
 
-import torch
 from collections import Counter
+
+import torch
 
 
 def intersection_over_union(boxes_preds, boxes_labels, box_format="midpoint"):

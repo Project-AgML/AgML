@@ -14,11 +14,11 @@
 
 """Converts PyTorch Lightning checkpoints to `nn.Module` state dicts."""
 
+import argparse
 import os
 import shutil
-import argparse
-from fnmatch import fnmatch
 from collections import OrderedDict
+from fnmatch import fnmatch
 
 import torch
 

@@ -12,12 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Callable
 from functools import wraps
+from typing import Callable
 
-import torch
-import numpy as np
 import albumentations as A
+import numpy as np
+import torch
 
 from agml.backend.tftorch import is_array_like
 

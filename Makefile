@@ -26,7 +26,8 @@ test: $(test.python) $(src.python) ## Run tests
 
 
 .PHONY: format
-format: ## Run ruff format
+format: ## Run ruff format (Includes sorting of imports)
+	uv run ruff check --select I --config=config/ruff.toml --fix
 	uv run ruff format --config=config/ruff.toml $(src.python) $(test.python)
 
 .PHONY: check-format

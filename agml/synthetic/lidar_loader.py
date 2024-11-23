@@ -12,15 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import glob
 import os
 import re
-import glob
 
 import numpy as np
 
-from agml.framework import AgMLSerializable
 from agml.backend.config import synthetic_data_save_path
 from agml.data.point_cloud import PointCloud
+from agml.framework import AgMLSerializable
 from agml.utils.random import inject_random_state
 
 

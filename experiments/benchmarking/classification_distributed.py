@@ -12,16 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
 import argparse
+import os
 
-import agml
 import albumentations as A
-
+import pytorch_lightning as pl
 import torch
 import torch.nn as nn
-import pytorch_lightning as pl
 from torchvision.models import efficientnet_b4
+
+import agml
 
 
 class EfficientNetB4Transfer(nn.Module):

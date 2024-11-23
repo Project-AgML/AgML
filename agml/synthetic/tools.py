@@ -14,10 +14,9 @@
 
 """Tools for working with synthetic data in the Helios format."""
 
-import os
-
 import math
-from typing import List, Union, Tuple
+import os
+from typing import List, Tuple, Union
 
 import numpy as np
 from scipy.signal import sawtooth

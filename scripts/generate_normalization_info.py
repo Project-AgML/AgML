@@ -16,14 +16,15 @@
 Generates the normalization info for new or changed datasets.
 """
 
-import os
-import json
-import shutil
 import argparse
+import json
+import os
+import shutil
 
-import agml
 import numpy as np
 from tqdm import tqdm
+
+import agml
 
 # Parse input arguments (get the datasets to re-generate).
 ap = argparse.ArgumentParser()

@@ -12,21 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
 import argparse
+import os
 
+import albumentations as A
+import pytorch_lightning as pl
 import torch
 import torch.nn as nn
-import pytorch_lightning as pl
 from pytorch_lightning.loggers import CSVLogger, TensorBoardLogger
-from torchmetrics.classification import Precision, Recall, Accuracy
-
+from tools import MetricLogger, checkpoint_dir, gpus
+from torchmetrics.classification import Accuracy, Precision, Recall
 from torchvision.models import efficientnet_b4
 
 import agml
-import albumentations as A
-
-from tools import gpus, checkpoint_dir, MetricLogger
 
 
 class EfficientNetB4Transfer(nn.Module):

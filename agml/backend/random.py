@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from agml.backend.tftorch import torch, tf, get_backend
+from agml.backend.tftorch import get_backend, tf, torch
 
 
 def set_seed(seed=None):

@@ -17,8 +17,8 @@ Convenience script to reformat the public data source
 JSON file in a nicer-looking format (for readability).
 """
 
-import os
 import json
+import os
 
 SOURCE_PATH = os.path.join(
     os.path.dirname(os.path.dirname(__file__)),

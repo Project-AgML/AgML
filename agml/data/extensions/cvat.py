@@ -12,9 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import json
 import os
 import shutil
-import json
 
 
 def restructure_cvat_annotations(image_dir, cvat_dir, dataset_name, output_dir=None):

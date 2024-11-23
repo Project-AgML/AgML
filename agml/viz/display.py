@@ -16,8 +16,9 @@ import sys
 
 import cv2
 import matplotlib.pyplot as plt
-from PIL import Image, ExifTags
 import numpy as np
+from PIL import ExifTags, Image
+
 from agml.viz.tools import get_viz_backend
 
 

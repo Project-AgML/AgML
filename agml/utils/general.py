@@ -12,18 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import re
-import cv2
 import glob
 import math
-import matplotlib.pyplot as plt
+import re
+from math import floor, pi
+
+import cv2
 import matplotlib.patches as patches
-
-from math import pi, floor
-from scipy import signal
-
+import matplotlib.pyplot as plt
 import numpy as np
-
+from scipy import signal
 
 # Represents an empty object, but allows passing `None`
 # as an independent object in certain cases.

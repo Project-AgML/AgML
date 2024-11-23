@@ -18,10 +18,10 @@ A set of data preprocessing functions for `AgMLDataLoaders`.
 
 import inspect
 
-import torch
-import numpy as np
-from PIL import Image
 import albumentations as A
+import numpy as np
+import torch
+from PIL import Image
 
 from agml.models.tools import imagenet_style_process as _isp
 

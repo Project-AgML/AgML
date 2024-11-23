@@ -16,7 +16,6 @@ import argparse
 
 from experiments.benchmarking.experiment import DetectionExperiment
 
-
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("--name", help="The name of the experiment.", required=True)

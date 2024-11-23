@@ -13,8 +13,9 @@
 # limitations under the License.
 
 import os
-import pytest
+
 import numpy as np
+import pytest
 
 import agml
 

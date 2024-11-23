@@ -12,15 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import json
 import os
 import re
 import sys
-import json
 
-from agml.framework import AgMLSerializable
 from agml.backend.config import data_save_path
+from agml.framework import AgMLSerializable
 from agml.utils.downloads import download_dataset
-from agml.utils.io import get_file_list, get_dir_list, is_image_file
+from agml.utils.io import get_dir_list, get_file_list, is_image_file
 
 
 class DataBuilder(AgMLSerializable):

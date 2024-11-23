@@ -12,36 +12,36 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
-import json
 import copy
-import glob
 import fnmatch
-from typing import Union
+import glob
+import json
+import os
 from collections.abc import Sequence
-from decimal import getcontext, Decimal
+from decimal import Decimal, getcontext
+from typing import Union
 
 import numpy as np
 
-from agml.framework import AgMLSerializable
-from agml.data.manager import DataManager
-from agml.data.builder import DataBuilder
-from agml.data.metadata import DatasetMetadata, make_metadata
-from agml.data.exporters.yolo import export_yolo
-from agml.utils.logging import log
-from agml.utils.io import get_file_list, get_dir_list
-from agml.utils.data import load_public_sources
-from agml.utils.general import NoArgument, resolve_list_value
-from agml.utils.random import inject_random_state
-from agml.backend.config import data_save_path, synthetic_data_save_path, SUPER_BASE_DIR
+from agml.backend.config import SUPER_BASE_DIR, data_save_path, synthetic_data_save_path
 from agml.backend.experimental import AgMLExperimentalFeatureWrapper
 from agml.backend.tftorch import (
+    StrictBackendError,
+    _add_dataset_to_mro,  # noqa
     get_backend,
     set_backend,
     user_changed_backend,
-    StrictBackendError,
-    _add_dataset_to_mro,  # noqa
 )
+from agml.data.builder import DataBuilder
+from agml.data.exporters.yolo import export_yolo
+from agml.data.manager import DataManager
+from agml.data.metadata import DatasetMetadata, make_metadata
+from agml.framework import AgMLSerializable
+from agml.utils.data import load_public_sources
+from agml.utils.general import NoArgument, resolve_list_value
+from agml.utils.io import get_dir_list, get_file_list
+from agml.utils.logging import log
+from agml.utils.random import inject_random_state
 from agml.viz.general import show_sample
 
 
@@ -1761,8 +1761,9 @@ class AgMLDataLoader(AgMLSerializable, metaclass=AgMLDataLoaderMeta):
         -------
         A `torch.utils.data.DataLoader` enclosing a copy of this loader.
         """
-        from agml.backend.tftorch import torch
         from torch.utils.data import DataLoader
+
+        from agml.backend.tftorch import torch
 
         if get_backend() != "torch":
             if user_changed_backend():

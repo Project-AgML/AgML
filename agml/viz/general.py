@@ -16,10 +16,10 @@ import matplotlib.pyplot as plt
 
 from agml.backend.tftorch import is_array_like
 from agml.viz.boxes import show_image_and_boxes
-from agml.viz.masks import show_image_and_overlaid_mask
-from agml.viz.labels import show_images_and_labels
-from agml.viz.tools import format_image, _inference_best_shape, convert_figure_to_image
 from agml.viz.display import display_image
+from agml.viz.labels import show_images_and_labels
+from agml.viz.masks import show_image_and_overlaid_mask
+from agml.viz.tools import _inference_best_shape, convert_figure_to_image, format_image
 
 
 def show_sample(loader, image_only=False, num_images=1, **kwargs):

@@ -12,12 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import inspect
+import logging
 import os
 import sys
 import time
-import inspect
-import logging
-
 
 # This is a simple hack to auto-adjust `tqdm` based on whether
 # we are in a Jupyter notebook or in a regular shell environment.

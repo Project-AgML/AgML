@@ -12,12 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
-import sys
-import json
-import shutil
 import difflib
 import functools
+import json
+import os
+import shutil
+import sys
 
 
 @functools.lru_cache(maxsize=None)

@@ -16,14 +16,15 @@
 Generates the shape information file for new datasets or changed datasets.
 """
 
+import argparse
 import os
 import pickle
 import shutil
-import argparse
 
-import agml
 import numpy as np
 from tqdm import tqdm
+
+import agml
 
 # Parse input arguments (get the datasets to re-generate).
 ap = argparse.ArgumentParser()

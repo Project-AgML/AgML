@@ -12,30 +12,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import types
-import inspect
 import functools
+import inspect
+import types
 from enum import Enum
 
-from agml.framework import AgMLSerializable
-from agml.backend.tftorch import (
-    get_backend,
-    set_backend,
-    user_changed_backend,
-    StrictBackendError,
-)
+from agml.backend.tftorch import StrictBackendError, get_backend, set_backend, user_changed_backend
 from agml.data.managers.transform_helpers import (
-    AlbumentationsTransformSingle,
-    AlbumentationsTransformMask,
     AlbumentationsTransformCOCO,
-    SameStateImageMaskTransform,
-    NormalizationTransformBase,
-    ScaleTransform,
-    NormalizationTransform,
-    OneHotLabelTransform,
+    AlbumentationsTransformMask,
+    AlbumentationsTransformSingle,
     MaskToChannelBasisTransform,
+    NormalizationTransform,
+    NormalizationTransformBase,
+    OneHotLabelTransform,
+    SameStateImageMaskTransform,
+    ScaleTransform,
     ToTensorSeg,
 )
+from agml.framework import AgMLSerializable
 from agml.utils.logging import log
 
 

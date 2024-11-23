@@ -14,11 +14,9 @@
 
 import warnings
 
-import numpy as np
 import albumentations as A
-
+import numpy as np
 import torch
-
 from tqdm import tqdm
 
 try:
@@ -30,12 +28,7 @@ except ImportError:
     )
 
 try:
-    from effdet import (
-        create_model_from_config,
-        get_efficientdet_config,
-        DetBenchPredict,
-        DetBenchTrain,
-    )
+    from effdet import DetBenchPredict, DetBenchTrain, create_model_from_config, get_efficientdet_config
 except ImportError:
     raise ImportError(
         "Could not find an installation of the `effdet` package. "
@@ -43,12 +36,12 @@ except ImportError:
         "the version is important for proper functionality)."
     )
 
+from agml.backend.tftorch import is_array_like
+from agml.data.public import source
 from agml.models.base import AgMLModelBase
 from agml.models.benchmarks import BenchmarkMetadata
-from agml.models.tools import auto_move_data
 from agml.models.metrics.map import MeanAveragePrecision
-from agml.data.public import source
-from agml.backend.tftorch import is_array_like
+from agml.models.tools import auto_move_data
 from agml.utils.general import has_func
 from agml.utils.image import resolve_image_size
 from agml.utils.logging import log

@@ -19,8 +19,8 @@ __all__ = ["data", "synthetic", "backend", "viz", "io"]
 # If AgML is being imported for the first time, then we need to setup
 # the module, namely prepping the config file.
 def _setup():
-    import os as _os
     import json as _json
+    import os as _os
 
     if not _os.path.exists(_os.path.expanduser("~/.agml")):
         _os.makedirs(_os.path.expanduser("~/.agml"))
@@ -39,4 +39,4 @@ del _setup  # noqa
 
 
 # There are no top-level imported functions or classes, only the modules.
-from . import data, backend, synthetic, viz, io
+from . import backend, data, io, synthetic, viz

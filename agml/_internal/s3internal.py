@@ -16,11 +16,11 @@
 Internal class for interacting with the AgML public dataset S3 bucket.
 """
 
+import json
 import os
 import sys
-import json
-import zipfile
 import warnings
+import zipfile
 
 import boto3
 import botocore.exceptions

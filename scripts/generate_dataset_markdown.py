@@ -20,9 +20,9 @@ import os
 import random
 
 import cv2
+import matplotlib.pyplot as plt
 import numpy as np
 from tqdm import tqdm
-import matplotlib.pyplot as plt
 
 import agml
 from agml.utils.data import load_public_sources

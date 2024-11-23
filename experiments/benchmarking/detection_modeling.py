@@ -15,10 +15,9 @@
 import os
 from typing import Union
 
-import torch
 import numpy as np
-
-from effdet import get_efficientdet_config, DetBenchTrain, create_model_from_config
+import torch
+from effdet import DetBenchTrain, create_model_from_config, get_efficientdet_config
 
 from agml.models.detection import DetectionModel
 from experiments.benchmarking.mean_average_precision_torch import MeanAveragePrecision

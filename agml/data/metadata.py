@@ -12,23 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import collections
 import io
 import re
 import sys
-import yaml
-import collections
 from typing import Iterable
 
-from agml.framework import AgMLSerializable
-import agml.utils.logging as logging
-from agml.utils.general import has_nested_dicts
-from agml.utils.data import (
-    load_public_sources,
-    load_citation_sources,
-    maybe_you_meant,
-    copyright_print,
-)
+import yaml
 
+import agml.utils.logging as logging
+from agml.framework import AgMLSerializable
+from agml.utils.data import copyright_print, load_citation_sources, load_public_sources, maybe_you_meant
+from agml.utils.general import has_nested_dicts
 
 # Named tuples which are used by the metadata.
 Tasks = collections.namedtuple("Tasks", ["ml", "ag"])

@@ -19,13 +19,9 @@ from pytorch_lightning import Trainer
 from pytorch_lightning.loggers import WandbLogger
 
 import agml
-from experiments.benchmarking.detection_data import (
-    build_loader,
-    TransformApplier,
-    EfficientDetDataModule,
-)
-from experiments.benchmarking.detection_modeling import DetectionTrainingModel
 from agml.models.training_resources.tools import gpus
+from experiments.benchmarking.detection_data import EfficientDetDataModule, TransformApplier, build_loader
+from experiments.benchmarking.detection_modeling import DetectionTrainingModel
 
 
 class DetectionExperiment(object):

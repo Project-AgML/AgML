@@ -12,19 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
-import sys
 import glob
 import json
+import os
 import shutil
-from typing import List
+import sys
 from dataclasses import dataclass
 from datetime import datetime as dt
+from typing import List
 
 import cv2
 import numpy as np
 
-from agml.utils.io import recursive_dirname, get_dir_list, get_file_list
+from agml.utils.io import get_dir_list, get_file_list, recursive_dirname
 from agml.utils.logging import tqdm
 
 

@@ -16,23 +16,15 @@ import os
 import pickle
 
 import numpy as np
-
-import torch
 import pytorch_lightning as pl
-
-from detection_lightning import (
-    EfficientDetModel,
-    EfficientDetDataModule,
-    AgMLDatasetAdaptor,
-)
+import torch
+from detection_lightning import AgMLDatasetAdaptor, EfficientDetDataModule, EfficientDetModel
 from mean_average_precision_torch import MeanAveragePrecision
 from pytorch_lightning.loggers import TensorBoardLogger
-
-import agml
-
-from tools import gpus, checkpoint_dir
+from tools import checkpoint_dir, gpus
 from tqdm import tqdm
 
+import agml
 
 FINETUNE_EPOCHS = 5
 EVAL_CLASSES = ["orange", "apple", "mango", "capsicum"]

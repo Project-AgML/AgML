@@ -19,33 +19,25 @@ Some of the training code in this file is adapted from the following sources:
 2. https://gist.github.com/Chris-hughes10/73628b1d8d6fc7d359b3dcbbbb8869d7
 """
 
-import os
 import argparse
+import os
 from typing import List, Union
 
+import albumentations as A
 import numpy as np
-from PIL import Image
-
-import torch
-from torch.utils.data import Dataset, DataLoader
 import pytorch_lightning as pl
-from pytorch_lightning.loggers import CSVLogger, TensorBoardLogger
+import torch
+from PIL import Image
+from albumentations.pytorch import ToTensorV2
+from ensemble_boxes import ensemble_boxes_wbf
 from mean_average_precision import MeanAveragePrecision
+from pytorch_lightning.loggers import CSVLogger, TensorBoardLogger
+from tools import MetricLogger, auto_move_data, checkpoint_dir, gpus
+from torch.utils.data import DataLoader, Dataset
 
 import agml
-import albumentations as A
-from albumentations.pytorch import ToTensorV2
-
-from agml.models.training_resources.model import (
-    get_efficientdet_config,
-    HeadNet,
-    create_model_from_config,
-)
-from agml.models.training_resources.bench import DetBenchTrain, DetBenchPredict
-
-from ensemble_boxes import ensemble_boxes_wbf
-
-from tools import gpus, checkpoint_dir, MetricLogger, auto_move_data
+from agml.models.training_resources.bench import DetBenchPredict, DetBenchTrain
+from agml.models.training_resources.model import HeadNet, create_model_from_config, get_efficientdet_config
 
 # Constants
 IMAGE_SIZE = 512

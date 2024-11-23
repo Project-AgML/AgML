@@ -13,8 +13,9 @@
 # limitations under the License.
 
 import os
-import time
 import shutil
+import time
+
 import pytest
 
 import agml.data as agdata

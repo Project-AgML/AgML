@@ -20,7 +20,6 @@ import functools
 
 import numpy as np
 
-
 __all__ = ["generate_keras_segmentation_dual_transform"]
 
 

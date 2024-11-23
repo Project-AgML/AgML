@@ -12,16 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import glob
 import os
 import re
-import sys
-import glob
 import shutil
-import tempfile
 import subprocess as sp
+import sys
+import tempfile
 from datetime import datetime as dt
 
-from agml.backend.config import _update_config, _get_config
+from agml.backend.config import _get_config, _update_config
 from agml.synthetic.config import HELIOS_PATH
 
 # Helios build and compilation paths.

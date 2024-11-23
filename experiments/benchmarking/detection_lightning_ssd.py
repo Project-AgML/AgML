@@ -12,16 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
 import argparse
+import os
 
+import albumentations as A
 import numpy as np
+import pytorch_lightning as pl
 import torch
 import torch.nn as nn
 from torchvision.models.detection import ssd300_vgg16
-import pytorch_lightning as pl
+
 import agml
-import albumentations as A
 
 
 class EfficientDetTransfer(nn.Module):

@@ -12,8 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
 import datetime
+import os
 
 import torch
 from pytorch_lightning import Trainer
@@ -26,8 +26,8 @@ except ImportError:
 from pytorch_lightning.callbacks import ModelCheckpoint
 
 from agml.models.classification import ClassificationModel
-from agml.models.segmentation import SegmentationModel
 from agml.models.detection import DetectionModel
+from agml.models.segmentation import SegmentationModel
 from agml.models.system_utils import get_accelerator
 from agml.utils.logging import log
 

@@ -12,16 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
 import abc
+import os
 from functools import wraps
 
 import cv2
 import numpy as np
 
+from agml.backend.tftorch import scalar_unpack
 from agml.framework import AgMLSerializable
 from agml.utils.image import imread_context
-from agml.backend.tftorch import scalar_unpack
 
 
 class DataObject(AgMLSerializable):

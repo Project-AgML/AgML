@@ -38,12 +38,9 @@ except ImportError:
     )
 
 
+from . import legacy, losses, metrics, preprocessing
+from .benchmarks import get_benchmark
 from .classification import ClassificationModel
-from .segmentation import SegmentationModel
 from .detection import DetectionModel
 from .detector import Detector
-from . import metrics
-from . import losses
-from . import preprocessing
-from . import legacy
-from .benchmarks import get_benchmark
+from .segmentation import SegmentationModel

@@ -13,18 +13,13 @@
 # limitations under the License.
 
 import cv2
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 
-from agml.utils.general import (
-    resolve_tuple_values,
-    weak_squeeze,
-    scalar_unpack,
-    as_scalar,
-)
 from agml.data.tools import convert_bbox_format
-from agml.viz.tools import format_image, get_colormap, convert_figure_to_image
+from agml.utils.general import as_scalar, resolve_tuple_values, scalar_unpack, weak_squeeze
 from agml.viz.display import display_image
+from agml.viz.tools import convert_figure_to_image, format_image, get_colormap
 
 
 def _resolve_proportional_bboxes(coords, shape):

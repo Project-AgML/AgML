@@ -15,7 +15,6 @@
 import os
 
 import numpy as np
-
 from matplotlib.pyplot import cm
 
 from agml.utils.general import is_float, is_int

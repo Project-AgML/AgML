@@ -19,21 +19,17 @@ Some of the training code in this file is adapted from the following sources:
 2. https://gist.github.com/Chris-hughes10/73628b1d8d6fc7d359b3dcbbbb8869d7
 """
 
-import os
 import argparse
+import os
 
-import torch
 import pytorch_lightning as pl
-from pytorch_lightning.loggers import WandbLogger
+import torch
+from detection_learning import AgMLDatasetAdaptor, EfficientDetDataModule, EfficientDetModel
 from pytorch_lightning.callbacks import LearningRateMonitor
+from pytorch_lightning.loggers import WandbLogger
+from tools import checkpoint_dir, gpus
 
 import agml
-from tools import gpus, checkpoint_dir
-from detection_learning import (
-    AgMLDatasetAdaptor,
-    EfficientDetDataModule,
-    EfficientDetModel,
-)
 
 
 def train(dataset, epochs, save_dir=None, overwrite=None, pretrained_path=None):

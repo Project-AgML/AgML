@@ -12,20 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
 import argparse
+import os
 
 import numpy as np
 import pandas as pd
-from tqdm import tqdm
-
-import torch
 import pytorch_lightning as pl
-
-import agml
+import torch
 from classification_lightning import ClassificationBenchmark
 from torchmetrics import Accuracy
+from tqdm import tqdm
 
+import agml
 
 # Define device.
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")

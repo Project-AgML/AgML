@@ -12,18 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import argparse
 import os
 import sys
 from enum import Enum
-import argparse
 
+import albumentations as A
+import numpy as np
 import torch
 import torch.nn as nn
 from torchvision.models import efficientnet_b4
-
-import numpy as np
 from tqdm import tqdm
-import albumentations as A
 
 import agml
 from agml.utils.io import recursive_dirname

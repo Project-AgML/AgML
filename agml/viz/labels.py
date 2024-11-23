@@ -12,12 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 
 from agml.backend.tftorch import as_scalar, is_array_like
-from agml.viz.tools import format_image, _inference_best_shape, convert_figure_to_image
 from agml.viz.display import display_image
+from agml.viz.tools import _inference_best_shape, convert_figure_to_image, format_image
 
 
 def show_images_and_labels(images, labels=None, info=None, shape=None, **kwargs):
