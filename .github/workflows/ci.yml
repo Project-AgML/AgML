@@ -1,4 +1,4 @@
-name: pr_check
+name: ci
 
 on: [push, pull_request]
 
@@ -19,12 +19,14 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
+
       - name: Install the latest version of uv
         uses: astral-sh/setup-uv@v3
         with:
           version: "latest"
           enable-cache: true
           cache-dependency-glob: "**/pyproject.toml"
+
       - name: Check if cache used
         if: steps.setup-uv.outputs.cache-hit == 'true'
         run: echo "Cache was restored"
