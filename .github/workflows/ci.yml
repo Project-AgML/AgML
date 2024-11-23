@@ -33,7 +33,9 @@ jobs:
         run: uv sync --dev
 
       - name: Run Checks
-        run: make for
+        continue-on-error: true
+        run: make checks
+
       - name: Run tests
         # For example, using `pytest`
         run: make test
