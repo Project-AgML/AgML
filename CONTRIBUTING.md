@@ -189,8 +189,7 @@ We will then review the changes and review next steps for adding the dataset int
 
 
 ### Installing uv
-
-Install uv follow the guidelines in  https://docs.astral.sh/uv/getting-started/installation/, it is recommended to use the standalone installation.
+Dependencies and admin actions are done using `uv`. To Install uv follow the guidelines in  https://docs.astral.sh/uv/getting-started/installation/, it is recommended to use the standalone installation.
 
 
 ### Building Project
@@ -206,7 +205,8 @@ To sync the dependencies simply run:
 ```
 uv sync
 ```
-### Running test
+
+### Running tests
 
 ```
 make test
@@ -214,7 +214,7 @@ make test
 
 ### Running scripts
 
-For running scripts or one using the project's e
+For running scripts or one-offs using the project's installed enviroment
 
 ```
 uv run python <script>

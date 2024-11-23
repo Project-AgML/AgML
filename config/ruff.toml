@@ -79,6 +79,7 @@ docstring-code-format = false
 docstring-code-line-length = "dynamic"
 
 [lint.isort]
+
 case-sensitive = true
 default-section = "third-party"
 known-first-party = ["agml"]

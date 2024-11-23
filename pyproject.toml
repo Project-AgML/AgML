@@ -35,8 +35,6 @@ classifiers = [
     "Typing :: Typed",
 ]
 
-
-
 # managed by uv
 dependencies = [
     "matplotlib>=3.7.5",
