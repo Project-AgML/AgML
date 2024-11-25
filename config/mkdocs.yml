@@ -5,7 +5,17 @@ site_url: ""
 repo_url: "https://github.com/Project-AgML/AgML"
 repo_name: "AgML"
 
-watch: [../config/mkdocs.yml, ../README.md, ../CONTRIBUTING.md, ../agml]
+watch:
+  [
+    ../config/mkdocs.yml,
+    ../README.md,
+    ../LICENSE,
+    ../CODE_OF_CONDUCT.md,
+    ../CONTRIBUTING.md,
+    ../agml,
+    ../docs,
+  ]
+
 copyright: Copyright &copy; 2024
 edit_uri: edit/main/docs/
 
@@ -22,13 +32,13 @@ nav:
       - Overview: index.md
       - Changelog: changelog.md
       - Credits: credits.md
-      - License: ../LICENSE
+      - License: license.md
   # defer to gen-files + literate-nav
   - API reference:
       - AgML: reference/
   - Development:
-      - Contributing: ../CONTRIBUTING.md
-      - Code of Conduct: ../CODE_OF_CONDUCT.md
+      - Contributing: development.md
+      - Code of Conduct: code_of_conduct.md
       - Coverage report: coverage.md
 
 theme:
@@ -87,8 +97,18 @@ markdown_extensions:
       emoji_generator: !!python/name:material.extensions.emoji.to_svg
   - pymdownx.magiclink
   - pymdownx.snippets:
-      base_path: [!relative $config_dir, README.md]
+      base_path:
+        [
+          !relative $config_dir,
+          README.md,
+          LICENSE,
+          CONTRIBUTING.md,
+          CODE_OF_CONDUCT.md,
+          scripts,
+          pyproject.toml,
+        ]
       check_paths: true
+
   - pymdownx.superfences
   - pymdownx.tabbed:
       alternate_style: true
@@ -105,7 +125,7 @@ plugins:
   - markdown-exec
   - gen-files:
       scripts:
-        - ../scripts/gen_ref_nav.py
+        - ../scripts/docs/gen_ref_nav.py
   - literate-nav:
       nav_file: SUMMARY.md
   - coverage
