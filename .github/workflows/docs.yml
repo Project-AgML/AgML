@@ -13,7 +13,7 @@ concurrency:
 
 jobs:
   deploy:
-    enviroment:
+    environment:
         name: documenation
         url: ${{steps.deployement.outputs.page_url}}
     runs-on: ubuntu-latest
@@ -49,7 +49,7 @@ jobs:
 
       - run: uv run mkdocs build --config-file config/mkdocs.yml
 
-      - run: uv run mkdocs gh-deploy --force --config-file config/mkdocs.yml
+    #   - run: uv run mkdocs gh-deploy --force --config-file config/mkdocs.yml
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
