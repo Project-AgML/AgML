@@ -27,9 +27,9 @@ jobs:
       - name: Install the latest version of uv
         uses: astral-sh/setup-uv@v3
         with:
-        version: "latest"
-        enable-cache: true
-        cache-dependency-glob: "**/pyproject.toml"
+          version: "latest"
+          enable-cache: true
+          cache-dependency-glob: "**/pyproject.toml"
 
       - name: Check if cache used
         if: steps.setup-uv.outputs.cache-hit == 'true'
