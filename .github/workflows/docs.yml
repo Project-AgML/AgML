@@ -38,3 +38,5 @@ jobs:
       - run: uv sync --only-group docs
 
       - run: uv run mkdocs build --config-file config/mkdocs.yml
+
+      - run: uv run mkdocs gh-deploy --config-file config/mkdocs.yml
