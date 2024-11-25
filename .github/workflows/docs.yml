@@ -39,4 +39,4 @@ jobs:
 
       - run: uv run mkdocs build --config-file config/mkdocs.yml
 
-      - run: uv run mkdocs gh-deploy --config-file config/mkdocs.yml
+      - run: uv run mkdocs gh-deploy --force --config-file config/mkdocs.yml
