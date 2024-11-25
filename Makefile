@@ -6,20 +6,26 @@ version := 0.7.0
 src.python := $(shell find ./agml -type f -name "*.py" || :)
 test.python := $(shell find ./tests -type f -name "*.py" || :)
 
+uv.project.enviroment := .venv
 dist.dir := dist
 build.wheel := $(dist.dir)/agml-$(version).tar.gz
 
 
-install: setup ## Install dependencies including development ones
-	uv sync --dev
 
-setup: ## setup env
-	uv venv .venv
 
 
 .PHONY: help
 help: ## Print the help screen.
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":|:[[:space:]].*?##"}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
+
+# Setup and Build
+
+
+install: setup ## Installing dependencies
+	uv sync
+
+setup: ## Setup the project.
+	uv venv $(uv.project.enviroment)
 
 
 $(build.wheel): $(src.python) ## Build wheels
