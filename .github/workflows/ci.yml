@@ -32,7 +32,7 @@ jobs:
         run: echo "Cache was restored"
 
       - name: Set up python env
-        run: uv venv  .venv
+        run: make setup
 
       - name: Run Checks
         continue-on-error: true

@@ -10,6 +10,9 @@ dist.dir := dist
 build.wheel := $(dist.dir)/agml-$(version).tar.gz
 
 
+install: setup ## Install dependencies including development ones
+	uv sync --dev
+
 setup: ## setup env
 	uv venv .venv
 
