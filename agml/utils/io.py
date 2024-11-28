@@ -14,9 +14,8 @@
 
 import os
 
-
 # Files which shouldn't be included in a file list.
-EXCLUDED_FILES: list = ['.DS_Store']
+EXCLUDED_FILES: list = [".DS_Store"]
 
 
 def _is_valid_file(file):
@@ -27,39 +26,37 @@ def _is_valid_file(file):
     """
     global EXCLUDED_FILES
     if os.path.isfile(file):
-        if not file.startswith('.git') and file not in EXCLUDED_FILES:
+        if not file.startswith(".git") and file not in EXCLUDED_FILES:
             return True
     return False
 
 
-def get_file_list(fpath, ext = None, full_paths = True):
+def get_file_list(fpath, ext=None, full_paths=True):
     """Gets a list of files from a path."""
-    base_list = [os.path.join(fpath, f) if full_paths else f
-                 for f in os.listdir(fpath)
-                 if _is_valid_file(os.path.join(fpath, f))]
+    base_list = [
+        os.path.join(fpath, f) if full_paths else f for f in os.listdir(fpath) if _is_valid_file(os.path.join(fpath, f))
+    ]
     if ext is not None:
         if callable(ext):
             return [f for f in base_list if ext(f)]
         if isinstance(ext, str):
             return [f for f in base_list if f.endswith(ext)]
         else:
-            return [f for f in base_list if
-                    any([f.endswith(i) for i in ext])]
+            return [f for f in base_list if any([f.endswith(i) for i in ext])]
     return base_list
 
 
 def get_dir_list(filepath):
     """Get a list of directories from a path."""
-    return [f for f in os.listdir(filepath)
-            if os.path.isdir(os.path.join(filepath, f))]
+    return [f for f in os.listdir(filepath) if os.path.isdir(os.path.join(filepath, f))]
 
 
 def nested_dir_list(fpath):
     """Returns a nested list of directories from a path."""
     dirs = []
-    for f in os.scandir(fpath): # type: os.DirEntry
+    for f in os.scandir(fpath):  # type: os.DirEntry
         if f.is_dir():
-            if not os.path.basename(f.path).startswith('.'):
+            if not os.path.basename(f.path).startswith("."):
                 dirs.append(os.path.join(fpath, f.path))
     if len(dirs) != 0:
         for dir_ in dirs:
@@ -67,23 +64,23 @@ def nested_dir_list(fpath):
     return dirs
 
 
-def nested_file_list(fpath, ext = None):
+def nested_file_list(fpath, ext=None):
     """Returns a nested list of files from a path."""
-    if ext == 'image':
-        ext = ['jpg', 'jpeg', 'png', 'bmp', 'tiff']
-    files = get_file_list(fpath, ext = ext)
+    if ext == "image":
+        ext = ["jpg", "jpeg", "png", "bmp", "tiff"]
+    files = get_file_list(fpath, ext=ext)
     dirs = nested_dir_list(fpath)
     for dir_ in dirs:
-        files.extend(get_file_list(dir_, ext = ext))
+        files.extend(get_file_list(dir_, ext=ext))
     return files
 
 
 def create_dir(dir_):
     """Creates a directory (or does nothing if it exists)."""
-    os.makedirs(dir_, exist_ok = True)
+    os.makedirs(dir_, exist_ok=True)
 
 
-def recursive_dirname(dir_, level = 1):
+def recursive_dirname(dir_, level=1):
     """Returns a recursive dirname for the number of levels provided."""
     if level == 0:
         return dir_
@@ -95,24 +92,22 @@ def is_image_file(file):
     if not isinstance(file, (str, bytes, os.PathLike)):
         return False
     end = os.path.splitext(file)[-1][1:]
-    return end.lower() in ['jpg', 'jpeg', 'png', 'bmp', 'tiff']
+    return end.lower() in ["jpg", "jpeg", "png", "bmp", "tiff"]
 
 
 def load_code_from_string_or_file(code):
     """Returns valid code either from the file `code` or the string `code`."""
     if not isinstance(code, str):
         raise TypeError(
-            f"`code` must be either a code string or a path to "
-            f"a code file, got {code} of type ({type(code)}).")
+            f"`code` must be either a code string or a path to " f"a code file, got {code} of type ({type(code)})."
+        )
 
     # Check if it is a path. Just because the path doesn't exist doesn't mean
     # that it isn't a path: it could be an incorrect path.
     if os.path.exists(code):
-        with open(code, 'r') as f:
+        with open(code, "r") as f:
             code = f.read()
     else:
-        if code.endswith('.cpp') or code.endswith('.cc') \
-                or code.endswith('.txt') or code.endswith('.py'):
+        if code.endswith(".cpp") or code.endswith(".cc") or code.endswith(".txt") or code.endswith(".py"):
             raise ValueError(f"The provided file at {code} could not be found.")
     return code
-

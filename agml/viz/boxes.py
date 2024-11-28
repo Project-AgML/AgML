@@ -13,15 +13,13 @@
 # limitations under the License.
 
 import cv2
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 
-from agml.utils.general import (
-    resolve_tuple_values, weak_squeeze, scalar_unpack, as_scalar
-)
 from agml.data.tools import convert_bbox_format
-from agml.viz.tools import format_image, get_colormap, convert_figure_to_image
+from agml.utils.general import as_scalar, resolve_tuple_values, scalar_unpack, weak_squeeze
 from agml.viz.display import display_image
+from agml.viz.tools import convert_figure_to_image, format_image, get_colormap
 
 
 def _resolve_proportional_bboxes(coords, shape):
@@ -33,24 +31,18 @@ def _resolve_proportional_bboxes(coords, shape):
     if all(isinstance(i, float) for i in coords):
         if coords[0] <= 1:
             x, y, width, height = coords
-            y *= shape[0]; height *= shape[0]  # noqa
-            x *= shape[1]; width *= shape[1]  # noqa
+            y *= shape[0]
+            height *= shape[0]  # noqa
+            x *= shape[1]
+            width *= shape[1]  # noqa
             coords = [x, y, width, height]
         return [int(round(c)) for c in coords]
     elif all(isinstance(i, int) for i in coords):
         return coords
-    raise TypeError(
-        f"Got multiple types for coordinates: "
-        f"{[type(i) for i in coords]}.")
+    raise TypeError(f"Got multiple types for coordinates: " f"{[type(i) for i in coords]}.")
 
 
-def annotate_object_detection(image,
-                              bboxes = None,
-                              labels = None,
-                              inplace = True,
-                              info = None,
-                              bbox_format = None,
-                              **kwargs):
+def annotate_object_detection(image, bboxes=None, labels=None, inplace=True, info=None, bbox_format=None, **kwargs):
     """Annotates bounding boxes onto an image.
 
     This method will annotate the given bounding boxes directly onto the image,
@@ -90,24 +82,27 @@ def annotate_object_detection(image,
     # user just called `agml.viz.put_boxes_on_image(loader[0])`), or whether
     # the relevant values have been passed to the keyword arguments.
     image, bboxes, labels = resolve_tuple_values(
-        image, bboxes, labels, custom_error =
-        "If `image` is a tuple/list, it should contain "
-        "three values: the image, mask, and (optionally) labels."
+        image,
+        bboxes,
+        labels,
+        custom_error="If `image` is a tuple/list, it should contain "
+        "three values: the image, mask, and (optionally) labels.",
     )
 
     # If the user passed a COCO JSON dictionary for `bboxes`, resolve it into
     # a list of bounding boxes and its corresponding labels.
     if isinstance(bboxes, dict):
         try:
-            bboxes, labels = bboxes['bbox'], bboxes['category_id']
+            bboxes, labels = bboxes["bbox"], bboxes["category_id"]
         except KeyError:
             try:
-                bboxes, labels = bboxes['bboxes'], bboxes['labels']
+                bboxes, labels = bboxes["bboxes"], bboxes["labels"]
             except KeyError:
                 raise ValueError(
                     "Unexpected COCO JSON format found in input `bboxes` "
                     "dictionary, got {list(bboxes.keys())} but expected "
-                    "either `bbox` or `bboxes` for bounding boxes.")
+                    "either `bbox` or `bboxes` for bounding boxes."
+                )
 
     # If there are no bounding boxes, then simply return the image.
     if len(bboxes) == 0:
@@ -118,20 +113,20 @@ def annotate_object_detection(image,
         bboxes = convert_bbox_format(bboxes, bbox_format)
 
     # Run a few final checks in order to ensure data is formatted properly.
-    image = format_image(image, mask = False).copy()
+    image = format_image(image, mask=False).copy()
     if not inplace:
         image = image.copy()
-    bboxes = weak_squeeze(bboxes, ndims = 2)
+    bboxes = weak_squeeze(bboxes, ndims=2)
     if labels is None:
         labels = [0] * len(bboxes)
-    labels = weak_squeeze(labels, ndims = 1)
+    labels = weak_squeeze(labels, ndims=1)
 
     # Check for any additional information that can be used to annotate labels.
     annotate_with_info = False
     if info is not None:
-        if kwargs.get('num_to_class') is not None:
+        if kwargs.get("num_to_class") is not None:
             annotate_with_info = True
-            info = kwargs['num_to_class']
+            info = kwargs["num_to_class"]
 
         elif all(isinstance(label, str) for label in labels):
             # If the labels are already strings, then create an info dictionary
@@ -142,7 +137,7 @@ def annotate_object_detection(image,
             info = {v: k for k, v in label_map.items()}
             labels = [label_map[j] for j in labels]
 
-        elif hasattr(info, 'num_to_class'):
+        elif hasattr(info, "num_to_class"):
             annotate_with_info = True
             info = info.num_to_class
 
@@ -150,7 +145,7 @@ def annotate_object_detection(image,
             annotate_with_info = True
 
     # Check the keyword arguments for any additional information that can be used.
-    thickness = kwargs.get('thickness', 2)
+    thickness = kwargs.get("thickness", 2)
 
     # Iterate over each bounding box and label, and annotate them onto the image.
     cmap = get_colormap()
@@ -162,8 +157,7 @@ def annotate_object_detection(image,
         x2, y2 = bbox[2] + x, bbox[3] + y
 
         # Annotate the bounding box onto the image.
-        cv2.rectangle(image, (x, y), (x2, y2), color = cmap[as_scalar(label)],
-                      thickness = thickness)
+        cv2.rectangle(image, (x, y), (x2, y2), color=cmap[as_scalar(label)], thickness=thickness)
 
         # If the user passed additional information, annotate it onto the image
         # by putting the text above the bounding box with the corresponding label.
@@ -174,54 +168,58 @@ def annotate_object_detection(image,
                 text = info[label + 1]
 
             # Get the text size.
-            (label_width, label_height), baseline = cv2.getTextSize(
-                text, cv2.FONT_HERSHEY_SIMPLEX, 0.5, 2)
+            (label_width, label_height), baseline = cv2.getTextSize(text, cv2.FONT_HERSHEY_SIMPLEX, 0.5, 2)
 
             # Calculate the coordinates of the background rectangle of the label.
             x, y = bbox[0], bbox[1] - label_height - baseline
             x2, y2 = x + label_width, y + label_height + baseline
 
             # Annotate the background rectangle and label text onto the image.
-            cv2.rectangle(image, (x, y), (x2, y2), color = cmap[label], thickness = -1)
-            cv2.putText(image, text, (x, y + label_height),
-                        cv2.FONT_HERSHEY_DUPLEX, 0.5, (0, 0, 0), 1)
+            cv2.rectangle(image, (x, y), (x2, y2), color=cmap[label], thickness=-1)
+            cv2.putText(
+                image,
+                text,
+                (x, y + label_height),
+                cv2.FONT_HERSHEY_DUPLEX,
+                0.5,
+                (0, 0, 0),
+                1,
+            )
 
     # Return the image.
     return image
 
 
-def show_image_and_boxes(image,
-                         bboxes = None,
-                         labels = None,
-                         inplace = True,
-                         info = None,
-                         bbox_format = None,
-                         **kwargs):
+def show_image_and_boxes(image, bboxes=None, labels=None, inplace=True, info=None, bbox_format=None, **kwargs):
     """Visualizes an image with annotated bounding boxes."""
     # Annotate the bounding boxes onto the image.
-    image = annotate_object_detection(image = image,
-                                      bboxes = bboxes,
-                                      labels = labels,
-                                      inplace = inplace,
-                                      info = info,
-                                      bbox_format = bbox_format,
-                                      **kwargs)
+    image = annotate_object_detection(
+        image=image,
+        bboxes=bboxes,
+        labels=labels,
+        inplace=inplace,
+        info=info,
+        bbox_format=bbox_format,
+        **kwargs,
+    )
 
     # Display the image.
-    if not kwargs.get('no_show', False):
+    if not kwargs.get("no_show", False):
         _ = display_image(image, force_show=True)
     return image
 
 
-def show_object_detection_truth_and_prediction(image,
-                                               real_boxes = None,
-                                               real_labels = None,
-                                               predicted_boxes = None,
-                                               predicted_labels = None,
-                                               inplace = True,
-                                               info = None,
-                                               bbox_format = None,
-                                               **kwargs):
+def show_object_detection_truth_and_prediction(
+    image,
+    real_boxes=None,
+    real_labels=None,
+    predicted_boxes=None,
+    predicted_labels=None,
+    inplace=True,
+    info=None,
+    bbox_format=None,
+    **kwargs,
+):
     """Visualizes the ground truth and prediction of an object detection model.
 
     Parameters
@@ -277,15 +275,18 @@ def show_object_detection_truth_and_prediction(image,
             image, real_boxes, real_labels, predicted_boxes, predicted_labels = image
     else:
         # Otherwise, check that the first three arguments have been passed.
-        if real_boxes is not None and real_labels is not None and \
-                predicted_boxes is None and predicted_labels is None:
+        if real_boxes is not None and real_labels is not None and predicted_boxes is None and predicted_labels is None:
             if isinstance(real_boxes, dict) and isinstance(real_labels, dict):
                 predicted_boxes = real_labels
                 real_labels = None
 
         # Otherwise, check that the first FOUR arguments have been passed.
-        if real_boxes is not None and real_labels is not None and \
-                predicted_boxes is not None and predicted_labels is None:
+        if (
+            real_boxes is not None
+            and real_labels is not None
+            and predicted_boxes is not None
+            and predicted_labels is None
+        ):
             # The real annotations are a COCO JSON dict and predicted annotations
             # are two input arrays. The other case is redundant since it is technically
             # correct in formatting, so we don't do anything.
@@ -299,37 +300,36 @@ def show_object_detection_truth_and_prediction(image,
             pass
 
     # Generate the two images: real and predicted.
-    real_image = annotate_object_detection(image = image,
-                                           bboxes = real_boxes,
-                                           labels = real_labels,
-                                           inplace = inplace,
-                                           info = info,
-                                           bbox_format = bbox_format,
-                                           **kwargs)
-    predicted_image = annotate_object_detection(image = image,
-                                                bboxes = predicted_boxes,
-                                                labels = predicted_labels,
-                                                inplace = inplace,
-                                                info = info,
-                                                bbox_format = bbox_format,
-                                                **kwargs)
-
+    real_image = annotate_object_detection(
+        image=image,
+        bboxes=real_boxes,
+        labels=real_labels,
+        inplace=inplace,
+        info=info,
+        bbox_format=bbox_format,
+        **kwargs,
+    )
+    predicted_image = annotate_object_detection(
+        image=image,
+        bboxes=predicted_boxes,
+        labels=predicted_labels,
+        inplace=inplace,
+        info=info,
+        bbox_format=bbox_format,
+        **kwargs,
+    )
 
     # Create two side-by-side figures with the images.
-    fig, axes = plt.subplots(1, 2, figsize = (12, 6))
-    for ax, img, label in zip(
-            axes, (real_image, predicted_image),
-            ("Ground Truth Boxes", "Predicted Boxes")):
+    fig, axes = plt.subplots(1, 2, figsize=(12, 6))
+    for ax, img, label in zip(axes, (real_image, predicted_image), ("Ground Truth Boxes", "Predicted Boxes")):
         ax.imshow(img)
         ax.set_axis_off()
-        ax.set_title(label, fontsize = 15)
-        ax.set_aspect('equal')
+        ax.set_title(label, fontsize=15)
+        ax.set_aspect("equal")
     fig.tight_layout()
 
     # Display and return the image.
     image = convert_figure_to_image()
-    if not kwargs.get('no_show', False):
+    if not kwargs.get("no_show", False):
         _ = display_image(image)
     return image
-
-

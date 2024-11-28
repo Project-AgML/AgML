@@ -22,25 +22,25 @@ commonly used deep learning models on agricultural datasets within AgML.
 try:
     import torch
 except ImportError:
-    raise ImportError('Could not find a PyTorch installation. If you want to use '
-                      'the models in `agml.models`, you will need to install PyTorch '
-                      'first. Try `pip install torch` to do so.')
+    raise ImportError(
+        "Could not find a PyTorch installation. If you want to use "
+        "the models in `agml.models`, you will need to install PyTorch "
+        "first. Try `pip install torch` to do so."
+    )
 
 try:
     import pytorch_lightning
 except ImportError:
-    raise ImportError('Could not find a PyTorch Lightning installation. If you want to '
-                      'use the models in `agml.models`, you will need to install PyTorch '
-                      'Lightning first. Try `pip install pytorch-lightning` to do so.')
+    raise ImportError(
+        "Could not find a PyTorch Lightning installation. If you want to "
+        "use the models in `agml.models`, you will need to install PyTorch "
+        "Lightning first. Try `pip install pytorch-lightning` to do so."
+    )
 
 
+from . import legacy, losses, metrics, preprocessing
+from .benchmarks import get_benchmark
 from .classification import ClassificationModel
-from .segmentation import SegmentationModel
 from .detection import DetectionModel
 from .detector import Detector
-from . import metrics
-from . import losses
-from . import preprocessing
-from . import legacy
-from .benchmarks import get_benchmark
-
+from .segmentation import SegmentationModel

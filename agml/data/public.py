@@ -16,14 +16,15 @@ import functools
 
 import numpy as np
 
-from agml.utils.downloads import download_dataset as _download # noqa
-from agml.utils.data import load_public_sources
-from agml.data.metadata import DatasetMetadata
 from agml.backend.config import data_save_path
+from agml.data.metadata import DatasetMetadata
+from agml.utils.data import load_public_sources
+from agml.utils.downloads import download_dataset as _download  # noqa
 
 
 class _PublicSourceFilter(object):
     """Filters public datasets based on the input filters."""
+
     _sources = load_public_sources()
     _current_filtered_source = []
 
@@ -36,56 +37,53 @@ class _PublicSourceFilter(object):
             if key not in list(self._sources.values())[0].keys():
                 raise ValueError(f"Invalid filter: {key}.")
             internal_set = []
-            if key == 'location':
+            if key == "location":
                 self._location_case(value, internal_set)
-            elif key in ['n_images', 'num_images'] and value.startswith('>'):
-                self._n_image_case_greater(
-                    int(float(value[1:])), internal_set)
-            elif key in ['n_images', 'num_images'] and value.startswith('<'):
-                self._n_image_case_greater(
-                    int(float(value[1:])), internal_set)
+            elif key in ["n_images", "num_images"] and value.startswith(">"):
+                self._n_image_case_greater(int(float(value[1:])), internal_set)
+            elif key in ["n_images", "num_images"] and value.startswith("<"):
+                self._n_image_case_greater(int(float(value[1:])), internal_set)
             else:
                 for source_ in self._sources.keys():
                     try:
                         if self._sources[source_][key] == value:
                             internal_set.append(source_)
-                    except: # some situations don't have certain arguments.
+                    except:  # some situations don't have certain arguments.
                         continue
             source_sets.append(internal_set)
-        self._current_filtered_source \
-            = functools.reduce(np.intersect1d, source_sets)
+        self._current_filtered_source = functools.reduce(np.intersect1d, source_sets)
         return self
 
     def _location_case(self, desired, value_set):
         for source_ in self._sources.keys():
-            param, value = desired.split(':')
+            param, value = desired.split(":")
             try:
-                if self._sources[source_]['location'][param] == value:
+                if self._sources[source_]["location"][param] == value:
                     value_set.append(source_)
-            except KeyError: # some situations don't have location.
+            except KeyError:  # some situations don't have location.
                 continue
         return value_set
 
     def _n_image_case_greater(self, thresh, value_set):
         for source_ in self._sources.keys():
             try:
-                if int(float(self._sources[source_]['n_images'])) >= thresh:
+                if int(float(self._sources[source_]["n_images"])) >= thresh:
                     value_set.append(source_)
-            except KeyError: # some situations don't have n_images.
+            except KeyError:  # some situations don't have n_images.
                 continue
         return
 
     def _n_image_case_lesser(self, thresh, value_set):
         for source_ in self._sources.keys():
             try:
-                if int(float(self._sources[source_]['n_images'])) <= thresh:
+                if int(float(self._sources[source_]["n_images"])) <= thresh:
                     value_set.append(source_)
-            except KeyError: # some situations don't have n_images.
+            except KeyError:  # some situations don't have n_images.
                 continue
         return
 
     def print_result(self):
-        return "[%s]" % ', '.join(self._current_filtered_source)
+        return "[%s]" % ", ".join(self._current_filtered_source)
 
     def result(self):
         return [DatasetMetadata(s) for s in self._current_filtered_source]
@@ -149,7 +147,7 @@ def source(name):
     return DatasetMetadata(name)
 
 
-def download_public_dataset(dataset, location = None, redownload = False):
+def download_public_dataset(dataset, location=None, redownload=False):
     """Downloads a public dataset from AgML to a directory.
 
     While the `AgMLDataLoader` exists to load data directly into an
@@ -174,12 +172,9 @@ def download_public_dataset(dataset, location = None, redownload = False):
     -------
     The local directory of the dataset.
     """
-    location = location if location \
-                        else data_save_path()
+    location = location if location else data_save_path()
     if not isinstance(dataset, (list, tuple, set, np.ndarray)):
         dataset = [dataset]
     for d in dataset:
-        _download(d, location, redownload = redownload)
+        _download(d, location, redownload=redownload)
     return location
-
-

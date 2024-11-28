@@ -15,12 +15,12 @@
 
 from agml.framework import AgMLSerializable
 
-
-__all__ = ['allow_nested_data_splitting']
+__all__ = ["allow_nested_data_splitting"]
 
 
 class AgMLExperimentalFeatureWrapper(AgMLSerializable):
     """Stores all of the feature values."""
+
     _NESTED_SPLITTING = False
 
     def __init__(self):
@@ -58,4 +58,3 @@ class AgMLExperimentalFeatureWrapper(AgMLSerializable):
 # While the `AgMLExperimentalFeatureWrapper` class controls the actual values,
 # we expose each of its toggle methods as part of the `agml.backend` API.
 allow_nested_data_splitting = AgMLExperimentalFeatureWrapper.allow_nested_data_splitting
-

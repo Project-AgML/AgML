@@ -12,31 +12,29 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
+import datetime
 import gc
+import importlib
 import json
+import os
 import shutil
 import warnings
-import datetime
-import importlib
 
 import numpy as np
 import torch
 
-from agml.framework import AgMLSerializable
 from agml.backend.config import model_save_path
-from agml.utils.logging import log
+from agml.data.public import public_data_sources, source
+from agml.data.tools import convert_bbox_format
+from agml.framework import AgMLSerializable
+from agml.models.extensions.ultralytics import install_and_configure_ultralytics
 from agml.utils.data import load_detector_benchmarks
 from agml.utils.downloads import download_detector
+from agml.utils.logging import log
 from agml.viz.boxes import show_image_and_boxes
 
-from agml.data.public import source
-from agml.data.public import public_data_sources
-from agml.data.tools import convert_bbox_format
-from agml.models.extensions.ultralytics import install_and_configure_ultralytics
-
 try:
-    warnings.filterwarnings("ignore", message='.*Python>=3.10 is required')
+    warnings.filterwarnings("ignore", message=".*Python>=3.10 is required")
     import ultralytics
     from ultralytics import YOLO
 except ImportError:
@@ -44,8 +42,8 @@ except ImportError:
     ultralytics = None
 
 
-VALID_YOLO11_MODELS = ['YOLO11n', 'YOLO11s', 'YOLO11m', 'YOLO11l', 'YOLO11x']
-YOLO11_MODELS_TO_PATH = {k.upper(): f'{k.lower()}.pt' for k in VALID_YOLO11_MODELS}
+VALID_YOLO11_MODELS = ["YOLO11n", "YOLO11s", "YOLO11m", "YOLO11l", "YOLO11x"]
+YOLO11_MODELS_TO_PATH = {k.upper(): f"{k.lower()}.pt" for k in VALID_YOLO11_MODELS}
 
 
 class Detector(AgMLSerializable):
@@ -69,10 +67,11 @@ class Detector(AgMLSerializable):
     and `Detector.load_benchmark` for loading models. The `Detector` class is
     designed to be a simple and easy-to-use interface for YOLO object detection.
     """
-    serializable = frozenset(('net', '_verbose'))
+
+    serializable = frozenset(("net", "_verbose"))
 
     # the default path to save the models in the AgML internal model repository.
-    DEFAULT_MODEL_PATH = os.path.join(model_save_path(), 'detectors')
+    DEFAULT_MODEL_PATH = os.path.join(model_save_path(), "detectors")
 
     def __new__(cls, net, *args, **kwargs):
         # only setup Ultralytics when the class is initialized
@@ -86,14 +85,16 @@ class Detector(AgMLSerializable):
 
     def __init__(self, net, *args, **kwargs):
         if not kwargs.get("_internally_instantiated", False):
-            raise TypeError("An `agml.models.Detector` should only be instantiated "
-                            "from the `Detector.load(<name>)` method or the "
-                            "`Detector.load_benchmark(<name>)` method.")
+            raise TypeError(
+                "An `agml.models.Detector` should only be instantiated "
+                "from the `Detector.load(<name>)` method or the "
+                "`Detector.load_benchmark(<name>)` method."
+            )
 
         self.net = net
 
-        self._verbose = kwargs.get('verbose', False)
-        self._benchmark_data = kwargs.get('benchmark_data', None)
+        self._verbose = kwargs.get("verbose", False)
+        self._benchmark_data = kwargs.get("benchmark_data", None)
         self._info = None
 
     def __call__(self, image, return_full=False, **kwargs):
@@ -119,7 +120,7 @@ class Detector(AgMLSerializable):
         result_dict = result_dict.cpu().numpy()
         boxes = result_dict.boxes
         bboxes = boxes.xyxy.astype(np.float32)
-        bboxes = convert_bbox_format(bboxes, 'xyxy')
+        bboxes = convert_bbox_format(bboxes, "xyxy")
         classes = boxes.cls.astype(np.int32)
         confidences = boxes.conf.astype(np.float32)
         return bboxes, classes, confidences
@@ -176,7 +177,8 @@ class Detector(AgMLSerializable):
 
     @verbose.setter
     def verbose(self, value):
-        if not isinstance(value, bool): raise ValueError("Verbose must be True/False.")
+        if not isinstance(value, bool):
+            raise ValueError("Verbose must be True/False.")
         self._verbose = value
 
     @property
@@ -222,8 +224,7 @@ class Detector(AgMLSerializable):
         model_save_dir = os.path.join(Detector.DEFAULT_MODEL_PATH, run_name)
         if os.path.exists(model_save_dir):
             if os.listdir(model_save_dir) and not overwrite:
-                raise ValueError(f"Model with name {run_name} already exists. "
-                                 f"Set `overwrite=True` to overwrite.")
+                raise ValueError(f"Model with name {run_name} already exists. " f"Set `overwrite=True` to overwrite.")
         os.makedirs(model_save_dir, exist_ok=True)
 
         # export the YOLO dataset in the Ultralytics package directory
@@ -236,32 +237,32 @@ class Detector(AgMLSerializable):
             raise ValueError(f"Invalid model choice: {model}. Choose from: {VALID_YOLO11_MODELS}")
 
         with warnings.catch_warnings():
-            warnings.filterwarnings("ignore", message='.*torch.amp.autocast')
+            warnings.filterwarnings("ignore", message=".*torch.amp.autocast")
             train_result = net.train(
                 epochs=epochs,
-                data=export_path_dict['metadata_path'],
-                save_dir=f'runs/train/{run_name}',
-                **kwargs
+                data=export_path_dict["metadata_path"],
+                save_dir=f"runs/train/{run_name}",
+                **kwargs,
             )
 
-            model_save_path = train_result.save_dir / 'weights' / 'best.pt'
-            model_results_csv = train_result.save_dir / 'results.csv'
-            model_args_path = train_result.save_dir / 'args.yaml'
+            model_save_path = train_result.save_dir / "weights" / "best.pt"
+            model_results_csv = train_result.save_dir / "results.csv"
+            model_args_path = train_result.save_dir / "args.yaml"
 
             # compose a complete result dictionary
             results = train_result.results_dict
-            results['class_map'] = {
-                'classes': train_result.names,
-                'maps': train_result.maps.tolist()
+            results["class_map"] = {
+                "classes": train_result.names,
+                "maps": train_result.maps.tolist(),
             }
-            with open(os.path.join(model_save_dir, 'results.json'), 'w') as f:
+            with open(os.path.join(model_save_dir, "results.json"), "w") as f:
                 json.dump(results, f, indent=4)
 
         # move the trained model to the `~/.agml/models` directory where it
         # will sit under the name `run_name` for easy loading in the future
-        shutil.move(model_save_path, os.path.join(model_save_dir, 'best.pt'))
-        shutil.move(model_results_csv, os.path.join(model_save_dir, 'results.csv'))
-        shutil.move(model_args_path, os.path.join(model_save_dir, 'args.yaml'))
+        shutil.move(model_save_path, os.path.join(model_save_dir, "best.pt"))
+        shutil.move(model_results_csv, os.path.join(model_save_dir, "results.csv"))
+        shutil.move(model_args_path, os.path.join(model_save_dir, "args.yaml"))
         log(f"""Model training complete. Model saved to: {model_save_dir}
 
         For full Ultralytics training logs and outputs, see: {train_result.save_dir}
@@ -311,12 +312,14 @@ class Detector(AgMLSerializable):
         if name is not None and weights is not None:
             raise ValueError("You can only provide either a `name` or `weights` argument, not both.")
         if name is not None:
-            model_path = os.path.join(Detector.DEFAULT_MODEL_PATH, name, 'best.pt')
+            model_path = os.path.join(Detector.DEFAULT_MODEL_PATH, name, "best.pt")
             if not os.path.exists(model_path):
-                raise FileNotFoundError(f"Model with name {name} not found in the "
-                                        f"internal AgML model repository at {model_path}. If "
-                                        f"you want to load a custom path to weights, pass the "
-                                        f"`weights` argument instead of `name`.")
+                raise FileNotFoundError(
+                    f"Model with name {name} not found in the "
+                    f"internal AgML model repository at {model_path}. If "
+                    f"you want to load a custom path to weights, pass the "
+                    f"`weights` argument instead of `name`."
+                )
         if weights is not None:
             model_path = weights
             if not os.path.exists(model_path):
@@ -353,11 +356,11 @@ class Detector(AgMLSerializable):
         -------
         The loaded YOLO model.
         """
-        if dataset_name not in public_data_sources(ml_task='object_detection'):
+        if dataset_name not in public_data_sources(ml_task="object_detection"):
             raise ValueError(f"Dataset {dataset_name} is not a valid object detection dataset.")
         if yolo_model.upper() not in YOLO11_MODELS_TO_PATH.keys():
             if len(yolo_model) == 1:
-                yolo_model = 'yolo11' + yolo_model
+                yolo_model = "yolo11" + yolo_model
                 if yolo_model not in YOLO11_MODELS_TO_PATH.keys():
                     raise ValueError(f"YOLO model {yolo_model} is not a valid YOLO11 model.")
             raise ValueError(f"YOLO model {yolo_model} is not a valid YOLO11 model.")
@@ -368,18 +371,12 @@ class Detector(AgMLSerializable):
             raise ValueError(f"Could not find a valid benchmark for model ({model_name}).")
 
         # Download the model if it does not exist
-        if not os.path.exists(os.path.join(Detector.DEFAULT_MODEL_PATH, model_name.replace('+', '-'))):
+        if not os.path.exists(os.path.join(Detector.DEFAULT_MODEL_PATH, model_name.replace("+", "-"))):
             download_detector(model_name, Detector.DEFAULT_MODEL_PATH)
 
         # Load the model
         benchmark_data = load_detector_benchmarks()[model_name]
-        model_path = os.path.join(Detector.DEFAULT_MODEL_PATH, model_name.replace('+', '-'), 'best.pt')
+        model_path = os.path.join(Detector.DEFAULT_MODEL_PATH, model_name.replace("+", "-"), "best.pt")
         net = cls.load(weights=model_path, benchmark_data=benchmark_data, **kwargs)
         net._info = source(dataset_name)
         return net
-
-
-
-
-
-

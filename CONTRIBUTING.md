@@ -1,6 +1,6 @@
 # Contributing Guidelines
 
-Thank you for choosing to contribute to AgML! 
+Thank you for choosing to contribute to AgML!
 
 ## Contributing Data
 
@@ -29,15 +29,15 @@ Image classification datasets are organized in the following directory tree:
     └── <label 2>
         ├── image1.png
         ├── image2.png
-        └── image3.png               
+        └── image3.png
 ```
 
 The `AgMLDataLoader` generates a mapping between each of the label names "label 1", "label 2", etc.,
-and a numerical value. 
+and a numerical value.
 
 #### Object Detection
 
-Object detection datasets are constructed using COCO JSON formatting. For a general overview, see 
+Object detection datasets are constructed using COCO JSON formatting. For a general overview, see
 [https://cocodataset.org/#format-data](https://cocodataset.org/#format-data).
 Another good resource is [https://docs.aws.amazon.com/rekognition/latest/customlabels-dg/cd-transform-coco.html](https://docs.aws.amazon.com/rekognition/latest/customlabels-dg/cd-transform-coco.html).
 Once you have the images and the bounding box annotations, this involves generating a dictionary with four keys:
@@ -75,7 +75,7 @@ The dictionary containing this information should be written to a file called `a
     └── images
         ├── image1.png
         ├── image2.png
-        └── image3.png              
+        └── image3.png
 ```
 
 #### Semantic Segmentation
@@ -104,7 +104,7 @@ The directory tree should look like follows:
 ## Contributing a Dataset
 
 If you've found a new dataset that *isn't already being used* in AgML and you want to add it, there's a few things you
-need to do. 
+need to do.
 
 Any preprocessing code being used for the dataset can be kept in `agml/_internal/preprocess.py`, by adding an `elif` statement
 to the `preprocess()` method with the dataset name. If there is no preprocessing code, then just put a `pass` statement in the block.
@@ -164,7 +164,7 @@ then put "worldwide" for both "continent" and "country".
 | Dataset Format | `ml_task` | `annotation_format` |
 | :------------: | :-------: | :-----------------: |
 | Image Classification | `image_classification` | `directory_names` |
-| Object Detection | `object_detection` | `coco_json` | 
+| Object Detection | `object_detection` | `coco_json` |
 | Semantic Segmentation | `semantic_segmentation` | `image` |
 
 
@@ -189,8 +189,12 @@ We will then review the changes and review next steps for adding the dataset int
 
 
 ### Installing uv
+<<<<<<< HEAD
 
 Install uv follow the guidelines in  https://docs.astral.sh/uv/getting-started/installation/, it is recommended to use the standalone installation.
+=======
+Dependencies and admin actions are done using `uv`. To Install uv follow the guidelines in  https://docs.astral.sh/uv/getting-started/installation/, it is recommended to use the standalone installation.
+>>>>>>> dev
 
 
 ### Building Project
@@ -198,7 +202,7 @@ Install uv follow the guidelines in  https://docs.astral.sh/uv/getting-started/i
 The build the associated wheels simply run:
 
 ```
-uv build
+make build
 ```
 
 To sync the dependencies simply run:
@@ -207,9 +211,15 @@ To sync the dependencies simply run:
 uv sync
 ```
 
+### Running tests
+
+```
+make test
+```
+
 ### Running scripts
 
-For running scripts or one using the project's e
+For running scripts or one-offs using the project's installed enviroment
 
 ```
 uv run python <script>

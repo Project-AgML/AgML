@@ -14,11 +14,9 @@
 
 import warnings
 
-import numpy as np
 import albumentations as A
-
+import numpy as np
 import torch
-
 from tqdm import tqdm
 
 try:
@@ -30,12 +28,7 @@ except ImportError:
     )
 
 try:
-    from effdet import (
-        create_model_from_config,
-        get_efficientdet_config,
-        DetBenchPredict,
-        DetBenchTrain
-    )
+    from effdet import DetBenchPredict, DetBenchTrain, create_model_from_config, get_efficientdet_config
 except ImportError:
     raise ImportError(
         "Could not find an installation of the `effdet` package. "
@@ -43,12 +36,12 @@ except ImportError:
         "the version is important for proper functionality)."
     )
 
+from agml.backend.tftorch import is_array_like
+from agml.data.public import source
 from agml.models.base import AgMLModelBase
 from agml.models.benchmarks import BenchmarkMetadata
-from agml.models.tools import auto_move_data
 from agml.models.metrics.map import MeanAveragePrecision
-from agml.data.public import source
-from agml.backend.tftorch import is_array_like
+from agml.models.tools import auto_move_data
 from agml.utils.general import has_func
 from agml.utils.image import resolve_image_size
 from agml.utils.logging import log
@@ -91,23 +84,19 @@ class DetectionModel(AgMLModelBase):
     conf_threshold : float
         Filters bounding boxes by their level of confidence based on this threshold.
     """
-    serializable = frozenset((
-        "model", "num_classes", "conf_thresh", "image_size"))
+
+    serializable = frozenset(("model", "num_classes", "conf_thresh", "image_size"))
     state_override = frozenset(("model",))
 
-    _ml_task = 'object_detection'
+    _ml_task = "object_detection"
 
-    def __init__(self,
-                 num_classes = 1,
-                 image_size = 512,
-                 conf_threshold = 0.3,
-                 **kwargs):
+    def __init__(self, num_classes=1, image_size=512, conf_threshold=0.3, **kwargs):
         # Initialize the base modules.
         super(DetectionModel, self).__init__()
 
         # If being initialized by a subclass, then don't do any of
         # model construction logic (since that's already been done).
-        if not kwargs.get('model_initialized', False):
+        if not kwargs.get("model_initialized", False):
             # Construct the network and load in pretrained weights.
             self._image_size = resolve_image_size(image_size)
             self._confidence_threshold = conf_threshold
@@ -115,13 +104,12 @@ class DetectionModel(AgMLModelBase):
             self.model = self._construct_sub_net(
                 self._num_classes,
                 self._image_size,
-                pretrained = kwargs.get('pretrained', True))
+                pretrained=kwargs.get("pretrained", True),
+            )
 
         # Filter out unnecessary warnings.
-        warnings.filterwarnings(
-            'ignore', category = UserWarning, module = 'ensemble_boxes')
-        warnings.filterwarnings(
-            'ignore', category = UserWarning, module = 'effdet.bench')  # noqa
+        warnings.filterwarnings("ignore", category=UserWarning, module="ensemble_boxes")
+        warnings.filterwarnings("ignore", category=UserWarning, module="effdet.bench")  # noqa
 
     @auto_move_data
     def forward(self, *batch):
@@ -131,11 +119,10 @@ class DetectionModel(AgMLModelBase):
         return self.model(batch[0])
 
     @staticmethod
-    def _construct_sub_net(num_classes, image_size, pretrained = False):
-        cfg = get_efficientdet_config('tf_efficientdet_d4')
+    def _construct_sub_net(num_classes, image_size, pretrained=False):
+        cfg = get_efficientdet_config("tf_efficientdet_d4")
         cfg.update({"image_size": image_size})
-        model = create_model_from_config(
-            cfg, pretrained = pretrained, num_classes = num_classes)
+        model = create_model_from_config(cfg, pretrained=pretrained, num_classes=num_classes)
         return DetBenchPredict(model)
 
     def switch_predict(self):
@@ -157,7 +144,7 @@ class DetectionModel(AgMLModelBase):
         return self.model.model
 
     @torch.jit.ignore()
-    def reset_class_net(self, num_classes = 1):
+    def reset_class_net(self, num_classes=1):
         """Reconfigures the output class net for a new number of classes.
 
         Parameters
@@ -166,7 +153,7 @@ class DetectionModel(AgMLModelBase):
             The number of classes to reconfigure the output net to use.
         """
         if num_classes != self._num_classes:
-            self.model.model.reset_head(num_classes = num_classes)
+            self.model.model.reset_head(num_classes=num_classes)
 
     @staticmethod
     def _preprocess_image(image, image_size):
@@ -187,12 +174,12 @@ class DetectionModel(AgMLModelBase):
         dimension for two-channel inputs, for example.
         """
         # Convert the image to a NumPy array.
-        if is_array_like(image) and hasattr(image, 'numpy'):
+        if is_array_like(image) and hasattr(image, "numpy"):
             image = image.numpy()
 
         # Add a channel dimension for grayscale imagery.
         if image.ndim == 2:
-            image = np.expand_dims(image, axis = -1)
+            image = np.expand_dims(image, axis=-1)
 
         # If the image is already in channels-first format, convert
         # it back temporarily until preprocessing has concluded.
@@ -201,13 +188,13 @@ class DetectionModel(AgMLModelBase):
 
         # Resize the image to ImageNet standards.
         (w, h) = image_size
-        rz = A.Resize(height = h, width = w)
+        rz = A.Resize(height=h, width=w)
         if image.shape[0] != h or image.shape[1] != w:
-            image = rz(image = image)['image']
+            image = rz(image=image)["image"]
 
         # Normalize the image to ImageNet standards.
         if 1 <= image.max() <= 255:
-            image = image.astype(np.float32) / 255.
+            image = image.astype(np.float32) / 255.0
 
         # Convert the image into a PyTorch tensor.
         image = torch.from_numpy(image).permute(2, 0, 1)
@@ -216,7 +203,7 @@ class DetectionModel(AgMLModelBase):
         return image
 
     @torch.jit.ignore()
-    def preprocess_input(self, images, return_shapes = False):
+    def preprocess_input(self, images, return_shapes=False):
         """Preprocesses the input image to the specification of the model.
 
         This method takes in a set of inputs and preprocesses them into the
@@ -257,9 +244,7 @@ class DetectionModel(AgMLModelBase):
         """
         images = self._expand_input_images(images)
         shapes = self._get_shapes(images)
-        images = torch.stack(
-            [self._preprocess_image(
-                image, self._image_size) for image in images], dim = 0)
+        images = torch.stack([self._preprocess_image(image, self._image_size) for image in images], dim=0)
         if return_shapes:
             return images, shapes
         return images
@@ -286,9 +271,7 @@ class DetectionModel(AgMLModelBase):
 
         # Run weighted boxes fusion. For an exact description of how this
         # works, see the paper: https://arxiv.org/pdf/1910.13302.pdf.
-        (predicted_bboxes,
-         predicted_class_confidences,
-         predicted_class_labels) = self._wbf(predictions)
+        (predicted_bboxes, predicted_class_confidences, predicted_class_labels) = self._wbf(predictions)
         return predicted_bboxes, predicted_class_confidences, predicted_class_labels
 
     @staticmethod
@@ -299,7 +282,7 @@ class DetectionModel(AgMLModelBase):
             h, w = img_dims
             if len(bboxes) > 0:
                 # Move the device to the CPU.
-                if hasattr(bboxes, 'cpu'):
+                if hasattr(bboxes, "cpu"):
                     bboxes = bboxes.cpu()
 
                 # Re-scale the bounding box to the appropriate format.
@@ -331,9 +314,7 @@ class DetectionModel(AgMLModelBase):
             labels = [prediction["classes"].tolist()]
 
             # Run the actual fusion and update the containers.
-            boxes, scores, labels = weighted_boxes_fusion(
-                boxes, scores, labels,
-                iou_thr = 0.44, skip_box_thr = 0.43)
+            boxes, scores, labels = weighted_boxes_fusion(boxes, scores, labels, iou_thr=0.44, skip_box_thr=0.43)
             boxes = boxes * (512 - 1)
             bboxes.append(boxes)
             confidences.append(scores)
@@ -343,14 +324,12 @@ class DetectionModel(AgMLModelBase):
     @staticmethod
     def _remap_outputs(boxes, labels, confidences):
         """Remaps the outputs to the format described in `predict()`."""
-        squeeze = lambda *args: tuple(list(
-            np.squeeze(a).tolist() for a in args))
-        return [squeeze(b, l, c)
-                for b, l, c in zip(boxes, labels, confidences)]
+        squeeze = lambda *args: tuple(list(np.squeeze(a).tolist() for a in args))
+        return [squeeze(b, l, c) for b, l, c in zip(boxes, labels, confidences)]
 
     def _to_out(self, tensor: "torch.Tensor") -> "torch.Tensor":
         if isinstance(tensor, dict):
-            tensor = tensor['detections']
+            tensor = tensor["detections"]
         return super()._to_out(tensor)
 
     @torch.no_grad()
@@ -383,7 +362,7 @@ class DetectionModel(AgMLModelBase):
         for the corresponding input image.
         """
         # Process the images and run inference.
-        images, shapes = self.preprocess_input(images, return_shapes = True)
+        images, shapes = self.preprocess_input(images, return_shapes=True)
         out = self._to_out(self.forward(images))
 
         # Post-process the output detections.
@@ -416,7 +395,7 @@ class DetectionModel(AgMLModelBase):
             bboxes, labels = [bboxes], [labels]
         return show_image_and_boxes(image, bboxes, labels)
 
-    def load_benchmark(self, dataset, strict = False):
+    def load_benchmark(self, dataset, strict=False):
         """Loads a benchmark for the given semantic segmentation dataset.
 
         This method is used to load pretrained weights for a specific AgML dataset.
@@ -439,11 +418,12 @@ class DetectionModel(AgMLModelBase):
         network weights (backbone, box network, etc.) will use the pretrained weights
         for the benchmark. This can be disabled by setting `strict = True`.
         """
-        if source(dataset).tasks.ml != 'object_detection':
+        if source(dataset).tasks.ml != "object_detection":
             raise ValueError(
                 f"You are trying to load a benchmark for a "
                 f"{source(dataset).tasks.ml} task ({dataset}) "
-                f"in an object detection model.")
+                f"in an object detection model."
+            )
 
         # Check loading strictness.
         cs = source(dataset).num_classes == self._num_classes
@@ -453,22 +433,25 @@ class DetectionModel(AgMLModelBase):
                     f"You cannot load a benchmark for a dataset '{dataset}' "
                     f"with {source(dataset).num_classes} classes, while your "
                     f"model has {self._num_classes} classes. If you want to, "
-                    f"then you need to set `strict = False`.")
+                    f"then you need to set `strict = False`."
+                )
 
         # Load the benchmark.
         state = self._get_benchmark(dataset)
         if not strict and not cs:
             self.reset_class_net(source(dataset).num_classes)
-            log(f"Loading a state dict for {dataset} with "
+            log(
+                f"Loading a state dict for {dataset} with "
                 f"{source(dataset).num_classes}, while your "
                 f"model has {self._num_classes} classes. The "
-                f"class network will use random weights.")
+                f"class network will use random weights."
+            )
         self.load_state_dict(state)
         if not strict and not cs:
             self.reset_class_net(self._num_classes)
         self._benchmark = BenchmarkMetadata(dataset)
 
-    def evaluate(self, loader, iou_threshold = 0.5, method = 'accumulate'):
+    def evaluate(self, loader, iou_threshold=0.5, method="accumulate"):
         """Runs a mean average precision evaluation on the given loader.
 
         This method will loop over the provided `AgMLDataLoader` and compute
@@ -493,57 +476,59 @@ class DetectionModel(AgMLModelBase):
         The final calculated mean average precision.
         """
         if not 0 < iou_threshold < 1:
-            raise ValueError(
-                f"The `iou_threshold` must be between 0 and 1, got {iou_threshold}.")
-        if method not in ['accumulate', 'average']:
-            raise ValueError(
-                f"Method must be either `accumulate` or `average`, got {method}.")
+            raise ValueError(f"The `iou_threshold` must be between 0 and 1, got {iou_threshold}.")
+        if method not in ["accumulate", "average"]:
+            raise ValueError(f"Method must be either `accumulate` or `average`, got {method}.")
 
         # Construct the mean average precision accumulator and run the calculations.
-        mean_ap = MeanAveragePrecision(
-            num_classes = self._num_classes, iou_threshold = iou_threshold)
-        bar = tqdm(loader, desc = "Calculating Mean Average Precision")
-        if method == 'average':
+        mean_ap = MeanAveragePrecision(num_classes=self._num_classes, iou_threshold=iou_threshold)
+        bar = tqdm(loader, desc="Calculating Mean Average Precision")
+        if method == "average":
             cumulative_maps = []
         for sample in bar:
             image, truth = sample
-            true_box, true_label = truth['bbox'], truth['category_id']
+            true_box, true_label = truth["bbox"], truth["category_id"]
             bboxes, labels, conf = self.predict(image)
-            mean_ap.update(*(
-                dict(boxes = bboxes, labels = labels, scores = conf),
-                dict(boxes = true_box, labels = true_label)))
+            mean_ap.update(
+                *(
+                    dict(boxes=bboxes, labels=labels, scores=conf),
+                    dict(boxes=true_box, labels=true_label),
+                )
+            )
 
             # If averaging, then calculate and reset the mAP, otherwise continue.
-            if method == 'average':
+            if method == "average":
                 res = mean_ap.compute()
-                cumulative_maps.append(res) # noqa
-                bar.set_postfix({'map': float(res)})
+                cumulative_maps.append(res)  # noqa
+                bar.set_postfix({"map": float(res)})
                 mean_ap.reset()
 
         # Compute the final mAP.
-        if method == 'average':
+        if method == "average":
             result = sum(cumulative_maps) / len(cumulative_maps)
         else:
             result = mean_ap.compute()
         return result
 
-    def run_training(self,
-                     dataset=None,
-                     *,
-                     epochs=50,
-                     metrics=None,
-                     optimizer=None,
-                     lr_scheduler=None,
-                     lr=None,
-                     batch_size=8,
-                     loggers=None,
-                     train_dataloader=None,
-                     val_dataloader=None,
-                     test_dataloader=None,
-                     use_cpu=False,
-                     save_dir=None,
-                     experiment_name=None,
-                     **kwargs):
+    def run_training(
+        self,
+        dataset=None,
+        *,
+        epochs=50,
+        metrics=None,
+        optimizer=None,
+        lr_scheduler=None,
+        lr=None,
+        batch_size=8,
+        loggers=None,
+        train_dataloader=None,
+        val_dataloader=None,
+        test_dataloader=None,
+        use_cpu=False,
+        save_dir=None,
+        experiment_name=None,
+        **kwargs,
+    ):
         """Trains an object detection model.
 
         This method can be used to train an object detection model on a given
@@ -632,27 +617,24 @@ class DetectionModel(AgMLModelBase):
 
         return train_detection(
             self,
-            dataset = dataset,
-            epochs = epochs,
-            metrics = metrics,
-            optimizer = optimizer,
-            lr_scheduler = lr_scheduler,
-            lr = lr,
+            dataset=dataset,
+            epochs=epochs,
+            metrics=metrics,
+            optimizer=optimizer,
+            lr_scheduler=lr_scheduler,
+            lr=lr,
             batch_size=batch_size,
-            loggers = loggers,
-            train_dataloader = train_dataloader,
-            val_dataloader = val_dataloader,
-            test_dataloader = test_dataloader,
-            use_cpu = use_cpu,
-            save_dir = save_dir,
-            experiment_name = experiment_name,
-            **kwargs
+            loggers=loggers,
+            train_dataloader=train_dataloader,
+            val_dataloader=val_dataloader,
+            test_dataloader=test_dataloader,
+            use_cpu=use_cpu,
+            save_dir=save_dir,
+            experiment_name=experiment_name,
+            **kwargs,
         )
 
-    def _prepare_for_training(self,
-                              metrics = (),
-                              optimizer = None,
-                              **kwargs):
+    def _prepare_for_training(self, metrics=(), optimizer=None, **kwargs):
         """Prepares the model for training."""
 
         # Initialize the metrics.
@@ -661,15 +643,16 @@ class DetectionModel(AgMLModelBase):
             for metric in metrics:
                 # So far, only the mAP metric is supported.
                 if isinstance(metric, str):
-                    if metric.lower() not in ['ap', 'map']:
+                    if metric.lower() not in ["ap", "map"]:
                         raise ValueError(
                             "Unfortunately, the only currently supported metric "
                             "is mean average precision (use 'ap' or 'map' "
-                            "to enable mean average precision).")
+                            "to enable mean average precision)."
+                        )
 
                     self.map = MeanAveragePrecision(
-                        num_classes = self._num_classes,
-                        iou_threshold = kwargs.get('iou_threshold', 0.5)
+                        num_classes=self._num_classes,
+                        iou_threshold=kwargs.get("iou_threshold", 0.5),
                     )
 
         # Initialize the optimizer/learning rate scheduler.
@@ -678,36 +661,37 @@ class DetectionModel(AgMLModelBase):
             if not has_func(torch.optim, optimizer_class):
                 raise ValueError(
                     f"Expected a valid optimizer name, but got '{optimizer_class}'. "
-                    f"Check `torch.optim` for a list of valid optimizers.")
+                    f"Check `torch.optim` for a list of valid optimizers."
+                )
 
             optimizer = getattr(torch.optim, optimizer_class)(
-                self.parameters(), lr = kwargs.get(
-                    'lr', 0.0002 if self._num_classes == 1 else 0.0008))
+                self.parameters(),
+                lr=kwargs.get("lr", 0.0002 if self._num_classes == 1 else 0.0008),
+            )
         elif isinstance(optimizer, torch.optim.Optimizer):
             pass  # nothing to do
         else:
-            raise TypeError(
-                f"Expected an optimizer name or a torch optimizer, but got '{type(optimizer)}'.")
+            raise TypeError(f"Expected an optimizer name or a torch optimizer, but got '{type(optimizer)}'.")
 
-        scheduler = kwargs.get('lr_scheduler', None)
+        scheduler = kwargs.get("lr_scheduler", None)
         if scheduler is not None:
             # No string auto-initialization, the LR scheduler must be pre-configured.
             if isinstance(scheduler, str):
                 raise ValueError(
                     f"If you want to use a learning rate scheduler, you must initialize "
-                    f"it on your own and pass it to the `lr_scheduler` argument. ")
+                    f"it on your own and pass it to the `lr_scheduler` argument. "
+                )
             elif not isinstance(scheduler, torch.optim.lr_scheduler.LRScheduler):
-                raise TypeError(
-                    f"Expected a torch LR scheduler, but got '{type(scheduler)}'.")
+                raise TypeError(f"Expected a torch LR scheduler, but got '{type(scheduler)}'.")
 
         self._optimization_parameters = {
-            'optimizer': optimizer,
-            'lr_scheduler': scheduler
+            "optimizer": optimizer,
+            "lr_scheduler": scheduler,
         }
 
     def configure_optimizers(self):
-        opt = self._optimization_parameters['optimizer']
-        scheduler = self._optimization_parameters['lr_scheduler']
+        opt = self._optimization_parameters["optimizer"]
+        scheduler = self._optimization_parameters["lr_scheduler"]
         if scheduler is None:
             return opt
         return [opt], [scheduler]
@@ -720,35 +704,50 @@ class DetectionModel(AgMLModelBase):
     def validation_step(self, batch, batch_idx, *args, **kwargs):
         images, annotations, targets = batch
         outputs = self(images, annotations)
-        detections = outputs['detections']
+        detections = outputs["detections"]
 
         # Calculate the mean average precision.
         if not self.trainer.sanity_checking and self.map is not None:
             boxes, confidences, labels = self._process_detections(self._to_out(detections))
-            if hasattr(boxes, 'cpu'):
+            if hasattr(boxes, "cpu"):
                 boxes = boxes.cpu()
-            if hasattr(annotations['bbox'], 'cpu'):
-                annotations['bbox'] = annotations['bbox'].cpu()
+            if hasattr(annotations["bbox"], "cpu"):
+                annotations["bbox"] = annotations["bbox"].cpu()
             boxes = self._rescale_bboxes(boxes, [[512, 512]] * len(images))
-            annotations['bbox'] = self._rescale_bboxes(
-                annotations['bbox'], [[512, 512, ]] * len(images), yxyx=True)
+            annotations["bbox"] = self._rescale_bboxes(
+                annotations["bbox"],
+                [
+                    [
+                        512,
+                        512,
+                    ]
+                ]
+                * len(images),
+                yxyx=True,
+            )
 
             for pred_box, pred_label, pred_conf, true_box, true_label in zip(
-                    boxes, labels, confidences, annotations['bbox'], annotations['cls']):
+                boxes, labels, confidences, annotations["bbox"], annotations["cls"]
+            ):
                 metric_update_values = (
-                    dict(boxes=self._to_out(torch.tensor(pred_box, dtype=torch.float32)),
-                         labels=self._to_out(torch.tensor(pred_label, dtype=torch.int32)),
-                         scores=self._to_out(torch.tensor(pred_conf))),
-                    dict(boxes=self._to_out(torch.tensor(true_box, dtype=torch.float32)),
-                         labels=self._to_out(torch.tensor(true_label, dtype=torch.int32))))
+                    dict(
+                        boxes=self._to_out(torch.tensor(pred_box, dtype=torch.float32)),
+                        labels=self._to_out(torch.tensor(pred_label, dtype=torch.int32)),
+                        scores=self._to_out(torch.tensor(pred_conf)),
+                    ),
+                    dict(
+                        boxes=self._to_out(torch.tensor(true_box, dtype=torch.float32)),
+                        labels=self._to_out(torch.tensor(true_label, dtype=torch.int32)),
+                    ),
+                )
                 self.map.update(*metric_update_values)
 
                 # Log the MAP values.
                 map_ = self.map.compute().detach().cpu().numpy().item()
                 self.log("val_map", map_, prog_bar=True, logger=True, sync_dist=True)
 
-        self.log("val_loss", outputs['loss'], prog_bar=True, logger=True, sync_dist=True)
-        return outputs['loss']
+        self.log("val_loss", outputs["loss"], prog_bar=True, logger=True, sync_dist=True)
+        return outputs["loss"]
 
     def on_validation_epoch_end(self):
         if self.map is not None:
@@ -760,36 +759,43 @@ class DetectionModel(AgMLModelBase):
 
         # Calculate the mean average precision.
         if not self.trainer.sanity_checking and self.map is not None:
-            boxes, confidences, labels = self._process_detections(self._to_out(outputs['detections']))
-            if hasattr(boxes, 'cpu'):
+            boxes, confidences, labels = self._process_detections(self._to_out(outputs["detections"]))
+            if hasattr(boxes, "cpu"):
                 boxes = boxes.cpu()
-            if hasattr(annotations['bbox'], 'cpu'):
-                annotations['bbox'] = annotations['bbox'].cpu()
+            if hasattr(annotations["bbox"], "cpu"):
+                annotations["bbox"] = annotations["bbox"].cpu()
             boxes = self._rescale_bboxes(boxes, [[512, 512]] * len(images))
-            annotations['bbox'] = self._rescale_bboxes(
-                annotations['bbox'], [[512, 512, ]] * len(images), yxyx=True)
+            annotations["bbox"] = self._rescale_bboxes(
+                annotations["bbox"],
+                [
+                    [
+                        512,
+                        512,
+                    ]
+                ]
+                * len(images),
+                yxyx=True,
+            )
 
             for pred_box, pred_label, pred_conf, true_box, true_label in zip(
-                    boxes, labels, confidences, annotations['bbox'], annotations['cls']):
+                boxes, labels, confidences, annotations["bbox"], annotations["cls"]
+            ):
                 metric_update_values = (
-                    dict(boxes=self._to_out(torch.tensor(pred_box, dtype=torch.float32)),
-                         labels=self._to_out(torch.tensor(pred_label, dtype=torch.int32)),
-                         scores=self._to_out(torch.tensor(pred_conf))),
-                    dict(boxes=self._to_out(torch.tensor(true_box, dtype=torch.float32)),
-                         labels=self._to_out(torch.tensor(true_label, dtype=torch.int32))))
+                    dict(
+                        boxes=self._to_out(torch.tensor(pred_box, dtype=torch.float32)),
+                        labels=self._to_out(torch.tensor(pred_label, dtype=torch.int32)),
+                        scores=self._to_out(torch.tensor(pred_conf)),
+                    ),
+                    dict(
+                        boxes=self._to_out(torch.tensor(true_box, dtype=torch.float32)),
+                        labels=self._to_out(torch.tensor(true_label, dtype=torch.int32)),
+                    ),
+                )
                 self.map.update(*metric_update_values)
 
                 # Log the MAP values.
                 map_ = self.map.compute().detach().cpu().numpy().item()
                 self.log("test_map", map_, prog_bar=True, logger=True, sync_dist=True)
 
-        self.log("test_loss", outputs['loss'], prog_bar=True, logger=True, sync_dist=True)
-        return outputs['loss']
-
-
-
-
-
-
-
-
+        self.log("test_loss", outputs["loss"], prog_bar=True, logger=True, sync_dist=True)
+        return outputs["loss"]

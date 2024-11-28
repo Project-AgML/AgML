@@ -49,12 +49,12 @@ _RANDOM_STATE_DOC = """random_state : int
 def inject_random_state(f):
     """Runs a method inside of a context if a random seed is provided."""
     if "{random_state}" in f.__doc__:
-        f.__doc__ = f.__doc__.format(random_state = _RANDOM_STATE_DOC)
+        f.__doc__ = f.__doc__.format(random_state=_RANDOM_STATE_DOC)
     else:
         f.__doc__ += _RANDOM_STATE_DOC
 
     @functools.wraps(f)
-    def _run(*args, random_state = None, **kwargs):
+    def _run(*args, random_state=None, **kwargs):
         # If no random state is provided, run the method as normal.
         if random_state is None:
             return f(*args, **kwargs)
@@ -64,10 +64,11 @@ def inject_random_state(f):
             raise TypeError(
                 f"Expected `random_state` argument to be "
                 f"an integer, instead got ({random_state}) "
-                f"of type ({type(random_state)}).")
+                f"of type ({type(random_state)})."
+            )
 
         with seed_context(random_state):
             result = f(*args, **kwargs)
         return result
-    return _run
 
+    return _run

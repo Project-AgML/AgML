@@ -12,34 +12,32 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import types
-import inspect
 import functools
+import inspect
+import types
 from enum import Enum
 
-from agml.framework import AgMLSerializable
-from agml.backend.tftorch import (
-    get_backend, set_backend, user_changed_backend, StrictBackendError
-)
+from agml.backend.tftorch import StrictBackendError, get_backend, set_backend, user_changed_backend
 from agml.data.managers.transform_helpers import (
-    AlbumentationsTransformSingle,
-    AlbumentationsTransformMask,
     AlbumentationsTransformCOCO,
-    SameStateImageMaskTransform,
-    NormalizationTransformBase,
-    ScaleTransform,
-    NormalizationTransform,
-    OneHotLabelTransform,
+    AlbumentationsTransformMask,
+    AlbumentationsTransformSingle,
     MaskToChannelBasisTransform,
-    ToTensorSeg
+    NormalizationTransform,
+    NormalizationTransformBase,
+    OneHotLabelTransform,
+    SameStateImageMaskTransform,
+    ScaleTransform,
+    ToTensorSeg,
 )
+from agml.framework import AgMLSerializable
 from agml.utils.logging import log
 
 
 class TransformKind(Enum):
-    Transform = 'transform'
-    TargetTransform = 'target_transform'
-    DualTransform = 'dual_transform'
+    Transform = "transform"
+    TargetTransform = "target_transform"
+    DualTransform = "dual_transform"
 
 
 # Shorthand form of the enum for testing explicit values.
@@ -67,9 +65,16 @@ class TransformManager(AgMLSerializable):
     semantic segmentation and object detection transformations, but
     there is no `dual_transform` for image classification.
     """
+
     serializable = frozenset(
-        ('task', 'transforms', 'time_inserted_transforms',
-         'contains_tf_transforms', 'contains_torch_transforms'))
+        (
+            "task",
+            "transforms",
+            "time_inserted_transforms",
+            "contains_tf_transforms",
+            "contains_torch_transforms",
+        )
+    )
 
     def __init__(self, task):
         self._task = task
@@ -116,7 +121,7 @@ class TransformManager(AgMLSerializable):
     def assign(self, kind, transform):
         """Assigns a new transform to the manager."""
         # Determine if the transform is being reset or unchanged.
-        if transform == 'reset':
+        if transform == "reset":
             self._transforms.pop(kind, None)
             new_time_transforms = []
             for tfm in self._time_inserted_transforms:
@@ -130,21 +135,22 @@ class TransformManager(AgMLSerializable):
 
         # If an `albumentations` transform is passed to the `transform`
         # argument, then it is checked first to see if it is potentially
-        # just processing the input image, and then passed as just a 
+        # just processing the input image, and then passed as just a
         # `transform` (or else it will clash in object detection tasks).
         # Otherwise, it is stored internally as a `dual_transform`.
         if transform is not None:
             try:
-                if 'albumentations' in transform.__module__:
+                if "albumentations" in transform.__module__:
                     if t_(kind) == TransformKind.Transform:
                         if len(transform.processors) != 0:
-                            kind = 'dual_transform'
-                    if self._task == 'semantic_segmentation':
-                        kind = 'dual_transform'
-                elif 'agml.models' in transform.__module__:
+                            kind = "dual_transform"
+                    if self._task == "semantic_segmentation":
+                        kind = "dual_transform"
+                elif "agml.models" in transform.__module__:
                     from agml.models.preprocessing import EfficientDetPreprocessor
+
                     if isinstance(transform, EfficientDetPreprocessor):
-                        kind = 'dual_transform'
+                        kind = "dual_transform"
             except AttributeError:
                 # Some type of object that doesn't have `__module__`.
                 pass
@@ -154,38 +160,40 @@ class TransformManager(AgMLSerializable):
         prev = self._transforms.get(kind, None)
 
         # Validate the transformation based on the task and kind.
-        if self._task == 'image_classification':
+        if self._task == "image_classification":
             if t_(kind) == TransformKind.Transform:
                 transform = self._maybe_normalization_or_regular_transform(transform)
             elif t_(kind) == TransformKind.TargetTransform:
                 if isinstance(transform, tuple):  # a special convenience case
-                    if transform[0] == 'one_hot':
+                    if transform[0] == "one_hot":
                         if transform[2] is not True:  # removing the transform
                             self._pop_transform(OneHotLabelTransform, kind)
                             return
                         transform = OneHotLabelTransform(transform[1])
             else:
-                raise ValueError("There is no `dual_transform` for image "
-                                 "classification tasks. Please pass the "
-                                 "input as a `transform` or `target_transform`.")
-        elif self._task == 'image_regression':
+                raise ValueError(
+                    "There is no `dual_transform` for image "
+                    "classification tasks. Please pass the "
+                    "input as a `transform` or `target_transform`."
+                )
+        elif self._task == "image_regression":
             if t_(kind) == TransformKind.Transform:
                 transform = self._maybe_normalization_or_regular_transform(transform)
             elif t_(kind) == TransformKind.TargetTransform:
                 if isinstance(transform, tuple):  # a special convenience case
-                    if transform[0] == 'one_hot':
+                    if transform[0] == "one_hot":
                         if transform[2] is not True:  # removing the transform
                             self._pop_transform(OneHotLabelTransform, kind)
                             return
                         transform = OneHotLabelTransform(transform[1])
             else:
                 pass
-        elif self._task == 'semantic_segmentation':
+        elif self._task == "semantic_segmentation":
             if t_(kind) == TransformKind.Transform:
                 transform = self._maybe_normalization_or_regular_transform(transform)
             elif t_(kind) == TransformKind.TargetTransform:
                 if isinstance(transform, tuple):  # a special convenience case
-                    if transform[0] == 'channel_basis':
+                    if transform[0] == "channel_basis":
                         if transform[2] is not True:  # removing the transform
                             self._pop_transform(MaskToChannelBasisTransform, kind)
                         transform = MaskToChannelBasisTransform(transform[1])
@@ -193,7 +201,7 @@ class TransformManager(AgMLSerializable):
                     transform = self._maybe_normalization_or_regular_transform(transform)
             else:
                 transform = self._construct_image_and_mask_transform(transform)
-        elif self._task == 'object_detection':
+        elif self._task == "object_detection":
             if t_(kind) == TransformKind.Transform:
                 transform = self._maybe_normalization_or_regular_transform(transform)
             elif t_(kind) == TransformKind.TargetTransform:
@@ -236,16 +244,13 @@ class TransformManager(AgMLSerializable):
         image, annotation = contents
 
         # Iterate through the different transforms.
-        for (kind, transform) in self._time_inserted_transforms:
+        for kind, transform in self._time_inserted_transforms:
             if t_(kind) == TransformKind.Transform:
-                image = self._apply_to_objects(
-                    transform, (image, ), kind)
+                image = self._apply_to_objects(transform, (image,), kind)
             if t_(kind) == TransformKind.TargetTransform:
-                annotation = self._apply_to_objects(
-                    transform, (annotation, ), kind)
+                annotation = self._apply_to_objects(transform, (annotation,), kind)
             if t_(kind) == TransformKind.DualTransform:
-                image, annotation = self._apply_to_objects(
-                    transform, (image, annotation), kind)
+                image, annotation = self._apply_to_objects(transform, (image, annotation), kind)
 
         # Return the processed image and annotation.
         return image, annotation
@@ -256,17 +261,21 @@ class TransformManager(AgMLSerializable):
         try:
             return transform(*contents)
         except Exception as e:
-            default_msg = (f"Encountered an error when attempting to apply "
-                           f"a transform ({transform}) of kind '{kind}' to "
-                           f"objects: {contents}. See the above traceback.")
+            default_msg = (
+                f"Encountered an error when attempting to apply "
+                f"a transform ({transform}) of kind '{kind}' to "
+                f"objects: {contents}. See the above traceback."
+            )
 
             # A specific case of exception where the image first needs
             # to be converted to a PIL image before being used in a
             # general `torchvision.transforms` pipeline.
             if "PIL" in str(e):
-                raise TypeError("If using a `torchvision.transforms` pipeline "
-                                "when not in PyTorch training mode, you need "
-                                "to include `ToTensor()` in the pipeline.")
+                raise TypeError(
+                    "If using a `torchvision.transforms` pipeline "
+                    "when not in PyTorch training mode, you need "
+                    "to include `ToTensor()` in the pipeline."
+                )
 
             # Otherwise, raise the default exception.
             raise Exception(default_msg)
@@ -274,7 +283,7 @@ class TransformManager(AgMLSerializable):
     def _maybe_normalization_or_regular_transform(self, transform):
         """Dispatches to the correct single-image transform construction."""
         if isinstance(transform, tuple):
-            if transform[0] == 'normalize':
+            if transform[0] == "normalize":
                 return self._build_normalization_transform(transform)
         return self._construct_single_image_transform(transform)
 
@@ -290,7 +299,7 @@ class TransformManager(AgMLSerializable):
         # within the transform dict, and then we get its location.
         norm_transform_index, norm_transform_index_time = -1, -1
         try:
-            for i, t in enumerate(self._transforms['transform']):
+            for i, t in enumerate(self._transforms["transform"]):
                 if isinstance(t, NormalizationTransformBase):
                     norm_transform_index = i
                     break
@@ -299,18 +308,20 @@ class TransformManager(AgMLSerializable):
                     norm_transform_index_time = i
                     break
         except:
-            self._transforms['transform'] = []
+            self._transforms["transform"] = []
 
-        if transform[1] == 'scale':
+        if transform[1] == "scale":
             tfm = ScaleTransform(None)
             if norm_transform_index != -1:
-                self._transforms['transform'][norm_transform_index] = tfm
-                self._time_inserted_transforms[norm_transform_index_time] \
-                    = ('transform', tfm)
+                self._transforms["transform"][norm_transform_index] = tfm
+                self._time_inserted_transforms[norm_transform_index_time] = (
+                    "transform",
+                    tfm,
+                )
             else:
-                self._transforms['transform'].append(tfm)
-                self._time_inserted_transforms.append(('transform', tfm))
-        elif hasattr(transform[1], 'mean') or transform[1] == 'imagenet':
+                self._transforms["transform"].append(tfm)
+                self._time_inserted_transforms.append(("transform", tfm))
+        elif hasattr(transform[1], "mean") or transform[1] == "imagenet":
             try:
                 mean, std = transform[1].mean, transform[1].std
             except AttributeError:
@@ -319,38 +330,44 @@ class TransformManager(AgMLSerializable):
                 std = [0.229, 0.224, 0.225]
             tfm = NormalizationTransform((mean, std))
             if norm_transform_index != -1:
-                self._transforms['transform'][norm_transform_index] = tfm
-                self._time_inserted_transforms[norm_transform_index_time] \
-                    = ('transform', tfm)
+                self._transforms["transform"][norm_transform_index] = tfm
+                self._time_inserted_transforms[norm_transform_index_time] = (
+                    "transform",
+                    tfm,
+                )
             else:
-                self._transforms['transform'].append(tfm)
-                self._time_inserted_transforms.append(('transform', tfm))
-        elif transform[1] == 'reset':
+                self._transforms["transform"].append(tfm)
+                self._time_inserted_transforms.append(("transform", tfm))
+        elif transform[1] == "reset":
             if norm_transform_index != -1:
-                self._transforms['transform'].pop(norm_transform_index)
+                self._transforms["transform"].pop(norm_transform_index)
                 self._time_inserted_transforms.pop(norm_transform_index_time)
         return None
 
     def _transform_update_and_check(self, tfm_type):
         """Checks whether a TensorFlow/PyTorch transform has been added."""
         # Check for transform conflicts.
-        if tfm_type == 'torch' and self._contains_tf_transforms:
-            raise TypeError("Received a PyTorch-type transform, yet the loader "
-                            "already contains TensorFlow/Keras transforms. This "
-                            "will cause an error, please only pass one format. If "
-                            "you want to remove a transform, pass a value of `None` "
-                            "to reset all of the transforms for a certain type.")
-        if tfm_type == 'tf' and self._contains_torch_transforms:
-            raise TypeError("Received a TensorFlow/Keras-type transform, yet the "
-                            "loader already contains PyTorch transforms. This "
-                            "will cause an error, please only pass one format. If "
-                            "you want to remove a transform, pass a value of `None` "
-                            "to reset all of the transforms for a certain type.")
+        if tfm_type == "torch" and self._contains_tf_transforms:
+            raise TypeError(
+                "Received a PyTorch-type transform, yet the loader "
+                "already contains TensorFlow/Keras transforms. This "
+                "will cause an error, please only pass one format. If "
+                "you want to remove a transform, pass a value of `None` "
+                "to reset all of the transforms for a certain type."
+            )
+        if tfm_type == "tf" and self._contains_torch_transforms:
+            raise TypeError(
+                "Received a TensorFlow/Keras-type transform, yet the "
+                "loader already contains PyTorch transforms. This "
+                "will cause an error, please only pass one format. If "
+                "you want to remove a transform, pass a value of `None` "
+                "to reset all of the transforms for a certain type."
+            )
 
         # Update the transform type.
-        if tfm_type == 'torch':
+        if tfm_type == "torch":
             self._contains_torch_transforms = True
-        if tfm_type == 'tf':
+        if tfm_type == "tf":
             self._contains_tf_transforms = True
 
     # The following methods implement different checks which validate
@@ -376,35 +393,37 @@ class TransformManager(AgMLSerializable):
         elif isinstance(transform, (types.FunctionType, functools.partial)):
             sig = inspect.signature(transform).parameters
             if not len(sig) == 1:
-                raise TypeError("Expected a single-image transform passed "
-                                "to `transform` to accept one input image, "
-                                f"instead got {len(sig)} parameters.")
+                raise TypeError(
+                    "Expected a single-image transform passed "
+                    "to `transform` to accept one input image, "
+                    f"instead got {len(sig)} parameters."
+                )
             return transform
 
         # An `albumentations` transform to be applied to the image. This
         # wraps the transform into a method which treats it as a regular
         # functional transform, e.g. no keyword arguments (for easy use).
-        elif 'albumentations' in transform.__module__:
+        elif "albumentations" in transform.__module__:
             return AlbumentationsTransformSingle(transform)
 
         # A set of `torchvision` transforms wrapped into a `T.Compose` object
         # or just a single transformation. This simply confirms the backend.
-        elif 'torchvision' in transform.__module__:
-            if get_backend() != 'torch':
+        elif "torchvision" in transform.__module__:
+            if get_backend() != "torch":
                 if user_changed_backend():
-                    raise StrictBackendError(change = 'tf', obj = transform)
-                set_backend('torch')
-            self._transform_update_and_check('torch')
+                    raise StrictBackendError(change="tf", obj=transform)
+                set_backend("torch")
+            self._transform_update_and_check("torch")
             return transform
 
         # A `tf.keras.Sequential` preprocessing model or an individual
         # Keras preprocessing layer. This simply confirms the backend.
-        elif 'keras' in transform.__module__ or 'tensorflow' in transform.__module__:
-            if get_backend() != 'tf':
+        elif "keras" in transform.__module__ or "tensorflow" in transform.__module__:
+            if get_backend() != "tf":
                 if user_changed_backend():
-                    raise StrictBackendError(change = 'torch', obj = transform)
-                set_backend('tf')
-            self._transform_update_and_check('tf')
+                    raise StrictBackendError(change="torch", obj=transform)
+                set_backend("tf")
+            self._transform_update_and_check("tf")
             return transform
 
         # Otherwise, it may be a transform from a (lesser-known) third-party
@@ -437,16 +456,18 @@ class TransformManager(AgMLSerializable):
         elif isinstance(transform, (types.FunctionType, functools.partial)):
             sig = inspect.signature(transform).parameters
             if not len(sig) == 2:
-                raise TypeError(f"Expected a semantic segmentation transform "
-                                f"passed to `transform` to accept two args: "
-                                f"an input image and an annotation mask, "
-                                f"instead got {len(sig)} parameters.")
+                raise TypeError(
+                    f"Expected a semantic segmentation transform "
+                    f"passed to `transform` to accept two args: "
+                    f"an input image and an annotation mask, "
+                    f"instead got {len(sig)} parameters."
+                )
             return transform
 
         # An `albumentations` transform to be applied to the image. This
         # wraps the transform into a method which treats it as a regular
         # functional transform, e.g. no keyword arguments (for easy use).
-        elif 'albumentations' in transform.__module__:
+        elif "albumentations" in transform.__module__:
             return AlbumentationsTransformMask(transform)
 
         # If we have the case of a transform that needs to be applied to
@@ -455,46 +476,52 @@ class TransformManager(AgMLSerializable):
         # when the signature of the input function accepts only one input
         # parameter or it belongs to `torchvision` transform (not Keras).
         if len(inspect.signature(transform).parameters) == 1:
-            if 'torchvision' in transform.__module__:
-                if get_backend() != 'torch':
+            if "torchvision" in transform.__module__:
+                if get_backend() != "torch":
                     if user_changed_backend():
-                        raise StrictBackendError(
-                            change = 'tf', obj = transform)
-                    set_backend('torch')
+                        raise StrictBackendError(change="tf", obj=transform)
+                    set_backend("torch")
 
                 # Update `torchvision.transforms.ToTensor` to a custom
                 # updated class as this will modify the mask incorrectly.
                 import torchvision
+
                 if isinstance(transform, torchvision.transforms.ToTensor):
                     transform = ToTensorSeg(None)
-                    log("Updated `ToTensor` transform in the provided pipeline "
+                    log(
+                        "Updated `ToTensor` transform in the provided pipeline "
                         f"{transform} to an updated transform which does not "
                         f"modify the mask. If you want to change this behaviour, "
-                        f"please raise an error with the AgML team.")
+                        f"please raise an error with the AgML team."
+                    )
                 elif isinstance(transform, torchvision.transforms.Compose):
                     tfm_list = transform.transforms.copy()
                     for i, compose_tfm in enumerate(transform.transforms):
                         if isinstance(compose_tfm, torchvision.transforms.ToTensor):
                             tfm_list[i] = ToTensorSeg(None)
                     transform = torchvision.transforms.Compose(tfm_list)
-                    log("Updated `ToTensor` transform in the provided pipeline "
+                    log(
+                        "Updated `ToTensor` transform in the provided pipeline "
                         f"{transform} to an updated transform which does not "
                         f"modify the mask. If you want to change this behaviour, "
-                        f"please raise an error with the AgML team.")
+                        f"please raise an error with the AgML team."
+                    )
 
-                self._transform_update_and_check('torch')
-            elif 'keras.layers' in transform.__module__:
-                if get_backend() != 'tf':
+                self._transform_update_and_check("torch")
+            elif "keras.layers" in transform.__module__:
+                if get_backend() != "tf":
                     if user_changed_backend():
-                        raise StrictBackendError(
-                            change = 'torch', obj = transform)
-                    set_backend('tf')
-                log('Got a Keras transformation for a dual image and '
-                    'mask transform. If you are passing preprocessing '
-                    'layers to this method, then use `agml.data.experimental'
-                    '.generate_keras_segmentation_dual_transform` in order '
-                    'for the random state to be applied properly.', 'warning')
-                self._transform_update_and_check('tf')
+                        raise StrictBackendError(change="torch", obj=transform)
+                    set_backend("tf")
+                log(
+                    "Got a Keras transformation for a dual image and "
+                    "mask transform. If you are passing preprocessing "
+                    "layers to this method, then use `agml.data.experimental"
+                    ".generate_keras_segmentation_dual_transform` in order "
+                    "for the random state to be applied properly.",
+                    "warning",
+                )
+                self._transform_update_and_check("tf")
             return SameStateImageMaskTransform(transform)
 
         # Another type of transform, most likely some form of transform
@@ -521,21 +548,21 @@ class TransformManager(AgMLSerializable):
         elif isinstance(transform, (types.FunctionType, functools.partial)):
             sig = inspect.signature(transform).parameters
             if not len(sig) == 2:
-                raise TypeError(f"Expected a object detection transform passed "
-                                f"to `transform` to accept two args: an input "
-                                f"image and a COCO JSON dictionary, instead "
-                                f"got {len(sig)} parameters.")
+                raise TypeError(
+                    f"Expected a object detection transform passed "
+                    f"to `transform` to accept two args: an input "
+                    f"image and a COCO JSON dictionary, instead "
+                    f"got {len(sig)} parameters."
+                )
             return transform
 
         # An `albumentations` transform to be applied to the image. This
         # wraps the transform into a method which treats it as a regular
         # functional transform, e.g. no keyword arguments (for easy use).
-        elif 'albumentations' in transform.__module__:
+        elif "albumentations" in transform.__module__:
             return AlbumentationsTransformCOCO(transform)
 
         # Another type of transform, most likely some form of transform
         # class. No checks are applied here, since we can't account for
         # each of the potential cases of the transformations.
         return transform
-
-

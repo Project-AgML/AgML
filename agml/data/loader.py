@@ -12,17 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
-import json
 import copy
-import glob
 import fnmatch
-from typing import Union
+import glob
+import json
+import os
 from collections.abc import Sequence
-from decimal import getcontext, Decimal
+from decimal import Decimal, getcontext
+from typing import Union
 
 import numpy as np
 
+<<<<<<< HEAD
 from agml.framework import AgMLSerializable
 from agml.data.manager import DataManager
 from agml.data.builder import DataBuilder
@@ -41,7 +42,27 @@ from agml.backend.tftorch import (
     user_changed_backend,
     StrictBackendError,
     _add_dataset_to_mro,  # noqa
+=======
+from agml.backend.config import SUPER_BASE_DIR, data_save_path, synthetic_data_save_path
+from agml.backend.experimental import AgMLExperimentalFeatureWrapper
+from agml.backend.tftorch import (
+    StrictBackendError,
+    _add_dataset_to_mro,  # noqa
+    get_backend,
+    set_backend,
+    user_changed_backend,
+>>>>>>> dev
 )
+from agml.data.builder import DataBuilder
+from agml.data.exporters.yolo import export_yolo
+from agml.data.manager import DataManager
+from agml.data.metadata import DatasetMetadata, make_metadata
+from agml.framework import AgMLSerializable
+from agml.utils.data import load_public_sources
+from agml.utils.general import NoArgument, resolve_list_value
+from agml.utils.io import get_dir_list, get_file_list
+from agml.utils.logging import log
+from agml.utils.random import inject_random_state
 from agml.viz.general import show_sample
 
 
@@ -172,13 +193,26 @@ class AgMLDataLoader(AgMLSerializable, metaclass=AgMLDataLoaderMeta):
         # internal contents are constructed using a `DataBuilder`, which
         # finds and wraps the local data in a proper format.
         self._builder = DataBuilder(
+<<<<<<< HEAD
             info=self._info, dataset_path=kwargs.get("dataset_path", None), overwrite=kwargs.get("overwrite", False)
+=======
+            info=self._info,
+            dataset_path=kwargs.get("dataset_path", None),
+            overwrite=kwargs.get("overwrite", False),
+>>>>>>> dev
         )
 
         # These contents are then passed to a `DataManager`, which conducts
         # the actual loading and processing of the data when called.
         self._manager = DataManager(
+<<<<<<< HEAD
             builder=self._builder, task=self._info.tasks.ml, name=self._info.name, root=self._builder.dataset_root
+=======
+            builder=self._builder,
+            task=self._info.tasks.ml,
+            name=self._info.name,
+            root=self._builder.dataset_root,
+>>>>>>> dev
         )
 
         # If the dataset is split, then the `AgMLDataLoader`s with the
@@ -331,7 +365,15 @@ class AgMLDataLoader(AgMLSerializable, metaclass=AgMLDataLoaderMeta):
                     classes = [c["name"] for c in json.load(f)["categories"]]
 
         # Construct and return the `AgMLDataLoader`.
+<<<<<<< HEAD
         return cls(name, dataset_path=dataset_path, meta={"task": task, "classes": classes, **kwargs})
+=======
+        return cls(
+            name,
+            dataset_path=dataset_path,
+            meta={"task": task, "classes": classes, **kwargs},
+        )
+>>>>>>> dev
 
     @classmethod
     def helios(cls, name, dataset_path=None):
@@ -1023,7 +1065,14 @@ class AgMLDataLoader(AgMLSerializable, metaclass=AgMLDataLoaderMeta):
 
         # Create the new loader.
         obj = self._generate_split_loader(
+<<<<<<< HEAD
             new_coco_map, "train", meta_properties=new_properties, labels_for_image=new_category_map
+=======
+            new_coco_map,
+            "train",
+            meta_properties=new_properties,
+            labels_for_image=new_category_map,
+>>>>>>> dev
         )
         obj._is_split = False
 
@@ -1427,7 +1476,16 @@ class AgMLDataLoader(AgMLSerializable, metaclass=AgMLDataLoaderMeta):
         """
         self._manager.assign_resize(image_size=image_size, method=method)
 
+<<<<<<< HEAD
     def transform(self, transform=NoArgument, target_transform=NoArgument, dual_transform=NoArgument):
+=======
+    def transform(
+        self,
+        transform=NoArgument,
+        target_transform=NoArgument,
+        dual_transform=NoArgument,
+    ):
+>>>>>>> dev
         """Applies vision transforms to the input image and annotation data.
 
         This method applies transformations to the image and annotation data
@@ -1495,7 +1553,13 @@ class AgMLDataLoader(AgMLSerializable, metaclass=AgMLDataLoaderMeta):
           `transform` argument and they will automatically be applied.
         """
         self._manager.push_transforms(
+<<<<<<< HEAD
             transform=transform, target_transform=target_transform, dual_transform=dual_transform
+=======
+            transform=transform,
+            target_transform=target_transform,
+            dual_transform=dual_transform,
+>>>>>>> dev
         )
 
     def normalize_images(self, method="scale"):
@@ -1742,9 +1806,13 @@ class AgMLDataLoader(AgMLSerializable, metaclass=AgMLDataLoaderMeta):
         -------
         A `torch.utils.data.DataLoader` enclosing a copy of this loader.
         """
-        from agml.backend.tftorch import torch
         from torch.utils.data import DataLoader
 
+<<<<<<< HEAD
+=======
+        from agml.backend.tftorch import torch
+
+>>>>>>> dev
         if get_backend() != "torch":
             if user_changed_backend():
                 raise StrictBackendError(change="torch", obj=self.export_torch)
@@ -1782,7 +1850,17 @@ class AgMLDataLoader(AgMLSerializable, metaclass=AgMLDataLoaderMeta):
 
         # Return the DataLoader with a copy of this AgMLDataLoader, so
         # that changes to this will not affect the returned loader.
+<<<<<<< HEAD
         return DataLoader(obj, batch_size=batch_size, shuffle=shuffle, collate_fn=collate_fn, **loader_kwargs)
+=======
+        return DataLoader(
+            obj,
+            batch_size=batch_size,
+            shuffle=shuffle,
+            collate_fn=collate_fn,
+            **loader_kwargs,
+        )
+>>>>>>> dev
 
     def export_yolo(self, yolo_path=None):
         """Exports the contents of the loader to the YOLO format, ready for training.
