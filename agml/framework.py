@@ -39,18 +39,19 @@ class AgMLSerializable(object):
     In turn, objects can be used with a JSON serialization format,
     the pickle serialization format, or copied as desired.
     """
+
     serializable: "frozenset"
     state_override: "frozenset"
 
     def __init_subclass__(cls, **kwargs):
-        if not hasattr(cls, 'state_override'):
+        if not hasattr(cls, "state_override"):
             cls.state_override = frozenset(())
 
     def __getstate__(self):
         state = {}
         for param in self.serializable:
             try:
-                state[param] = getattr(self, f'_{param}')
+                state[param] = getattr(self, f"_{param}")
             except AttributeError:
                 if param in self.state_override:
                     state[param] = getattr(self, param)
@@ -58,7 +59,8 @@ class AgMLSerializable(object):
                     raise AttributeError(
                         f"Encountered error while attempting to serialize "
                         f"a {self.__class__}: the attribute '_{param}' "
-                        f"(or '{param}') does not exist.")
+                        f"(or '{param}') does not exist."
+                    )
         return state
 
     def __setstate__(self, state):
@@ -66,9 +68,9 @@ class AgMLSerializable(object):
             if field in self.state_override:
                 setattr(self, field, state[field])
             else:
-                setattr(self, f'_{field}', state[field])
+                setattr(self, f"_{field}", state[field])
 
-    def __deepcopy__(self, memo = None):
+    def __deepcopy__(self, memo=None):
         params = self.__getstate__()
         cls = super(AgMLSerializable, self).__new__(self.__class__)
         cls.__setstate__(copy.deepcopy(params))
@@ -76,7 +78,3 @@ class AgMLSerializable(object):
 
     def __copy__(self):
         return self.__deepcopy__()
-
-
-
-

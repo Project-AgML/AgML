@@ -14,19 +14,18 @@
 
 import numpy as np
 
-from agml.framework import AgMLSerializable
-from agml.data.object import DataObject
+from agml.backend.tftorch import convert_to_batch, is_array_like
 from agml.data.builder import DataBuilder
-from agml.data.metadata import DatasetMetadata
-from agml.data.managers.transforms import TransformManager
 from agml.data.managers.resize import ImageResizeManager
 from agml.data.managers.training import TrainingManager
-
+from agml.data.managers.transforms import TransformManager
+from agml.data.metadata import DatasetMetadata
+from agml.data.object import DataObject
+from agml.framework import AgMLSerializable
 from agml.utils.general import NoArgument
-from agml.backend.tftorch import convert_to_batch, is_array_like
-from agml.utils.random import seed_context
 from agml.utils.image import consistent_shapes
 from agml.utils.logging import log
+from agml.utils.random import seed_context
 
 
 class DataManager(AgMLSerializable):
@@ -47,10 +46,22 @@ class DataManager(AgMLSerializable):
     Another way to think about the `DataManager` is it being a list
     of `DataObjects`, with extra logic for processing.
     """
-    serializable = frozenset((
-        'data_objects', 'resize_manager', 'accessors', 'task',
-        'dataset_name', 'shuffle', 'batch_size', 'dataset_root',
-        'transform_manager', 'builder', 'train_manager'))
+
+    serializable = frozenset(
+        (
+            "data_objects",
+            "resize_manager",
+            "accessors",
+            "task",
+            "dataset_name",
+            "shuffle",
+            "batch_size",
+            "dataset_root",
+            "transform_manager",
+            "builder",
+            "train_manager",
+        )
+    )
 
     def __init__(self, builder, task, name, root, **kwargs):
         # Set the basic class information.
@@ -60,27 +71,22 @@ class DataManager(AgMLSerializable):
 
         # Create the `DataObject`s from the `DataBuilder`.
         if not isinstance(builder, DataBuilder):
-            builder = DataBuilder.from_data(
-                contents = builder,
-                info = DatasetMetadata(name),
-                root = root)
+            builder = DataBuilder.from_data(contents=builder, info=DatasetMetadata(name), root=root)
         self._builder = builder
         self._create_objects(self._builder, task)
 
         # Set up the internal transform managers. These control
         # the application of transformations to the input data.
-        self._transform_manager = TransformManager(task = task)
-        self._resize_manager = ImageResizeManager(
-            task = task, dataset = name, root = root
-        )
+        self._transform_manager = TransformManager(task=task)
+        self._resize_manager = ImageResizeManager(task=task, dataset=name, root=root)
 
         # The transform and resize managers are wrapped inside of a
         # `TrainingManager`, which controls the application of
         # preprocessing to the data based on the class state.
         self._train_manager = TrainingManager(
-            transform_manager = self._transform_manager,
-            resize_manager = self._resize_manager,
-            task = task
+            transform_manager=self._transform_manager,
+            resize_manager=self._resize_manager,
+            task=task,
         )
 
         # While we store data in the list of `DataObject`s, the actual
@@ -102,7 +108,7 @@ class DataManager(AgMLSerializable):
         # The following parameters store various parameters which are
         # used internally or accessed by the `AgMLDataLoader` externally.
         self._batch_size = None
-        self._shuffle = kwargs.get('shuffle', True)
+        self._shuffle = kwargs.get("shuffle", True)
         self._maybe_shuffle()
 
     def data_length(self):
@@ -121,26 +127,23 @@ class DataManager(AgMLSerializable):
         """
         self._data_objects = []
         contents = builder.get_contents()
-        if 'inputs' in contents.keys():
-            contents = zip(tuple(contents['inputs']),
-                           tuple(contents['outputs']))
+        if "inputs" in contents.keys():
+            contents = zip(tuple(contents["inputs"]), tuple(contents["outputs"]))
         else:
             contents = contents.items()
         for content in list(contents):
-            self._data_objects.append(DataObject.create(
-                contents = content, task = task,
-                root = self._dataset_root))
+            self._data_objects.append(DataObject.create(contents=content, task=task, root=self._dataset_root))
 
-    def _maybe_shuffle(self, seed = None):
+    def _maybe_shuffle(self, seed=None):
         """Wraps automatic shuffling to see if it is enabled or not."""
         if self._shuffle:
-            self.shuffle(seed = seed)
+            self.shuffle(seed=seed)
 
     def update_train_state(self, state):
         """Updates the training state in the `TrainingManager`."""
         self._train_manager.update_state(state)
 
-    def shuffle(self, seed = None):
+    def shuffle(self, seed=None):
         """Shuffles the contents of the `DataManager`.
 
         This method simply shuffles the order of the `DataObject`s
@@ -161,9 +164,8 @@ class DataManager(AgMLSerializable):
         which are returned back to the `AgMLDataLoader` to be constructed into
         `DataBuilder`s and wrapped into new `DataManager`s.
         """
-        if self._task == 'object_detection':
-            contents = np.array(list(
-                self._builder.get_contents().items()), dtype = object)
+        if self._task == "object_detection":
+            contents = np.array(list(self._builder.get_contents().items()), dtype=object)
         else:
             contents = np.array(list(self._builder.get_contents().items()))
         try:
@@ -172,7 +174,8 @@ class DataManager(AgMLSerializable):
             raise Exception(
                 f"Could not generate split contents, likely due to an error "
                 f"with the metadata for the dataset `{self._dataset_name}`. "
-                f"Please raise this error with the AgML team.")
+                f"Please raise this error with the AgML team."
+            )
 
     def batch_data(self, batch_size):
         """Batches the data into consistent groups.
@@ -206,40 +209,42 @@ class DataManager(AgMLSerializable):
         overflow = len(self._accessors) - num_splits * batch_size
         extra_items = data_items[-overflow:]
         try:
-            batches = np.array_split(
-                np.array(self._accessors
-                         [:num_splits * batch_size]), num_splits)
+            batches = np.array_split(np.array(self._accessors[: num_splits * batch_size]), num_splits)
         except ValueError:
-            log(f"There is less data ({len(self._accessors)}) than the provided "
-                f"batch size ({batch_size}). Consider using a smaller batch size.")
+            log(
+                f"There is less data ({len(self._accessors)}) than the provided "
+                f"batch size ({batch_size}). Consider using a smaller batch size."
+            )
             batches = [self._accessors]
         else:
             if len(extra_items) < batch_size:
                 batches.append(extra_items)
-        self._accessors = np.array(batches, dtype = object)
+        self._accessors = np.array(batches, dtype=object)
         self._batch_size = batch_size
 
     def assign_resize(self, image_size, method):
         """Assigns a resizing factor for the image and annotation data."""
         if image_size is None:
-            image_size = 'default'
+            image_size = "default"
         self._resize_manager.assign(image_size, method)
 
     def _warn_training_resize(self):
         """Warn the user if they are not resizing during training."""
-        if self._resize_manager._resize_type == 'default':
-            log(f"Warning: you have not applied any resizing method to the "
+        if self._resize_manager._resize_type == "default":
+            log(
+                f"Warning: you have not applied any resizing method to the "
                 f"dataset `{self._dataset_name}`. This may cause errors during "
-                f"training if the image aspect ratios are not consistent.")
+                f"training if the image aspect ratios are not consistent."
+            )
 
     def push_transforms(self, **transform_dict):
         """Pushes a transformation to the data transform pipeline."""
         # Check if any transforms are being reset and assign them as such.
         if all(i is NoArgument for i in transform_dict):
             transform_dict = {
-                'transform': 'reset',
-                'target_transform': 'reset',
-                'dual_transform': 'reset'
+                "transform": "reset",
+                "target_transform": "reset",
+                "dual_transform": "reset",
             }
         else:
             empty_keys, reset_keys = [], []
@@ -251,24 +256,22 @@ class DataManager(AgMLSerializable):
             if len(empty_keys) != 0:
                 for key, value in transform_dict.items():
                     if value is None:
-                        transform_dict[key] = 'reset'
+                        transform_dict[key] = "reset"
                     elif value is NoArgument:
                         transform_dict[key] = None
 
         # There is no `dual_transform` object for image classification.
-        if self._task == 'image_classification':
-            if transform_dict['dual_transform'] is None:
-                transform_dict['dual_transform'] = 'reset'
+        if self._task == "image_classification":
+            if transform_dict["dual_transform"] is None:
+                transform_dict["dual_transform"] = "reset"
 
         # Assign the transforms to the manager in order.
-        for key in ['transform', 'target_transform', 'dual_transform']:
+        for key in ["transform", "target_transform", "dual_transform"]:
             self._transform_manager.assign(key, transform_dict[key])
 
     def _load_one_image_and_annotation(self, obj):
         """Loads one image and annotation from a `DataObject`."""
-        return self._train_manager.apply(
-            obj = obj, batch_state = self._batch_size is not None
-        )
+        return self._train_manager.apply(obj=obj, batch_state=self._batch_size is not None)
 
     def _load_multiple_items(self, indexes):
         """Loads multiple images and annotations from a set of `DataObject`s."""
@@ -279,8 +282,7 @@ class DataManager(AgMLSerializable):
                 contents.append(self._load_batch(self._accessors[i]))
         else:
             for i in indexes:
-                contents.append(self._load_one_image_and_annotation(
-                    self._data_objects[self._accessors[i]]))
+                contents.append(self._load_one_image_and_annotation(self._data_objects[self._accessors[i]]))
         return contents
 
     def _batch_multi_image_inputs(self, images):
@@ -300,17 +302,19 @@ class DataManager(AgMLSerializable):
     def _batch_multi_output_annotations(self, annotations):
         """Converts either a list of annotations or multiple annotation types into a batch."""
         # If the output annotations are simple objects.
-        if (isinstance(annotations[0], (list, np.ndarray))
+        if (
+            isinstance(annotations[0], (list, np.ndarray))
             or isinstance(annotations, (list, np.ndarray))
-                and isinstance(annotations[0], (int, float))):
+            and isinstance(annotations[0], (int, float))
+        ):
             if not consistent_shapes(annotations):
-                annotations = np.array(annotations, dtype = object)
+                annotations = np.array(annotations, dtype=object)
             else:
                 annotations = np.array(annotations)
             return annotations
 
         # For object detection, just return the COCO JSON dictionaries.
-        if self._task == 'object_detection':
+        if self._task == "object_detection":
             return annotations
 
         # Otherwise, convert all of them independently.
@@ -331,8 +335,7 @@ class DataManager(AgMLSerializable):
         # Get the images and annotations from the data objects.
         images, annotations = [], []
         for index in batch_indexes:
-            image, annotation = self._load_one_image_and_annotation(
-                self._data_objects[index])
+            image, annotation = self._load_one_image_and_annotation(self._data_objects[index])
             images.append(image)
             annotations.append(annotation)
 
@@ -346,10 +349,7 @@ class DataManager(AgMLSerializable):
         annotations = self._batch_multi_output_annotations(annotations)
 
         # Return the batches.
-        return self._train_manager.make_batch(
-            images = images,
-            annotations = annotations
-        )
+        return self._train_manager.make_batch(images=images, annotations=annotations)
 
     def get(self, indexes):
         """Loads and processes a piece (or pieces) of data from the dataset.
@@ -362,9 +362,7 @@ class DataManager(AgMLSerializable):
         # If there is only one index and the data is not batched,
         # then we just need to return a single `DataObject`.
         if isinstance(indexes, int) and self._batch_size is None:
-            return self._load_one_image_and_annotation(
-                self._data_objects[self._accessors[indexes]]
-            )
+            return self._load_one_image_and_annotation(self._data_objects[self._accessors[indexes]])
 
         # If we have a batch of images, then return the batch.
         if isinstance(indexes, int) and self._batch_size is not None:
@@ -374,13 +372,3 @@ class DataManager(AgMLSerializable):
         # slice or just a tuple of integers), then we get multiple images.
         if isinstance(indexes, (list, tuple)):
             return self._load_multiple_items(indexes)
-
-    
-
-
-
-
-
-
-
-

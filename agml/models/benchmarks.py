@@ -17,9 +17,8 @@ import collections
 from agml.framework import AgMLSerializable
 from agml.utils.data import load_model_benchmarks
 
-
 # Named tuples which are used by the metadata.
-Metric = collections.namedtuple('Metric', ['name', 'value'])
+Metric = collections.namedtuple("Metric", ["name", "value"])
 
 
 class BenchmarkMetadata(AgMLSerializable):
@@ -29,15 +28,21 @@ class BenchmarkMetadata(AgMLSerializable):
     this class is used to provide information regarding the benchmark,
     as well as key hyperparameters which can be used for reproducibility.
     """
-    serializable = frozenset(('dataset', 'meta'))
+
+    serializable = frozenset(("dataset", "meta"))
 
     def __init__(self, dataset):
         # Load the information for the given dataset.
         if dataset is None:
             self._dataset = None
-            self._meta = {'hyperparameters': {
-                'model_config': None, 'optimizer_config': None,
-                'metric': {None: None}, 'epochs_trained': None}}
+            self._meta = {
+                "hyperparameters": {
+                    "model_config": None,
+                    "optimizer_config": None,
+                    "metric": {None: None},
+                    "epochs_trained": None,
+                }
+            }
             return
         try:
             self._dataset = dataset
@@ -51,23 +56,23 @@ class BenchmarkMetadata(AgMLSerializable):
     @property
     def model_config(self):
         """Returns a dictionary with the configuration for the model."""
-        return self._meta['hyperparameters']['model_config']
+        return self._meta["hyperparameters"]["model_config"]
 
     @property
     def optimizer_config(self):
         """Returns a dictionary with the configuration for the optimizer."""
-        return self._meta['hyperparameters']['optimizer_config']
+        return self._meta["hyperparameters"]["optimizer_config"]
 
     @property
     def epochs_trained(self):
         """Returns the number of epochs the benchmark was trained for."""
-        return self._meta['hyperparameters']['epochs']
+        return self._meta["hyperparameters"]["epochs"]
 
     @property
     def metric(self):
         """Returns the value of the metric for the benchmark."""
-        name, value = list(self._meta['metric'].items())[0]
-        return Metric(name = name, value = value)
+        name, value = list(self._meta["metric"].items())[0]
+        return Metric(name=name, value=value)
 
 
 def get_benchmark(dataset):
@@ -78,8 +83,6 @@ def get_benchmark(dataset):
     dataset : str
         The name of the dataset or a DatasetMetadata object.
     """
-    if hasattr(dataset, 'name'):
+    if hasattr(dataset, "name"):
         dataset = dataset.name
     return BenchmarkMetadata(dataset)
-
-

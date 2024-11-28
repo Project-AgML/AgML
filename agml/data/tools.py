@@ -31,15 +31,21 @@ def _resolve_coco_annotations(annotations):
             return annotations
         if len(annotations) == 1:
             return annotations
-        annotation = {'bboxes': [], 'labels': [], 'area': [],
-                      'image_id': "", 'iscrowd': [], 'segmentation': []}
+        annotation = {
+            "bboxes": [],
+            "labels": [],
+            "area": [],
+            "image_id": "",
+            "iscrowd": [],
+            "segmentation": [],
+        }
         for a_set in annotations:
-            annotation['bboxes'].append(a_set['bbox'])
-            annotation['labels'].append(a_set['category_id'])
-            annotation['iscrowd'].append(a_set['iscrowd'])
-            annotation['segmentation'].append(a_set['segmentation'])
-            annotation['area'].append(a_set['area'])
-            annotation['image_id'] = a_set['image_id']
+            annotation["bboxes"].append(a_set["bbox"])
+            annotation["labels"].append(a_set["category_id"])
+            annotation["iscrowd"].append(a_set["iscrowd"])
+            annotation["segmentation"].append(a_set["segmentation"])
+            annotation["area"].append(a_set["area"])
+            annotation["image_id"] = a_set["image_id"]
         for key, value in annotation.items():
             out = np.array(value)
             if np.isscalar(out):
@@ -53,9 +59,7 @@ def _resolve_coco_annotations(annotations):
     elif isinstance(annotations, np.ndarray):
         return annotations
     else:
-        raise TypeError(
-            "Expected either a single COCO annotation "
-            "dictionary or a list of multiple dictionaries.")
+        raise TypeError("Expected either a single COCO annotation " "dictionary or a list of multiple dictionaries.")
 
 
 def coco_to_bboxes(annotations):
@@ -76,7 +80,8 @@ def coco_to_bboxes(annotations):
     Two arrays consisting of the bounding boxes and labels.
     """
     annotations = _resolve_coco_annotations(annotations)
-    return annotations['bbox'], annotations['category_id']
+    print(annotations.keys())
+    return annotations["bboxes"], annotations["labels"]
 
 
 def convert_bbox_format(annotations_or_bboxes, fmt):
@@ -117,52 +122,59 @@ def convert_bbox_format(annotations_or_bboxes, fmt):
 
     annotations_or_bboxes = _resolve_coco_annotations(annotations_or_bboxes)
     if isinstance(annotations_or_bboxes, dict):
-        annotations = annotations_or_bboxes['bboxes']
+        annotations = annotations_or_bboxes["bboxes"]
     else:
         annotations = annotations_or_bboxes
         if isinstance(annotations[0], (int, float)):
             annotations = [annotations]
     if isinstance(fmt, str):
-        if 'voc' in fmt or 'pascal' in fmt:
-            fmt = 'x_min y_min x_max y_max'
-        elif 'efficientdet' in fmt or 'effdet' in fmt:
-            fmt = 'y_min x_min y_max x_max'
-        if fmt == 'xyxy':
-            fmt = 'x_min y_min x_max y_max'
-        if fmt == 'yxyx':
-            fmt = 'y_min x_min y_max x_max'
-        if ',' in fmt:
-            fmt = fmt.split(',')
+        if "voc" in fmt or "pascal" in fmt:
+            fmt = "x_min y_min x_max y_max"
+        elif "efficientdet" in fmt or "effdet" in fmt:
+            fmt = "y_min x_min y_max x_max"
+        if fmt == "xyxy":
+            fmt = "x_min y_min x_max y_max"
+        if fmt == "yxyx":
+            fmt = "y_min x_min y_max x_max"
+        if "," in fmt:
+            fmt = fmt.split(",")
         else:
-            fmt = fmt.split(' ')
+            fmt = fmt.split(" ")
     if len(fmt) != 4:
         raise ValueError(f"Argument 'fmt' should contain 4 values, got {len(fmt)}.")
-    
+
     # Define all of the intermediate conversion methods
-    def _x1_x2_y1_y2_to_coco(annotation): # noqa
+    def _x1_x2_y1_y2_to_coco(annotation):  # noqa
         x1, x2, y1, y2 = annotation
         width, height = abs(x2 - x1), abs(y2 - y1)
         return [x1, y1, width, height]
-    def _xmin_ymin_xmax_ymax_to_coco(annotation): # noqa
+
+    def _xmin_ymin_xmax_ymax_to_coco(annotation):  # noqa
         xmin, ymin, xmax, ymax = annotation
         width, height = abs(xmax - xmin), abs(ymax - ymin)
         return [xmin, ymin, width, height]
-    def _xmin_ymin_width_height_to_coco(annotation): # noqa
+
+    def _xmin_ymin_width_height_to_coco(annotation):  # noqa
         xmin, ymin, width, height = annotation
         x1, y1 = xmin, ymin - height
         return [x1, y1, width, height]
-    def _x1_y1_width_height_to_coco(annotation): # noqa
-        return annotation # This is just here for reordering.
+
+    def _x1_y1_width_height_to_coco(annotation):  # noqa
+        return annotation  # This is just here for reordering.
 
     # Resolve the format
-    fmt_bases = [['x1', 'x2', 'y1', 'y2'],
-                 ['x_min', 'y_min', 'x_max', 'y_max'],
-                 ['x_min', 'y_min', 'width', 'height'],
-                 ['x1', 'y1', 'width', 'height']]
-    fmt_map = {0: _x1_x2_y1_y2_to_coco,
-               1: _xmin_ymin_xmax_ymax_to_coco,
-               2: _xmin_ymin_width_height_to_coco,
-               3: _x1_y1_width_height_to_coco}
+    fmt_bases = [
+        ["x1", "x2", "y1", "y2"],
+        ["x_min", "y_min", "x_max", "y_max"],
+        ["x_min", "y_min", "width", "height"],
+        ["x1", "y1", "width", "height"],
+    ]
+    fmt_map = {
+        0: _x1_x2_y1_y2_to_coco,
+        1: _xmin_ymin_xmax_ymax_to_coco,
+        2: _xmin_ymin_width_height_to_coco,
+        3: _x1_y1_width_height_to_coco,
+    }
     fmt_found = False
     map_fmt, select_order = None, None
     for indx, base in enumerate(fmt_bases):
@@ -170,9 +182,7 @@ def convert_bbox_format(annotations_or_bboxes, fmt):
             fmt_found, map_fmt = True, fmt_map[indx]
             select_order = [base.index(i) for i in fmt]
     if not fmt_found:
-        raise ValueError(
-            f"Invalid format {fmt}, see `convert_bbox_format` "
-            f"for information about valid formats.")
+        raise ValueError(f"Invalid format {fmt}, see `convert_bbox_format` " f"for information about valid formats.")
 
     # Convert the formats
     formatted_annotations = []
@@ -182,7 +192,6 @@ def convert_bbox_format(annotations_or_bboxes, fmt):
     formatted_annotations = np.array(formatted_annotations)
     if isinstance(annotations_or_bboxes, dict):
         res = annotations_or_bboxes.copy()
-        res['bboxes'] = formatted_annotations
+        res["bboxes"] = formatted_annotations
         return res
     return resolve_list_value(formatted_annotations)
-

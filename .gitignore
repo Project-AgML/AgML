@@ -141,7 +141,6 @@ __MACOSX
 # Extra directories/files
 /**data*/
 
-**/**test*.*
 !tests/*/*
 agml/_helios
 agml/helios_config.sh
@@ -161,6 +160,7 @@ agml/models/training/*.log
 agml/models/training/*.err
 agml/models/training/*.out
 agml/models/training/*.csv
-.*/
+# .*/
 /
 *.pptx
+.ruff_cache
