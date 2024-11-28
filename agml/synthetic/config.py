@@ -28,10 +28,13 @@ from agml.utils.io import recursive_dirname
 _HELIOS_CHECK_DONE_IN_SESSION = False
 
 # Paths to the Helios module and the relevant C++ files.
-HELIOS_PATH = os.path.join(recursive_dirname(__file__, 2), "_helios/Helios")
-CANOPY_SOURCE = os.path.join(HELIOS_PATH, "plugins/canopygenerator/src/CanopyGenerator.cpp")
-CANOPY_HEADER = os.path.join(HELIOS_PATH, "plugins/canopygenerator/include/CanopyGenerator.h")
-LIDAR_SOURCE = os.path.join(HELIOS_PATH, "plugins/lidar/src/LiDAR.cpp")
+HELIOS_PATH = os.path.join(recursive_dirname(__file__, 2), '_helios/Helios')
+PROJECT_ROOT = os.path.join(HELIOS_PATH, 'projects')
+CANOPY_SOURCE = os.path.join(
+    HELIOS_PATH, 'plugins/canopygenerator/src/CanopyGenerator.cpp')
+CANOPY_HEADER = os.path.join(
+    HELIOS_PATH, 'plugins/canopygenerator/include/CanopyGenerator.h')
+LIDAR_SOURCE = os.path.join(HELIOS_PATH, 'plugins/lidar/src/LiDAR.cpp')
 
 # Path to the stored Helios configuration JSON file in root dir.
 HELIOS_CONFIG_FILE = os.path.expanduser("~/.agml/helios_config.json")
