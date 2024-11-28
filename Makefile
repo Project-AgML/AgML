@@ -39,8 +39,8 @@ test: $(test.python) $(src.python) ## Run tests
 
 # Quality Checks
 
-.PHONY: checks
-checks: check-format lint check-types docstring-coverage
+.PHONY: pre-commit
+pre-commit: check-format lint check-types docstring-coverage
 
 
 .PHONY: check-types
@@ -61,7 +61,7 @@ lint: ## Run ruff Code Linter
 docstring-coverage: ## Compute docstring coverage
 	uv run interrogate -c config/interrogate.toml .
 
-# Quality fixes
+# Automated Quality fixes
 
 .PHONY: lint-fix
 lint-fix: ## Fix ruff Lint issues

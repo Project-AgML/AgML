@@ -15,11 +15,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ matrix.python-version }}
-
       - name: Install the latest version of uv
         uses: astral-sh/setup-uv@v3
         with:
@@ -32,11 +27,13 @@ jobs:
         run: echo "Cache was restored"
 
       - name: Set up python env
-        run: make setup
+        run: |
+          uv venv --python  ${{ matrix.python-version }}
+          uv sync --dev
 
-      - name: Run Checks
+      - name: Run pre-commit
         continue-on-error: true
-        run: make checks
+        run: make pre-commit
 
       - name: Run tests
         # For example, using `pytest`
