@@ -189,7 +189,12 @@ We will then review the changes and review next steps for adding the dataset int
 
 
 ### Installing uv
+<<<<<<< HEAD
+
+Install uv follow the guidelines in  https://docs.astral.sh/uv/getting-started/installation/, it is recommended to use the standalone installation.
+=======
 Dependencies and admin actions are done using `uv`. To Install uv follow the guidelines in  https://docs.astral.sh/uv/getting-started/installation/, it is recommended to use the standalone installation.
+>>>>>>> dev
 
 
 ### Building Project
