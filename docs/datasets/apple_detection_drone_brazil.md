@@ -21,4 +21,4 @@
 
 ## Examples
 
-![Example Images for apple_detection_drone_brazil](https://github.com/Project-AgML/AgML/blob/main/docs/sample_images/apple_detection_drone_brazil_examples.png)
+![Example Images for apple_detection_drone_brazil](../sample_images/apple_detection_drone_brazil_examples.png)

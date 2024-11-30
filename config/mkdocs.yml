@@ -34,6 +34,9 @@ nav:
       - Changelog: changelog.md
       - Credits: credits.md
       - License: license.md
+  - Datasets:
+      - Dataset Listing: dataset_listing.md
+      - Datasets: datasets/
   # defer to gen-files + literate-nav
   - API reference:
       - AgML: reference/

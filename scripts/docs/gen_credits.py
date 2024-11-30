@@ -87,7 +87,7 @@ def _set_license(metadata: PackageMetadata) -> None:
 def _get_deps(base_deps: dict[str, Requirement], metadata: Metadata) -> Metadata:
     deps = {}
     for dep_name, dep_req in base_deps.items():
-        if dep_name not in metadata or dep_name == "detdef":
+        if dep_name not in metadata or dep_name == "agml":
             continue
         metadata[dep_name]["spec"] |= {str(spec) for spec in dep_req.specifier}  # type: ignore[operator]
         metadata[dep_name]["extras"] |= dep_req.extras  # type: ignore[operator]
