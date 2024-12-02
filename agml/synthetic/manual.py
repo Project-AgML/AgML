@@ -15,7 +15,6 @@
 import os
 import re
 import stat
-import sys
 import subprocess as sp
 import sys
 
@@ -107,7 +106,9 @@ def generate_manual_data(
                     )
 
         # Check that the necessary files exist.
-        if not os.path.exists(os.path.join(project_path, 'main.cpp')) and not os.path.exists(os.path.join(project_path, 'generate.cpp')):
+        if not os.path.exists(os.path.join(project_path, "main.cpp")) and not os.path.exists(
+            os.path.join(project_path, "generate.cpp")
+        ):
             raise ValueError(f"Could not find `main.cpp` file at {project_path}.")
         if not os.path.exists(os.path.join(project_path, "CMakeLists.txt")):
             raise ValueError(f"Could not find `CMakeLists.txt` file at {project_path}.")
@@ -119,10 +120,10 @@ def generate_manual_data(
         with open(os.path.join(SUPER_BASE_DIR, ".last_manual_compilation_cpp.cpp"), "r") as f:
             legacy_cpp = f.read()
         try:
-            with open(os.path.join(project_path, 'main.cpp'), 'r') as f:
+            with open(os.path.join(project_path, "main.cpp"), "r") as f:
                 current_cpp = f.read()
         except FileNotFoundError:
-            with open(os.path.join(project_path, 'generate.cpp'), 'r') as f:
+            with open(os.path.join(project_path, "generate.cpp"), "r") as f:
                 current_cpp = f.read()
         if legacy_cpp == current_cpp:
             cpp_same = True
@@ -138,12 +139,17 @@ def generate_manual_data(
     # Compile Helios.
     if not cpp_same and not cmake_same:
         # Construct arguments for the compilation.
-        helios_build = os.path.join(project_path, 'build')
-        cmake_args = ['cmake', '..', '-G', 'Unix Makefiles',
-                      f'-DCMAKE_LIBRARY_OUTPUT_DIRECTORY={helios_build}',
-                      f'-DCMAKE_BUILD_TYPE={cmake_build_type}']
-        make_args = ['cmake', '--build', '.']
-        log_file = os.path.join(SUPER_BASE_DIR, '.last_helios_manual_compilation.log')
+        helios_build = os.path.join(project_path, "build")
+        cmake_args = [
+            "cmake",
+            "..",
+            "-G",
+            "Unix Makefiles",
+            f"-DCMAKE_LIBRARY_OUTPUT_DIRECTORY={helios_build}",
+            f"-DCMAKE_BUILD_TYPE={cmake_build_type}",
+        ]
+        make_args = ["cmake", "--build", "."]
+        log_file = os.path.join(SUPER_BASE_DIR, ".last_helios_manual_compilation.log")
         if os.path.exists(log_file):
             os.unlink(log_file)
 
@@ -207,27 +213,34 @@ def generate_manual_data(
         sys.stderr.write("\nHelios compilation successful!")
 
     # Run the generation.
-    executable = os.path.join(project_path, 'build', project_name)
-    os.chmod(executable, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR | stat.S_IRGRP | stat.S_IXGRP |
-             stat.S_IROTH | stat.S_IXOTH) # add necessary permissions to executable
+    executable = os.path.join(project_path, "build", project_name)
+    os.chmod(
+        executable,
+        stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR | stat.S_IRGRP | stat.S_IXGRP | stat.S_IROTH | stat.S_IXOTH,
+    )  # add necessary permissions to executable
     env = os.environ.copy()
-    if os.path.exists('/usr/lib/wsl/lib'): # if using WSL, this is mandatory to use radiation plugin
-        env['LD_LIBRARY_PATH'] += ':/usr/lib/wsl/lib'
-    process = sp.Popen([executable], stdout = sp.PIPE, stderr = sp.STDOUT,
-                       cwd = os.path.join(project_path, 'build'), env=env,
-                       universal_newlines = True, )
+    if os.path.exists("/usr/lib/wsl/lib"):  # if using WSL, this is mandatory to use radiation plugin
+        env["LD_LIBRARY_PATH"] += ":/usr/lib/wsl/lib"
+    process = sp.Popen(
+        [executable],
+        stdout=sp.PIPE,
+        stderr=sp.STDOUT,
+        cwd=os.path.join(project_path, "build"),
+        env=env,
+        universal_newlines=True,
+    )
     for line in iter(process.stdout.readline, ""):
         sys.stdout.write(line)
     process.stdout.close()
     process.wait()
 
     # Save the existing files for comparison in future runs.
-    with open(os.path.join(SUPER_BASE_DIR, '.last_manual_compilation_cpp.cpp'), 'w') as f:
+    with open(os.path.join(SUPER_BASE_DIR, ".last_manual_compilation_cpp.cpp"), "w") as f:
         if code is not None and not os.path.exists(code):
             f.write(code)
         else:
             f.write(current_cpp)
-    with open(os.path.join(SUPER_BASE_DIR, '.last_manual_compilation_cmake.txt'), 'w') as f:
+    with open(os.path.join(SUPER_BASE_DIR, ".last_manual_compilation_cmake.txt"), "w") as f:
         if cmake is not None and not os.path.exists(cmake):
             f.write(cmake)
         else:

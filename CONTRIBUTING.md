@@ -189,33 +189,33 @@ We will then review the changes and review next steps for adding the dataset int
 
 
 ### Installing uv
-<<<<<<< HEAD
-
-Install uv follow the guidelines in  https://docs.astral.sh/uv/getting-started/installation/, it is recommended to use the standalone installation.
-=======
 Dependencies and admin actions are done using `uv`. To Install uv follow the guidelines in  https://docs.astral.sh/uv/getting-started/installation/, it is recommended to use the standalone installation.
->>>>>>> dev
 
 
 ### Building Project
 
-The build the associated wheels simply run:
+To sync the dependencies and create a local env that fits the requirements, simply run:
 
+
+```bash
+make install
 ```
+
+This will install both requirements and necessary development dependencies, such as `dev` and `docs` dependency groups. To build the wheels:
+
+
+```bash
 make build
-```
-
-To sync the dependencies simply run:
-
-```
-uv sync
 ```
 
 ### Running tests
 
-```
+To run all the tests with associated coverage:
+
+```bash
 make test
 ```
+
 
 ### Running scripts
 
