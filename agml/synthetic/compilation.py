@@ -20,20 +20,17 @@ import subprocess as sp
 import sys
 import tempfile
 from datetime import datetime as dt
-
-from agml.backend.config import _update_config, _get_config
-from agml.synthetic.config import HELIOS_PATH, PROJECT_ROOT
 from pathlib import Path
+
+from agml.backend.config import _get_config, _update_config
+from agml.synthetic.config import HELIOS_PATH, PROJECT_ROOT
 
 PROJECT = "SyntheticImageAnnotation"
 
 # Helios build and compilation paths.
-PROJECT_PATH = os.path.join(
-    PROJECT_ROOT, PROJECT)
-HELIOS_BUILD = os.path.join(
-    PROJECT_PATH, 'build')
-HELIOS_EXECUTABLE = os.path.join(
-    PROJECT_PATH, 'build', PROJECT)
+PROJECT_PATH = os.path.join(PROJECT_ROOT, PROJECT)
+HELIOS_BUILD = os.path.join(PROJECT_PATH, "build")
+HELIOS_EXECUTABLE = os.path.join(PROJECT_PATH, "build", PROJECT)
 
 # Helios parameter paths.
 XML_PATH = os.path.join(PROJECT_PATH, "xml")

@@ -12,6 +12,11 @@ categories:
       - "enhancement"
       - "✨"
       - "⚡️"
+  - title: "📦 Dependencies Changes":
+    labels:
+      - "dependency"
+      - "deps"
+      - "📦"
   - title: "🐛 Bug Fixes"
     labels:
       - "fix"
@@ -27,9 +32,15 @@ categories:
     labels:
       - "testing"
       - "test"
-  - title: " 🔨 Maintance"
+      - "ci"
+  - title: " 🔨 Maintance "
     labels:
       - "Maintenance"
+  - title: " 💿 Dataset Updates"
+    labels:
+      - "dataset"
+      - "datasets"
+      - "data"
 
 exclude-labels:
   - "changelog: skip"
