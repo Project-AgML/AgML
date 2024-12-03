@@ -16,6 +16,7 @@ import json
 import logging
 import os
 import shutil
+from pathlib import Path
 
 from agml.utils.logging import log
 
@@ -24,7 +25,7 @@ from agml.utils.logging import log
 # because the default path to save datasets to can be overridden by
 # `set_dataset_save_path()`, but we need to keep the super directory to
 # access the config file which stores this information in the first place.
-SUPER_BASE_DIR = os.path.join(os.path.expanduser("~"), ".agml")
+SUPER_BASE_DIR = Path(os.getenv("AGML_CONFIG_DIR", os.path.join(os.path.expanduser("~"), ".agml")))
 
 
 # This is the path to the saved datasets. By default, this saves to
