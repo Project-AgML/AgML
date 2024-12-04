@@ -33,6 +33,9 @@ def test_num_images_filters():
     for source in agdata.public_data_sources(n_images=">1000"):
         assert int(float(load_public_sources()[source.name]["n_images"])) >= 1000
 
+    for source in agdata.public_data_sources(n_images="<10000"):
+        assert int(float(load_public_sources()[source.name]["n_images"])) <= 10000
+
 
 def test_source_download():
     local_path = os.path.join(os.getcwd(), "download_test")
@@ -41,3 +44,18 @@ def test_source_download():
     assert os.path.exists(os.path.join(local_path, "bean_disease_uganda"))
     assert not os.path.exists(os.path.join(local_path, "bean_disease_uganda.zip"))
     shutil.rmtree(os.path.join(local_path))
+
+
+def test_invalid_filter(tmp_path):
+    with pytest.raises(ValueError) as exec_info:
+        agdata.public_data_sources(description="test")
+
+
+def test_other_filter():
+    other_filter = agdata.public_data_sources(platform="mixed")
+    assert len(other_filter) == 2
+
+
+def test_other_filter():
+    other_filter = agdata.public_data_sources(platform="mixed")
+    assert len(other_filter) == 2

@@ -23,12 +23,73 @@ from agml.utils.downloads import download_dataset as _download  # noqa
 
 
 class _PublicSourceFilter(object):
-    """Filters public datasets based on the input filters."""
+    """
+    Filters public datasets based on provided criteria.
+
+    This class provides a mechanism to filter the available public datasets
+    within AgML based on a variety of criteria.  It uses the
+    `public_datasources.json` file to access the dataset information and
+    performs filtering based on the provided keyword arguments.
+
+    The filtering process supports various criteria, including:
+
+    - `ml_task`: Filters datasets by the machine learning task they are
+      designed for (e.g., 'image_classification', 'object_detection').
+    - `location`: Filters datasets based on their geographical location.
+      The location filter should be specified as 'continent:<continent_name>'
+      or 'country:<country_name>'.
+    - `n_images` or `num_images`: Filters datasets based on the number of
+      images they contain.  Supports exact matching (e.g., `n_images=1000`)
+      and threshold-based filtering (e.g., `n_images='>1500'`,
+      `num_images='<500'`).  Thresholds are inclusive.
+
+    Examples
+    --------
+    >>> # Filter for image classification datasets in Africa:
+    >>> filtered_sources = _PublicSourceFilter().apply_filters(
+    ...     ml_task='image_classification', location='continent:africa'
+    ... )
+    >>> filtered_datasets = filtered_sources.result()
+
+    >>> # Filter datasets with more than 2000 images:
+    >>> many_image_sources = _PublicSourceFilter().apply_filters(n_images='>2000')
+    >>> datasets_many_images = many_image_sources.result()
+
+    Methods
+    -------
+    apply_filters(**filters):
+        Applies the specified filters to the list of public datasets.
+    print_result():
+        Returns a string representation of the filtered dataset names.
+    result():
+        Returns a list of `DatasetMetadata` objects for the filtered datasets.
+
+    Notes
+    -----
+    The `public_data_sources` function provides a more user-friendly interface for accessing filtered datasets.
+    """
 
     _sources = load_public_sources()
     _current_filtered_source = []
 
     def apply_filters(self, **filters):
+        """
+        Applies filters to the public data sources.
+
+        Filters the available public datasets based on the provided keyword
+        arguments. See the class docstring for details on available filters.
+
+        Parameters
+        ----------
+        **filters : keyword arguments
+            The filters to apply.
+
+        Returns
+        -------
+        self : _PublicSourceFilter
+            Returns the object itself to allow chaining.
+        """
+        print(self._sources.keys())
         if len(filters) == 0:
             self._current_filtered_source = self._sources.keys()
             return self
@@ -42,7 +103,7 @@ class _PublicSourceFilter(object):
             elif key in ["n_images", "num_images"] and value.startswith(">"):
                 self._n_image_case_greater(int(float(value[1:])), internal_set)
             elif key in ["n_images", "num_images"] and value.startswith("<"):
-                self._n_image_case_greater(int(float(value[1:])), internal_set)
+                self._n_image_case_lesser(int(float(value[1:])), internal_set)
             else:
                 for source_ in self._sources.keys():
                     try:
@@ -55,6 +116,26 @@ class _PublicSourceFilter(object):
         return self
 
     def _location_case(self, desired, value_set):
+        """
+        Filters datasets based on location.
+
+        This method filters the datasets based on the provided location
+        criteria. The `desired` argument should be in the format
+        '<location_type>:<location_name>', where `location_type` is either
+        'continent' or 'country'.
+
+        Parameters
+        ----------
+        desired : str
+            The desired location criteria.
+        value_set : list
+            The list to append the matching dataset names to.
+
+        Returns
+        -------
+        value_set : list
+            The updated list of matching dataset names.
+        """
         for source_ in self._sources.keys():
             param, value = desired.split(":")
             try:
@@ -65,6 +146,24 @@ class _PublicSourceFilter(object):
         return value_set
 
     def _n_image_case_greater(self, thresh, value_set):
+        """
+        Filters datasets with a number of images greater than a threshold.
+
+        This method filters the datasets which contain a number of images
+        greater than or equal to the provided threshold.
+
+        Parameters
+        ----------
+        thresh : int
+            The threshold for the number of images.
+        value_set : list
+            The list to append the matching dataset names to.
+
+        Returns
+        -------
+        value_set : list
+            The updated list of matching dataset names.
+        """
         for source_ in self._sources.keys():
             try:
                 if int(float(self._sources[source_]["n_images"])) >= thresh:
@@ -74,6 +173,24 @@ class _PublicSourceFilter(object):
         return
 
     def _n_image_case_lesser(self, thresh, value_set):
+        """
+        Filters datasets with a number of images lesser than a threshold.
+
+        This method filters the datasets which contain a number of images
+        lesser than or equal to the provided threshold.
+
+        Parameters
+        ----------
+        thresh : int
+            The threshold for the number of images.
+        value_set : list
+            The list to append the matching dataset names to.
+
+        Returns
+        -------
+        value_set : list
+            The updated list of matching dataset names.
+        """
         for source_ in self._sources.keys():
             try:
                 if int(float(self._sources[source_]["n_images"])) <= thresh:
@@ -86,6 +203,17 @@ class _PublicSourceFilter(object):
         return "[%s]" % ", ".join(self._current_filtered_source)
 
     def result(self):
+        """Returns the filtered datasets as DatasetMetadata objects.
+
+        This method returns the final filtered result as a list of
+        `DatasetMetadata` objects.  This allows for further inspection
+        and access to the metadata of the filtered datasets.
+
+        Returns
+        -------
+        list
+            A list of `DatasetMetadata` objects representing the filtered datasets.
+        """
         return [DatasetMetadata(s) for s in self._current_filtered_source]
 
 
