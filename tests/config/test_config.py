@@ -22,5 +22,3 @@ def test_config_setup():
     assert cfg.data_save_path() == cfg._get_config("data_path")
     assert cfg.model_save_path() == cfg._get_config("model_path")
     assert cfg.synthetic_data_save_path() == cfg._get_config("synthetic_data_path")
-
-    

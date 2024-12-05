@@ -1,9 +1,8 @@
 import os
-from pathlib import Path
 import shutil
+from pathlib import Path
 
 import pytest
-
 from pytest import TempPathFactory
 
 
