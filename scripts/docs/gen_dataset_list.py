@@ -1,10 +1,10 @@
 import json
-from textwrap import dedent
 from importlib import resources
+from textwrap import dedent
 
-
-from jinja2.sandbox import SandboxedEnvironment
 from jinja2 import StrictUndefined
+from jinja2.sandbox import SandboxedEnvironment
+
 # Check whether any dataset has been added that needs information updated (we do this
 # by checking for any datasets in the `public_datasources.json` file that don't have
 # corresponding information for the dataset statistics or other properties like shape).
