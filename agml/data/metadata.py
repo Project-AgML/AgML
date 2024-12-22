@@ -275,8 +275,7 @@ class DatasetMetadata(AgMLSerializable):
         as `print(loader.info.summary())`, just `loader.info.summary()`.
         """
 
-        if not console:
-            console = Console()
+        console = Console()
 
         table = Table(title="Dataset Summary")
 
