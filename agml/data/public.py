@@ -14,6 +14,7 @@
 
 import functools
 
+from rich.console import Console
 import numpy as np
 
 from agml.backend.config import data_save_path
@@ -199,8 +200,30 @@ class _PublicSourceFilter(object):
                 continue
         return
 
-    def print_result(self):
-        return "[%s]" % ", ".join(self._current_filtered_source)
+    def __repr__(self):
+        """Prints a formatted table of the filtered datasets using rich."""
+
+        console = Console()
+        if not self._current_filtered_source:
+            console.print("[bold yellow]No datasets found matching the criteria.[/]")
+            return
+
+        table = Table(title="Filtered Datasets")
+        table.add_column("Dataset Name", style="cyan")
+        table.add_column("ML Task")
+        table.add_column("Location")
+        table.add_column("# Images")
+
+        for source_name in self._current_filtered_source:
+            meta = self._sources[source_name]
+            table.add_row(
+                source_name,
+                meta.get("ml_task", "N/A"),  # Handle missing 'ml_task'
+                f"{meta['location']['continent']}, {meta['location']['country']}" if "location" in meta else "N/A",
+                str(meta.get("n_images", "N/A")),  # prints N/A if number of images are not there.
+            )
+
+        console.print(table)
 
     def result(self):
         """Returns the filtered datasets as DatasetMetadata objects.

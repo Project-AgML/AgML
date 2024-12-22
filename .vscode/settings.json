@@ -1,0 +1,13 @@
+{
+    "editor.fontFamily": "FiraCode Nerd Font, MesloLGS Nerd Font, sf-symbols, monospace",
+    "python.envFile": "${workspaceFolder}/.venv",
+    "python.poetryPath": "poetry",
+    "python.defaultInterpreterPath": "uv run python",
+    "python.testing.pytestPath": "uv run pytest -c=config/pytest.ini ",
+    "debugpy.showPythonInlineValues": true,
+    "python.terminal.activateEnvironment": false,
+    "python.testing.pytestEnabled": true,
+    "ruff.format.args": [
+        "\"args\": [\"--config=config/ruff.toml\"]"
+    ]
+}

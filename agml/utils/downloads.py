@@ -16,8 +16,18 @@ import os
 import shutil
 import zipfile
 
+from rich.progress import (
+    BarColumn,
+    DownloadColumn,
+    Progress,
+    TextColumn,
+    TimeRemainingColumn,
+    TransferSpeedColumn,
+)
+from rich.console import Console
+
 from agml.utils.data import copyright_print, load_public_sources, maybe_you_meant
-from agml.utils.logging import log, tqdm
+from agml.utils.logging import log
 
 
 def download_dataset(dataset_name, dest_dir, redownload=False):
@@ -64,39 +74,42 @@ def download_dataset(dataset_name, dest_dir, redownload=False):
     os.makedirs(dest_dir, exist_ok=True)
     dataset_download_path = os.path.join(dest_dir, dataset_name + ".zip")
 
+    console = Console()
+    progress = Progress(
+        TextColumn("[bold blue]{task.fields[filename]}", justify="right"),
+        BarColumn(bar_width=10),
+        "[progress.percentage]{task.percentage:.1f}%",
+        "•",
+        TransferSpeedColumn(),
+        "•",
+        DownloadColumn(),
+        "•",
+        TimeRemainingColumn(),
+    )
+
     # Download object from bucket
     try:
-        with requests.Session() as sess:
-            r = sess.get(url, stream=True)
-            r.raise_for_status()
-            content_size = int(r.headers["Content-Length"])
-            sz = round(content_size / 1000000, 1)
-            size_print = f"{sz} MB"
-            if sz > 1000:
-                size_print = f"{round(sz / 1000, 2)} GB"
-            pg = tqdm(
-                total=content_size,
-                desc=f"Downloading {dataset_name} " f"(size = {size_print})",
-            )
-            with open(dataset_download_path, "wb") as f:
-                for chunk in r.iter_content(chunk_size=8192):
-                    f.write(chunk)
-                    pg.update(8192)
-            pg.close()
+        with progress:
+            with requests.Session() as sess:
+                r = sess.get(url, stream=True)
+                r.raise_for_status()
+                content_size = int(r.headers.get("content-length", 0))
+                task_id = progress.add_task("download", filename=dataset_name + ".zip", total=content_size)
+                with open(dataset_download_path, "wb") as f:
+                    for chunk in r.iter_content(chunk_size=8192):
+                        f.write(chunk)
+                        progress.update(task_id, advance=len(chunk))
+
     except BaseException as e:
-        try:
-            pg.close()
-        except (NameError, UnboundLocalError):
-            pass
         if os.path.exists(dataset_download_path):
             os.remove(dataset_download_path)
         raise e
 
     # Unzip downloaded dataset
     with zipfile.ZipFile(dataset_download_path, "r") as z:
-        print(f"[AgML Download]: Extracting files for {dataset_name}... ", end="")
+        console.print(f"[AgML Download]: Extracting files for {dataset_name}... ", end="")
         z.extractall(path=dest_dir)
-        print("Done!")
+        console.print("[bold] Done!")
 
     # Delete zipped file
     if os.path.exists(dataset_download_path):
@@ -150,30 +163,33 @@ def download_model(model_name, dest_dir, redownload=False):
     os.makedirs(dest_dir, exist_ok=True)
     model_download_path = os.path.join(dest_dir, model_name + ".pth")
 
+    progress = Progress(
+        TextColumn("[bold blue]{task.fields[filename]}", justify="right"),
+        BarColumn(bar_width=None),
+        "[progress.percentage]{task.percentage:.1f}%",
+        "•",
+        TransferSpeedColumn(),
+        "•",
+        DownloadColumn(),
+        "•",
+        TimeRemainingColumn(),
+    )
     # Download object from bucket
+
     try:
-        with requests.Session() as sess:
-            r = sess.get(url, stream=True)
-            r.raise_for_status()
-            content_size = int(r.headers["Content-Length"])
-            sz = round(content_size / 1000000, 1)
-            size_print = f"{sz} MB"
-            if sz > 1000:
-                size_print = f"{round(sz / 1000, 2)} GB"
-            pg = tqdm(
-                total=content_size,
-                desc=f"Downloading {model_name} " f"(size = {size_print})",
-            )
-            with open(model_download_path, "wb") as f:
-                for chunk in r.iter_content(chunk_size=8192):
-                    f.write(chunk)
-                    pg.update(8192)
-            pg.close()
+        with progress:
+            with requests.Session() as sess:
+                r = sess.get(url, stream=True)
+                r.raise_for_status()
+
+                content_size = int(r.headers.get("content-length", 0))
+                task_id = progress.add_task("download", filename=model_name + ".pth", total=content_size)
+                with open(model_download_path, "wb") as f:
+                    for chunk in r.iter_content(chunk_size=8192):
+                        f.write(chunk)
+                        progress.update(task_id, advance=len(chunk))
+
     except BaseException as e:
-        try:
-            pg.close()
-        except (NameError, UnboundLocalError):
-            pass
         if os.path.exists(model_download_path):
             os.remove(model_download_path)
         raise e
@@ -212,40 +228,43 @@ def download_detector(detector_name, dest_dir, redownload=False):
     # File path of model
     os.makedirs(dest_dir, exist_ok=True)
     model_download_path = os.path.join(dest_dir, detector_name + ".zip")
-
+    console = Console()
+    progress = Progress(
+        TextColumn("[bold blue]{task.fields[filename]}", justify="right"),
+        BarColumn(bar_width=None),
+        "[progress.percentage]{task.percentage:.1f}%",
+        "•",
+        TransferSpeedColumn(),
+        "•",
+        DownloadColumn(),
+        "•",
+        TimeRemainingColumn(),
+    )
     # Download object from bucket
     try:
-        with requests.Session() as sess:
-            r = sess.get(url, stream=True)
-            r.raise_for_status()
-            content_size = int(r.headers["Content-Length"])
-            sz = round(content_size / 1000000, 1)
-            size_print = f"{sz} MB"
-            if sz > 1000:
-                size_print = f"{round(sz / 1000, 2)} GB"
-            pg = tqdm(
-                total=content_size,
-                desc=f"Downloading {detector_name} " f"(size = {size_print})",
-            )
-            with open(model_download_path, "wb") as f:
-                for chunk in r.iter_content(chunk_size=8192):
-                    f.write(chunk)
-                    pg.update(8192)
-            pg.close()
+        with progress:
+            with requests.Session() as sess:
+                r = sess.get(url, stream=True)
+                r.raise_for_status()
+
+                content_size = int(r.headers.get("content-length", 0))
+                task_id = progress.add_task("download", filename=detector_name + ".zip", total=content_size)
+
+                with open(model_download_path, "wb") as f:
+                    for chunk in r.iter_content(chunk_size=8192):
+                        f.write(chunk)
+                        progress.update(task_id, advance=len(chunk))
+
     except BaseException as e:
-        try:
-            pg.close()
-        except (NameError, UnboundLocalError):
-            pass
         if os.path.exists(model_download_path):
             os.remove(model_download_path)
         raise e
 
     # Unzip downloaded dataset
     with zipfile.ZipFile(model_download_path, "r") as z:
-        print(f"[AgML Download]: Extracting files for {detector_name}... ", end="")
+        console.print(f"[bold] [AgML Download]: [normal pink] Extracting files for {detector_name}... ", end="")
         z.extractall(path=dest_dir)
-        print("Done!")
+        console.print("󱓞 Done! ")
 
     # Delete zipped file
     if os.path.exists(model_download_path):
