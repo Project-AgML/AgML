@@ -19,7 +19,8 @@ import os
 import shutil
 import sys
 
-
+from rich.console import Console
+from rich.panel import Panel
 from rich.text import Text
 
 
@@ -73,16 +74,16 @@ def maybe_you_meant(name, msg, source=None) -> str:
 def copyright_print(name, location=None):
     """Prints out license/copyright info after a dataset download."""
     content = load_citation_sources()[name]
-    license = content["license"]  # noqa
+    license_info = content["license"]  # noqa
     citation = content["citation"]
 
-    def _bold(msg):  # noqa
-        return "\033[1m" + msg + "\033[0m"
+    # Construct the title text
+    title_text = Text(f"Dataset: {name}", style="bold cyan")
 
-    if location is None:
-        first_msg = "Citation information for " + _bold(name) + ".\n"
+    if location is not None:
+        location_text = Text.assemble(("You have just downloaded ", "bold cyan"), (name, "green"))
     else:
-        first_msg = "You have just downloaded " + _bold(name) + ".\n"
+        location_text = Text.assemble(("Citation information for", "bold cyan"), (name, "green"))
 
     _LICENSE_TO_URL = {
         "CC BY-SA 4.0": "https://creativecommons.org/licenses/by-sa/4.0/",
@@ -96,42 +97,78 @@ def copyright_print(name, location=None):
         "CC0: Public Domain": "https://creativecommons.org/publicdomain/zero/1.0/",
         "Apache 2.0": "https://www.apache.org/licenses/LICENSE-2.0",
     }
-    if license == "":
-        license_msg = "This dataset has " + _bold("no license") + ".\n"
-    else:
-        license_msg = "This dataset is licensed under the " + _bold(license) + " license.\n"
-        license_msg += "To learn more, visit: " + _LICENSE_TO_URL[license] + "\n"
 
+    # Create license message
+    if not license_info:  # Handle empty license
+        license_msg = Text("License: None specified", style="yellow")
+    else:
+        license_msg = Text.assemble(("This dataset is licensed under ", "bold cyan"), (f"{license_info}", "green"))
+        if license_info in _LICENSE_TO_URL:
+            license_more_info = Text(" To learn more about this license, visit ", style="bold cyan")
+            license_url = Text(f"{_LICENSE_TO_URL[license_info]}", justify="center", style="white")
+        else:
+            license_more_info = ""
+            license_url = ""
+    # Create citation message
     if citation == "":
-        citation_msg = "This dataset has no associated citation."
+        citation_msg = Text("This dataset has no associated citation.", style="yellow")
+        citation_url = ""
     else:
-        citation_msg = "When using this dataset, please cite the following:\n\n"
-        citation_msg += citation
+        citation_msg = (Text("When using this dataset, please cite the following: \n", style="bold cyan"),)
+        citation_url = Text(citation, justify="center", style="white")
 
+    # Dataset documentation message
     docs = load_public_sources()[name]["docs_url"]
-    docs_msg = "\nYou can find additional information about " "this dataset at:\n" + docs
+    docs_msg = Text("You can find additional information about this dataset at: ", style="bold  cyan")
+    docs_url = Text(docs, justify="center", style="white")
 
-    columns = shutil.get_terminal_size((80, 24)).columns
-    max_print_length = max(
-        min(
-            columns,
-            max([len(i) for i in [*citation_msg.split("\n"), *license_msg.split("\n")]]),
+    combined_message = Text.assemble(
+        title_text,
+        "\n\n",
+        location_text,
+        "\n\n",
+        license_msg,
+        " ",
+        license_more_info,
+        license_url,
+        "\n\n",
+        citation_msg,
+        citation_url,
+        "\n\n",
+        docs_msg,
+        docs_url,
+    )
+    console = Console()
+    # Create and print the rich Panel
+    panel = Panel(
+        combined_message,
+        title="Copyright, Citation, and Documenation Information",
+        subtitle=title_text,
+        border_style="bright_yellow",
+        highlight=True,
+        expand=False,  # Prevent unnecessary whitespace
+    )
+    console.print(panel)
+
+    # Instructions on how to reprint (using rich Text)
+    instructions = Text.assemble(
+        ("\nThis message will ",),
+        (
+            "not ",
+            "bold",
         ),
-        columns,
+        ("be automatically shown again. To view this message again,  in an AgMLDataLoader run "),
+        ("`loader.info.citation_summary()` "),
+        (" Otherwise, you can use `agml.data.source(<dataset_name>).citation_summary()`.",),
     )
-    print("\n" + "=" * max_print_length)
-    print(first_msg)
-    print(license_msg)
-    print(citation_msg)
-    print(docs_msg)
-    print(
-        "\nThis message will " + _bold("not") + " be automatically shown\n"
-        "again. To view this message again, in an AgMLDataLoader\n"
-        + "run `loader.info.citation_summary()`. Otherwise, you\n"
-        + "can use `agml.data.source(<name>).citation_summary().`"
+    warning_panel = Panel(
+        instructions,
+        title="Note",
+        border_style="yellow",
+        expand=False,
+        highlight=True,
     )
+    console.print(warning_panel)
 
     if location is not None:
-        print(f"\nYou can find your dataset at {location}.")
-    print("=" * max_print_length)
-    sys.stdout.flush()
+        console.print(f"\n [bold] You can find your dataset at {location}.")
