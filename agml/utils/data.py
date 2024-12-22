@@ -20,6 +20,9 @@ import shutil
 import sys
 
 
+from rich.text import Text
+
+
 @functools.lru_cache(maxsize=None)
 def load_public_sources() -> dict:
     """Loads the public data sources JSON file."""
