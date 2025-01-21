@@ -167,6 +167,9 @@ model.run_training(loader)
 [strawberry_detection_2022](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/strawberry_detection_2022.md) | Object Detection | 175 |
 [almond_harvest_2021](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/almond_harvest_2021.md) | Object Detection | 50 |
 [almond_bloom_2023](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/almond_bloom_2023.md) | Object Detection | 100 |
+[gemini_flower_detection](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/gemini_flower_detection.md) | Object Detection | 134 |
+[gemini_leaf_detection](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/gemini_leaf_detection.md) | Object Detection | 25 |
+[gemini_pod_detection](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/gemini_pod_detection.md) | Object Detection | 98 |
 
 ## Usage Information
 
@@ -196,4 +199,4 @@ We welcome contributions! If you would like to contribute a new feature, fix an 
 a bug or feature that you would like to see implemented, please don't hesitate to use the *Issues* tab to bring it to our attention.
 See the [contributing guidelines](/CONTRIBUTING.md) for more information.
 
-## Fund
+##

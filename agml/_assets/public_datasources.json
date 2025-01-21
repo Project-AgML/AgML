@@ -1657,5 +1657,98 @@
                 0.23989765346050262
             ]
         }
+    },
+    "gemini_flower_detection": {
+        "classes": {
+            "1": "object"
+        },
+        "ml_task": "object_detection",
+        "ag_task": "flower_detection",
+        "location": {
+            "continent": "north_america",
+            "country": "usa"
+        },
+        "sensor_modality": "rgb",
+        "real_synthetic": "real",
+        "platform": "ground",
+        "annotation_format": "coco_json",
+        "input_data_format": "jpg",
+        "n_images": "134",
+        "docs_url": "http://gemini-breeding.github.io/",
+        "external_image_sources": [],
+        "stats": {
+            "mean": [
+                0.4323323965072632,
+                0.46158450841903687,
+                0.30745893716812134
+            ],
+            "std": [
+                0.1580360382795334,
+                0.15188023447990417,
+                0.1447634994983673
+            ]
+        }
+    },
+    "gemini_leaf_detection": {
+        "classes": {
+            "1": "object"
+        },
+        "ml_task": "object_detection",
+        "ag_task": "leaf_detection",
+        "location": {
+            "continent": "north_america",
+            "country": "usa"
+        },
+        "sensor_modality": "rgb",
+        "real_synthetic": "real",
+        "platform": "ground",
+        "annotation_format": "coco_json",
+        "input_data_format": "jpg",
+        "n_images": "25",
+        "docs_url": "http://gemini-breeding.github.io/",
+        "external_image_sources": [],
+        "stats": {
+            "mean": [
+                0.5152409672737122,
+                0.48080527782440186,
+                0.4170548915863037
+            ],
+            "std": [
+                0.17544656991958618,
+                0.1531846672296524,
+                0.13160519301891327
+            ]
+        }
+    },
+    "gemini_pod_detection": {
+        "classes": {
+            "1": "object"
+        },
+        "ml_task": "object_detection",
+        "ag_task": "pod_detection",
+        "location": {
+            "continent": "north_america",
+            "country": "usa"
+        },
+        "sensor_modality": "rgb",
+        "real_synthetic": "real",
+        "platform": "ground",
+        "annotation_format": "coco_json",
+        "input_data_format": "jpg",
+        "n_images": "98",
+        "docs_url": "http://gemini-breeding.github.io/",
+        "external_image_sources": [],
+        "stats": {
+            "mean": [
+                0.4158002436161041,
+                0.47277742624282837,
+                0.2854432761669159
+            ],
+            "std": [
+                0.16562673449516296,
+                0.1610204577445984,
+                0.16480477154254913
+            ]
+        }
     }
 }

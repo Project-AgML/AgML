@@ -186,5 +186,17 @@
     "almond_bloom_2023": {
         "license": "",
         "citation": ""
+    },
+    "gemini_flower_detection": {
+        "license": "Apache 2.0",
+        "citation": ""
+    },
+    "gemini_leaf_detection": {
+        "license": "Apache 2.0",
+        "citation": ""
+    },
+    "gemini_pod_detection": {
+        "license": "Apache 2.0",
+        "citation": ""
     }
 }

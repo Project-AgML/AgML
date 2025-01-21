@@ -1451,6 +1451,42 @@ class PublicDataPreprocessor(object):
         shutil.move(os.path.join(original_dir, 'coco.json'),
                     os.path.join(processed_dir, 'annotations.json'))
         
+    def gemini_flower_detection(self, dataset_name):
+        original_dir = os.path.join(self.data_original_dir)
+        print(original_dir)
+        processed_dir = os.path.join(self.data_processed_dir, dataset_name)
+        processed_image_dir = os.path.join(processed_dir, 'images')
+        os.makedirs(processed_image_dir, exist_ok = True)
+        # Move images
+        for image in tqdm(glob.glob(os.path.join(original_dir, 'images', '*.jpg'))):
+            shutil.move(image, processed_image_dir)
+        shutil.move(os.path.join(original_dir, 'coco.json'),
+                    os.path.join(processed_dir, 'annotations.json'))
+        
+    def gemini_leaf_detection(self, dataset_name):
+        original_dir = os.path.join(self.data_original_dir)
+        print(original_dir)
+        processed_dir = os.path.join(self.data_processed_dir, dataset_name)
+        processed_image_dir = os.path.join(processed_dir, 'images')
+        os.makedirs(processed_image_dir, exist_ok = True)
+        # Move images
+        for image in tqdm(glob.glob(os.path.join(original_dir, 'images', '*.jpg'))):
+            shutil.move(image, processed_image_dir)
+        shutil.move(os.path.join(original_dir, 'coco.json'),
+                    os.path.join(processed_dir, 'annotations.json'))
+    
+    def gemini_pod_detection(self, dataset_name):
+        original_dir = os.path.join(self.data_original_dir)
+        print(original_dir)
+        processed_dir = os.path.join(self.data_processed_dir, dataset_name)
+        processed_image_dir = os.path.join(processed_dir, 'images')
+        os.makedirs(processed_image_dir, exist_ok = True)
+        # Move images
+        for image in tqdm(glob.glob(os.path.join(original_dir, 'images', '*.jpg'))):
+            shutil.move(image, processed_image_dir)
+        shutil.move(os.path.join(original_dir, 'coco.json'),
+                    os.path.join(processed_dir, 'annotations.json'))
+        
 if __name__ == '__main__':
     # Initialize program arguments.
     ap = argparse.ArgumentParser()
