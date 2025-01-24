@@ -198,5 +198,9 @@
     "gemini_pod_detection": {
         "license": "Apache 2.0",
         "citation": ""
+    },
+    "gemini_plant_detection": {
+        "license": "Apache 2.0",
+        "citation": ""
     }
 }

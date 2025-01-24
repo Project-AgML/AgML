@@ -1750,5 +1750,37 @@
                 0.16480477154254913
             ]
         }
+    },
+    "gemini_plant_detection": {
+        "classes": {
+            "1": "plant",
+            "2": "weed"
+        },
+        "ml_task": "object_detection",
+        "ag_task": "plant_detection",
+        "location": {
+            "continent": "north_america",
+            "country": "usa"
+        },
+        "sensor_modality": "rgb",
+        "real_synthetic": "real",
+        "platform": "ground",
+        "annotation_format": "coco_json",
+        "input_data_format": "jpg",
+        "n_images": "402",
+        "docs_url": "http://gemini-breeding.github.io/",
+        "external_image_sources": [],
+        "stats": {
+            "mean": [
+                0.513730525970459,
+                0.47968044877052307,
+                0.41635745763778687
+            ],
+            "std": [
+                0.17421162128448486,
+                0.15248577296733856,
+                0.13018733263015747
+            ]
+        }
     }
 }
