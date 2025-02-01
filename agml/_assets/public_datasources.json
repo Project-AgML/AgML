@@ -1782,5 +1782,45 @@
                 0.13018733263015747
             ]
         }
+    },
+    "paddy_disease_classification": {
+        "ml_task": "image_classification",
+        "ag_task": "paddy_disease_classification",
+        "location": {
+            "continent": "asia",
+            "country": "india"
+        },
+        "sensor_modality": "rgb",
+        "real_synthetic": "real",
+        "platform": "uav",
+        "input_data_format": "jpg",
+        "annotation_format": "directory_names",
+        "n_images": "10407",
+        "docs_url": "https://www.kaggle.com/competitions/paddy-disease-classification/data",
+        "classes": {
+            "0": "bacterial_leaf_blight",
+            "1": "bacterial_leaf_streak",
+            "2": "bacterial_panicle_blight",
+            "3": "blast",
+            "4": "brown_spot",
+            "5": "dead_heart",
+            "6": "downy_mildew",
+            "7": "hispa",
+            "8": "normal",
+            "9": "tungro"
+        },
+        "external_image_sources": [],
+        "stats": {
+            "mean": [
+                0.49716252088546753,
+                0.5882205963134766,
+                0.2304224669933319
+            ],
+            "std": [
+                0.23286384344100952,
+                0.23301087319850922,
+                0.1900700032711029
+            ]
+        }
     }
 }

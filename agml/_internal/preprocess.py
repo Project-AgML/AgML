@@ -1498,7 +1498,10 @@ class PublicDataPreprocessor(object):
             shutil.move(image, processed_image_dir)
         shutil.move(os.path.join(original_dir, 'coco.json'),
                     os.path.join(processed_dir, 'annotations.json'))
-        
+
+    def paddy_disease_classification(self, dataset_name):
+        pass
+    
 if __name__ == '__main__':
     # Initialize program arguments.
     ap = argparse.ArgumentParser()

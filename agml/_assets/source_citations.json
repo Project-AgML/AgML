@@ -202,5 +202,9 @@
     "gemini_plant_detection": {
         "license": "Apache 2.0",
         "citation": ""
+    },
+    "paddy_disease_classification": {
+        "license": "CC BY 4.0",
+        "citation": "Petchiammal A, Briskline Kiruba S, Murugan D, Pandarasamy Arjunan. (2022). Paddy Doctor: A Visual Image Dataset for Automated Paddy Disease Classification and Benchmarking. IEEE Dataport. https://dx.doi.org/10.21227/hz4v-af08"
     }
 }

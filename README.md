@@ -171,6 +171,7 @@ model.run_training(loader)
 [gemini_leaf_detection](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/gemini_leaf_detection.md) | Object Detection | 25 |
 [gemini_pod_detection](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/gemini_pod_detection.md) | Object Detection | 98 |
 [gemini_plant_detection](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/gemini_plant_detection.md) | Object Detection | 402 |
+[paddy_disease_classification](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/paddy_disease_classification.md) | Image Classification | 10407 |
 
 ## Usage Information
 
@@ -199,5 +200,3 @@ into a single training pipeline. To this end, we provide annotations in the foll
 We welcome contributions! If you would like to contribute a new feature, fix an issue that you've noticed, or even just mention
 a bug or feature that you would like to see implemented, please don't hesitate to use the *Issues* tab to bring it to our attention.
 See the [contributing guidelines](/CONTRIBUTING.md) for more information.
-
-#
