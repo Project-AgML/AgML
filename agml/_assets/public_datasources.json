@@ -1856,5 +1856,40 @@
                 0.15651942789554596
             ]
         }
+    },
+    "chilli_leaf_classification": {
+        "ml_task": "image_classification",
+        "ag_task": "chilli_leaf_classification",
+        "location": {
+            "continent": "asia",
+            "country": "india"
+        },
+        "sensor_modality": "rgb",
+        "real_synthetic": "real",
+        "platform": "uav",
+        "input_data_format": "jpg",
+        "annotation_format": "directory_names",
+        "n_images": "10974",
+        "docs_url": "https://www.researchgate.net/publication/380611658_Dataset_of_Chilli_and_Onion_Plant_Leaf_Images_for_Classification_and_Detection",
+        "classes": {
+            "0": "cercospora",
+            "1": "healthy",
+            "2": "mites_and_trips",
+            "3": "nutritional",
+            "4": "powdery_mildew"
+        },
+        "external_image_sources": [],
+        "stats": {
+            "mean": [
+                0.5395056009292603,
+                0.5616798996925354,
+                0.4004570543766022
+            ],
+            "std": [
+                0.17784084379673004,
+                0.1770888715982437,
+                0.18177233636379242
+            ]
+        }
     }
 }
