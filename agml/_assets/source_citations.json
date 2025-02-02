@@ -206,5 +206,9 @@
     "paddy_disease_classification": {
         "license": "CC BY 4.0",
         "citation": "Petchiammal A, Briskline Kiruba S, Murugan D, Pandarasamy Arjunan. (2022). Paddy Doctor: A Visual Image Dataset for Automated Paddy Disease Classification and Benchmarking. IEEE Dataport. https://dx.doi.org/10.21227/hz4v-af08"
+    },
+    "onion_leaf_classification": {
+        "license": "CC BY 4.0",
+        "citation": "Aishwarya, M.P & Reddy, A.. (2024). Dataset of Chilli and Onion Plant Leaf Images for Classification and Detection. Data in Brief. 54. 110524. 10.1016/j.dib.2024.110524. "
     }
 }

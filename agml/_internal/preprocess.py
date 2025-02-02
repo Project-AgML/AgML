@@ -1502,6 +1502,9 @@ class PublicDataPreprocessor(object):
     def paddy_disease_classification(self, dataset_name):
         pass
     
+    def onion_leaf_classification(self, dataset_name):
+        pass
+    
 if __name__ == '__main__':
     # Initialize program arguments.
     ap = argparse.ArgumentParser()
