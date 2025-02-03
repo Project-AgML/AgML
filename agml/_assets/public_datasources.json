@@ -2108,5 +2108,41 @@
                 0.22041980922222137
             ]
         }
+    },
+    "rice_leaf_disease_classification": {
+        "ml_task": "image_classification",
+        "ag_task": "rice_leaf_disease_classification",
+        "location": {
+            "continent": "worldwide",
+            "country": "worldwide"
+        },
+        "sensor_modality": "rgb",
+        "real_synthetic": "real",
+        "platform": "uav",
+        "input_data_format": "jpg",
+        "annotation_format": "directory_names",
+        "n_images": "3829",
+        "docs_url": "https://www.kaggle.com/datasets/anshulm257/rice-disease-dataset/data",
+        "classes": {
+            "0": "Bacterial_Leaf_Blight",
+            "1": "Brown_Spot",
+            "2": "Healthy_Rice_Leaf",
+            "3": "Leaf_Blast",
+            "4": "Leaf_Scald",
+            "5": "Sheath_Blight"
+        },
+        "external_image_sources": [],
+        "stats": {
+            "mean": [
+                0.3801848888397217,
+                0.5112283229827881,
+                0.24517497420310974
+            ],
+            "std": [
+                0.1857737898826599,
+                0.1747269332408905,
+                0.13470299541950226
+            ]
+        }
     }
 }

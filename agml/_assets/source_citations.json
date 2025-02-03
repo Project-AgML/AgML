@@ -238,5 +238,9 @@
     "coconut_tree_disease_classification": {
         "license": "CC BY 4.0",
         "citation": "PATIL, Kailas; Thite, Sandip; Suryawanshi, Yogesh; chumchu, prawit (2023), “Coconut Tree Disease Dataset”, Mendeley Data, V1, doi: 10.17632/gh56wbsnj5.1"
+    },
+    "rice_leaf_disease_classification": {
+        "license": "",
+        "citation": ""
     }
 }
