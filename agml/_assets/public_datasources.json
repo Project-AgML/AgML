@@ -1891,5 +1891,116 @@
                 0.18177233636379242
             ]
         }
+    },
+    "orange_leaf_disease_classification": {
+        "ml_task": "image_classification",
+        "ag_task": "orange_leaf_disease_classification",
+        "location": {
+            "continent": "asia",
+            "country": "bangladesh"
+        },
+        "sensor_modality": "rgb",
+        "real_synthetic": "real",
+        "platform": "uav",
+        "input_data_format": "jpeg",
+        "annotation_format": "directory_names",
+        "n_images": "5813",
+        "docs_url": "https://www.sciencedirect.com/science/article/pii/S2352340924006802#sec0004",
+        "classes": {
+            "0": "citrus_canker",
+            "1": "citrus_greening",
+            "2": "citrus_mealybugs",
+            "3": "die_back",
+            "4": "foliage_damaged",
+            "5": "healthy_leaf",
+            "6": "powdery_mildew",
+            "7": "shot_hole",
+            "8": "spiny_whitefly",
+            "9": "yellow_dragon",
+            "10": "yellow_leaves"
+        },
+        "external_image_sources": [],
+        "stats": {
+            "mean": [
+                0.641664981842041,
+                0.645190954208374,
+                0.5412733554840088
+            ],
+            "std": [
+                0.21496868133544922,
+                0.19639450311660767,
+                0.2651123106479645
+            ]
+        }
+    },
+    "papaya_leaf_disease_classification": {
+        "ml_task": "image_classification",
+        "ag_task": "papaya_leaf_disease_classification",
+        "location": {
+            "continent": "asia",
+            "country": "bangladesh"
+        },
+        "sensor_modality": "rgb",
+        "real_synthetic": "real",
+        "platform": "uav",
+        "input_data_format": "jpg",
+        "annotation_format": "directory_names",
+        "n_images": "2159",
+        "docs_url": "https://www.sciencedirect.com/science/article/pii/S2352340924008734",
+        "classes": {
+            "0": "Anthracnose",
+            "1": "BacterialSpot",
+            "2": "Curl",
+            "3": "Healthy",
+            "4": "RingSpot"
+        },
+        "external_image_sources": [],
+        "stats": {
+            "mean": [
+                0.4037705361843109,
+                0.5427719950675964,
+                0.29178404808044434
+            ],
+            "std": [
+                0.1690509021282196,
+                0.15967564284801483,
+                0.14206627011299133
+            ]
+        }
+    },
+    "blackgram_plant_leaf_disease_classification": {
+        "ml_task": "image_classification",
+        "ag_task": "blackgram_plant_leaf_disease_classification",
+        "location": {
+            "continent": "asia",
+            "country": "india"
+        },
+        "sensor_modality": "rgb",
+        "real_synthetic": "real",
+        "platform": "uav",
+        "input_data_format": "jpg",
+        "annotation_format": "directory_names",
+        "n_images": "1007",
+        "docs_url": "https://www.sciencedirect.com/science/article/pii/S2352340922009295",
+        "classes": {
+            "0": "anthracnose",
+            "1": "healthy",
+            "2": "leaf_crinckle",
+            "3": "powdery_mildew",
+            "4": "yellow_mosaic"
+        },
+        "external_image_sources": [],
+        "stats": {
+            "mean": [
+                0.4454658031463623,
+                0.5082071423530579,
+                0.3293055593967438
+            ],
+            "std": [
+                0.19813409447669983,
+                0.1792915314435959,
+                0.16840000450611115
+            ]
+        }
     }
 }

@@ -1508,6 +1508,15 @@ class PublicDataPreprocessor(object):
     def chilli_leaf_classification(self, dataset_name):
         pass
 
+    def orange_leaf_disease_classification(self, dataset_name):
+        pass
+
+    def papaya_leaf_disease_classification(self, dataset_name):
+        pass
+
+    def blackgram_plant_leaf_disease_classification(self, dataset_name):
+        pass
+
 if __name__ == '__main__':
     # Initialize program arguments.
     ap = argparse.ArgumentParser()

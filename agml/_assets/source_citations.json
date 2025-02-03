@@ -214,5 +214,17 @@
     "chilli_leaf_classification": {
         "license": "CC BY 4.0",
         "citation": "Aishwarya, M.P & Reddy, A.. (2024). Dataset of Chilli and Onion Plant Leaf Images for Classification and Detection. Data in Brief. 54. 110524. 10.1016/j.dib.2024.110524. "
+    },
+    "orange_leaf_disease_classification": {
+        "license": "CC BY 4.0",
+        "citation": "Emon, Yousuf Rayhan; Ahad, Md Taimur (2023), “Multi-format open-source sweet orange leaf dataset for disease detection, classification, and analysis.”, Mendeley Data, V1, doi: 10.17632/f7cr74mwpj.1"
+    },
+    "papaya_leaf_disease_classification": {
+        "license": "CC BY 4.0",
+        "citation": "Sarker, Arpita ; Mustofa, Sumaya; Ahad, Md Taimur  (2023), “BDPapayaLeaf: A annotation based image dataset of papaya leaf disease.”, Mendeley Data, V1, doi: 10.17632/p997fvf526.1"
+    },
+    "blackgram_plant_leaf_disease_classification": {
+        "license": "CC BY 4.0",
+        "citation": "Talasila, Srinivas; Rawal, Kirti; Sethi, Gaurav; MSS, Sanjay; M, Surya Prakash Reddy (2022), “Blackgram Plant Leaf Disease Dataset”, Mendeley Data, V3, doi: 10.17632/zfcv9fmrgv.3"
     }
 }
