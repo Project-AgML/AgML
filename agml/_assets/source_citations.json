@@ -234,5 +234,9 @@
     "banana_leaf_disease_classification": {
         "license": "CC BY 4.0",
         "citation": "hailu, yordanos (2021), “Banana Leaf Disease Images”, Mendeley Data, V1, doi: 10.17632/rjykr62kdh.1"
+    },
+    "coconut_tree_disease_classification": {
+        "license": "CC BY 4.0",
+        "citation": "PATIL, Kailas; Thite, Sandip; Suryawanshi, Yogesh; chumchu, prawit (2023), “Coconut Tree Disease Dataset”, Mendeley Data, V1, doi: 10.17632/gh56wbsnj5.1"
     }
 }

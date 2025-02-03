@@ -2073,5 +2073,40 @@
                 0.18596293032169342
             ]
         }
+    },
+    "coconut_tree_disease_classification": {
+        "ml_task": "image_classification",
+        "ag_task": "coconut_tree_disease_classification",
+        "location": {
+            "continent": "asia",
+            "country": "india"
+        },
+        "sensor_modality": "rgb",
+        "real_synthetic": "real",
+        "platform": "uav",
+        "input_data_format": "jpg",
+        "annotation_format": "directory_names",
+        "n_images": "5798",
+        "docs_url": "https://www.sciencedirect.com/science/article/pii/S2352340923007692#sec0003",
+        "classes": {
+            "0": "Bud_Root_Dropping",
+            "1": "Bud_Rot",
+            "2": "Gray_Leaf_Spot",
+            "3": "Leaf_Rot",
+            "4": "Stem_Bleeding"
+        },
+        "external_image_sources": [],
+        "stats": {
+            "mean": [
+                0.49172350764274597,
+                0.49519237875938416,
+                0.4346628189086914
+            ],
+            "std": [
+                0.2121831327676773,
+                0.20774872601032257,
+                0.22041980922222137
+            ]
+        }
     }
 }

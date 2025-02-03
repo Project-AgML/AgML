@@ -1522,7 +1522,10 @@ class PublicDataPreprocessor(object):
 
     def banana_leaf_disease_classification(self, dataset_name):
         pass
-    
+
+    def coconut_tree_disease_classification(self, dataset_name):
+        pass
+
 if __name__ == '__main__':
     # Initialize program arguments.
     ap = argparse.ArgumentParser()
