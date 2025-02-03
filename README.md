@@ -177,6 +177,7 @@ model.run_training(loader)
 [orange_leaf_disease_classification](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/orange_leaf_disease_classification.md) | Image Classification | 5813 |
 [papaya_leaf_disease_classification](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/papaya_leaf_disease_classification.md) | Image Classification | 2159 |
 [blackgram_plant_leaf_disease_classification](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/blackgram_plant_leaf_disease_classification.md) | Image Classification | 1007 |
+[arabica_coffee_leaf_disease_classification](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/arabica_coffee_leaf_disease_classification.md) | Image Classification | 58549 |
 
 ## Usage Information
 
@@ -204,4 +205,4 @@ into a single training pipeline. To this end, we provide annotations in the foll
 
 We welcome contributions! If you would like to contribute a new feature, fix an issue that you've noticed, or even just mention
 a bug or feature that you would like to see implemented, please don't hesitate to use the *Issues* tab to bring it to our attention.
-See the [contributing guidelines](/CONTRIBUTING.md) for more inform
+See the [contributing guidelines](/CONTRIBUTING.md) for more info

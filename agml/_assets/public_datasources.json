@@ -2002,5 +2002,43 @@
                 0.16840000450611115
             ]
         }
+    },
+    "arabica_coffee_leaf_disease_classification": {
+        "ml_task": "image_classification",
+        "ag_task": "arabica_coffee_leaf_disease_classification",
+        "location": {
+            "continent": "africa",
+            "country": "kenya"
+        },
+        "sensor_modality": "rgb",
+        "real_synthetic": "real",
+        "platform": "uav",
+        "input_data_format": [
+            "jpg",
+            "jpeg"
+        ],
+        "annotation_format": "directory_names",
+        "n_images": "58549",
+        "docs_url": "https://www.sciencedirect.com/science/article/pii/S2352340921004261?via%3Dihub#sec0001",
+        "classes": {
+            "0": "Cerscospora",
+            "1": "Healthy",
+            "2": "Leaf_rust",
+            "3": "Miner",
+            "4": "Phoma"
+        },
+        "external_image_sources": [],
+        "stats": {
+            "mean": [
+                0.4663342535495758,
+                0.6128407716751099,
+                0.40549468994140625
+            ],
+            "std": [
+                0.1319405734539032,
+                0.10137982666492462,
+                0.13884715735912323
+            ]
+        }
     }
 }
