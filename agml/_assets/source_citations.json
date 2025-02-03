@@ -230,5 +230,9 @@
     "arabica_coffee_leaf_disease_classification": {
         "license": "CC BY 4.0",
         "citation": "@article{JEPKOECH2021107142, title = {Arabica coffee leaf images dataset for coffee leaf disease detection and classification}, journal = {Data in Brief}, volume = {36}, pages = {107142}, year = {2021}, issn = {2352-3409}, doi = {https://doi.org/10.1016/j.dib.2021.107142}, url = {https://www.sciencedirect.com/science/article/pii/S2352340921004261}, author = {Jennifer Jepkoech and David Muchangi Mugo and Benson K. Kenduiywo and Edna Chebet Too}}"
+    },
+    "banana_leaf_disease_classification": {
+        "license": "CC BY 4.0",
+        "citation": "hailu, yordanos (2021), “Banana Leaf Disease Images”, Mendeley Data, V1, doi: 10.17632/rjykr62kdh.1"
     }
 }

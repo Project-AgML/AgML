@@ -2040,5 +2040,38 @@
                 0.13884715735912323
             ]
         }
+    },
+    "banana_leaf_disease_classification": {
+        "ml_task": "image_classification",
+        "ag_task": "banana_leaf_disease_classification",
+        "location": {
+            "continent": "africa",
+            "country": "ethiopia"
+        },
+        "sensor_modality": "rgb",
+        "real_synthetic": "real",
+        "platform": "uav",
+        "input_data_format": "jpg",
+        "annotation_format": "directory_names",
+        "n_images": "1288",
+        "docs_url": "https://www.researchgate.net/publication/380900090_Sigatoka_and_Xanthomonas_Banana_Leaf_Disease_Detection_Via_Transfer_Learning",
+        "classes": {
+            "0": "healthy",
+            "1": "segatoka",
+            "2": "xamthomonas"
+        },
+        "external_image_sources": [],
+        "stats": {
+            "mean": [
+                0.4403895437717438,
+                0.4788191020488739,
+                0.22997669875621796
+            ],
+            "std": [
+                0.2052917778491974,
+                0.20397576689720154,
+                0.18596293032169342
+            ]
+        }
     }
 }
