@@ -2144,5 +2144,41 @@
                 0.13470299541950226
             ]
         }
+    },
+    "tea_leaf_disease_classification": {
+        "ml_task": "image_classification",
+        "ag_task": "tea_leaf_disease_classification",
+        "location": {
+            "continent": "asia",
+            "country": "india"
+        },
+        "sensor_modality": "rgb",
+        "real_synthetic": "real",
+        "platform": "uav",
+        "input_data_format": "jpg",
+        "annotation_format": "directory_names",
+        "n_images": "5867",
+        "docs_url": "https://www.kaggle.com/datasets/saikatdatta1994/tea-leaf-disease",
+        "classes": {
+            "0": "algal_spot",
+            "1": "brown_blight",
+            "2": "gray_blight",
+            "3": "healthy",
+            "4": "helopeltis",
+            "5": "red_spot"
+        },
+        "external_image_sources": [],
+        "stats": {
+            "mean": [
+                0.720391035079956,
+                0.7148104310035706,
+                0.7214117646217346
+            ],
+            "std": [
+                0.2642996311187744,
+                0.24272359907627106,
+                0.32473450899124146
+            ]
+        }
     }
 }

@@ -242,5 +242,9 @@
     "rice_leaf_disease_classification": {
         "license": "",
         "citation": ""
+    },
+    "tea_leaf_disease_classification": {
+        "license": "CC BY-NC 4.0",
+        "citation": "@article{BALASUNDARAM2025103784, title = {Tea leaf disease detection using segment anything model and deep convolutional neural networks}, journal = {Results in Engineering}, volume = {25}, pages = {103784}, year = {2025}, issn = {2590-1230}, doi = {https://doi.org/10.1016/j.rineng.2024.103784}, url = {https://www.sciencedirect.com/science/article/pii/S2590123024020279}, author = {Ananthakrishnan Balasundaram and Prem Sundaresan and Aryan Bhavsar and Mishti Mattu and Muthu Subash Kavitha and Ayesha Shaik}}"
     }
 }
