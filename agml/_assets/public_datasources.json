@@ -2214,5 +2214,41 @@
                 0.21828916668891907
             ]
         }
+    },
+    "java_plum_leaf_disease_classification": {
+        "ml_task": "image_classification",
+        "ag_task": "java_plum_leaf_disease_classification",
+        "location": {
+            "continent": "asia",
+            "country": "bangladesh"
+        },
+        "sensor_modality": "rgb",
+        "real_synthetic": "real",
+        "platform": "uav",
+        "input_data_format": "jpg",
+        "annotation_format": "directory_names",
+        "n_images": "2400",
+        "docs_url": "https://www.sciencedirect.com/science/article/pii/S2772375524001059#sec0003",
+        "classes": {
+            "0": "Bacterial_Spot",
+            "1": "Brown_Blight",
+            "2": "Dry",
+            "3": "Healthy",
+            "4": "Powdery_Mildew",
+            "5": "Sooty_Mold"
+        },
+        "external_image_sources": [],
+        "stats": {
+            "mean": [
+                0.6888663172721863,
+                0.7057309746742249,
+                0.6495749950408936
+            ],
+            "std": [
+                0.21865394711494446,
+                0.20790858566761017,
+                0.3019416928291321
+            ]
+        }
     }
 }

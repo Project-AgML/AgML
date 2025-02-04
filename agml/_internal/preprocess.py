@@ -1535,6 +1535,9 @@ class PublicDataPreprocessor(object):
     def betel_leaf_disease_classification(self, dataset_name):
         pass
 
+    def java_plum_leaf_disease_classification(self, dataset_name):
+        pass
+
 if __name__ == '__main__':
     # Initialize program arguments.
     ap = argparse.ArgumentParser()

@@ -250,5 +250,9 @@
     "betel_leaf_disease_classification": {
         "license": "CC BY 4.0",
         "citation": "Rashid, Mohammad Rifat Ahmmad; Hossain, Md. Miskat ; Biswas,  Joy ; Majumder, Hredoy  (2024), “Betel Leaf Image Dataset from Bangladesh”, Mendeley Data, V2, doi: 10.17632/g7fpgj57wc.2"
+    },
+    "java_plum_leaf_disease_classification": {
+        "license": "CC BY 4.0",
+        "citation": "Bhowmik, Auvick Chandra; Ahad, Taimur (2024), “Java Plum Leaf Disease Dataset”, Mendeley Data, V3, doi: 10.17632/43d75vptz4.3"
     }
 }
