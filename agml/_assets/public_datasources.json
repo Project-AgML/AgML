@@ -2180,5 +2180,39 @@
                 0.32473450899124146
             ]
         }
+    },
+    "betel_leaf_disease_classification": {
+        "ml_task": "image_classification",
+        "ag_task": "betel_leaf_disease_classification",
+        "location": {
+            "continent": "asia",
+            "country": "bangladesh"
+        },
+        "sensor_modality": "rgb",
+        "real_synthetic": "real",
+        "platform": "uav",
+        "input_data_format": "jpg",
+        "annotation_format": "directory_names",
+        "n_images": "3589",
+        "docs_url": "https://www.semanticscholar.org/paper/Betel-Leaf-Diseases-Classification-using-Machine-A-David-Mukunthan/38208c9d2306444e3b9f8593715a46e2dcf26f44#paper-topics",
+        "classes": {
+            "0": "Bacterial_Leaf_Disease",
+            "1": "Dried_Leaf",
+            "2": "Fungal_Brown_Spot_Disease",
+            "3": "Healthy_Leaf"
+        },
+        "external_image_sources": [],
+        "stats": {
+            "mean": [
+                0.44302278757095337,
+                0.5203492045402527,
+                0.32380297780036926
+            ],
+            "std": [
+                0.18618987500667572,
+                0.19697120785713196,
+                0.21828916668891907
+            ]
+        }
     }
 }

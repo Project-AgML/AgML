@@ -1532,7 +1532,8 @@ class PublicDataPreprocessor(object):
     def tea_leaf_disease_classification(self, dataset_name):
         pass
 
-    
+    def betel_leaf_disease_classification(self, dataset_name):
+        pass
 
 if __name__ == '__main__':
     # Initialize program arguments.
