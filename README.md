@@ -184,6 +184,8 @@ model.run_training(loader)
 [tea_leaf_disease_classification](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/tea_leaf_disease_classification.md) | Image Classification | 5867 |
 [betel_leaf_disease_classification](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/betel_leaf_disease_classification.md) | Image Classification | 3589 |
 [java_plum_leaf_disease_classification](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/java_plum_leaf_disease_classification.md) | Image Classification | 2400 |
+[sunflower_disease_classification](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/sunflower_disease_classification.md) | Image Classification | 2358 |
+[cucumber_disease_classification](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/cucumber_disease_classification.md) | Image Classification | 7689 |
 
 ## Usage Information
 
@@ -211,4 +213,4 @@ into a single training pipeline. To this end, we provide annotations in the foll
 
 We welcome contributions! If you would like to contribute a new feature, fix an issue that you've noticed, or even just mention
 a bug or feature that you would like to see implemented, please don't hesitate to use the *Issues* tab to bring it to our attention.
-See the [contributing guidelines](/CONTRIBUTING.md) for m
+See the [contributing guidelines](/CONTRIBUTING.md) for

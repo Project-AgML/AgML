@@ -2250,5 +2250,77 @@
                 0.3019416928291321
             ]
         }
+    },
+    "sunflower_disease_classification": {
+        "ml_task": "image_classification",
+        "ag_task": "sunflower_disease_classification",
+        "location": {
+            "continent": "asia",
+            "country": "bangladesh"
+        },
+        "sensor_modality": "rgb",
+        "real_synthetic": "real",
+        "platform": "uav",
+        "input_data_format": "jpg",
+        "annotation_format": "directory_names",
+        "n_images": "2358",
+        "docs_url": "https://www.sciencedirect.com/science/article/pii/S2352340922002542",
+        "classes": {
+            "0": "Downy_mildew",
+            "1": "Fresh_leaf",
+            "2": "Gray_mold",
+            "3": "Leaf_scars"
+        },
+        "external_image_sources": [],
+        "stats": {
+            "mean": [
+                0.45603200793266296,
+                0.45415663719177246,
+                0.2436216175556183
+            ],
+            "std": [
+                0.22495068609714508,
+                0.21411556005477905,
+                0.17952653765678406
+            ]
+        }
+    },
+    "cucumber_disease_classification": {
+        "ml_task": "image_classification",
+        "ag_task": "cucumber_disease_classification",
+        "location": {
+            "continent": "asia",
+            "country": "bangladesh"
+        },
+        "sensor_modality": "rgb",
+        "real_synthetic": "real",
+        "platform": "uav",
+        "input_data_format": "jpg",
+        "annotation_format": "directory_names",
+        "n_images": "7689",
+        "docs_url": "https://www.sciencedirect.com/science/article/pii/S2352340923004389",
+        "classes": {
+            "0": "Anthracnose",
+            "1": "Bacterial_Wilt",
+            "2": "Belly_Rot",
+            "3": "Downy_Mildew",
+            "4": "Fresh_Cucumber",
+            "5": "Fresh_Leaf",
+            "6": "Gummy_Stem_Blight",
+            "7": "Pythium_Fruit_Rot"
+        },
+        "external_image_sources": [],
+        "stats": {
+            "mean": [
+                0.46584174036979675,
+                0.5267260074615479,
+                0.3983174264431
+            ],
+            "std": [
+                0.19197316467761993,
+                0.18358547985553741,
+                0.17932511866092682
+            ]
+        }
     }
 }

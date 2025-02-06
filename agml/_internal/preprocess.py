@@ -1538,6 +1538,12 @@ class PublicDataPreprocessor(object):
     def java_plum_leaf_disease_classification(self, dataset_name):
         pass
 
+    def sunflower_disease_classification(self, dataset_name):
+        pass
+
+    def cucumber_disease_classification(self, dataset_name):
+        pass
+
 if __name__ == '__main__':
     # Initialize program arguments.
     ap = argparse.ArgumentParser()

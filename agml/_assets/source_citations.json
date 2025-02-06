@@ -254,5 +254,13 @@
     "java_plum_leaf_disease_classification": {
         "license": "CC BY 4.0",
         "citation": "Bhowmik, Auvick Chandra; Ahad, Taimur (2024), “Java Plum Leaf Disease Dataset”, Mendeley Data, V3, doi: 10.17632/43d75vptz4.3"
+    },
+    "sunflower_disease_classification": {
+        "license": "CC BY 4.0",
+        "citation": "Rajbongshi, Aditya; Sara, Umme ; Akter, Bonna ; Shakil, Rashiduzzaman ; Sazzad, Sadia (2022), “Sun Flower Fruits and Leaves dataset for Sunflower Disease Classification through Machine Learning and Deep Learning”, Mendeley Data, V1, doi: 10.17632/b83hmrzth8.1"
+    },
+    "cucumber_disease_classification": {
+        "license": "CC BY 4.0",
+        "citation": "Sultana, Nusrat; Shorif, Sumaita Binte ; Akter, Morium ; Uddin, Mohammad Shorif  (2022), “Cucumber Disease Recognition Dataset”, Mendeley Data, V1, doi: 10.17632/y6d3z6f8z9.1"
     }
 }
