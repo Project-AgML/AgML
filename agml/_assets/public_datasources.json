@@ -932,7 +932,7 @@
             "29": "Tomato two spotted spider mites leaf"
         },
         "ml_task": "object_detection",
-        "ag_task": "disease_classification",
+        "ag_task": "disease_detection",
         "location": {
             "continent": "worldwide",
             "country": "worldwide"
@@ -1423,7 +1423,7 @@
             "3": "Red Blotch"
         },
         "ml_task": "image_classification",
-        "ag_task": "vine_virus_photo",
+        "ag_task": "disease_classification",
         "location": {
             "continent": "worldwide",
             "country": "worldwide"
@@ -1530,7 +1530,7 @@
             "6": "small_white"
         },
         "ml_task": "object_detection",
-        "ag_task": "strawberry_detection",
+        "ag_task": "fruit_detection",
         "location": {
             "continent": "north_america",
             "country": "usa"
@@ -1567,7 +1567,7 @@
             "6": "small_white"
         },
         "ml_task": "object_detection",
-        "ag_task": "strawberry_detection",
+        "ag_task": "fruit_detection",
         "location": {
             "continent": "north_america",
             "country": "usa"
@@ -1785,7 +1785,7 @@
     },
     "paddy_disease_classification": {
         "ml_task": "image_classification",
-        "ag_task": "paddy_disease_classification",
+        "ag_task": "disease_classification",
         "location": {
             "continent": "asia",
             "country": "india"
@@ -1825,7 +1825,7 @@
     },
     "onion_leaf_classification": {
         "ml_task": "image_classification",
-        "ag_task": "onion_leaf_classification",
+        "ag_task": "leaf_classification",
         "location": {
             "continent": "asia",
             "country": "india"
@@ -1859,7 +1859,7 @@
     },
     "chilli_leaf_classification": {
         "ml_task": "image_classification",
-        "ag_task": "chilli_leaf_classification",
+        "ag_task": "leaf_classification",
         "location": {
             "continent": "asia",
             "country": "india"
@@ -1894,7 +1894,7 @@
     },
     "orange_leaf_disease_classification": {
         "ml_task": "image_classification",
-        "ag_task": "orange_leaf_disease_classification",
+        "ag_task": "disease_classification",
         "location": {
             "continent": "asia",
             "country": "bangladesh"
@@ -1935,7 +1935,7 @@
     },
     "papaya_leaf_disease_classification": {
         "ml_task": "image_classification",
-        "ag_task": "papaya_leaf_disease_classification",
+        "ag_task": "disease_classification",
         "location": {
             "continent": "asia",
             "country": "bangladesh"
@@ -1970,7 +1970,7 @@
     },
     "blackgram_plant_leaf_disease_classification": {
         "ml_task": "image_classification",
-        "ag_task": "blackgram_plant_leaf_disease_classification",
+        "ag_task": "disease_classification",
         "location": {
             "continent": "asia",
             "country": "india"
@@ -2005,7 +2005,7 @@
     },
     "arabica_coffee_leaf_disease_classification": {
         "ml_task": "image_classification",
-        "ag_task": "arabica_coffee_leaf_disease_classification",
+        "ag_task": "disease_classification",
         "location": {
             "continent": "africa",
             "country": "kenya"
@@ -2043,7 +2043,7 @@
     },
     "banana_leaf_disease_classification": {
         "ml_task": "image_classification",
-        "ag_task": "banana_leaf_disease_classification",
+        "ag_task": "disease_classification",
         "location": {
             "continent": "africa",
             "country": "ethiopia"
@@ -2076,7 +2076,7 @@
     },
     "coconut_tree_disease_classification": {
         "ml_task": "image_classification",
-        "ag_task": "coconut_tree_disease_classification",
+        "ag_task": "disease_classification",
         "location": {
             "continent": "asia",
             "country": "india"
@@ -2111,7 +2111,7 @@
     },
     "rice_leaf_disease_classification": {
         "ml_task": "image_classification",
-        "ag_task": "rice_leaf_disease_classification",
+        "ag_task": "disease_classification",
         "location": {
             "continent": "worldwide",
             "country": "worldwide"
@@ -2147,7 +2147,7 @@
     },
     "tea_leaf_disease_classification": {
         "ml_task": "image_classification",
-        "ag_task": "tea_leaf_disease_classification",
+        "ag_task": "disease_classification",
         "location": {
             "continent": "asia",
             "country": "india"
@@ -2183,7 +2183,7 @@
     },
     "betel_leaf_disease_classification": {
         "ml_task": "image_classification",
-        "ag_task": "betel_leaf_disease_classification",
+        "ag_task": "disease_classification",
         "location": {
             "continent": "asia",
             "country": "bangladesh"
@@ -2217,7 +2217,7 @@
     },
     "java_plum_leaf_disease_classification": {
         "ml_task": "image_classification",
-        "ag_task": "java_plum_leaf_disease_classification",
+        "ag_task": "disease_classification",
         "location": {
             "continent": "asia",
             "country": "bangladesh"
@@ -2253,7 +2253,7 @@
     },
     "sunflower_disease_classification": {
         "ml_task": "image_classification",
-        "ag_task": "sunflower_disease_classification",
+        "ag_task": "disease_classification",
         "location": {
             "continent": "asia",
             "country": "bangladesh"
@@ -2287,7 +2287,7 @@
     },
     "cucumber_disease_classification": {
         "ml_task": "image_classification",
-        "ag_task": "cucumber_disease_classification",
+        "ag_task": "disease_classification",
         "location": {
             "continent": "asia",
             "country": "bangladesh"
