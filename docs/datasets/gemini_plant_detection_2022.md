@@ -1,5 +1,5 @@
 
-# `gemini_plant_detection`
+# `gemini_plant_detection_2022`
 
 ## Dataset Metadata
 
@@ -22,4 +22,4 @@
 
 ## Examples
 
-![Example Images for gemini_plant_detection](https://github.com/Project-AgML/AgML/blob/main/docs/sample_images/gemini_plant_detection_examples.png)
+![Example Images for gemini_plant_detection_2022](https://github.com/Project-AgML/AgML/blob/main/docs/sample_images/gemini_plant_detection_2022_examples.png)

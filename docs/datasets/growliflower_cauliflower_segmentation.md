@@ -1,5 +1,5 @@
 
-# `cauliflower_segmentation`
+# `growliflower_cauliflower_segmentation`
 
 ## Dataset Metadata
 
@@ -16,10 +16,8 @@
 | **Annotation Format** | image |
 | **Number of Images** | 1542 |
 | **Documentation** | https://phenoroam.phenorob.de/geonetwork/srv/eng/catalog.search#/metadata/cb328232-31f5-4b84-a929-8e1ee551d66a |
-| **Stats/Mean** | [0.485, 0.426, 0.331] |
-| **Stats/Standard Deviation** | [0.123, 0.126, 0.114] |
 
 
 ## Examples
 
-![Example Images for cauliflower_segmentation](https://github.com/Project-AgML/AgML/blob/main/docs/sample_images/cauliflower_segmentation_examples.png)
+![Example Images for growliflower_cauliflower_segmentation](https://github.com/Project-AgML/AgML/blob/main/docs/sample_images/growliflower_cauliflower_segmentation_examples.png)

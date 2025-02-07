@@ -1,5 +1,5 @@
 
-# `grape_bunch_detection`
+# `embrapa_wgisd_grape_detection`
 
 ## Dataset Metadata
 
@@ -22,4 +22,4 @@
 
 ## Examples
 
-![Example Images for grape_bunch_detection](https://github.com/Project-AgML/AgML/blob/main/docs/sample_images/grape_bunch_detection_examples.png)
+![Example Images for embrapa_wgisd_grape_detection](https://github.com/Project-AgML/AgML/blob/main/docs/sample_images/embrapa_wgisd_grape_detection_examples.png)

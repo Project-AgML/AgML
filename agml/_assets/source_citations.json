@@ -163,11 +163,11 @@
         "license": "Apache 2.0",
         "citation": ""
     },
-    "grape_bunch_detection": {
+    "embrapa_wgisd_grape_detection": {
         "license": "CC BY-NC 4.0",
         "citation": ""
     },
-    "cauliflower_segmentation": {
+    "growliflower_cauliflower_segmentation": {
         "license": "",
         "citation": "Kierdorf, Jana & Junker-Frohn, Laura & Delaney, Mike & Olave, Mariele & Burkart, Andreas & Jaenicke, Hannah & Muller, Onno & Roscher, Ribana. (2022). GrowliFlower: An image time‐series dataset for GROWth analysis of cauLIFLOWER. Journal of Field Robotics. 40. 10.1002/rob.22122. "
     },
@@ -180,26 +180,26 @@
         "citation": ""
     },
     "almond_harvest_2021": {
-        "license": "",
+        "license": "Apache 2.0",
         "citation": ""
     },
     "almond_bloom_2023": {
-        "license": "",
-        "citation": ""
-    },
-    "gemini_flower_detection": {
         "license": "Apache 2.0",
         "citation": ""
     },
-    "gemini_leaf_detection": {
+    "gemini_flower_detection_2022": {
         "license": "Apache 2.0",
         "citation": ""
     },
-    "gemini_pod_detection": {
+    "gemini_leaf_detection_2022": {
         "license": "Apache 2.0",
         "citation": ""
     },
-    "gemini_plant_detection": {
+    "gemini_pod_detection_2022": {
+        "license": "Apache 2.0",
+        "citation": ""
+    },
+    "gemini_plant_detection_2022": {
         "license": "Apache 2.0",
         "citation": ""
     },

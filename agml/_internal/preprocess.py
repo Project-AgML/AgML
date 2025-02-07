@@ -1136,7 +1136,7 @@ class PublicDataPreprocessor(object):
             with open(os.path.join(splits_folder, f'{split_name}.json'), 'w') as f:
                 json.dump(split, f)
 
-    def grape_bunch_detection(self, dataset_name):
+    def embrapa_wgisd_grape_detection(self, dataset_name):
         """Preprocesses your grape dataset (Chardonnay, PinotGris, PinotNoir) from YOLO format to COCO format."""
         base_path = os.path.join(self.data_original_dir)
 
@@ -1304,7 +1304,7 @@ class PublicDataPreprocessor(object):
 
         print(f"Preprocessing completed! Annotations saved to {output_json_file}") 
 
-    def cauliflower_segmentation(self, dataset_name):
+    def growliflower_cauliflower_segmentation(self, dataset_name):
         """
         Preprocess the cauliflower dataset by merging mask images and moving them to the new directory.
         
@@ -1451,7 +1451,7 @@ class PublicDataPreprocessor(object):
         shutil.move(os.path.join(original_dir, 'coco.json'),
                     os.path.join(processed_dir, 'annotations.json'))
         
-    def gemini_flower_detection(self, dataset_name):
+    def gemini_flower_detection_2022(self, dataset_name):
         original_dir = os.path.join(self.data_original_dir)
         print(original_dir)
         processed_dir = os.path.join(self.data_processed_dir, dataset_name)
@@ -1463,7 +1463,7 @@ class PublicDataPreprocessor(object):
         shutil.move(os.path.join(original_dir, 'coco.json'),
                     os.path.join(processed_dir, 'annotations.json'))
         
-    def gemini_leaf_detection(self, dataset_name):
+    def gemini_leaf_detection_2022(self, dataset_name):
         original_dir = os.path.join(self.data_original_dir)
         print(original_dir)
         processed_dir = os.path.join(self.data_processed_dir, dataset_name)
@@ -1475,7 +1475,7 @@ class PublicDataPreprocessor(object):
         shutil.move(os.path.join(original_dir, 'coco.json'),
                     os.path.join(processed_dir, 'annotations.json'))
     
-    def gemini_pod_detection(self, dataset_name):
+    def gemini_pod_detection_2022(self, dataset_name):
         original_dir = os.path.join(self.data_original_dir)
         print(original_dir)
         processed_dir = os.path.join(self.data_processed_dir, dataset_name)
@@ -1487,7 +1487,7 @@ class PublicDataPreprocessor(object):
         shutil.move(os.path.join(original_dir, 'coco.json'),
                     os.path.join(processed_dir, 'annotations.json'))
         
-    def gemini_plant_detection(self, dataset_name):
+    def gemini_plant_detection_2022(self, dataset_name):
         original_dir = os.path.join(self.data_original_dir)
         print(original_dir)
         processed_dir = os.path.join(self.data_processed_dir, dataset_name)

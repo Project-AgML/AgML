@@ -1,5 +1,5 @@
 
-# `gemini_pod_detection`
+# `gemini_flower_detection_2022`
 
 ## Dataset Metadata
 
@@ -7,19 +7,19 @@
 | --- | --- |
 | **Classes** | object |
 | **Machine Learning Task** | object_detection |
-| **Agricultural Task** | pod_detection |
+| **Agricultural Task** | flower_detection |
 | **Location** | United States, North America |
 | **Sensor Modality** | RGB |
 | **Real or Synthetic** | real |
 | **Platform** | ground |
 | **Annotation Format** | coco_json |
 | **Input Data Format** | JPG |
-| **Number of Images** | 98 |
+| **Number of Images** | 134 |
 | **Documentation** | http://gemini-breeding.github.io/ |
-| **Stats/Mean** | [0.416, 0.473, 0.285] |
-| **Stats/Standard Deviation** | [0.166, 0.161, 0.165] |
+| **Stats/Mean** | [0.432, 0.462, 0.307] |
+| **Stats/Standard Deviation** | [0.158, 0.152, 0.145] |
 
 
 ## Examples
 
-![Example Images for gemini_pod_detection](https://github.com/Project-AgML/AgML/blob/main/docs/sample_images/gemini_pod_detection_examples.png)
+![Example Images for gemini_flower_detection_2022](https://github.com/Project-AgML/AgML/blob/main/docs/sample_images/gemini_flower_detection_2022_examples.png)
