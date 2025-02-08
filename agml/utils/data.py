@@ -82,19 +82,21 @@ def copyright_print(name, location=None):
         first_msg = "You have just downloaded " + _bold(name) + ".\n"
 
     _LICENSE_TO_URL = {
-        "CC BY-SA 4.0": "https://creativecommons.org/licenses/by-sa/4.0/",
-        "CC BY-SA 3.0": "https://creativecommons.org/licenses/by-sa/3.0/",
-        "CC BY-NC 3.0": "https://creativecommons.org/licenses/by-nc/3.0/",
-        "CC BY-NC SA 3.0": "https://creativecommons.org/licenses/by-nc/3.0/",
-        "CC BY-NC-SA 4.0": "https://creativecommons.org/licenses/by-nc/4.0/",
-        "MIT": "https://opensource.org/licenses/MIT",
-        "GPL-3.0": "https://opensource.org/licenses/GPL-3.0",
-        "US Public Domain": "https://www.usa.gov/government-works",
-        "CC0: Public Domain": "https://creativecommons.org/publicdomain/zero/1.0/",
-        "Apache 2.0": "https://www.apache.org/licenses/LICENSE-2.0",
-    }
-    if license == "":
-        license_msg = "This dataset has " + _bold("no license") + ".\n"
+        'CC BY-SA 4.0': 'https://creativecommons.org/licenses/by-sa/4.0/',
+        'CC BY-SA 3.0': 'https://creativecommons.org/licenses/by-sa/3.0/',
+        'CC BY-NC 3.0': 'https://creativecommons.org/licenses/by-nc/3.0/',
+        'CC BY-NC SA 3.0': 'https://creativecommons.org/licenses/by-nc/3.0/',
+        'MIT': 'https://opensource.org/licenses/MIT',
+        'GPL-3.0': 'https://opensource.org/licenses/GPL-3.0',
+        'US Public Domain': 'https://www.usa.gov/government-works',
+        'CC0: Public Domain': 'https://creativecommons.org/publicdomain/zero/1.0/',
+        'Apache 2.0': 'https://www.apache.org/licenses/LICENSE-2.0',
+        'CC BY-NC 4.0': 'https://creativecommons.org/licenses/by-nc/4.0/',
+        'CC BY-NC-SA 4.0': 'https://creativecommons.org/licenses/by-nc-sa/4.0/',
+        'CC BY 4.0': 'https://creativecommons.org/licenses/by/4.0/deed.en'}
+    if license == '':
+        license_msg = "This dataset has " \
+                      + _bold("no license") + ".\n"
     else:
         license_msg = "This dataset is licensed under the " + _bold(license) + " license.\n"
         license_msg += "To learn more, visit: " + _LICENSE_TO_URL[license] + "\n"
