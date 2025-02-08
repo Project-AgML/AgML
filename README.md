@@ -120,7 +120,7 @@ model.run_training(loader)
 
 AgML contains a wide variety of public datasets from various locations across the world:
 
-![AgML Dataset World Map](/figures/agml_dataset_world_map.png
+![AgML Dataset World Map](/figures/agml_dataset_world_map.png)
 
 
 The following is a comprehensive list of all datasets available in AgML. For more information,
