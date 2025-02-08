@@ -163,3 +163,7 @@ agml/models/training/*.csv
 /
 *.pptx
 .ruff_cache
+test*.*
+image*.png
+.challenges
+.paper
