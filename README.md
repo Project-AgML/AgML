@@ -161,16 +161,16 @@ model.run_training(loader)
 [tomato_leaf_disease](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/tomato_leaf_disease.md) | Image Classification | 11000 |
 [vine_virus_photo_dataset](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/vine_virus_photo_dataset.md) | Image Classification | 3866 |
 [tomato_ripeness_detection](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/tomato_ripeness_detection.md) | Object Detection | 804 |
-[grape_bunch_detection](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/grape_bunch_detection.md) | Object Detection | 239 |
-[cauliflower_segmentation](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/cauliflower_segmentation.md) | Semantic Segmentation | 1542 |
+[embrapa_wgisd_grape_detection](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/embrapa_wgisd_grape_detection.md) | Object Detection | 239 |
+[growliflower_cauliflower_segmentation](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/growliflower_cauliflower_segmentation.md) | Semantic Segmentation | 1542 |
 [strawberry_detection_2023](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/strawberry_detection_2023.md) | Object Detection | 204 |
 [strawberry_detection_2022](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/strawberry_detection_2022.md) | Object Detection | 175 |
 [almond_harvest_2021](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/almond_harvest_2021.md) | Object Detection | 50 |
 [almond_bloom_2023](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/almond_bloom_2023.md) | Object Detection | 100 |
-[gemini_flower_detection](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/gemini_flower_detection.md) | Object Detection | 134 |
-[gemini_leaf_detection](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/gemini_leaf_detection.md) | Object Detection | 25 |
-[gemini_pod_detection](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/gemini_pod_detection.md) | Object Detection | 98 |
-[gemini_plant_detection](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/gemini_plant_detection.md) | Object Detection | 402 |
+[gemini_flower_detection_2022](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/gemini_flower_detection_2022.md) | Object Detection | 134 |
+[gemini_leaf_detection_2022](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/gemini_leaf_detection_2022.md) | Object Detection | 25 |
+[gemini_pod_detection_2022](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/gemini_pod_detection_2022.md) | Object Detection | 98 |
+[gemini_plant_detection_2022](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/gemini_plant_detection_2022.md) | Object Detection | 402 |
 [paddy_disease_classification](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/paddy_disease_classification.md) | Image Classification | 10407 |
 [onion_leaf_classification](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/onion_leaf_classification.md) | Image Classification | 4502 |
 [chilli_leaf_classification](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/chilli_leaf_classification.md) | Image Classification | 10974 |
@@ -186,12 +186,6 @@ model.run_training(loader)
 [java_plum_leaf_disease_classification](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/java_plum_leaf_disease_classification.md) | Image Classification | 2400 |
 [sunflower_disease_classification](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/sunflower_disease_classification.md) | Image Classification | 2358 |
 [cucumber_disease_classification](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/cucumber_disease_classification.md) | Image Classification | 7689 |
-[embrapa_wgisd_grape_detection](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/embrapa_wgisd_grape_detection.md) | Object Detection | 239 |
-[growliflower_cauliflower_segmentation](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/growliflower_cauliflower_segmentation.md) | Semantic Segmentation | 1542 |
-[gemini_flower_detection_2022](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/gemini_flower_detection_2022.md) | Object Detection | 134 |
-[gemini_leaf_detection_2022](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/gemini_leaf_detection_2022.md) | Object Detection | 25 |
-[gemini_pod_detection_2022](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/gemini_pod_detection_2022.md) | Object Detection | 98 |
-[gemini_plant_detection_2022](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/gemini_plant_detection_2022.md) | Object Detection | 402 |
 
 ## Usage Information
 
@@ -219,4 +213,7 @@ into a single training pipeline. To this end, we provide annotations in the foll
 
 We welcome contributions! If you would like to contribute a new feature, fix an issue that you've noticed, or even just mention
 a bug or feature that you would like to see implemented, please don't hesitate to use the *Issues* tab to bring it to our attention.
-See the [contributing guidelines](/CONTRIBUTING
+See the [contributing guidelines](/CONTRIBUTING.md) for more information.
+
+## Funding
+This project is partly funded by the [National AI Institute for Food Systems](https://aifs.ucdavis.edu)

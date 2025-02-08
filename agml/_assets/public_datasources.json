@@ -624,6 +624,10 @@
         "annotation_format": "json",
         "n_images": "389",
         "docs_url": "https://data.4tu.nl/articles/dataset/3rd_Autonomous_Greenhouse_Challenge_Online_Challenge_Lettuce_Images/15023088/1",
+        "location": {
+            "continent": "europe",
+            "country": "netherlands"
+        },
         "classes": {
             "regression": {
                 "0": "FreshWeightShoot",
@@ -1188,6 +1192,10 @@
         "annotation_format": "directory_names",
         "n_images": "3520",
         "docs_url": "https://github.com/ctyeong/Riseholme-2021",
+        "location": {
+            "continent": "europe",
+            "country": "uk"
+        },
         "external_image_sources": [],
         "stats": {
             "mean": [
