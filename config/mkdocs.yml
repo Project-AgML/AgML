@@ -1,0 +1,189 @@
+site_name: "AgML"
+site_description: "A comprehensive library for agricultural deep learning"
+site_url: ""
+
+repo_url: "https://github.com/Project-AgML/AgML"
+repo_name: "AgML"
+
+watch:
+  [
+    ../config/mkdocs.yml,
+    ../README.md,
+    ../LICENSE,
+    ../CODE_OF_CONDUCT.md,
+    ../CONTRIBUTING.md,
+    ../agml,
+    ../docs,
+  ]
+
+copyright: Copyright &copy; 2024
+edit_uri: edit/main/docs/
+
+docs_dir: ../docs
+site_dir: ../site
+
+use_directory_urls: false
+validation:
+  omitted_files: warn
+  absolute_links: warn
+  unrecognized_links: warn
+
+nav:
+  - Home:
+      - Overview: index.md
+      - Changelog: changelog.md
+      - Credits: credits.md
+      - License: license.md
+  - Datasets:
+      - Dataset Listing: dataset_listing.md
+      - Datasets: datasets/
+  # defer to gen-files + literate-nav
+  - API reference:
+      - AgML: reference/
+  - Development:
+      - Contributing: development.md
+      - Code of Conduct: code_of_conduct.md
+      - Coverage report: coverage.md
+
+theme:
+  name: material
+  logo: assets/agml-logo.png
+  custom_dir: ../docs/overrides
+  features:
+    - announce.dismiss
+    - content.action.edit
+    - content.action.view
+    - content.code.annotate
+    - content.code.copy
+    - content.tooltips
+    - navigation.footer
+    - navigation.indexes
+    - navigation.sections
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.top
+    - search.highlight
+    - search.suggest
+    - toc.follow
+  palette:
+    - media: "(prefers-color-scheme)"
+      toggle:
+        icon: material/brightness-auto
+        name: Switch to light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: teal
+      accent: purple
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: black
+      accent: lime
+      toggle:
+        icon: material/weather-night
+        name: Switch to system preference
+
+extra_css:
+  - css/material.css
+  - css/mkdocstrings.css
+
+extra_javascript:
+  - js/feedback.js
+
+markdown_extensions:
+  - attr_list
+  - admonition
+  - callouts
+  - footnotes
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - pymdownx.magiclink
+  - pymdownx.snippets:
+      base_path:
+        [
+          !relative $config_dir,
+          README.md,
+          LICENSE,
+          CONTRIBUTING.md,
+          CODE_OF_CONDUCT.md,
+          scripts,
+          pyproject.toml,
+        ]
+      check_paths: true
+
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+      slugify: !!python/object/apply:pymdownx.slugs.slugify
+        kwds:
+          case: lower
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - toc:
+      permalink: true
+
+plugins:
+  - search
+  - markdown-exec
+  - gen-files:
+      scripts:
+        - ../scripts/docs/gen_ref_nav.py
+  - literate-nav:
+      nav_file: SUMMARY.md
+  - coverage
+  - mkdocstrings:
+      handlers:
+        python:
+          import:
+            - https://docs.python.org/3/objects.inv
+          paths: [../agml]
+          options:
+            docstring_options:
+              ignore_init_summary: true
+            docstring_section_style: list
+            filters: ["!^_"]
+            heading_level: 1
+            inherited_members: true
+            merge_init_into_class: true
+            separate_signature: true
+            show_root_heading: true
+            show_root_full_path: false
+            show_signature_annotations: true
+            show_source: true
+            show_symbol_type_heading: true
+            show_symbol_type_toc: true
+            signature_crossrefs: true
+            summary: true
+  - git-revision-date-localized:
+      enabled: !ENV [DEPLOY, false]
+      enable_creation_date: true
+      type: timeago
+  - minify:
+      minify_html: !ENV [DEPLOY, false]
+  - group:
+      enabled: !ENV [MATERIAL_INSIDERS, false]
+      plugins:
+        - typeset
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/Project-AgML/AgML
+    - icon: fontawesome/brands/python
+      link: https://pypi.org/project/agml/
+
+  analytics:
+    feedback:
+      title: Was this page helpful?
+      ratings:
+        - icon: material/emoticon-happy-outline
+          name: This page was helpful
+          data: 1
+          note: Thanks for your feedback!
+        - icon: material/emoticon-sad-outline
+          name: This page could be improved
+          data: 0
+          note: Let us know how we can improve this page.

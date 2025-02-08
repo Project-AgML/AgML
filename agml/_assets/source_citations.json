@@ -162,5 +162,105 @@
     "vine_virus_photo_dataset": {
         "license": "Apache 2.0",
         "citation": ""
+    },
+    "embrapa_wgisd_grape_detection": {
+        "license": "CC BY-NC 4.0",
+        "citation": ""
+    },
+    "growliflower_cauliflower_segmentation": {
+        "license": "",
+        "citation": "Kierdorf, Jana & Junker-Frohn, Laura & Delaney, Mike & Olave, Mariele & Burkart, Andreas & Jaenicke, Hannah & Muller, Onno & Roscher, Ribana. (2022). GrowliFlower: An image time‐series dataset for GROWth analysis of cauLIFLOWER. Journal of Field Robotics. 40. 10.1002/rob.22122. "
+    },
+    "strawberry_detection_2023": {
+        "license": "CC BY 4.0",
+        "citation": ""
+    },
+    "strawberry_detection_2022": {
+        "license": "CC BY 4.0",
+        "citation": ""
+    },
+    "almond_harvest_2021": {
+        "license": "Apache 2.0",
+        "citation": ""
+    },
+    "almond_bloom_2023": {
+        "license": "Apache 2.0",
+        "citation": ""
+    },
+    "gemini_flower_detection_2022": {
+        "license": "Apache 2.0",
+        "citation": ""
+    },
+    "gemini_leaf_detection_2022": {
+        "license": "Apache 2.0",
+        "citation": ""
+    },
+    "gemini_pod_detection_2022": {
+        "license": "Apache 2.0",
+        "citation": ""
+    },
+    "gemini_plant_detection_2022": {
+        "license": "Apache 2.0",
+        "citation": ""
+    },
+    "paddy_disease_classification": {
+        "license": "CC BY 4.0",
+        "citation": "Petchiammal A, Briskline Kiruba S, Murugan D, Pandarasamy Arjunan. (2022). Paddy Doctor: A Visual Image Dataset for Automated Paddy Disease Classification and Benchmarking. IEEE Dataport. https://dx.doi.org/10.21227/hz4v-af08"
+    },
+    "onion_leaf_classification": {
+        "license": "CC BY 4.0",
+        "citation": "Aishwarya, M.P & Reddy, A.. (2024). Dataset of Chilli and Onion Plant Leaf Images for Classification and Detection. Data in Brief. 54. 110524. 10.1016/j.dib.2024.110524. "
+    },
+    "chilli_leaf_classification": {
+        "license": "CC BY 4.0",
+        "citation": "Aishwarya, M.P & Reddy, A.. (2024). Dataset of Chilli and Onion Plant Leaf Images for Classification and Detection. Data in Brief. 54. 110524. 10.1016/j.dib.2024.110524. "
+    },
+    "orange_leaf_disease_classification": {
+        "license": "CC BY 4.0",
+        "citation": "Emon, Yousuf Rayhan; Ahad, Md Taimur (2023), “Multi-format open-source sweet orange leaf dataset for disease detection, classification, and analysis.”, Mendeley Data, V1, doi: 10.17632/f7cr74mwpj.1"
+    },
+    "papaya_leaf_disease_classification": {
+        "license": "CC BY 4.0",
+        "citation": "Sarker, Arpita ; Mustofa, Sumaya; Ahad, Md Taimur  (2023), “BDPapayaLeaf: A annotation based image dataset of papaya leaf disease.”, Mendeley Data, V1, doi: 10.17632/p997fvf526.1"
+    },
+    "blackgram_plant_leaf_disease_classification": {
+        "license": "CC BY 4.0",
+        "citation": "Talasila, Srinivas; Rawal, Kirti; Sethi, Gaurav; MSS, Sanjay; M, Surya Prakash Reddy (2022), “Blackgram Plant Leaf Disease Dataset”, Mendeley Data, V3, doi: 10.17632/zfcv9fmrgv.3"
+    },
+    "arabica_coffee_leaf_disease_classification": {
+        "license": "CC BY 4.0",
+        "citation": "@article{JEPKOECH2021107142, title = {Arabica coffee leaf images dataset for coffee leaf disease detection and classification}, journal = {Data in Brief}, volume = {36}, pages = {107142}, year = {2021}, issn = {2352-3409}, doi = {https://doi.org/10.1016/j.dib.2021.107142}, url = {https://www.sciencedirect.com/science/article/pii/S2352340921004261}, author = {Jennifer Jepkoech and David Muchangi Mugo and Benson K. Kenduiywo and Edna Chebet Too}}"
+    },
+    "banana_leaf_disease_classification": {
+        "license": "CC BY 4.0",
+        "citation": "hailu, yordanos (2021), “Banana Leaf Disease Images”, Mendeley Data, V1, doi: 10.17632/rjykr62kdh.1"
+    },
+    "coconut_tree_disease_classification": {
+        "license": "CC BY 4.0",
+        "citation": "PATIL, Kailas; Thite, Sandip; Suryawanshi, Yogesh; chumchu, prawit (2023), “Coconut Tree Disease Dataset”, Mendeley Data, V1, doi: 10.17632/gh56wbsnj5.1"
+    },
+    "rice_leaf_disease_classification": {
+        "license": "",
+        "citation": ""
+    },
+    "tea_leaf_disease_classification": {
+        "license": "CC BY-NC 4.0",
+        "citation": "@article{BALASUNDARAM2025103784, title = {Tea leaf disease detection using segment anything model and deep convolutional neural networks}, journal = {Results in Engineering}, volume = {25}, pages = {103784}, year = {2025}, issn = {2590-1230}, doi = {https://doi.org/10.1016/j.rineng.2024.103784}, url = {https://www.sciencedirect.com/science/article/pii/S2590123024020279}, author = {Ananthakrishnan Balasundaram and Prem Sundaresan and Aryan Bhavsar and Mishti Mattu and Muthu Subash Kavitha and Ayesha Shaik}}"
+    },
+    "betel_leaf_disease_classification": {
+        "license": "CC BY 4.0",
+        "citation": "Rashid, Mohammad Rifat Ahmmad; Hossain, Md. Miskat ; Biswas,  Joy ; Majumder, Hredoy  (2024), “Betel Leaf Image Dataset from Bangladesh”, Mendeley Data, V2, doi: 10.17632/g7fpgj57wc.2"
+    },
+    "java_plum_leaf_disease_classification": {
+        "license": "CC BY 4.0",
+        "citation": "Bhowmik, Auvick Chandra; Ahad, Taimur (2024), “Java Plum Leaf Disease Dataset”, Mendeley Data, V3, doi: 10.17632/43d75vptz4.3"
+    },
+    "sunflower_disease_classification": {
+        "license": "CC BY 4.0",
+        "citation": "Rajbongshi, Aditya; Sara, Umme ; Akter, Bonna ; Shakil, Rashiduzzaman ; Sazzad, Sadia (2022), “Sun Flower Fruits and Leaves dataset for Sunflower Disease Classification through Machine Learning and Deep Learning”, Mendeley Data, V1, doi: 10.17632/b83hmrzth8.1"
+    },
+    "cucumber_disease_classification": {
+        "license": "CC BY 4.0",
+        "citation": "Sultana, Nusrat; Shorif, Sumaita Binte ; Akter, Morium ; Uddin, Mohammad Shorif  (2022), “Cucumber Disease Recognition Dataset”, Mendeley Data, V1, doi: 10.17632/y6d3z6f8z9.1"
     }
 }

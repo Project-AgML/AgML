@@ -15,15 +15,14 @@
 import os
 import sys
 from functools import wraps
-from typing import Dict, Callable
+from typing import Callable, Dict
 
 import pandas as pd
-
 import torch
 from torchmetrics import Metric
 
 
-def gpus(given = None):
+def gpus(given=None):
     """Gets the number of GPUs to use based on the experiment."""
     if not torch.cuda.is_available():
         return 0
@@ -32,31 +31,32 @@ def gpus(given = None):
     return torch.cuda.device_count()
 
 
-def checkpoint_dir(given = None, dataset = None):
+def checkpoint_dir(given=None, dataset=None):
     """Returns the directory to save logs/checkpoints to."""
     if given is not None:
-        if given.endswith('dataset'):
+        if given.endswith("dataset"):
             # if a path is passed like /root/dataset, this updates to the name
             given = os.path.dirname(given)
             given = os.path.join(given, dataset)
         if not os.path.exists(given):
-            os.makedirs(given, exist_ok = True)
+            os.makedirs(given, exist_ok=True)
         return given
-    if 'get_ipython()' in globals() and os.path.exists('/content'):
+    if "get_ipython()" in globals() and os.path.exists("/content"):
         # In Google Colab.
-        return '/content/logs'
+        return "/content/logs"
     else:
-        if os.path.exists('/data2'):
+        if os.path.exists("/data2"):
             save_dir = os.path.join(f"/data2/amnjoshi/checkpoints")
         else:
-            save_dir = os.path.join(os.path.dirname(__file__), 'logs')
+            save_dir = os.path.join(os.path.dirname(__file__), "logs")
         save_dir = os.path.join(save_dir, dataset)
-        os.makedirs(save_dir, exist_ok = True)
+        os.makedirs(save_dir, exist_ok=True)
         return save_dir
 
 
 class MetricLogger(object):
     """Logs metrics for training after every epoch."""
+
     def __init__(self, metrics, file):
         if not isinstance(metrics, dict):
             raise TypeError("Expected a dictionary of metrics.")
@@ -64,7 +64,8 @@ class MetricLogger(object):
 
         if not os.path.exists(os.path.dirname(file)):
             raise NotADirectoryError(
-                f"The directory of the file {file} does not exist.")
+                f"The directory of the file {file} does not exist."
+            )
         path_name = os.path.splitext(file)[0]
         file = path_name + ".csv"
         self.out_file = file
@@ -93,7 +94,7 @@ class MetricLogger(object):
 
         # Compile metrics into a CSV format.
         names = list(self.metrics.keys())
-        df = pd.DataFrame(self.log_outputs, columns = names)
+        df = pd.DataFrame(self.log_outputs, columns=names)
         df.to_csv(self.out_file)
 
 
@@ -138,10 +139,9 @@ def auto_move_data(fn: Callable) -> Callable:
         if not isinstance(self, LightningModule):
             return fn(self, *args, **kwargs)
 
-        args, kwargs = self.transfer_batch_to_device((args, kwargs), device=self.device, dataloader_idx=None)
+        args, kwargs = self.transfer_batch_to_device(
+            (args, kwargs), device=self.device, dataloader_idx=None
+        )
         return fn(self, *args, **kwargs)
 
     return auto_transfer_args
-
-
-

@@ -16,13 +16,11 @@ import os
 import shutil
 import zipfile
 
-from agml.utils.data import (
-    load_public_sources, maybe_you_meant, copyright_print
-)
-from agml.utils.logging import tqdm, log
+from agml.utils.data import copyright_print, load_public_sources, maybe_you_meant
+from agml.utils.logging import log, tqdm
 
 
-def download_dataset(dataset_name, dest_dir, redownload = False):
+def download_dataset(dataset_name, dest_dir, redownload=False):
     """
     Downloads a dataset from the agdata-data s3 file storage.
 
@@ -40,14 +38,13 @@ def download_dataset(dataset_name, dest_dir, redownload = False):
     # Validate dataset name
     source_info = load_public_sources()
     if dataset_name not in source_info.keys():
-        if dataset_name.replace('-', '_') not in source_info.keys():
+        if dataset_name.replace("-", "_") not in source_info.keys():
             msg = f"Received invalid public source: '{dataset_name}'."
             msg = maybe_you_meant(dataset_name, msg)
             raise ValueError(msg)
         else:
-            log(f"Interpreted dataset '{dataset_name}' as "
-                f"'{dataset_name.replace('-', '_')}.'")
-            dataset_name = dataset_name.replace('-', '_')
+            log(f"Interpreted dataset '{dataset_name}' as " f"'{dataset_name.replace('-', '_')}.'")
+            dataset_name = dataset_name.replace("-", "_")
 
     # Connect to S3 and generate unsigned URL for bucket object
     url = f"https://agdata-data.s3.us-west-1.amazonaws.com/datasets/{dataset_name}.zip"
@@ -58,32 +55,31 @@ def download_dataset(dataset_name, dest_dir, redownload = False):
     exist_dir = os.path.join(dest_dir, dataset_name)
     if not redownload:
         if os.path.exists(exist_dir):
-            log(f"Dataset '{dataset_name}' already exists "
-                f"in '{exist_dir}', skipping download.")
+            log(f"Dataset '{dataset_name}' already exists " f"in '{exist_dir}', skipping download.")
             return
     elif os.path.exists(exist_dir) and redownload:
         shutil.rmtree(exist_dir)
 
     # File path of zipped dataset
-    os.makedirs(dest_dir, exist_ok = True)
-    dataset_download_path = os.path.join(
-        dest_dir, dataset_name + '.zip')
+    os.makedirs(dest_dir, exist_ok=True)
+    dataset_download_path = os.path.join(dest_dir, dataset_name + ".zip")
 
     # Download object from bucket
     try:
         with requests.Session() as sess:
-            r = sess.get(url, stream = True)
+            r = sess.get(url, stream=True)
             r.raise_for_status()
-            content_size = int(r.headers['Content-Length'])
+            content_size = int(r.headers["Content-Length"])
             sz = round(content_size / 1000000, 1)
             size_print = f"{sz} MB"
             if sz > 1000:
                 size_print = f"{round(sz / 1000, 2)} GB"
-            pg = tqdm(total = content_size,
-                      desc = f"Downloading {dataset_name} "
-                             f"(size = {size_print})")
-            with open(dataset_download_path, 'wb') as f:
-                for chunk in r.iter_content(chunk_size = 8192):
+            pg = tqdm(
+                total=content_size,
+                desc=f"Downloading {dataset_name} " f"(size = {size_print})",
+            )
+            with open(dataset_download_path, "wb") as f:
+                for chunk in r.iter_content(chunk_size=8192):
                     f.write(chunk)
                     pg.update(8192)
             pg.close()
@@ -97,10 +93,10 @@ def download_dataset(dataset_name, dest_dir, redownload = False):
         raise e
 
     # Unzip downloaded dataset
-    with zipfile.ZipFile(dataset_download_path, 'r') as z:
-        print(f'[AgML Download]: Extracting files for {dataset_name}... ', end = '')
-        z.extractall(path = dest_dir)
-        print('Done!')
+    with zipfile.ZipFile(dataset_download_path, "r") as z:
+        print(f"[AgML Download]: Extracting files for {dataset_name}... ", end="")
+        z.extractall(path=dest_dir)
+        print("Done!")
 
     # Delete zipped file
     if os.path.exists(dataset_download_path):
@@ -110,7 +106,7 @@ def download_dataset(dataset_name, dest_dir, redownload = False):
     copyright_print(dataset_name, os.path.splitext(dataset_download_path)[0])
 
 
-def download_model(model_name, dest_dir, redownload = False):
+def download_model(model_name, dest_dir, redownload=False):
     """
     Downloads a model from the agdata-data s3 file storage.
 
@@ -128,14 +124,13 @@ def download_model(model_name, dest_dir, redownload = False):
     # Validate dataset name
     source_info = load_public_sources()
     if model_name not in source_info.keys():
-        if model_name.replace('-', '_') not in source_info.keys():
+        if model_name.replace("-", "_") not in source_info.keys():
             msg = f"Received invalid public source: '{model_name}'."
             msg = maybe_you_meant(model_name, msg)
             raise ValueError(msg)
         else:
-            log(f"Interpreted dataset '{model_name}' as "
-                f"'{model_name.replace('-', '_')}.'")
-            model_name = model_name.replace('-', '_')
+            log(f"Interpreted dataset '{model_name}' as " f"'{model_name.replace('-', '_')}.'")
+            model_name = model_name.replace("-", "_")
 
     # Connect to S3 and generate unsigned URL for bucket object
     url = f"https://agdata-data.s3.us-west-1.amazonaws.com/models/{model_name}.pth"
@@ -146,31 +141,31 @@ def download_model(model_name, dest_dir, redownload = False):
     exist_dir = os.path.join(dest_dir, model_name)
     if not redownload:
         if os.path.exists(exist_dir):
-            log(f"Model '{model_name}' already exists "
-                f"in '{exist_dir}', skipping download.")
+            log(f"Model '{model_name}' already exists " f"in '{exist_dir}', skipping download.")
             return
     elif os.path.exists(exist_dir) and redownload:
         shutil.rmtree(exist_dir)
 
     # File path of model
-    os.makedirs(dest_dir, exist_ok = True)
-    model_download_path = os.path.join(dest_dir, model_name + '.pth')
+    os.makedirs(dest_dir, exist_ok=True)
+    model_download_path = os.path.join(dest_dir, model_name + ".pth")
 
     # Download object from bucket
     try:
         with requests.Session() as sess:
-            r = sess.get(url, stream = True)
+            r = sess.get(url, stream=True)
             r.raise_for_status()
-            content_size = int(r.headers['Content-Length'])
+            content_size = int(r.headers["Content-Length"])
             sz = round(content_size / 1000000, 1)
             size_print = f"{sz} MB"
             if sz > 1000:
                 size_print = f"{round(sz / 1000, 2)} GB"
-            pg = tqdm(total = content_size,
-                      desc = f"Downloading {model_name} "
-                             f"(size = {size_print})")
-            with open(model_download_path, 'wb') as f:
-                for chunk in r.iter_content(chunk_size = 8192):
+            pg = tqdm(
+                total=content_size,
+                desc=f"Downloading {model_name} " f"(size = {size_print})",
+            )
+            with open(model_download_path, "wb") as f:
+                for chunk in r.iter_content(chunk_size=8192):
                     f.write(chunk)
                     pg.update(8192)
             pg.close()
@@ -184,7 +179,7 @@ def download_model(model_name, dest_dir, redownload = False):
         raise e
 
 
-def download_detector(detector_name, dest_dir, redownload = False):
+def download_detector(detector_name, dest_dir, redownload=False):
     """
     Downloads a detector from the agdata-data s3 file storage.
 
@@ -200,7 +195,7 @@ def download_detector(detector_name, dest_dir, redownload = False):
     import requests
 
     # Connect to S3 and generate unsigned URL for bucket object
-    detector_name_url = detector_name.replace('+', '%2B')
+    detector_name_url = detector_name.replace("+", "%2B")
     url = f"https://agdata-data.s3.us-west-1.amazonaws.com/models/detector/{detector_name_url}.zip"
 
     # Check if model already exists
@@ -209,31 +204,31 @@ def download_detector(detector_name, dest_dir, redownload = False):
     exist_dir = os.path.join(dest_dir, detector_name)
     if not redownload:
         if os.path.exists(exist_dir):
-            log(f"Model '{detector_name}' already exists "
-                f"in '{exist_dir}', skipping download.")
+            log(f"Model '{detector_name}' already exists " f"in '{exist_dir}', skipping download.")
             return
     elif os.path.exists(exist_dir) and redownload:
         shutil.rmtree(exist_dir)
 
     # File path of model
-    os.makedirs(dest_dir, exist_ok = True)
-    model_download_path = os.path.join(dest_dir, detector_name + '.zip')
+    os.makedirs(dest_dir, exist_ok=True)
+    model_download_path = os.path.join(dest_dir, detector_name + ".zip")
 
     # Download object from bucket
     try:
         with requests.Session() as sess:
-            r = sess.get(url, stream = True)
+            r = sess.get(url, stream=True)
             r.raise_for_status()
-            content_size = int(r.headers['Content-Length'])
+            content_size = int(r.headers["Content-Length"])
             sz = round(content_size / 1000000, 1)
             size_print = f"{sz} MB"
             if sz > 1000:
                 size_print = f"{round(sz / 1000, 2)} GB"
-            pg = tqdm(total = content_size,
-                      desc = f"Downloading {detector_name} "
-                             f"(size = {size_print})")
-            with open(model_download_path, 'wb') as f:
-                for chunk in r.iter_content(chunk_size = 8192):
+            pg = tqdm(
+                total=content_size,
+                desc=f"Downloading {detector_name} " f"(size = {size_print})",
+            )
+            with open(model_download_path, "wb") as f:
+                for chunk in r.iter_content(chunk_size=8192):
                     f.write(chunk)
                     pg.update(8192)
             pg.close()
@@ -247,10 +242,10 @@ def download_detector(detector_name, dest_dir, redownload = False):
         raise e
 
     # Unzip downloaded dataset
-    with zipfile.ZipFile(model_download_path, 'r') as z:
-        print(f'[AgML Download]: Extracting files for {detector_name}... ', end = '')
-        z.extractall(path = dest_dir)
-        print('Done!')
+    with zipfile.ZipFile(model_download_path, "r") as z:
+        print(f"[AgML Download]: Extracting files for {detector_name}... ", end="")
+        z.extractall(path=dest_dir)
+        print("Done!")
 
     # Delete zipped file
     if os.path.exists(model_download_path):

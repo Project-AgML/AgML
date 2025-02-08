@@ -12,16 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import inspect
+import logging
 import os
 import sys
 import time
-import inspect
-import logging
-
 
 # This is a simple hack to auto-adjust `tqdm` based on whether
 # we are in a Jupyter notebook or in a regular shell environment.
-if 'get_ipython' in globals():
+if "get_ipython" in globals():
     from tqdm.notebook import tqdm
 else:
     from tqdm import tqdm
@@ -33,11 +32,12 @@ _GIVEN_WARNINGS = {}
 
 # Configure the logger.
 logging.basicConfig(
-    format = '%(asctime)s %(levelname)s - %(name)s: %(message)s',
-    datefmt = '%m-%d-%Y %H:%M:%S')
+    format="%(asctime)s %(levelname)s - %(name)s: %(message)s",
+    datefmt="%m-%d-%Y %H:%M:%S",
+)
 
 
-def log(msg, level = logging.WARNING):
+def log(msg, level=logging.WARNING):
     """Logs a message to the console.
 
     This is an internal wrapper method for the logging module,
@@ -49,10 +49,10 @@ def log(msg, level = logging.WARNING):
         logging.INFO: logging.info,
         logging.WARNING: logging.warning,
         logging.CRITICAL: logging.critical,
-        'debug': logging.debug,
-        'info': logging.info,
-        'warning': logging.warning,
-        'critical': logging.critical
+        "debug": logging.debug,
+        "info": logging.info,
+        "warning": logging.warning,
+        "critical": logging.critical,
     }
 
     # Check if the warning has been delivered recently.
@@ -61,7 +61,7 @@ def log(msg, level = logging.WARNING):
     msg = "[AgML] " + msg
     if save_hash in _GIVEN_WARNINGS.keys():
         if _GIVEN_WARNINGS[save_hash] == msg:
-            save_time = float(save_hash.split(':')[0])
+            save_time = float(save_hash.split(":")[0])
             if time.time() - save_time > 240:
                 log_method(msg)
     else:
@@ -79,11 +79,11 @@ class no_print(object):
     > print("This will be printed.")
     This will be printed.
     """
+
     def __enter__(self):
         self._stdout_reset = sys.stdout
-        sys.stdout = open(os.devnull, 'w')
+        sys.stdout = open(os.devnull, "w")
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         sys.stdout.close()
         sys.stdout = self._stdout_reset
-

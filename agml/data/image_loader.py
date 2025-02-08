@@ -17,9 +17,9 @@ import os
 import cv2
 import numpy as np
 
-from agml.framework import AgMLSerializable
 from agml.data.loader import AgMLDataLoader
 from agml.data.public import public_data_sources
+from agml.framework import AgMLSerializable
 from agml.utils.io import nested_file_list
 from agml.utils.random import inject_random_state
 
@@ -40,10 +40,10 @@ class ImageLoader(AgMLSerializable):
     image_size : tuple, optional
         The size to resize the images to. If `None`, the images will not be resized.
     """
-    serializable = frozenset(
-        ('accessor_list', 'image_size', 'grayscale', 'return_paths', 'transforms'))
 
-    def __init__(self, location, image_size = None, **kwargs):
+    serializable = frozenset(("accessor_list", "image_size", "grayscale", "return_paths", "transforms"))
+
+    def __init__(self, location, image_size=None, **kwargs):
         # Parse the input `location`: this can be either a directory of images,
         # a directory tree with nested image folders, or an AgML dataset.
         self._setup_loader(location, **kwargs)
@@ -53,7 +53,7 @@ class ImageLoader(AgMLSerializable):
 
         # Save class variables.
         self._image_size = None
-        self.image_size = image_size # checks for validity.
+        self.image_size = image_size  # checks for validity.
         self._grayscale = False
         self._return_paths = False
         self._transforms = []
@@ -97,7 +97,7 @@ class ImageLoader(AgMLSerializable):
                 value = (value, value)
             if len(value) != 2:
                 raise ValueError("Cannot use `image_size` with more than two dimensions.")
-            value = (value[0], value[1]) # convert to tuples for cv2.resize
+            value = (value[0], value[1])  # convert to tuples for cv2.resize
         self._image_size = value
 
     @property
@@ -130,15 +130,15 @@ class ImageLoader(AgMLSerializable):
             if isinstance(self._root_path, list):
                 image_files = []
                 for root_path in self._root_path:
-                    image_files.extend(nested_file_list(root_path, ext='image'))
+                    image_files.extend(nested_file_list(root_path, ext="image"))
                 self._image_files = sorted(image_files)
             else:
-                self._image_files = sorted(nested_file_list(self._root_path, ext='image'))
+                self._image_files = sorted(nested_file_list(self._root_path, ext="image"))
         elif location in public_data_sources():
             # This is a quick way to run all of the checks regarding the location
             # of the dataset, and download it if it isn't already downloaded.
             self._root_path = AgMLDataLoader(location, **kwargs).dataset_root
-            self._image_files = sorted(nested_file_list(self._root_path, ext='image'))
+            self._image_files = sorted(nested_file_list(self._root_path, ext="image"))
 
         # If the folder itself is a directory of images, then we can just use
         # the directory as the root path.
@@ -146,11 +146,11 @@ class ImageLoader(AgMLSerializable):
             self._root_path = os.path.abspath(location)
 
             # Get all of the image files.
-            self._image_files = sorted(nested_file_list(self._root_path, ext='image'))
+            self._image_files = sorted(nested_file_list(self._root_path, ext="image"))
 
         # Otherwise, the given path is invalid.
         else:
-            raise ValueError(f'Invalid path for `ImageLoader`: {location}')
+            raise ValueError(f"Invalid path for `ImageLoader`: {location}")
 
     def transform(self, transform):
         """Adds a transform to the loader.
@@ -161,4 +161,3 @@ class ImageLoader(AgMLSerializable):
             A function which takes in an image and returns a modified image.
         """
         self._transforms.append(transform)
-

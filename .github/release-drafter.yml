@@ -1,0 +1,66 @@
+name-template: "v$RESOLVED_VERSION"
+tag-template: "v$RESOLVED_VERSION"
+change-template: "- $TITLE #$NUMBER [@$AUTHOR]"
+change-template: '- $TITLE @$AUTHOR (#$NUMBER)'
+change-title-escapes: '\<*_&' # You can add # and @ to disable mentions, and add ` to disable code blocks.
+
+
+categories:
+  - title: "✨ Features"
+    labels:
+      - "feature"
+      - "enhancement"
+      - "✨"
+      - "⚡️"
+  - title: "📦 Dependencies Changes":
+    labels:
+      - "dependency"
+      - "deps"
+      - "📦"
+  - title: "🐛 Bug Fixes"
+    labels:
+      - "fix"
+      - "bugfix"
+      - "bug"
+      - "🐛"
+  - title: "📚 Documentation"
+    labels:
+      - "documentation"
+      - "docs"
+      - "📚"
+  - title: " 🚨 Continous Integration"
+    labels:
+      - "testing"
+      - "test"
+      - "ci"
+  - title: " 🔨 Maintance "
+    labels:
+      - "Maintenance"
+  - title: " 💿 Dataset Updates"
+    labels:
+      - "dataset"
+      - "datasets"
+      - "data"
+
+exclude-labels:
+  - "changelog: skip"
+
+version-resolver:
+  major:
+    labels:
+      - "major"
+  minor:
+    labels:
+      - "minor"
+  patch:
+    labels:
+      - "patch"
+  default: patch
+
+template: |
+
+  ## AgML release v$RESOLVED_VERSION
+
+  This version include the following changes
+
+  $CHANGES

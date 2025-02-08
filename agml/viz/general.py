@@ -16,10 +16,10 @@ import matplotlib.pyplot as plt
 
 from agml.backend.tftorch import is_array_like
 from agml.viz.boxes import show_image_and_boxes
-from agml.viz.masks import show_image_and_overlaid_mask
-from agml.viz.labels import show_images_and_labels
-from agml.viz.tools import format_image, _inference_best_shape, convert_figure_to_image
 from agml.viz.display import display_image
+from agml.viz.labels import show_images_and_labels
+from agml.viz.masks import show_image_and_overlaid_mask
+from agml.viz.tools import _inference_best_shape, convert_figure_to_image, format_image
 
 
 def show_sample(loader, image_only=False, num_images=1, **kwargs):
@@ -61,7 +61,7 @@ def show_sample(loader, image_only=False, num_images=1, **kwargs):
     elif loader.task == 'image_classification':
         return show_images_and_labels(
             samples, info=loader.info, no_show=kwargs.get('no_show', False))
-
+    
 
 def show_images(images,
                 shape = None,
@@ -92,7 +92,7 @@ def show_images(images,
     if not isinstance(images, (list, tuple)):
         if is_array_like(images):
             images = format_image(images)
-            if not kwargs.get('no_show', False):
+            if not kwargs.get("no_show", False):
                 display_image(images)
             return images
 
@@ -104,30 +104,25 @@ def show_images(images,
         shape = _inference_best_shape(len(images))
     if max(shape) > 20:
         raise NotImplementedError(
-            "Length of maximum shape length is greater than 20. "
-            "This method does not support non-rectangular shapes.")
+            "Length of maximum shape length is greater than 20. " "This method does not support non-rectangular shapes."
+        )
 
-    fig, axes = plt.subplots(
-        shape[0], shape[1], figsize = (shape[1] * 2, shape[0] * 2))
+    fig, axes = plt.subplots(shape[0], shape[1], figsize=(shape[1] * 2, shape[0] * 2))
     try:
         iter_ax = axes.flat
-    except AttributeError: # If showing only a single image.
+    except AttributeError:  # If showing only a single image.
         iter_ax = [axes]
     for image, ax in zip(images, iter_ax):
         ax.imshow(format_image(image))
         ax.set_aspect(1)
         ax.set_xticklabels([])
         ax.set_yticklabels([])
-        ax.tick_params(
-            axis = 'both', which = 'both', bottom = False,
-            top = False, left = False, right = False
-        )
-        plt.setp(ax.spines.values(), visible = False)
+        ax.tick_params(axis="both", which="both", bottom=False, top=False, left=False, right=False)
+        plt.setp(ax.spines.values(), visible=False)
     fig.tight_layout()
 
     # Display and return the image.
     image = convert_figure_to_image()
-    if not kwargs.get('no_show', False):
+    if not kwargs.get("no_show", False):
         display_image(image)
     return image
-

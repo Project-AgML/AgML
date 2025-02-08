@@ -16,8 +16,9 @@ import sys
 
 import cv2
 import matplotlib.pyplot as plt
-from PIL import Image, ExifTags
 import numpy as np
+from PIL import ExifTags, Image
+
 from agml.viz.tools import get_viz_backend
 
 
@@ -26,7 +27,7 @@ def correct_image_orientation(image):
     try:
         pil_image = Image.fromarray(image)
         for orientation in ExifTags.TAGS.keys():
-            if ExifTags.TAGS[orientation] == 'Orientation':
+            if ExifTags.TAGS[orientation] == "Orientation":
                 break
         exif = pil_image._getexif()
         if exif is not None:
@@ -52,20 +53,20 @@ def display_image(image, **kwargs):
     notebook = False
     try:
         shell = eval("get_ipython().__class__.__name__")
-        if shell == 'ZMQInteractiveShell':
+        if shell == "ZMQInteractiveShell":
             notebook = True
     except NameError:
         pass
 
-    if get_viz_backend() == 'cv2':
+    if get_viz_backend() == "cv2":
         # If running in Colab, then use a separate procedure.
-        if 'google.colab' in sys.modules:
+        if "google.colab" in sys.modules:
             try:
                 from google.colab.patches import cv2_imshow
             except ImportError:
                 raise ImportError(
-                    "Can't import cv2_imshow from google.colab.patches. "
-                    "Use the matplotlib backend for `agml.viz`.")
+                    "Can't import cv2_imshow from google.colab.patches. " "Use the matplotlib backend for `agml.viz`."
+                )
             cv2_imshow(image)
             return
 
@@ -73,31 +74,29 @@ def display_image(image, **kwargs):
         # displays images in the background, so don't actually do anything here.
         if notebook:
             # If the input content is not a figure, then we can display it.
-            if kwargs.get('matplotlib_figure', True):
+            if kwargs.get("matplotlib_figure", True):
                 return
 
         else:
-            if kwargs.get('read_raw', False):
-                image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR) # convert back to BGR
-            cv2.imshow('image', image)
+            if kwargs.get("read_raw", False):
+                image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)  # convert back to BGR
+            cv2.imshow("image", image)
             cv2.waitKey(0)
-            cv2.destroyWindow('image')
+            cv2.destroyWindow("image")
             return
 
-    if get_viz_backend() == 'matplotlib':
+    if get_viz_backend() == "matplotlib":
         # If we are in a notebook or Colab, then don't show anything (since
         # it will be displayed automatically due to the way notebooks are).
         #
         # But also, some methods don't have any Matplotlib functions - so
         # for those we bypass this skip just to show the result.
-        if 'google.colab' in sys.modules or notebook and not kwargs.get('force_show', False):
+        if "google.colab" in sys.modules or notebook and not kwargs.get("force_show", False):
             return
 
     # Default case is matplotlib, since it is the most modular.
-    fig = plt.figure(figsize = (10, 10))
+    fig = plt.figure(figsize=(10, 10))
     plt.imshow(image)
-    plt.gca().axis('off')
-    plt.gca().set_aspect('equal')
+    plt.gca().axis("off")
+    plt.gca().set_aspect("equal")
     plt.show()
-
-

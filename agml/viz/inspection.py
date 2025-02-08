@@ -12,22 +12,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
 import glob
+import os
 
 import cv2
-
 import matplotlib.pyplot as plt
 from matplotlib.patches import FancyArrowPatch
 from mpl_toolkits.mplot3d import proj3d
 
-from agml.viz.labels import _inference_best_shape
 from agml.synthetic.tools import _is_agml_converted
 from agml.utils.image import imread_context
+from agml.viz.labels import _inference_best_shape
 
 
 class Arrow3D(FancyArrowPatch):
     """Draws a 3-dimensional arrow using the given coordinates."""
+
     def __init__(self, xs, ys, zs, *args, **kwargs):
         FancyArrowPatch.__init__(self, (0, 0), (0, 0), *args, **kwargs)
         self._coords = xs, ys, zs
@@ -64,20 +64,34 @@ def plot_synthetic_camera_positions(positions, lookat):
     The matplotlib figure with the plot.
     """
     # Creat ethe figure.
-    plt.figure(figsize = (7, 7))
-    ax = plt.axes(projection = '3d')
-    ax.plot3D(0, 0, 1, 'r*', label = 'Canopy Origin')
+    plt.figure(figsize=(7, 7))
+    ax = plt.axes(projection="3d")
+    ax.plot3D(0, 0, 1, "r*", label="Canopy Origin")
     for i in range(len(positions)):
-        ax.plot3D(positions[i][0], positions[i][1], positions[i][2], 'o',
-                  label = 'Camera ' + str(i))
-        arw = Arrow3D([positions[i][0], lookat[i][0]],
-                      [positions[i][1], lookat[i][1]],
-                      [positions[i][2], lookat[i][2]],
-                      arrowstyle = "->", color = "purple",
-                      lw = 1, mutation_scale = 25)
+        ax.plot3D(
+            positions[i][0],
+            positions[i][1],
+            positions[i][2],
+            "o",
+            label="Camera " + str(i),
+        )
+        arw = Arrow3D(
+            [positions[i][0], lookat[i][0]],
+            [positions[i][1], lookat[i][1]],
+            [positions[i][2], lookat[i][2]],
+            arrowstyle="->",
+            color="purple",
+            lw=1,
+            mutation_scale=25,
+        )
         ax.add_artist(arw)
-    ax.legend(loc = 'upper center', bbox_to_anchor = (0.5, 1.05),
-              ncol = 4, fancybox = True, shadow = True)
+    ax.legend(
+        loc="upper center",
+        bbox_to_anchor=(0.5, 1.05),
+        ncol=4,
+        fancybox=True,
+        shadow=True,
+    )
     fig = plt.gcf()
     return fig
 
@@ -108,23 +122,18 @@ def visualize_all_views(dataset_path, image):
     """
     dataset_path = os.path.abspath(os.path.expanduser(dataset_path))
     if not os.path.exists(dataset_path):
-        raise NotADirectoryError(
-            f"The provided dataset path {dataset_path} does not exist.")
+        raise NotADirectoryError(f"The provided dataset path {dataset_path} does not exist.")
 
     # Get all of the views for the input image.
     image = str(image)
-    if image.startswith('image'):
-        image = image.replace('image', '')
+    if image.startswith("image"):
+        image = image.replace("image", "")
     if _is_agml_converted(dataset_path):
-        views = glob.glob(os.path.join(
-            dataset_path, 'images', f'image{image}-view*.jpeg'))
+        views = glob.glob(os.path.join(dataset_path, "images", f"image{image}-view*.jpeg"))
         if len(views) == 0:
-            views = glob.glob(os.path.join(
-                dataset_path, f'image{image}-view*.jpeg'))
+            views = glob.glob(os.path.join(dataset_path, f"image{image}-view*.jpeg"))
     else:
-        views = glob.glob(os.path.join(
-            dataset_path, f'image{image}', '**/*.jpeg'
-        ), recursive = True)
+        views = glob.glob(os.path.join(dataset_path, f"image{image}", "**/*.jpeg"), recursive=True)
 
     # Check that there are images.
     if len(views) == 0:
@@ -138,7 +147,7 @@ def visualize_all_views(dataset_path, image):
 
     # Construct the figure.
     shape = _inference_best_shape(len(images))
-    fig, axes = plt.subplots(shape[0], shape[1], figsize = (shape[1] * 5, shape[0] * 5))
+    fig, axes = plt.subplots(shape[0], shape[1], figsize=(shape[1] * 5, shape[0] * 5))
     for image, ax in zip(images, axes.flat):
         ax.imshow(image)
         ax.set_axis_off()
@@ -146,6 +155,3 @@ def visualize_all_views(dataset_path, image):
     # Return the figure.
     fig.tight_layout()
     return fig
-
-
-

@@ -12,17 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Callable
 from functools import wraps
+from typing import Callable
 
-import torch
-import numpy as np
 import albumentations as A
+import numpy as np
+import torch
 
 from agml.backend.tftorch import is_array_like
 
 
-def imagenet_style_process(image, size = None, **kwargs):
+def imagenet_style_process(image, size=None, **kwargs):
     """Preprocesses a single input image to ImageNet standards.
 
     The preprocessing steps are applied logically; if the images
@@ -40,12 +40,12 @@ def imagenet_style_process(image, size = None, **kwargs):
     dimension for two-channel inputs, for example.
     """
     # Convert the image to a NumPy array.
-    if is_array_like(image) and hasattr(image, 'numpy'):
+    if is_array_like(image) and hasattr(image, "numpy"):
         image = image.numpy()
 
     # Add a channel dimension for grayscale imagery.
     if image.ndim == 2:
-        image = np.expand_dims(image, axis = -1)
+        image = np.expand_dims(image, axis=-1)
 
     # If the image is already in channels-first format, convert
     # it back temporarily until preprocessing has concluded.
@@ -56,21 +56,21 @@ def imagenet_style_process(image, size = None, **kwargs):
     h = w = 224
     if size is not None:
         h, w = size
-    rz = A.Resize(height = h, width = w)
+    rz = A.Resize(height=h, width=w)
     if image.shape[0] != h or image.shape[1] != w:
-        image = rz(image = image)['image']
+        image = rz(image=image)["image"]
 
     # Normalize the image to ImageNet standards.
-    if kwargs.get('normalize', True):
+    if kwargs.get("normalize", True):
         if 1 <= image.max() <= 255:
             mean = [0.485, 0.456, 0.406]
             std = [0.229, 0.224, 0.225]
-            image = image.astype(np.float32) / 255.
-            mean = np.array(mean, dtype = np.float32)
-            std = np.array(std, dtype = np.float32)
-            denominator = np.reciprocal(std, dtype = np.float32)
+            image = image.astype(np.float32) / 255.0
+            mean = np.array(mean, dtype=np.float32)
+            std = np.array(std, dtype=np.float32)
+            denominator = np.reciprocal(std, dtype=np.float32)
             image = (image - mean) * denominator
-    else: # Otherwise, just scale the image.
+    else:  # Otherwise, just scale the image.
         if 1 <= image.max() <= 255:
             image = image.astype(np.float32) / 255.0
 
@@ -122,10 +122,7 @@ def auto_move_data(fn: Callable) -> Callable:
         if not isinstance(self, LightningModule):
             return fn(self, *args, **kwargs)
 
-        args, kwargs = self.transfer_batch_to_device(
-            (args, kwargs), device = self.device, dataloader_idx = None) # noqa
+        args, kwargs = self.transfer_batch_to_device((args, kwargs), device=self.device, dataloader_idx=None)  # noqa
         return fn(self, *args, **kwargs)
 
     return auto_transfer_args
-
-

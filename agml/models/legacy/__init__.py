@@ -13,5 +13,5 @@
 # limitations under the License.
 
 from .classification_efficientnet import ClassificationModel
-from .segmentation_deeplab import SegmentationModel
 from .detection_efficientdet import DetectionModel
+from .segmentation_deeplab import SegmentationModel

@@ -16,22 +16,27 @@ from enum import Enum
 
 import numpy as np
 
+from agml.backend.tftorch import (
+    StrictBackendError,
+    _convert_image_to_torch,
+    get_backend,
+    is_array_like,
+    set_backend,
+    tf,
+    torch,
+    user_changed_backend,
+)
 from agml.framework import AgMLSerializable
 from agml.utils.image import needs_batch_dim
-from agml.backend.tftorch import (
-    tf, torch, set_backend, get_backend,
-    user_changed_backend, StrictBackendError,
-    _convert_image_to_torch, is_array_like
-)
 
 
 class TrainState(Enum):
     NONE = None
-    TF = 'tf'
-    TORCH = 'torch'
-    EVAL = 'eval'
-    EVAL_TF = 'eval-tf'
-    EVAL_TORCH = 'eval-torch'
+    TF = "tf"
+    TORCH = "torch"
+    EVAL = "eval"
+    EVAL_TF = "eval-tf"
+    EVAL_TORCH = "eval-torch"
     FALSE = False
 
 
@@ -54,11 +59,10 @@ class TrainingManager(AgMLSerializable):
     as well as being able to manage whether certain preprocessing steps
     should be applied, allowing for independent train and eval modes.
     """
-    serializable = frozenset((
-        'transform_manager', 'resize_manager',
-        'state', 'task', 'remap_hook', 'name'))
 
-    def __init__(self, transform_manager, resize_manager, task = None):
+    serializable = frozenset(("transform_manager", "resize_manager", "state", "task", "remap_hook", "name"))
+
+    def __init__(self, transform_manager, resize_manager, task=None):
         # Update the general parameters for the loader.
         self._task = task
         self._name = resize_manager._dataset_name
@@ -149,18 +153,18 @@ class TrainingManager(AgMLSerializable):
         # Apply a 'tf' or 'torch' backend conversion.
         elif t_(state) == TrainState.TORCH:
             self._state = TrainState.TORCH
-            if get_backend() == 'tf':
+            if get_backend() == "tf":
                 if user_changed_backend():
-                    raise StrictBackendError(change = 'torch', obj = t_(state))
-                set_backend('torch')
-            self._resize_manager.assign('train-auto')
+                    raise StrictBackendError(change="torch", obj=t_(state))
+                set_backend("torch")
+            self._resize_manager.assign("train-auto")
         elif t_(state) == TrainState.TF:
             self._state = TrainState.TF
-            if get_backend() == 'torch':
+            if get_backend() == "torch":
                 if user_changed_backend():
-                    raise StrictBackendError(change = 'tf', obj = t_(state))
-                set_backend('tf')
-            self._resize_manager.assign('train-auto')
+                    raise StrictBackendError(change="tf", obj=t_(state))
+                set_backend("tf")
+            self._resize_manager.assign("train-auto")
 
         # Set the default conversion (`None`).
         elif t_(state) == TrainState.NONE:
@@ -189,7 +193,7 @@ class TrainingManager(AgMLSerializable):
         # If there is a hook to apply (for multi-dataset loaders),
         # then apply the hook before doing anything else.
         if self._remap_hook:
-            contents = self._remap_hook(contents, self._name) # noqa
+            contents = self._remap_hook(contents, self._name)  # noqa
 
         # If the state is set to `False`, then just return the raw contents.
         if self._state is TrainState.FALSE:
@@ -200,9 +204,11 @@ class TrainingManager(AgMLSerializable):
 
         # If we are in a training state or `None`, (so not an evaluation
         # state or `False`), then we apply the transforms to the images.
-        if self._state not in [TrainState.EVAL,
-                               TrainState.EVAL_TF,
-                               TrainState.EVAL_TORCH]:
+        if self._state not in [
+            TrainState.EVAL,
+            TrainState.EVAL_TF,
+            TrainState.EVAL_TORCH,
+        ]:
             contents = self._transform_manager.apply(contents)
 
         # If the images are not in a batch, then we convert them to tensors
@@ -228,11 +234,9 @@ class TrainingManager(AgMLSerializable):
         if self._state in [TrainState.NONE, TrainState.FALSE, TrainState.EVAL]:
             return images, annotations
         elif self._state in [TrainState.TF, TrainState.EVAL_TF]:
-            return self._tf_tensor_batch_convert(
-                (images, annotations), self._task)
+            return self._tf_tensor_batch_convert((images, annotations), self._task)
         elif self._state in [TrainState.TORCH, TrainState.EVAL_TORCH]:
-            return self._torch_tensor_batch_convert(
-                (images, annotations), self._task)
+            return self._torch_tensor_batch_convert((images, annotations), self._task)
         return images, annotations
 
     @staticmethod
@@ -255,26 +259,27 @@ class TrainingManager(AgMLSerializable):
         # Convert the image and annotation to `tf.Tensor`s.
         image, annotation = contents
         image = TrainingManager._tf_tensor_image_convert(image)
-        if task in ['image_classification',
-                    'image_regression',
-                    'semantic_segmentation']:
+        if task in [
+            "image_classification",
+            "image_regression",
+            "semantic_segmentation",
+        ]:
             if isinstance(annotation, (int, np.ndarray)):
                 annotation = tf.constant(annotation)
             else:
                 for k, v in annotation.items():
                     annotation[k] = tf.constant(v)
-        elif task == 'object_detection':
-            annotation = TrainingManager._tf_tensor_coco_convert(
-                annotation)
+        elif task == "object_detection":
+            annotation = TrainingManager._tf_tensor_coco_convert(annotation)
 
         # Add a first-dimension batch to the image.
         if isinstance(image, tf.Tensor):
             if needs_batch_dim(image):
-                image = tf.expand_dims(image, axis = 0)
+                image = tf.expand_dims(image, axis=0)
         else:
             for k, v in image.items():
                 if needs_batch_dim(v):
-                    image[k] = tf.expand_dims(v, axis = 0)
+                    image[k] = tf.expand_dims(v, axis=0)
         return image, annotation
 
     @staticmethod
@@ -283,19 +288,18 @@ class TrainingManager(AgMLSerializable):
         # This stacks the images and annotations together.
         images, annotations = contents
         images = TrainingManager._tf_tensor_image_batch_convert(images)
-        if task == 'image_classification':
+        if task == "image_classification":
             annotations = tf.constant(annotations)
-        elif task == 'image_regression':
+        elif task == "image_regression":
             if isinstance(annotations, np.ndarray):
                 annotations = tf.constant(annotations)
             else:
                 for k, v in annotations.items():
                     annotations[k] = tf.constant(v)
-        elif task == 'semantic_segmentation':
-            annotations = tf.stack(annotations, axis = 0)
-        elif task == 'object_detection':
-            annotations = [TrainingManager._tf_tensor_coco_convert(
-                a_set) for a_set in annotations]
+        elif task == "semantic_segmentation":
+            annotations = tf.stack(annotations, axis=0)
+        elif task == "object_detection":
+            annotations = [TrainingManager._tf_tensor_coco_convert(a_set) for a_set in annotations]
         return images, annotations
 
     @staticmethod
@@ -317,28 +321,24 @@ class TrainingManager(AgMLSerializable):
     def _torch_tensor_image_batch_convert(batch):
         """Converts potential multi-image input batch dicts to tensor dicts."""
         if is_array_like(batch):
-            return torch.stack([
-                _convert_image_to_torch(image) for image in batch])
-        return {k: TrainingManager.
-            _torch_tensor_image_batch_convert(b) for k, b in batch.items()}
+            return torch.stack([_convert_image_to_torch(image) for image in batch])
+        return {k: TrainingManager._torch_tensor_image_batch_convert(b) for k, b in batch.items()}
 
     @staticmethod
     def _torch_tensor_convert(contents, task):
         """Converts contents to `torch.Tensor`s where possible."""
         image, annotation = contents
         image = TrainingManager._torch_tensor_image_convert(image)
-        if task in ['image_classification',
-                    'image_regression']:
+        if task in ["image_classification", "image_regression"]:
             if isinstance(annotation, (int, np.ndarray)):
                 annotation = torch.tensor(annotation)
             else:
                 for k, v in annotation.items():
                     annotation[k] = torch.tensor(v)
-        elif task == 'semantic_segmentation':
+        elif task == "semantic_segmentation":
             annotation = _convert_image_to_torch(annotation)
-        elif task == 'object_detection':
-            annotation = TrainingManager._torch_tensor_coco_convert(
-                annotation)
+        elif task == "object_detection":
+            annotation = TrainingManager._torch_tensor_coco_convert(annotation)
         return image, annotation
 
     @staticmethod
@@ -346,19 +346,16 @@ class TrainingManager(AgMLSerializable):
         """Converts batch contents to `torch.Tensor`s where possible."""
         images, annotations = contents
         images = TrainingManager._torch_tensor_image_batch_convert(images)
-        if task in ['image_classification',
-                    'image_regression']:
+        if task in ["image_classification", "image_regression"]:
             if isinstance(annotations, (int, np.ndarray)):
                 annotations = torch.tensor(annotations)
             else:
                 for k, v in annotations.items():
                     annotations[k] = torch.tensor(v)
-        elif task == 'semantic_segmentation':
-            annotations = torch.stack([
-                _convert_image_to_torch(a) for a in annotations])
-        elif task == 'object_detection':
-            annotations = [TrainingManager._torch_tensor_coco_convert(
-                a_set) for a_set in annotations]
+        elif task == "semantic_segmentation":
+            annotations = torch.stack([_convert_image_to_torch(a) for a in annotations])
+        elif task == "object_detection":
+            annotations = [TrainingManager._torch_tensor_coco_convert(a_set) for a_set in annotations]
         return images, annotations
 
     @staticmethod
@@ -366,16 +363,10 @@ class TrainingManager(AgMLSerializable):
         """Converts a COCO JSON dictionary to a `torch.Tensor`."""
         coco_tensor = {}
         for key, value in contents.items():
-            if key == 'segmentation':
+            if key == "segmentation":
                 value = np.empty(0)
             if not isinstance(value, torch.Tensor):
                 coco_tensor[key] = torch.tensor(value)
             else:
                 coco_tensor[key] = value
         return coco_tensor
-
-
-
-
-
-

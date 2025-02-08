@@ -35,9 +35,8 @@ def consistent_shapes(objects):
 
 def needs_batch_dim(image):
     """Determines whether an image has or is missing a batch dimension."""
-    if not hasattr(image, 'shape'):
-        raise TypeError(
-            "Can only determine batch dimensions for numpy arrays or tensors.")
+    if not hasattr(image, "shape"):
+        raise TypeError("Can only determine batch dimensions for numpy arrays or tensors.")
     if len(image.shape) == 2:
         return True
     elif len(image.shape) == 3:
@@ -51,13 +50,12 @@ def resolve_image_size(size):
         return size, size
     elif isinstance(size, (list, tuple, set, np.ndarray)):
         if not len(size) == 2:
-            raise ValueError(
-                "Only two values must be provided for an input image size.")
+            raise ValueError("Only two values must be provided for an input image size.")
         return size
     else:
         raise ValueError(
-            f"Expected either an integer or list of two values for "
-            f"image size, got ({size}) of type ({type(size)}).")
+            f"Expected either an integer or list of two values for " f"image size, got ({size}) of type ({type(size)})."
+        )
 
 
 class imread_context(object):
@@ -70,35 +68,36 @@ class imread_context(object):
     error message in future operations. This context catches such
     issues and raises a more detailed error message for the user.
     """
-    def __init__(self, path, flags = None):
+
+    def __init__(self, path, flags=None):
         self._path = path
         if not os.path.exists(path):
             raise ValueError(
                 f"The image path '{path}' does not exist. "
                 f"Please check the dataset you are using, "
-                f"and if files are missing, re-download it.")
+                f"and if files are missing, re-download it."
+            )
         self.flags = flags
         if self.flags is None:
             self.flags = cv2.IMREAD_UNCHANGED
 
     def __enter__(self):
         try:
-
             img = cv2.imread(self._path, self.flags)
         except cv2.error:
             raise ValueError(
                 f"An error was encountered when loading the image "
                 f"'{self._path}'. Please check the dataset you are "
-                f"using and re-download it if files are missing.")
+                f"using and re-download it if files are missing."
+            )
         else:
             if img is None:
                 raise ValueError(
                     f"The image at '{self._path}' is empty,"
                     f" corrupted, or could not be read. Please "
-                    f"re-download the dataset you are using.")
+                    f"re-download the dataset you are using."
+                )
         return img
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         pass
-
-

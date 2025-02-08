@@ -14,11 +14,11 @@
 
 """Converts PyTorch Lightning checkpoints to `nn.Module` state dicts."""
 
+import argparse
 import os
 import shutil
-import argparse
-from fnmatch import fnmatch
 from collections import OrderedDict
+from fnmatch import fnmatch
 
 import torch
 
@@ -33,13 +33,13 @@ def convert_state_dict(fpath):
     if isinstance(contents, OrderedDict):
         keys: list[str] = list(contents.keys())
         if len(keys) == 0:
-            print('No state dict found.')
+            print("No state dict found.")
             return
-        if keys[0].startswith('net'):
+        if keys[0].startswith("net"):
             out_dict = OrderedDict()
             for key in contents.keys():
                 value = contents[key]
-                out_dict[key.replace('net.', '')] = value
+                out_dict[key.replace("net.", "")] = value
         else:
             return
 
@@ -47,7 +47,7 @@ def convert_state_dict(fpath):
     # and re-save the file using the same name, just with only
     # the state dict and no PyTorch Lightning values.
     else:
-        state_dict: OrderedDict = contents.get('state_dict', None)
+        state_dict: OrderedDict = contents.get("state_dict", None)
         if state_dict is None:
             print(f"No state dict found in file {fpath}.")
             return
@@ -56,35 +56,32 @@ def convert_state_dict(fpath):
         out_dict = OrderedDict()
         for key in state_dict.keys():
             value = state_dict[key]
-            out_dict[key.replace('net.', '')] = value
+            out_dict[key.replace("net.", "")] = value
 
     # Save the state dict.
-    temp_path = os.path.join(os.path.dirname(fpath), 'temp_state_dict.ckpt')
-    shutil.copy(fpath, temp_path) # save a copy in case an issue occurs
+    temp_path = os.path.join(os.path.dirname(fpath), "temp_state_dict.ckpt")
+    shutil.copy(fpath, temp_path)  # save a copy in case an issue occurs
     os.remove(fpath)
-    torch.save(out_dict, fpath.replace('.ckpt', '.pth'))
+    torch.save(out_dict, fpath.replace(".ckpt", ".pth"))
     os.remove(temp_path)
     print("Conversion Successful.")
 
 
 # Parse input arguments (get the directory to search).
 ap = argparse.ArgumentParser()
-ap.add_argument('--search_dir', type = str, required = True,
-                help = 'The directory containing all of the checkpoints that you want'
-                       'to convert. This will search for all nested folders and files '
-                       'in the provided directory.')
+ap.add_argument(
+    "--search_dir",
+    type=str,
+    required=True,
+    help="The directory containing all of the checkpoints that you want"
+    "to convert. This will search for all nested folders and files "
+    "in the provided directory.",
+)
 search_dir = ap.parse_args().search_dir
 
 # Search through and convert all of the files.
 for path, subdirs, files in os.walk(os.path.abspath(os.path.normpath(search_dir))):
     for name in files:
-        if fnmatch(name, '*.ckpt') or fnmatch(name, '*.pth'):
-            print(f"Converting checkpoint at '{os.path.join(path, name)}'... ", end = '')
+        if fnmatch(name, "*.ckpt") or fnmatch(name, "*.pth"):
+            print(f"Converting checkpoint at '{os.path.join(path, name)}'... ", end="")
             convert_state_dict(os.path.join(path, name))
-
-
-
-
-
-
-

@@ -160,6 +160,11 @@ agml/models/training/*.log
 agml/models/training/*.err
 agml/models/training/*.out
 agml/models/training/*.csv
-.*/
+# .*/
 /
 *.pptx
+.ruff_cache
+test*.*
+image*.png
+.challenges
+.paper

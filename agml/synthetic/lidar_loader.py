@@ -12,21 +12,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import glob
 import os
 import re
-import glob
 
 import numpy as np
 
-from agml.framework import AgMLSerializable
 from agml.backend.config import synthetic_data_save_path
 from agml.data.point_cloud import PointCloud
+from agml.framework import AgMLSerializable
 from agml.utils.random import inject_random_state
 
 
 class LiDARDataLoader(AgMLSerializable):
     """A data loader for Helios-generated LiDAR point clouds."""
-    serializable = frozenset(('point_clouds', 'accessor_list'))
+
+    serializable = frozenset(("point_clouds", "accessor_list"))
 
     def __init__(self, location):
         # Parse the input location and load all of the point clouds.
@@ -56,15 +57,15 @@ class LiDARDataLoader(AgMLSerializable):
         else:
             location = os.path.join(synthetic_data_save_path(), location)
             if not os.path.isdir(location):
-                raise ValueError(f'Invalid location: {location}')
+                raise ValueError(f"Invalid location: {location}")
         structure = self._load_structure(location)
-        point_cloud_files = glob.glob(os.path.join(location, '**/*.xyz'), recursive = True)
-        self._point_clouds = [PointCloud(f, structure = structure) for f in point_cloud_files]
+        point_cloud_files = glob.glob(os.path.join(location, "**/*.xyz"), recursive=True)
+        self._point_clouds = [PointCloud(f, structure=structure) for f in point_cloud_files]
 
     @staticmethod
     def _load_structure(location):
         # Check if the metadata directory exists, and if the stylesheet exists.
-        style_query_path = os.path.join(location, '.metadata', 'style*.xml')
+        style_query_path = os.path.join(location, ".metadata", "style*.xml")
         if not os.path.exists(os.path.dirname(style_query_path)):
             return None
         style_file = glob.glob(style_query_path)
@@ -73,16 +74,15 @@ class LiDARDataLoader(AgMLSerializable):
         style_file = style_file[0]
 
         # Load the `ASCII_format` XML tag if it exists.
-        contents = open(style_file, 'r').read()
-        ascii_format = re.search('<ASCII_format>(.*)</ASCII_format>', contents).group(1).strip()
-        ascii_format = ascii_format.replace('object_label', 'label')
-        ascii_format = ascii_format.split(' ')
+        contents = open(style_file, "r").read()
+        ascii_format = re.search("<ASCII_format>(.*)</ASCII_format>", contents).group(1).strip()
+        ascii_format = ascii_format.replace("object_label", "label")
+        ascii_format = ascii_format.split(" ")
         return ascii_format
 
-    def show_sample(self, format = 'default'):
+    def show_sample(self, format="default"):
         """Shows a sample of a point cloud in the loader."""
         # Prevent circular imports.
         from agml.viz.point_clouds import show_point_cloud
-        show_point_cloud(self._point_clouds[np.random.choice(self._accessor_list)], format = format)
 
-
+        show_point_cloud(self._point_clouds[np.random.choice(self._accessor_list)], format=format)
