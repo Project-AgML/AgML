@@ -31,6 +31,7 @@ def _resolve_coco_annotations(annotations):
             return annotations
         if len(annotations) == 1:
             return annotations
+
         annotation = {
             "bboxes": [],
             "labels": [],
@@ -39,6 +40,7 @@ def _resolve_coco_annotations(annotations):
             "iscrowd": [],
             "segmentation": [],
         }
+
         for a_set in annotations:
             annotation["bboxes"].append(a_set["bbox"])
             annotation["labels"].append(a_set["category_id"])

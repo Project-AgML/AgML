@@ -220,6 +220,21 @@ make test
 ### Running scripts
 
 For running scripts or one-offs using the project's installed enviroment
+The build the associated wheels simply run:
+
+```
+uv build
+```
+
+To sync the dependencies simply run:
+
+```
+uv sync
+```
+
+### Running scripts
+
+For running scripts or one using the project's environment:
 
 ```
 uv run python <script>

@@ -141,6 +141,7 @@ __MACOSX
 # Extra directories/files
 /**data*/
 
+!tests/*/*
 agml/_helios
 agml/helios_config.sh
 agml/train
