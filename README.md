@@ -1,5 +1,5 @@
 <p align="center">
-<img src="assets/agml-logo.png" alt="agml framework" width="400" height="400">
+<img src="docs/assets/agml-logo.png" alt="agml logo" width="400" height="400">
 </p>
 
 ----
@@ -15,7 +15,7 @@ AgML is a comprehensive library for agricultural machine learning. Currently, Ag
 access to a wealth of public agricultural datasets for common agricultural deep learning tasks. In the future, AgML will provide ag-specific ML functionality related to data, training, and evaluation. Here's a conceptual diagram of the overall framework.
 
 <p align="center">
-<img src="assets/agml-framework.png" alt="agml framework" width="350" height="291">
+<img src="docs/assets/agml-framework.png" alt="agml framework" width="350" height="291">
 </p>
 
 AgML supports both the [TensorFlow](https://www.tensorflow.org/) and [PyTorch](https://pytorch.org/) machine learning frameworks.
@@ -125,7 +125,7 @@ model.run_training(loader)
 
 AgML contains a wide variety of public datasets from various locations across the world:
 
-![AgML Dataset World Map](/figures/agml_dataset_world_map.png)
+![AgML Dataset World Map](/docs/assetsagml_dataset_world_map.png)
 
 
 The following is a comprehensive list of all datasets available in AgML. For more information,
