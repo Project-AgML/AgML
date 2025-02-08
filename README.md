@@ -118,6 +118,16 @@ model.run_training(loader)
 
 ## Public Dataset Listing
 
+AgML contains a wide variety of public datasets from various locations across the world:
+
+![AgML Dataset World Map](/figures/agml_dataset_world_map.png
+
+
+The following is a comprehensive list of all datasets available in AgML. For more information,
+you can use `agml.data.public_data_sources(...)` with various filters to filter datasets according
+to your desired specification.
+
+
 | Dataset | Task | Number of Images |
 | :--- | ---: | ---: |
 [bean_disease_uganda](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/bean_disease_uganda.md) | Image Classification | 1295 | 
