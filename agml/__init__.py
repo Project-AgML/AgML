@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-__version__ = "0.7.0"
+__version__ = "0.7.1"
 __all__ = ["data", "synthetic", "backend", "viz", "io"]
 
 
