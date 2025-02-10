@@ -161,12 +161,28 @@ in the `agml/_assets` folder. You will need to update the `public_datasources.js
 **Note**: If the dataset is captured in multiple countries or you don't know where it is from,
 then put "worldwide" for both "continent" and "country".
 
+**Note**: If there is no explicit documentation for the dataset, then reach out to the AgML team
+regarding what you should put. It is important that we have references to as many datasets as possible,
+to allow users to acquire raw data as they desire.
+
+
+#### `ml_task` and `ag_task`
+
+The ML task can be quickly defined from the following table:
+
 | Dataset Format | `ml_task` | `annotation_format` |
 | :------------: | :-------: | :-----------------: |
 | Image Classification | `image_classification` | `directory_names` |
 | Object Detection | `object_detection` | `coco_json` |
 | Semantic Segmentation | `semantic_segmentation` | `image` |
 
+
+The `ag_task` field is more broadly defined - it should be the main task that the dataset is associated with.
+For instance, any of the `*_leaf_disease_classification` datasets, alongside `bean_disease_uganda`, are all 
+associated with the `disease_classification` task. The `apple_segmentation_minnesota` dataset has the label
+`fruit_segmentation`. See `agml/_assets/public_datasources.json` for various examples of valid `ag_tasks`.
+Generally, you should keep this field broad enough that it encompasses the dataset (e.g., instead of a specific
+fruit, just put 'fruit' in general), but not as broad as the `ml_task`: it should have an agricultural component.
 
 The `source_citations.json` file should be updated this way:
 
@@ -185,7 +201,17 @@ Once you've readied the dataset, create a new pull request on the AgML repositor
 We will then review the changes and review next steps for adding the dataset into AgML's public data storage.
 
 
-## Developement Guidelines
+
+## Quality Checks
+
+When contributing a dataset, you should abide by the following guidelines to ensure compatibility with AgML and ensure that there are no problems for users who are working with the datasets:
+
+- Check that the dataset can be properly downloaded and loaded. It is best to instantiate an `AgMLDataLoader` and call `loader.show_sample()` in order to validate that the images and annotations are in the right format.
+- Make sure you have run `python3 scripts/generate_normalization_info.py --dataset <name>` and `python3 scripts/generate_shape_info.py --dataset <name>` to generate the dataset normalization and shape information.
+- Make sure that there is an entry in `agml/_internal/preprocess.py` for the dataset. Specifically, you should have a method in the class that makes up the file with the name of the method being the dataset, and the preprocessing code being that of the dataset.
+  
+
+## Development Guidelines
 
 
 ### Installing uv
