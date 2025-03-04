@@ -201,6 +201,13 @@ to your desired specification.
 [java_plum_leaf_disease_classification](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/java_plum_leaf_disease_classification.md) | Image Classification | 2400 |
 [sunflower_disease_classification](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/sunflower_disease_classification.md) | Image Classification | 2358 |
 [cucumber_disease_classification](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/cucumber_disease_classification.md) | Image Classification | 7689 |
+[embrapa_wgisd_grape_detection](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/embrapa_wgisd_grape_detection.md) | Object Detection | 239 |
+[growliflower_cauliflower_segmentation](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/growliflower_cauliflower_segmentation.md) | Semantic Segmentation | 1542 |
+[gemini_flower_detection_2022](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/gemini_flower_detection_2022.md) | Object Detection | 134 |
+[gemini_leaf_detection_2022](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/gemini_leaf_detection_2022.md) | Object Detection | 25 |
+[gemini_pod_detection_2022](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/gemini_pod_detection_2022.md) | Object Detection | 98 |
+[gemini_plant_detection_2022](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/gemini_plant_detection_2022.md) | Object Detection | 402 |
+[iNatAg/berrya_cordifolia](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/iNatAg/berrya_cordifolia.md) | Image Classification | 50 |
 
 ## Usage Information
 
@@ -228,7 +235,11 @@ into a single training pipeline. To this end, we provide annotations in the foll
 
 We welcome contributions! If you would like to contribute a new feature, fix an issue that you've noticed, or even just mention
 a bug or feature that you would like to see implemented, please don't hesitate to use the *Issues* tab to bring it to our attention.
+<<<<<<< HEAD
 See the [contributing guidelines](/CONTRIBUTING.md) for more information.
 
 ## Funding
 This project is partly funded by the [National AI Institute for Food Systems](https://aifs.ucdavis.edu).
+=======
+See the [contributing guidelines](/CONT
+>>>>>>> 959017b7 (Added iNatAg-mini datasets, created iNatAg-mini_public_datasources and iNatAg-mini_source_citations.json, altered data.py to incorporate these json files)

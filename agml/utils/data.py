@@ -22,21 +22,47 @@ import sys
 
 @functools.lru_cache(maxsize=None)
 def load_public_sources() -> dict:
-    """Loads the public data sources JSON file."""
-    with open(
-        os.path.join(
-            os.path.dirname(os.path.dirname(__file__)),
-            "_assets/public_datasources.json",
-        )
-    ) as f:
-        return json.load(f)
+    """Loads and merges multiple public data sources JSON files while preserving dictionary format."""
+    base_path = os.path.dirname(os.path.dirname(__file__))
+    file_paths = [
+        os.path.join(base_path, '_assets/public_datasources.json'),
+        os.path.join(base_path, '_assets/iNatAg-mini_public_datasources.json')  
+    ]
 
+    combined_data = {}
+
+    for file_path in file_paths:
+        if os.path.exists(file_path):
+            with open(file_path, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+                if isinstance(data, dict):  # Ensure it's a dictionary before merging
+                    combined_data.update(data)  # Merging dictionaries (keys from the second file overwrite the first)
+                else:
+                    raise ValueError(f"JSON structure in {file_path} is not a dictionary")
+
+    return combined_data
 
 @functools.lru_cache(maxsize=None)
 def load_citation_sources() -> dict:
-    """Loads the citation sources JSON file."""
-    with open(os.path.join(os.path.dirname(os.path.dirname(__file__)), "_assets/source_citations.json")) as f:
-        return json.load(f)
+    """Loads and merges multiple public data sources JSON files while preserving dictionary format."""
+    base_path = os.path.dirname(os.path.dirname(__file__))
+    file_paths = [
+        os.path.join(base_path, '_assets/source_citations.json'),
+        os.path.join(base_path, '_assets/iNatAg-mini_source_citations.json') 
+    ]
+
+    combined_data = {}
+
+    for file_path in file_paths:
+        if os.path.exists(file_path):
+            with open(file_path, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+                if isinstance(data, dict):  # Ensure it's a dictionary before merging
+                    combined_data.update(data)  # Merging dictionaries (keys from the second file overwrite the first)
+                else:
+                    raise ValueError(f"JSON structure in {file_path} is not a dictionary")
+
+    return combined_data
 
 
 @functools.lru_cache(maxsize=None)
