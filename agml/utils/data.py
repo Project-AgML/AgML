@@ -26,7 +26,8 @@ def load_public_sources() -> dict:
     base_path = os.path.dirname(os.path.dirname(__file__))
     file_paths = [
         os.path.join(base_path, '_assets/public_datasources.json'),
-        os.path.join(base_path, '_assets/iNatAg-mini_public_datasources.json')  
+        os.path.join(base_path, '_assets/iNatAg-mini_public_datasources.json'),
+        os.path.join(base_path, '_assets/iNatAg_public_datasources.json')  
     ]
 
     combined_data = {}
@@ -48,7 +49,8 @@ def load_citation_sources() -> dict:
     base_path = os.path.dirname(os.path.dirname(__file__))
     file_paths = [
         os.path.join(base_path, '_assets/source_citations.json'),
-        os.path.join(base_path, '_assets/iNatAg-mini_source_citations.json') 
+        os.path.join(base_path, '_assets/iNatAg-mini_source_citations.json'),
+        os.path.join(base_path, '_assets/iNatAg_source_citations.json')
     ]
 
     combined_data = {}
