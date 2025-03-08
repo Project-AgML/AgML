@@ -26,5 +26,4 @@ loader.info.summary()
 ```
 
 ## Examples
-
-(https://github.com/Project-AgML/AgML/blob/naitik-dev/docs/sample_images/iNatAg_sample_images.png)
+![Example Images for iNatAg-mini](https://github.com/Project-AgML/AgML/blob/naitik-dev/docs/sample_images/iNatAg_sample_images.png)

@@ -23,6 +23,5 @@ loader = agml.data.AgMLDataLoader('iNatAg/sorghum_bicolor')
 loader.info.summary()
 ```
 
-## Examples
-
-(https://github.com/Project-AgML/AgML/blob/naitik-dev/docs/sample_images/iNatAg_sample_images.png)
+## Examples 
+![Example Images for iNatAg](https://github.com/Project-AgML/AgML/blob/naitik-dev/docs/sample_images/iNatAg_sample_images.png)
