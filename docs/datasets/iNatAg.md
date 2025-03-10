@@ -24,4 +24,4 @@ loader.info.summary()
 ```
 
 ## Examples 
-![Example Images for iNatAg](https://github.com/Project-AgML/AgML/blob/naitik-dev/docs/sample_images/iNatAg_sample_images.png)
+![Example Images for iNatAg](https://github.com/Project-AgML/AgML/blob/main/docs/sample_images/iNatAg_sample_images.png)

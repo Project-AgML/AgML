@@ -48808,7 +48808,7 @@
             "JPG"
         ],
         "annotation_format": "directory_names",
-        "n_images": 2499,
+        "n_images": 2500,
         "docs_url": "https://www.inaturalist.org/",
         "classes": {
             "0": "crop"
@@ -69952,7 +69952,7 @@
             "JPG"
         ],
         "annotation_format": "directory_names",
-        "n_images": 2500,
+        "n_images": 2494,
         "docs_url": "https://www.inaturalist.org/",
         "classes": {
             "0": "weed"
@@ -69976,7 +69976,7 @@
             "JPG"
         ],
         "annotation_format": "directory_names",
-        "n_images": 318,
+        "n_images": 324,
         "docs_url": "https://www.inaturalist.org/",
         "classes": {
             "0": "crop"
@@ -70072,7 +70072,7 @@
             "JPG"
         ],
         "annotation_format": "directory_names",
-        "n_images": 2500,
+        "n_images": 2483,
         "docs_url": "https://www.inaturalist.org/",
         "classes": {
             "0": "weed"
@@ -70264,7 +70264,7 @@
             "JPG"
         ],
         "annotation_format": "directory_names",
-        "n_images": 2500,
+        "n_images": 2469,
         "docs_url": "https://www.inaturalist.org/",
         "classes": {
             "0": "weed"
@@ -70312,7 +70312,7 @@
             "JPG"
         ],
         "annotation_format": "directory_names",
-        "n_images": 93,
+        "n_images": 92,
         "docs_url": "https://www.inaturalist.org/",
         "classes": {
             "0": "crop"
@@ -70336,7 +70336,7 @@
             "JPG"
         ],
         "annotation_format": "directory_names",
-        "n_images": 59,
+        "n_images": 64,
         "docs_url": "https://www.inaturalist.org/",
         "classes": {
             "0": "crop"
@@ -70408,7 +70408,7 @@
             "JPG"
         ],
         "annotation_format": "directory_names",
-        "n_images": 2500,
+        "n_images": 2467,
         "docs_url": "https://www.inaturalist.org/",
         "classes": {
             "0": "weed"
@@ -70432,7 +70432,7 @@
             "JPG"
         ],
         "annotation_format": "directory_names",
-        "n_images": 2500,
+        "n_images": 2488,
         "docs_url": "https://www.inaturalist.org/",
         "classes": {
             "0": "weed"
@@ -70480,7 +70480,7 @@
             "JPG"
         ],
         "annotation_format": "directory_names",
-        "n_images": 951,
+        "n_images": 979,
         "docs_url": "https://www.inaturalist.org/",
         "classes": {
             "0": "crop"
@@ -70504,7 +70504,7 @@
             "JPG"
         ],
         "annotation_format": "directory_names",
-        "n_images": 123,
+        "n_images": 128,
         "docs_url": "https://www.inaturalist.org/",
         "classes": {
             "0": "crop"
@@ -70552,7 +70552,7 @@
             "JPG"
         ],
         "annotation_format": "directory_names",
-        "n_images": 366,
+        "n_images": 365,
         "docs_url": "https://www.inaturalist.org/",
         "classes": {
             "0": "crop"
@@ -70576,7 +70576,7 @@
             "JPG"
         ],
         "annotation_format": "directory_names",
-        "n_images": 848,
+        "n_images": 851,
         "docs_url": "https://www.inaturalist.org/",
         "classes": {
             "0": "weed"
@@ -70624,7 +70624,7 @@
             "JPG"
         ],
         "annotation_format": "directory_names",
-        "n_images": 83,
+        "n_images": 71,
         "docs_url": "https://www.inaturalist.org/",
         "classes": {
             "0": "weed"
@@ -70696,7 +70696,7 @@
             "JPG"
         ],
         "annotation_format": "directory_names",
-        "n_images": 2498,
+        "n_images": 2492,
         "docs_url": "https://www.inaturalist.org/",
         "classes": {
             "0": "weed"
@@ -70720,7 +70720,7 @@
             "JPG"
         ],
         "annotation_format": "directory_names",
-        "n_images": 76,
+        "n_images": 79,
         "docs_url": "https://www.inaturalist.org/",
         "classes": {
             "0": "crop"
@@ -70768,7 +70768,7 @@
             "JPG"
         ],
         "annotation_format": "directory_names",
-        "n_images": 76,
+        "n_images": 81,
         "docs_url": "https://www.inaturalist.org/",
         "classes": {
             "0": "crop"
@@ -70864,7 +70864,7 @@
             "JPG"
         ],
         "annotation_format": "directory_names",
-        "n_images": 602,
+        "n_images": 603,
         "docs_url": "https://www.inaturalist.org/",
         "classes": {
             "0": "crop"
@@ -70888,7 +70888,7 @@
             "JPG"
         ],
         "annotation_format": "directory_names",
-        "n_images": 989,
+        "n_images": 1033,
         "docs_url": "https://www.inaturalist.org/",
         "classes": {
             "0": "weed"

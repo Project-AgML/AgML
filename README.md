@@ -201,8 +201,8 @@ to your desired specification.
 [java_plum_leaf_disease_classification](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/java_plum_leaf_disease_classification.md) | Image Classification | 2400 |
 [sunflower_disease_classification](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/sunflower_disease_classification.md) | Image Classification | 2358 |
 [cucumber_disease_classification](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/cucumber_disease_classification.md) | Image Classification | 7689 |
-[iNatAg](https://github.com/Project-AgML/AgML/blob/naitik-dev/docs/datasets/iNatAg.md) | Image Classification | 4720903 |
-[iNatAg-mini](https://github.com/Project-AgML/AgML/blob/naitik-dev/docs/datasets/iNatAg-mini.md) | Image Classification | 560844 |
+[iNatAg](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/iNatAg.md) | Image Classification | 4720903 |
+[iNatAg-mini](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/iNatAg-mini.md) | Image Classification | 560844 |
 
 ## Usage Information
 
