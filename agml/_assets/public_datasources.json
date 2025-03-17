@@ -30,7 +30,8 @@
                 0.1994817703962326,
                 0.16856099665164948
             ]
-        }
+        },
+        "parent_dataset": ""
     },
     "carrot_weeds_germany": {
         "ml_task": "semantic_segmentation",
@@ -62,7 +63,8 @@
                 0.0995175763964653,
                 0.08643443882465363
             ]
-        }
+        },
+        "parent_dataset": ""
     },
     "plant_seedlings_aarhus": {
         "ml_task": "image_classification",
@@ -104,7 +106,8 @@
                 0.09644099324941635,
                 0.10552676767110825
             ]
-        }
+        },
+        "parent_dataset": ""
     },
     "soybean_weed_uav_brazil": {
         "ml_task": "image_classification",
@@ -138,7 +141,8 @@
                 0.2491522580385208,
                 0.1570599377155304
             ]
-        }
+        },
+        "parent_dataset": ""
     },
     "sugarcane_damage_usa": {
         "ml_task": "image_classification",
@@ -173,7 +177,8 @@
                 0.21735334396362305,
                 0.1923859715461731
             ]
-        }
+        },
+        "parent_dataset": ""
     },
     "crop_weeds_greece": {
         "ml_task": "image_classification",
@@ -206,7 +211,8 @@
                 0.15307274460792542,
                 0.13750970363616943
             ]
-        }
+        },
+        "parent_dataset": ""
     },
     "sugarbeet_weed_segmentation": {
         "ml_task": "semantic_segmentation",
@@ -238,7 +244,8 @@
             "0": "sugar_beet",
             "1": "random_weeds"
         },
-        "external_image_sources": []
+        "external_image_sources": [],
+        "parent_dataset": ""
     },
     "rangeland_weeds_australia": {
         "ml_task": "image_classification",
@@ -277,7 +284,8 @@
                 0.22450383007526398,
                 0.22274655103683472
             ]
-        }
+        },
+        "parent_dataset": ""
     },
     "fruit_detection_worldwide": {
         "ml_task": "object_detection",
@@ -314,7 +322,8 @@
             "6": "mango",
             "7": "capsicum"
         },
-        "external_image_sources": []
+        "external_image_sources": [],
+        "parent_dataset": ""
     },
     "leaf_counting_denmark": {
         "ml_task": "image_classification",
@@ -351,7 +360,8 @@
                 0.14348869025707245,
                 0.1148977279663086
             ]
-        }
+        },
+        "parent_dataset": ""
     },
     "apple_detection_usa": {
         "ml_task": "object_detection",
@@ -382,7 +392,8 @@
         "classes": {
             "1": "apple"
         },
-        "external_image_sources": []
+        "external_image_sources": [],
+        "parent_dataset": ""
     },
     "mango_detection_australia": {
         "ml_task": "object_detection",
@@ -413,7 +424,8 @@
         "classes": {
             "1": "mango"
         },
-        "external_image_sources": []
+        "external_image_sources": [],
+        "parent_dataset": ""
     },
     "tomato_ripeness_detection": {
         "ml_task": "object_detection",
@@ -449,7 +461,8 @@
                 0.19280721247196198,
                 0.22368815541267395
             ]
-        }
+        },
+        "parent_dataset": ""
     },
     "apple_flower_segmentation": {
         "ml_task": "semantic_segmentation",
@@ -480,7 +493,8 @@
         "classes": {
             "0": "apple"
         },
-        "external_image_sources": []
+        "external_image_sources": [],
+        "parent_dataset": ""
     },
     "apple_segmentation_minnesota": {
         "ml_task": "semantic_segmentation",
@@ -511,7 +525,8 @@
         "classes": {
             "0": "apple"
         },
-        "external_image_sources": []
+        "external_image_sources": [],
+        "parent_dataset": ""
     },
     "rice_seedling_segmentation": {
         "ml_task": "semantic_segmentation",
@@ -543,7 +558,8 @@
             "0": "Rice",
             "1": "Weed"
         },
-        "external_image_sources": []
+        "external_image_sources": [],
+        "parent_dataset": ""
     },
     "plant_village_classification": {
         "ml_task": "image_classification",
@@ -612,7 +628,8 @@
                 0.15169931948184967,
                 0.19375933706760406
             ]
-        }
+        },
+        "parent_dataset": ""
     },
     "autonomous_greenhouse_regression": {
         "ml_task": "image_regression",
@@ -657,7 +674,8 @@
                 0.13940763473510742,
                 0.19247490167617798
             ]
-        }
+        },
+        "parent_dataset": ""
     },
     "grape_detection_syntheticday": {
         "classes": {
@@ -688,7 +706,8 @@
                 0.18630442023277283,
                 0.2241816222667694
             ]
-        }
+        },
+        "parent_dataset": ""
     },
     "grape_detection_californiaday": {
         "classes": {
@@ -719,7 +738,8 @@
                 0.25918272137641907,
                 0.2625304162502289
             ]
-        }
+        },
+        "parent_dataset": ""
     },
     "grape_detection_californianight": {
         "classes": {
@@ -750,7 +770,8 @@
                 0.20105913281440735,
                 0.20582404732704163
             ]
-        }
+        },
+        "parent_dataset": ""
     },
     "guava_disease_pakistan": {
         "classes": {
@@ -783,7 +804,8 @@
                 0.18359650671482086,
                 0.18744416534900665
             ]
-        }
+        },
+        "parent_dataset": ""
     },
     "apple_detection_spain": {
         "classes": {
@@ -813,7 +835,8 @@
                 0.27973315119743347,
                 0.2829023003578186
             ]
-        }
+        },
+        "parent_dataset": ""
     },
     "apple_detection_drone_brazil": {
         "classes": {
@@ -843,7 +866,8 @@
                 0.1873108297586441,
                 0.1734534204006195
             ]
-        }
+        },
+        "parent_dataset": ""
     },
     "plant_doc_classification": {
         "classes": {
@@ -901,7 +925,8 @@
                 0.2036021202802658,
                 0.22107268869876862
             ]
-        }
+        },
+        "parent_dataset": ""
     },
     "plant_doc_detection": {
         "classes": {
@@ -960,7 +985,8 @@
                 0.2036709189414978,
                 0.21807792782783508
             ]
-        }
+        },
+        "parent_dataset": ""
     },
     "wheat_head_counting": {
         "classes": {
@@ -991,7 +1017,8 @@
                 0.21708978712558746,
                 0.17700935900211334
             ]
-        }
+        },
+        "parent_dataset": ""
     },
     "peachpear_flower_segmentation": {
         "classes": {
@@ -1017,7 +1044,8 @@
                 0.2141699343919754,
                 0.2441396266222
             ]
-        }
+        },
+        "parent_dataset": ""
     },
     "red_grapes_and_leaves_segmentation": {
         "classes": {
@@ -1049,7 +1077,8 @@
                 0.2871488034725189,
                 0.2831265926361084
             ]
-        }
+        },
+        "parent_dataset": ""
     },
     "white_grapes_and_leaves_segmentation": {
         "classes": {
@@ -1081,7 +1110,8 @@
                 0.24588093161582947,
                 0.25335168838500977
             ]
-        }
+        },
+        "parent_dataset": ""
     },
     "ghai_romaine_detection": {
         "classes": {
@@ -1112,7 +1142,8 @@
                 0.26515713334083557,
                 0.2393222600221634
             ]
-        }
+        },
+        "parent_dataset": ""
     },
     "ghai_green_cabbage_detection": {
         "classes": {
@@ -1143,7 +1174,8 @@
                 0.27976617217063904,
                 0.276553213596344
             ]
-        }
+        },
+        "parent_dataset": ""
     },
     "ghai_iceberg_lettuce_detection": {
         "classes": {
@@ -1174,7 +1206,8 @@
                 0.2841264605522156,
                 0.25660744309425354
             ]
-        }
+        },
+        "parent_dataset": ""
     },
     "riseholme_strawberry_classification_2021": {
         "classes": {
@@ -1208,7 +1241,8 @@
                 0.19222107529640198,
                 0.1773509532213211
             ]
-        }
+        },
+        "parent_dataset": ""
     },
     "ghai_broccoli_detection": {
         "classes": {
@@ -1240,7 +1274,8 @@
                 0.23975253105163574,
                 0.23829665780067444
             ]
-        }
+        },
+        "parent_dataset": ""
     },
     "bean_synthetic_earlygrowth_aerial": {
         "classes": {
@@ -1272,7 +1307,8 @@
                 0.12054657936096191,
                 0.08992248773574829
             ]
-        }
+        },
+        "parent_dataset": ""
     },
     "ghai_strawberry_fruit_detection": {
         "classes": {
@@ -1312,7 +1348,8 @@
                 0.16137710213661194,
                 0.18042609095573425
             ]
-        }
+        },
+        "parent_dataset": ""
     },
     "vegann_multicrop_presence_segmentation": {
         "classes": {
@@ -1342,7 +1379,8 @@
                 5.818264007568359,
                 4.189508438110352
             ]
-        }
+        },
+        "parent_dataset": ""
     },
     "corn_maize_leaf_disease": {
         "classes": {
@@ -1380,7 +1418,8 @@
                 0.1671891063451767,
                 0.17422494292259216
             ]
-        }
+        },
+        "parent_dataset": ""
     },
     "tomato_leaf_disease": {
         "classes": {
@@ -1421,7 +1460,8 @@
                 0.1477183699607849,
                 0.18538573384284973
             ]
-        }
+        },
+        "parent_dataset": ""
     },
     "vine_virus_photo_dataset": {
         "classes": {
@@ -1459,7 +1499,8 @@
                 0.2280450314283371,
                 0.23016904294490814
             ]
-        }
+        },
+        "parent_dataset": ""
     },
     "embrapa_wgisd_grape_detection": {
         "classes": {
@@ -1492,7 +1533,8 @@
                 0.2119981199502945,
                 0.2218495011329651
             ]
-        }
+        },
+        "parent_dataset": ""
     },
     "growliflower_cauliflower_segmentation": {
         "classes": {
@@ -1525,7 +1567,8 @@
                 0.1260126680135727,
                 0.11423511058092117
             ]
-        }
+        },
+        "parent_dataset": ""
     },
     "strawberry_detection_2023": {
         "classes": {
@@ -1562,7 +1605,8 @@
                 0.1477075070142746,
                 0.14832836389541626
             ]
-        }
+        },
+        "parent_dataset": ""
     },
     "strawberry_detection_2022": {
         "classes": {
@@ -1599,7 +1643,8 @@
                 0.19917000830173492,
                 0.20504336059093475
             ]
-        }
+        },
+        "parent_dataset": ""
     },
     "almond_harvest_2021": {
         "classes": {
@@ -1633,7 +1678,8 @@
                 0.1702313870191574,
                 0.1667901575565338
             ]
-        }
+        },
+        "parent_dataset": ""
     },
     "almond_bloom_2023": {
         "classes": {
@@ -1664,7 +1710,8 @@
                 0.24729833006858826,
                 0.23989765346050262
             ]
-        }
+        },
+        "parent_dataset": ""
     },
     "gemini_flower_detection_2022": {
         "classes": {
@@ -1695,7 +1742,8 @@
                 0.1518802046775818,
                 0.1447635143995285
             ]
-        }
+        },
+        "parent_dataset": ""
     },
     "gemini_leaf_detection_2022": {
         "classes": {
@@ -1726,7 +1774,8 @@
                 0.1531846821308136,
                 0.13160519301891327
             ]
-        }
+        },
+        "parent_dataset": ""
     },
     "gemini_pod_detection_2022": {
         "classes": {
@@ -1757,7 +1806,8 @@
                 0.1610204428434372,
                 0.1648048311471939
             ]
-        }
+        },
+        "parent_dataset": ""
     },
     "gemini_plant_detection_2022": {
         "classes": {
@@ -1789,7 +1839,8 @@
                 0.15248580276966095,
                 0.13018731772899628
             ]
-        }
+        },
+        "parent_dataset": ""
     },
     "paddy_disease_classification": {
         "ml_task": "image_classification",
@@ -1829,7 +1880,8 @@
                 0.23301087319850922,
                 0.1900700032711029
             ]
-        }
+        },
+        "parent_dataset": ""
     },
     "onion_leaf_classification": {
         "ml_task": "image_classification",
@@ -1863,7 +1915,8 @@
                 0.14629681408405304,
                 0.15651942789554596
             ]
-        }
+        },
+        "parent_dataset": ""
     },
     "chilli_leaf_classification": {
         "ml_task": "image_classification",
@@ -1898,7 +1951,8 @@
                 0.1770888715982437,
                 0.18177233636379242
             ]
-        }
+        },
+        "parent_dataset": ""
     },
     "orange_leaf_disease_classification": {
         "ml_task": "image_classification",
@@ -1939,7 +1993,8 @@
                 0.19639450311660767,
                 0.2651123106479645
             ]
-        }
+        },
+        "parent_dataset": ""
     },
     "papaya_leaf_disease_classification": {
         "ml_task": "image_classification",
@@ -1974,7 +2029,8 @@
                 0.15967564284801483,
                 0.14206627011299133
             ]
-        }
+        },
+        "parent_dataset": ""
     },
     "blackgram_plant_leaf_disease_classification": {
         "ml_task": "image_classification",
@@ -2009,7 +2065,8 @@
                 0.1792915314435959,
                 0.16840000450611115
             ]
-        }
+        },
+        "parent_dataset": ""
     },
     "arabica_coffee_leaf_disease_classification": {
         "ml_task": "image_classification",
@@ -2047,7 +2104,8 @@
                 0.10137982666492462,
                 0.13884715735912323
             ]
-        }
+        },
+        "parent_dataset": ""
     },
     "banana_leaf_disease_classification": {
         "ml_task": "image_classification",
@@ -2080,7 +2138,8 @@
                 0.20397576689720154,
                 0.18596293032169342
             ]
-        }
+        },
+        "parent_dataset": ""
     },
     "coconut_tree_disease_classification": {
         "ml_task": "image_classification",
@@ -2115,7 +2174,8 @@
                 0.20774872601032257,
                 0.22041980922222137
             ]
-        }
+        },
+        "parent_dataset": ""
     },
     "rice_leaf_disease_classification": {
         "ml_task": "image_classification",
@@ -2151,7 +2211,8 @@
                 0.1747269332408905,
                 0.13470299541950226
             ]
-        }
+        },
+        "parent_dataset": ""
     },
     "tea_leaf_disease_classification": {
         "ml_task": "image_classification",
@@ -2187,7 +2248,8 @@
                 0.24272359907627106,
                 0.32473450899124146
             ]
-        }
+        },
+        "parent_dataset": ""
     },
     "betel_leaf_disease_classification": {
         "ml_task": "image_classification",
@@ -2221,7 +2283,8 @@
                 0.19697120785713196,
                 0.21828916668891907
             ]
-        }
+        },
+        "parent_dataset": ""
     },
     "java_plum_leaf_disease_classification": {
         "ml_task": "image_classification",
@@ -2257,7 +2320,8 @@
                 0.20790858566761017,
                 0.3019416928291321
             ]
-        }
+        },
+        "parent_dataset": ""
     },
     "sunflower_disease_classification": {
         "ml_task": "image_classification",
@@ -2291,7 +2355,8 @@
                 0.21411556005477905,
                 0.17952653765678406
             ]
-        }
+        },
+        "parent_dataset": ""
     },
     "cucumber_disease_classification": {
         "ml_task": "image_classification",
@@ -2329,6 +2394,7 @@
                 0.18358547985553741,
                 0.17932511866092682
             ]
-        }
+        },
+        "parent_dataset": ""
     }
 }

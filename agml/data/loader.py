@@ -426,6 +426,42 @@ class AgMLDataLoader(AgMLSerializable, metaclass=AgMLDataLoaderMeta):
 
         # Construct the loader.
         return cls.custom(name, dataset_path, **meta)
+    
+    @classmethod
+    def from_parent(cls, parent_dataset, filters=None, **kwargs):
+        """Instantiates an `AgMLDataLoader` from a parent dataset.
+        
+        Given a selected `parent_dataset`, that is, a larger super-dataset which
+        contains multiple sub-datasets, this method will construct an `AgMLDataLoader`
+        containing all of the datasets within the parent dataset (or a specific
+        subset of datasets from the parent, depending on the keyword arguments).
+        
+        As a defining example, AgML provides access to the iNatAg dataset, which is
+        composed as a collection of many individual species sub-datasets. Here, iNatAg
+        and iNatAg-mini are the parent datasets, and the individual species datasets
+        are the sub-datasets. To load the entirety of either of these datasets, you
+        would use this method with the parent dataset name as the argument to load
+        the entire dataset into a singular loader.
+
+        **Note**: Filtering functionality is still to be implemented. At the moment,
+        you can either load the entire dataset or need to manually select which
+        subsets you want; this will be augmented in the future.
+
+        Parameters
+        ----------
+        parent_dataset : str
+            The name of the parent dataset to load.
+        """
+        if filters is not None:
+            raise NotImplementedError(
+                "Filtering functionality is still to be implemented. At the moment, "
+                "you can either load the entire dataset or need to manually select "
+                "which subsets you want; this will be augmented in the future.")
+        
+        # Get all of the subdatasets from the parent dataset, and construct the loader.
+        subdataset_sources = public_data_sources(parent_dataset=parent_dataset)
+        subdatasets = [source['name'] for source in subdataset_sources]
+        return cls(subdatasets, **kwargs)
 
     @staticmethod
     def merge(*loaders, classes=None):

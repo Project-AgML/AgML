@@ -22,7 +22,7 @@ from agml.utils.data import load_public_sources
 from agml.utils.downloads import download_dataset as _download  # noqa
 
 
-class _PublicSourceFilter(object):
+class _PublicSourceFilter:
     """
     Filters public datasets based on provided criteria.
 
@@ -68,136 +68,59 @@ class _PublicSourceFilter(object):
     -----
     The `public_data_sources` function provides a more user-friendly interface for accessing filtered datasets.
     """
-
-    _sources = load_public_sources()
-    _current_filtered_source = []
+    def __init__(self):
+        # Load the public sources (a dict mapping source names to their metadata dict)
+        self._sources = load_public_sources()
+        self._current_filtered_source = list(self._sources.keys())
 
     def apply_filters(self, **filters):
-        """
-        Applies filters to the public data sources.
-
-        Filters the available public datasets based on the provided keyword
-        arguments. See the class docstring for details on available filters.
-
-        Parameters
-        ----------
-        **filters : keyword arguments
-            The filters to apply.
-
-        Returns
-        -------
-        self : _PublicSourceFilter
-            Returns the object itself to allow chaining.
-        """
-        print(self._sources.keys())
-        if len(filters) == 0:
-            self._current_filtered_source = self._sources.keys()
+        # If no filters are provided, all sources are included.
+        if not filters:
             return self
-        source_sets = []
-        for key, value in filters.items():
-            if key not in list(self._sources.values())[0].keys():
-                raise ValueError(f"Invalid filter: {key}.")
-            internal_set = []
-            if key == "location":
-                self._location_case(value, internal_set)
-            elif key in ["n_images", "num_images"] and value.startswith(">"):
-                self._n_image_case_greater(int(float(value[1:])), internal_set)
-            elif key in ["n_images", "num_images"] and value.startswith("<"):
-                self._n_image_case_lesser(int(float(value[1:])), internal_set)
-            else:
-                for source_ in self._sources.keys():
-                    try:
-                        if self._sources[source_][key] == value:
-                            internal_set.append(source_)
-                    except:  # some situations don't have certain arguments.
-                        continue
-            source_sets.append(internal_set)
-        self._current_filtered_source = functools.reduce(np.intersect1d, source_sets)
+
+        filtered_sources = []
+        for source, meta in self._sources.items():
+            if self._matches(meta, filters):
+                filtered_sources.append(source)
+        self._current_filtered_source = filtered_sources
         return self
 
-    def _location_case(self, desired, value_set):
-        """
-        Filters datasets based on location.
-
-        This method filters the datasets based on the provided location
-        criteria. The `desired` argument should be in the format
-        '<location_type>:<location_name>', where `location_type` is either
-        'continent' or 'country'.
-
-        Parameters
-        ----------
-        desired : str
-            The desired location criteria.
-        value_set : list
-            The list to append the matching dataset names to.
-
-        Returns
-        -------
-        value_set : list
-            The updated list of matching dataset names.
-        """
-        for source_ in self._sources.keys():
-            param, value = desired.split(":")
-            try:
-                if self._sources[source_]["location"][param] == value:
-                    value_set.append(source_)
-            except KeyError:  # some situations don't have location.
-                continue
-        return value_set
-
-    def _n_image_case_greater(self, thresh, value_set):
-        """
-        Filters datasets with a number of images greater than a threshold.
-
-        This method filters the datasets which contain a number of images
-        greater than or equal to the provided threshold.
-
-        Parameters
-        ----------
-        thresh : int
-            The threshold for the number of images.
-        value_set : list
-            The list to append the matching dataset names to.
-
-        Returns
-        -------
-        value_set : list
-            The updated list of matching dataset names.
-        """
-        for source_ in self._sources.keys():
-            try:
-                if int(float(self._sources[source_]["n_images"])) >= thresh:
-                    value_set.append(source_)
-            except KeyError:  # some situations don't have n_images.
-                continue
-        return
-
-    def _n_image_case_lesser(self, thresh, value_set):
-        """
-        Filters datasets with a number of images lesser than a threshold.
-
-        This method filters the datasets which contain a number of images
-        lesser than or equal to the provided threshold.
-
-        Parameters
-        ----------
-        thresh : int
-            The threshold for the number of images.
-        value_set : list
-            The list to append the matching dataset names to.
-
-        Returns
-        -------
-        value_set : list
-            The updated list of matching dataset names.
-        """
-        for source_ in self._sources.keys():
-            try:
-                if int(float(self._sources[source_]["n_images"])) <= thresh:
-                    value_set.append(source_)
-            except KeyError:  # some situations don't have n_images.
-                continue
-        return
+    def _matches(self, meta, filters):
+        for key, value in filters.items():
+            if key == 'location':
+                # Expecting a string in the form "param:desired" (e.g., "continent:africa")
+                try:
+                    loc_key, desired = value.split(':')
+                    desired = desired.lower()
+                except ValueError:
+                    raise ValueError("Location filter must be in the format 'key:value'.")
+                if meta.get('location', {}).get(loc_key) != desired:
+                    return False
+            elif key in ['n_images', 'num_images']:
+                try:
+                    n_images = int(float(meta.get('n_images', 0)))
+                except (ValueError, TypeError):
+                    return False
+                # Handle threshold conditions like '>1500' or '<1000'
+                if isinstance(value, str) and value and value[0] in ('>', '<'):
+                    operator = value[0]
+                    try:
+                        threshold = int(float(value[1:]))
+                    except ValueError:
+                        raise ValueError("n_images filter threshold must be numeric.")
+                    if operator == '>' and n_images < threshold:
+                        return False
+                    if operator == '<' and n_images > threshold:
+                        return False
+                else:
+                    # Exact match condition
+                    if n_images != int(value):
+                        return False
+            else:
+                # For all other filters, perform a simple equality check.
+                if meta.get(key) != value:
+                    return False
+        return True
 
     def print_result(self):
         return "[%s]" % ", ".join(self._current_filtered_source)
