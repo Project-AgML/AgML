@@ -265,6 +265,10 @@ class DatasetMetadata(AgMLSerializable):
     @property
     def parent_dataset(self):
         return self._metadata['parent_dataset']
+    
+    @property
+    def extra_metadata(self):
+        return self._metadata['extra_metadata']
 
     def summary(self):
         """Prints out a summary of the dataset information.
