@@ -426,6 +426,55 @@ class AgMLDataLoader(AgMLSerializable, metaclass=AgMLDataLoaderMeta):
 
         # Construct the loader.
         return cls.custom(name, dataset_path, **meta)
+    
+    @classmethod
+    def from_parent(cls, parent_dataset, filters=None, **kwargs):
+        """Instantiates an `AgMLDataLoader` from a parent dataset.
+        
+        Given a selected `parent_dataset`, that is, a larger super-dataset which
+        contains multiple sub-datasets, this method will construct an `AgMLDataLoader`
+        containing all of the datasets within the parent dataset (or a specific
+        subset of datasets from the parent, depending on the keyword arguments).
+        
+        As a defining example, AgML provides access to the iNatAg dataset, which is
+        composed as a collection of many individual species sub-datasets. Here, iNatAg
+        and iNatAg-mini are the parent datasets, and the individual species datasets
+        are the sub-datasets. To load the entirety of either of these datasets, you
+        would use this method with the parent dataset name as the argument to load
+        the entire dataset into a singular loader.
+
+        **Note**: Filtering functionality is still to be implemented. At the moment,
+        you can either load the entire dataset or need to manually select which
+        subsets you want; this will be augmented in the future.
+
+        Parameters
+        ----------
+        parent_dataset : str
+            The name of the parent dataset to load.
+        """
+        if not isinstance(filters, dict):
+            raise ValueError("You should provide a dictionary of filters with the names "
+                             "and values of the various filters which you desire to load.")
+        
+        # Get all of the subdatasets from the parent dataset, and construct the loader.
+        subdataset_sources = public_data_sources(parent_dataset=parent_dataset)
+
+        if filters is not None:
+            valid_subdataset_sources = []
+            for source in subdataset_sources:
+                for key, value in filters.items():
+                    if isinstance(value, list):
+                        if source.extra_metadata[key] in value:
+                            valid_subdataset_sources.append(source)
+                    elif source.extra_metadata[key] == value:
+                        valid_subdataset_sources.append(source)
+            subdataset_sources = valid_subdataset_sources
+
+            if len(subdataset_sources) == 0:
+                raise ValueError(f"No datasets in {parent_dataset} found matching the provided filters.")
+
+        subdatasets = [source['name'] for source in subdataset_sources]
+        return cls(subdatasets, **kwargs, parent_dataset = parent_dataset, parent_dataset_filters = filters)
 
     @staticmethod
     def merge(*loaders, classes=None):

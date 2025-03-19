@@ -61,8 +61,8 @@ def download_dataset(dataset_name, dest_dir, redownload=False):
         shutil.rmtree(exist_dir)
 
     # File path of zipped dataset
-    os.makedirs(dest_dir, exist_ok=True)
-    dataset_download_path = os.path.join(dest_dir, dataset_name + ".zip")
+    os.makedirs(dest_dir, exist_ok = True)
+    dataset_download_path = os.path.join(dest_dir, os.path.basename(dataset_name) + '.zip')
 
     # Download object from bucket
     try:
