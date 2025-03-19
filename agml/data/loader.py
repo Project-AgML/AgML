@@ -36,6 +36,7 @@ from agml.data.builder import DataBuilder
 from agml.data.exporters.yolo import export_yolo
 from agml.data.manager import DataManager
 from agml.data.metadata import DatasetMetadata, make_metadata
+from agml.data.public import public_data_sources
 from agml.framework import AgMLSerializable
 from agml.utils.data import load_public_sources
 from agml.utils.general import NoArgument, resolve_list_value
@@ -463,7 +464,13 @@ class AgMLDataLoader(AgMLSerializable, metaclass=AgMLDataLoaderMeta):
             valid_subdataset_sources = []
             for source in subdataset_sources:
                 for key, value in filters.items():
-                    if isinstance(value, list):
+                    if isinstance(source.extra_metadata[key], list):
+                        if isinstance(value, list):
+                            if any(v in source.extra_metadata[key] for v in value):
+                                valid_subdataset_sources.append(source)
+                        elif value in source.extra_metadata[key]:
+                            valid_subdataset_sources.append(source)
+                    elif isinstance(value, list):
                         if source.extra_metadata[key] in value:
                             valid_subdataset_sources.append(source)
                     elif source.extra_metadata[key] == value:

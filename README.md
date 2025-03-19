@@ -204,6 +204,20 @@ to your desired specification.
 [iNatAg](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/iNatAg.md) | Image Classification | 4720903 |
 [iNatAg-mini](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/iNatAg-mini.md) | Image Classification | 560844 |
 
+
+## iNatAg and iNatAg-mini
+
+
+AgML provides an API with direct access to iNatAg (and iNatAg-mini), one of the world's largest collections of agricultural images dedicated for the task of image classification. Collectively, this dataset contains over 4 million images along with detailed species classificaations and enables access to a variety of large-scale agricultural machine learning tasks. You can instantiate the iNatAg (or iNatAg-mini, a smaller variant of iNatAg for smaller-scale applications) dataset as follows:
+
+```python
+# To select a collection of scientific family names.
+loader = agml.data.AgMLDataLoader.from_parent("iNatAg", filters={"family_name": ["...", "..."]})
+
+# To select common names.
+loader = agml.data.AgMLDataLoader.from_parent("iNatAg", filters={"common_name": "..."})
+```
+
 ## Usage Information
 
 ### Using Public Agricultural Data
