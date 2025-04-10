@@ -201,6 +201,22 @@ to your desired specification.
 [java_plum_leaf_disease_classification](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/java_plum_leaf_disease_classification.md) | Image Classification | 2400 |
 [sunflower_disease_classification](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/sunflower_disease_classification.md) | Image Classification | 2358 |
 [cucumber_disease_classification](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/cucumber_disease_classification.md) | Image Classification | 7689 |
+[iNatAg](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/iNatAg.md) | Image Classification | 4720903 |
+[iNatAg-mini](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/iNatAg-mini.md) | Image Classification | 560844 |
+
+
+## iNatAg and iNatAg-mini
+
+
+AgML provides an API with direct access to iNatAg (and iNatAg-mini), one of the world's largest collections of agricultural images dedicated for the task of image classification. Collectively, this dataset contains over 4 million images along with detailed species classificaations and enables access to a variety of large-scale agricultural machine learning tasks. You can instantiate the iNatAg (or iNatAg-mini, a smaller variant of iNatAg for smaller-scale applications) dataset as follows:
+
+```python
+# To select a collection of scientific family names.
+loader = agml.data.AgMLDataLoader.from_parent("iNatAg", filters={"family_name": ["...", "..."]})
+
+# To select common names.
+loader = agml.data.AgMLDataLoader.from_parent("iNatAg", filters={"common_name": "..."})
+```
 
 ## Usage Information
 
@@ -228,7 +244,9 @@ into a single training pipeline. To this end, we provide annotations in the foll
 
 We welcome contributions! If you would like to contribute a new feature, fix an issue that you've noticed, or even just mention
 a bug or feature that you would like to see implemented, please don't hesitate to use the *Issues* tab to bring it to our attention.
+
 See the [contributing guidelines](/CONTRIBUTING.md) for more information.
 
 ## Funding
 This project is partly funded by the [National AI Institute for Food Systems](https://aifs.ucdavis.edu).
+

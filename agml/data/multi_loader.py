@@ -340,6 +340,13 @@ class AgMLMultiDatasetLoader(AgMLSerializable):
         # Total number of images in the entire dataset.
         self._num_images = sum(self._info.num_images.values())
 
+        # If this is a multi-dataset loader for a subcollection of a parent dataset,
+        # then there are a couple of additional informative attributes that we can set.
+        self._parent_dataset = kwargs.get('parent_dataset', None)
+        parent_dataset_filters = kwargs.get('parent_dataset_filters', None)
+        if parent_dataset_filters is not None:
+            self._parent_dataset_filter_representation = str(parent_dataset_filters)
+        
     @classmethod
     def _instantiate_from_collection(cls, *loaders, classes):
         """Instantiates an `AgMLMultiDatasetLoader` directly from a collection.
@@ -423,9 +430,21 @@ class AgMLMultiDatasetLoader(AgMLSerializable):
 
     def __repr__(self):
         dsp = ", "
-        out = f"<AgMLDataLoader: (datasets=[{dsp.join(self._info.name.split('-'))}]"
-        out += f", task={self.task}"
-        out += f") at {hex(id(self))}>"
+
+        # If there is a parent dataset, then we print based on that, rather than all of the
+        # individual datasets, in order to provide some broader context to the user.
+        if self._parent_dataset is not None:
+            out = f"<AgMLDataLoader: (parent={self._parent_dataset}"
+            if self._parent_dataset_filter_representation is not None:
+                out += f", filters={self._parent_dataset_filter_representation}"
+            else:
+                out += f", filters=all"
+            out += f", task={self.task}"
+            out += f") at {hex(id(self))}>"
+        else:
+            out = f"<AgMLDataLoader: (datasets=[{dsp.join(self._info.name.split('-'))}]"
+            out += f", task={self.task}"
+            out += f") at {hex(id(self))}>"
         return out
 
     def __str__(self):
