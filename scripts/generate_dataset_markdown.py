@@ -17,28 +17,27 @@ Generates a markdown file with information for a given dataset.
 """
 
 import os
-import random
 
 import cv2
-import matplotlib.pyplot as plt
-import numpy as np
 from tqdm import tqdm
 
 import agml
 from agml.utils.data import load_public_sources
 from agml.utils.io import recursive_dirname
+import random
+import numpy as np
 
 
 class DefaultDict(dict):
-    def __missing__(self, key):
-        return key
+    __missing__ = lambda self, key: key
 
+
+import matplotlib.pyplot as plt
 
 # Configuration Variables.
 NUM_EXAMPLES = 4
 AGML_REPO = "https://github.com/Project-AgML/AgML/blob/main"
 LOCAL_AGML_REPO = os.path.join(recursive_dirname(__file__, 2))
-
 
 # Format of the markdown file.
 MARKDOWN_TEMPLATE = """
@@ -53,24 +52,22 @@ MARKDOWN_TEMPLATE = """
 {examples}"""
 
 # Unused keys.
-UNUSED_KEYS = ["external_image_sources"]
+UNUSED_KEYS = ['external_image_sources']
 
 # Substitutions for metadata category names and values.
-substitutions = DefaultDict(
-    {
-        "Ml Task": "Machine Learning Task",
-        "Ag Task": "Agricultural Task",
-        "Real Synthetic": "Real or Synthetic",
-        "N Images": "Number of Images",
-        "Docs Url": "Documentation",
-        "Usa": "United States",
-        "rgb": "RGB",
-        "lidar": "LiDAR",
-        "jpg": "JPG",
-        "png": "PNG",
-        "jpeg": "JPEG",
-    }
-)
+substitutions = DefaultDict({
+    'Ml Task': 'Machine Learning Task',
+    'Ag Task': 'Agricultural Task',
+    'Real Synthetic': 'Real or Synthetic',
+    'N Images': 'Number of Images',
+    'Docs Url': 'Documentation',
+    'Usa': 'United States',
+    'rgb': 'RGB',
+    'lidar': 'LiDAR',
+    'jpg': 'JPG',
+    'png': 'PNG',
+    'jpeg': 'JPEG'
+})
 
 
 class TableFormat(object):
@@ -83,29 +80,25 @@ class TableFormat(object):
             return method(value)
         if isinstance(value, list):
             value = ", ".join(value)
-        if value == "":
-            value = "None"
-        return f"| **{substitutions[to_title(key)]}** | {substitutions[value]} |\n"
+        if value == '': value = "None"
+        return f'| **{substitutions[to_title(key)]}** | {substitutions[value]} |\n'
 
     @staticmethod
     def stats(value):  # noqa
-        return (
-            f"| **Stats/Mean** | [{', '.join(str(round(i, 3)) for i in value['mean'])}] |\n"
-            f"| **Stats/Standard Deviation** | [{', '.join(str(round(i, 3)) for i in value['std'])}] |\n"
-        )
+        return f"| **Stats/Mean** | [{', '.join(str(round(i, 3)) for i in value['mean'])}] |\n" \
+               f"| **Stats/Standard Deviation** | [{', '.join(str(round(i, 3)) for i in value['std'])}] |\n"
 
     @staticmethod
     def classes(value):
         print(value)
-        return "| **Classes** | {} |\n".format(", ".join(value.values()))
+        return "| **Classes** | {} |\n".format(', '.join(value.values()))
 
     @staticmethod
     def location(value):
-        if value["continent"] == "worldwide":
+        if value['continent'] == 'worldwide':
             return "| **Location** | Worldwide |\n"
         return "| **Location** | {}, {} |\n".format(
-            substitutions[to_title(value["country"])], to_title(value["continent"])
-        )
+            substitutions[to_title(value['country'])], to_title(value['continent']))
 
 
 def get_source_info(source):
@@ -114,12 +107,12 @@ def get_source_info(source):
 
 
 def to_title(name):
-    return " ".join(i.title() for i in name.split("_"))
+    return ' '.join(i.title() for i in name.split('_'))
 
 
 def build_table(json):
     """Builds a markdown table from the given json."""
-    table = "| Metadata | Value |\n| --- | --- |\n"
+    table = '| Metadata | Value |\n| --- | --- |\n'
     for key, value in json.items():
         if key in UNUSED_KEYS:
             continue
@@ -129,8 +122,10 @@ def build_table(json):
 
 def show_sample(loader, image_only=False, num_images=1, **kwargs):
     """A simplified convenience method that visualizes multiple samples from a loader.
+
     This method works for all types of annotations and visualizes multiple
     images based on the specified `num_images` parameter.
+
     Parameters
     ----------
     loader : AgMLDataLoader
@@ -139,33 +134,31 @@ def show_sample(loader, image_only=False, num_images=1, **kwargs):
         Whether to only display the images.
     num_images : int
         The number of images to display (default is 1).
+
     Returns
     -------
     The matplotlib figure showing the requested number of images.
     """
-    if kwargs.get("sample", None) is not None:
-        sample = kwargs["sample"]
+    if kwargs.get('sample', None) is not None:
+        sample = kwargs['sample']
     else:
         sample = loader[0]
+
     if image_only:
         return agml.viz.show_images(sample[0])
 
-    if loader.task == "object_detection":
+    if loader.task == 'object_detection':
         # Collect 4 images (or as many as available if fewer)
         samples = [loader[i] for i in range(min(len(loader), 4))]
-        return [
-            agml.viz.show_image_and_boxes(
-                sample, info=loader.info, no_show=kwargs.get("no_show", False)
-            )
-            for sample in samples
-        ]
+        return [agml.viz.show_image_and_boxes(sample, info=loader.info, no_show=kwargs.get('no_show', False)) for sample
+                in samples]
 
-    elif loader.task == "semantic_segmentation":
-        return agml.viz.show_image_and_overlaid_mask(
-            sample, no_show=kwargs.get("no_show", False)
-        )
+    elif loader.task == 'semantic_segmentation':
+        samples = [loader[i] for i in range(min(len(loader), num_images))]
+        return [agml.viz.show_image_and_overlaid_mask(sample, no_show=kwargs.get('no_show', False)) for sample in
+                samples]
 
-    elif loader.task == "image_classification":
+    elif loader.task == 'image_classification':
         # Fetch all available classes and initialize an empty list for samples.
         classes = loader.classes
         num_classes = len(classes)
@@ -182,8 +175,10 @@ def show_sample(loader, image_only=False, num_images=1, **kwargs):
             # Map label to its class index (if necessary)
             if isinstance(label, (list, np.ndarray)):  # Handle one-hot encoding case
                 label = np.argmax(label)  # Adjust indexing to start from 1
+
             if isinstance(label, dict):
-                label = label.get("label", None)
+                label = label.get('label', None)
+
             if label in class_to_sample and class_to_sample[label] is None:
                 class_to_sample[label] = sample
 
@@ -192,11 +187,7 @@ def show_sample(loader, image_only=False, num_images=1, **kwargs):
                 break
 
         # Collect samples ensuring uniqueness per class until we hit num_classes.
-        samples = [
-            class_to_sample[cls]
-            for cls in range(num_classes)
-            if class_to_sample[cls] is not None
-        ]
+        samples = [class_to_sample[cls] for cls in range(num_classes) if class_to_sample[cls] is not None]
 
         # If more images are required, duplicate randomly from the collected samples.
         if num_images > num_classes:
@@ -207,15 +198,14 @@ def show_sample(loader, image_only=False, num_images=1, **kwargs):
         if num_images <= num_classes:
             samples = samples[:num_images]
         return agml.viz.show_images_and_labels(
-            samples, info=loader.info, no_show=kwargs.get("no_show", False)
-        )
+            samples, info=loader.info, no_show=kwargs.get('no_show', False))
 
 
 def generate_example_images(name):
     """Generates multiple example images for the given dataset."""
     agml.backend.set_seed(189)
     loader = agml.data.AgMLDataLoader(name)  # Ensure the batch size is correct
-    return show_sample(loader, num_images=max(4, len(loader.classes)), no_show=True)
+    return agml.viz.show_sample(loader, num_images=max(4, len(loader.classes)), no_show=True)
 
 
 def build_examples(name):
@@ -230,10 +220,9 @@ def build_examples(name):
             elif isinstance(sample, np.ndarray):
                 image = sample  # If it's directly an image
             else:
-                print(
-                    f"Error: Sample {idx} is not a valid image format. Type: {type(sample)}"
-                )
+                print(f"Error: Sample {idx} is not a valid image format. Type: {type(sample)}")
                 continue
+
             images.append(image)
 
         # Limit to 4 images for the grid (2x2 layout)
@@ -245,78 +234,72 @@ def build_examples(name):
         for i, ax in enumerate(axes.flat):
             if i < len(images):
                 ax.imshow(images[i])
-                ax.axis("off")
+                ax.axis('off')
             else:
-                ax.axis("off")
+                ax.axis('off')
         # Save the combined image
-        save_path_local = os.path.join(
-            LOCAL_AGML_REPO, "docs/sample_images", f"{name}_examples.png"
-        )
-        plt.savefig(save_path_local, bbox_inches="tight")
+        save_path_local = os.path.join(LOCAL_AGML_REPO, 'docs/sample_images', f'{name}_examples.png')
+        plt.savefig(save_path_local, bbox_inches='tight')
         plt.close()
         print(f"Combined image saved to {save_path_local}")
-        save_path_remote = os.path.join(
-            AGML_REPO, "docs/sample_images", f"{name}_examples.png"
-        )
-        return f"![Example Images for {name}]({save_path_remote})"
+
+        save_path_remote = os.path.join(AGML_REPO, 'docs/sample_images', f'{name}_examples.png')
+        return f'![Example Images for {name}]({save_path_remote})'
 
     else:
         save_path_local = os.path.join(
-            LOCAL_AGML_REPO, "docs/sample_images", f"{name}_examples.png"
-        )
+            LOCAL_AGML_REPO, 'docs/sample_images', f'{name}_examples.png')
         save_path_remote = os.path.join(
-            AGML_REPO, "docs/sample_images", f"{name}_examples.png"
-        )
+            AGML_REPO, 'docs/sample_images', f'{name}_examples.png')
         cv2.imwrite(save_path_local, samples)
-        return f"![Example Images for {name}]({save_path_remote})"
+        return f'![Example Images for {name}]({save_path_remote})'
 
 
 def generate_markdown(name):
-    with open(os.path.join(LOCAL_AGML_REPO, "docs/datasets", f"{name}.md"), "w") as f:
-        f.write(
-            MARKDOWN_TEMPLATE.format(
-                name=name,
-                table=build_table(get_source_info(name)),
-                examples=build_examples(name),
-            )
-        )
+    with open(os.path.join(LOCAL_AGML_REPO, 'docs/datasets', f'{name}.md'), 'w') as f:
+        f.write(MARKDOWN_TEMPLATE.format(
+            name=name,
+            table=build_table(get_source_info(name)),
+            examples=build_examples(name)))
 
 
 def update_readme(datasets):
     # Find the part of the README where datasets are listed out.
-    with open(os.path.join(LOCAL_AGML_REPO, "README.md"), "r") as f:
+    with open(os.path.join(LOCAL_AGML_REPO, 'README.md'), 'r') as f:
         original_readme = [i[:-1] for i in f.readlines()]
-    with open(os.path.join(LOCAL_AGML_REPO, "README.md"), "r") as f:
+    with open(os.path.join(LOCAL_AGML_REPO, 'README.md'), 'r') as f:
         original_readme_full = f.read()
-    end_line = original_readme.index("## Usage Information") - 1
+    end_line = original_readme.index('## Usage Information') - 1
 
     # Update the README.
     for ds in tqdm(datasets):
         if ds.name not in original_readme_full:
-            content = "[{name}]({url}) | {task} | {num_images} |".format(
+            content = '[{name}]({url}) | {task} | {num_images} |'.format(
                 name=ds.name,
-                url=f"https://github.com/Project-AgML/AgML/blob/main/docs/datasets/{ds.name}.md",
+                url=f'https://github.com/Project-AgML/AgML/blob/main/docs/datasets/{ds.name}.md',
                 task=to_title(ds.tasks.ml),
-                num_images=ds.num_images,
+                num_images=ds.num_images
             )
             original_readme.insert(end_line, content)
             end_line += 1
 
     # Rewrite the README.
-    with open(os.path.join(LOCAL_AGML_REPO, "README.md"), "w") as f:
-        f.write("\n".join(original_readme))
+    with open(os.path.join(LOCAL_AGML_REPO, 'README.md'), 'w') as f:
+        f.write('\n'.join(original_readme))
 
 
-if __name__ == "__main__":
-    os.makedirs(os.path.join(LOCAL_AGML_REPO, "docs/datasets"), exist_ok=True)
-    os.makedirs(os.path.join(LOCAL_AGML_REPO, "docs/sample_images"), exist_ok=True)
+if __name__ == '__main__':
+    os.makedirs(os.path.join(LOCAL_AGML_REPO, 'docs/datasets'), exist_ok=True)
+    os.makedirs(os.path.join(LOCAL_AGML_REPO, 'docs/sample_images'), exist_ok=True)
     datasets = agml.data.public_data_sources()
     for ds in tqdm(datasets):
-        if not os.path.exists(
-            os.path.join(LOCAL_AGML_REPO, "docs/datasets", f"{ds.name}.md")
-        ):
+        if not os.path.exists(os.path.join(LOCAL_AGML_REPO, 'docs/datasets', f'{ds.name}.md')):
             generate_markdown(ds.name)
             pass
 
     # Update the README with any new datasets.
     update_readme(datasets)
+
+
+
+

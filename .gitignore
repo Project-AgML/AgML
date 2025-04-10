@@ -141,6 +141,7 @@ __MACOSX
 # Extra directories/files
 /**data*/
 
+!tests/*/*
 agml/_helios
 agml/helios_config.sh
 agml/train
@@ -163,3 +164,11 @@ agml/models/training/*.csv
 /
 *.pptx
 .ruff_cache
+*test*.*
+image*.png
+.challenges
+.paper
+
+# under development
+agml/data/augmentations/
+agml/data/exporters/pascal_voc.py

@@ -48,23 +48,24 @@ def show_sample(loader, image_only=False, num_images=1, **kwargs):
     if image_only:
         return show_images([sample[0] for sample in samples])
 
-    if loader.task == "object_detection":
-        return [
-            show_image_and_boxes(
-                sample,
-                info=loader.info,
-                no_show=kwargs.get("no_show", False),
-                num_to_class=kwargs.get("num_to_class", None),
-            )
-            for sample in samples
-        ]
-    elif loader.task == "semantic_segmentation":
-        return [show_image_and_overlaid_mask(sample, no_show=kwargs.get("no_show", False)) for sample in samples]
-    elif loader.task == "image_classification":
-        return show_images_and_labels(samples, info=loader.info, no_show=kwargs.get("no_show", False))
+    if loader.task == 'object_detection':
+        return [show_image_and_boxes(
+            sample, info=loader.info,
+            no_show=kwargs.get('no_show', False),
+            num_to_class=kwargs.get('num_to_class', None))
+            for sample in samples]
+    elif loader.task == 'semantic_segmentation':
+        return [show_image_and_overlaid_mask(
+            sample, no_show=kwargs.get('no_show', False))
+            for sample in samples]
+    elif loader.task == 'image_classification':
+        return show_images_and_labels(
+            samples, info=loader.info, no_show=kwargs.get('no_show', False))
+    
 
-
-def show_images(images, shape=None, **kwargs):
+def show_images(images,
+                shape = None,
+                **kwargs):
     """Shows multiple images in a grid format with the given shape.
 
     Given a set of images, this method will generate a grid for the

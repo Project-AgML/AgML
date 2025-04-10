@@ -16,6 +16,8 @@
 | **Annotation Format** | image |
 | **Number of Images** | 3775 |
 | **Documentation** | https://zenodo.org/records/7636408 |
+| **Stats/Mean** | [16.392, 18.685, 14.235] |
+| **Stats/Standard Deviation** | [4.59, 5.818, 4.19] |
 
 
 ## Examples

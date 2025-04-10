@@ -1763,8 +1763,6 @@ class AgMLDataLoader(AgMLSerializable, metaclass=AgMLDataLoaderMeta):
         """
         from torch.utils.data import DataLoader
 
-        from agml.backend.tftorch import torch
-
         if get_backend() != "torch":
             if user_changed_backend():
                 raise StrictBackendError(change="torch", obj=self.export_torch)
