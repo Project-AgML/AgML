@@ -10,10 +10,7 @@ It consists of 2,959 species with a breakdown of 1,986 crop species and 973 weed
 from pprint import pprint
 import agml
 
-datasets = agml.data.public_data_sources()
-iNatAg_mini_datasets = [ds._name.replace("iNatAg-mini/","") for ds in datasets if "iNatAg-mini" in ds._name]
-
-print(iNatAg_mini_datasets)
+print(agml.data.public_data_sources(parent_dataset='iNatAg-mini'))
 ```
 
 ## Loading iNatAg-mini dataset

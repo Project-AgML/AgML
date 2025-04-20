@@ -1585,6 +1585,9 @@ class PublicDataPreprocessor(object):
     def cucumber_disease_classification(self, dataset_name):
         pass
 
+    def soybean_insect_classification(self, dataset_name):
+        pass
+
 if __name__ == '__main__':
     # Initialize program arguments.
     ap = argparse.ArgumentParser()

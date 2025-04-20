@@ -262,5 +262,9 @@
     "cucumber_disease_classification": {
         "license": "CC BY 4.0",
         "citation": "Sultana, Nusrat; Shorif, Sumaita Binte ; Akter, Morium ; Uddin, Mohammad Shorif  (2022), “Cucumber Disease Recognition Dataset”, Mendeley Data, V1, doi: 10.17632/y6d3z6f8z9.1"
+    },
+    "soybean_insect_classification": {
+        "license": "CC BY 4.0",
+        "citation": "Mignoni, Maria Eloisa (2021), “Images of Soybean Leaves”, Mendeley Data, V1, doi: 10.17632/bycbh73438.1"
     }
 }

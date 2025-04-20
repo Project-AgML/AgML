@@ -203,7 +203,7 @@ to your desired specification.
 [cucumber_disease_classification](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/cucumber_disease_classification.md) | Image Classification | 7689 |
 [iNatAg](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/iNatAg.md) | Image Classification | 4720903 |
 [iNatAg-mini](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/iNatAg-mini.md) | Image Classification | 560844 |
-
+[soybean_insect_classification](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/soybean_insect_classification.md) | Image Classification | 6410 |
 
 ## iNatAg and iNatAg-mini
 
@@ -217,6 +217,7 @@ loader = agml.data.AgMLDataLoader.from_parent("iNatAg", filters={"family_name": 
 # To select common names.
 loader = agml.data.AgMLDataLoader.from_parent("iNatAg", filters={"common_name": "..."})
 ```
+
 
 ## Usage Information
 
@@ -249,4 +250,3 @@ See the [contributing guidelines](/CONTRIBUTING.md) for more information.
 
 ## Funding
 This project is partly funded by the [National AI Institute for Food Systems](https://aifs.ucdavis.edu).
-
