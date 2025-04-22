@@ -1057,6 +1057,11 @@
             "continent": "worldwide",
             "country": "worldwide"
         },
+        "sensor_modality": "rgb",
+        "real_synthetic": "real",
+        "platform": "handheld/ground",
+        "input_data_format": "jpg",
+        "annotation_format": "image",
         "n_images": "42",
         "docs_url": "https://data.nal.usda.gov/dataset/data-multi-species-fruit-flower-detection-using-refined-semantic-segmentation-network",
         "external_image_sources": [],
@@ -2462,5 +2467,40 @@
         },
         "parent_dataset": "",
         "extra_metadata": {}
+    },
+    "soybean_insect_classification": {
+        "ml_task": "image_classification",
+        "ag_task": "pest_classification",
+        "location": {
+            "continent": "south_america",
+            "country": "brazil"
+        },
+        "sensor_modality": "rgb",
+        "real_synthetic": "real",
+        "platform": "uav",
+        "input_data_format": "jpg",
+        "annotation_format": "directory_names",
+        "n_images": "6410",
+        "docs_url": "https://data.mendeley.com/datasets/bycbh73438/1",
+        "classes": {
+            "0": "Caterpillar",
+            "1": "Diabrotica_speciosa",
+            "2": "Healthy"
+        },
+        "external_image_sources": [],
+        "parent_dataset": "",
+        "extra_metadata": {},
+        "stats": {
+            "mean": [
+                0.4129256308078766,
+                0.515846848487854,
+                0.3347107470035553
+            ],
+            "std": [
+                0.22007715702056885,
+                0.22993944585323334,
+                0.20302338898181915
+            ]
+        }
     }
 }

@@ -19,6 +19,9 @@ import sys
 from typing import Iterable
 
 import yaml
+from rich.console import Console
+from rich.table import Table
+
 
 import agml.utils.logging as logging
 from agml.framework import AgMLSerializable
@@ -280,12 +283,12 @@ class DatasetMetadata(AgMLSerializable):
         as `print(loader.info.summary())`, just `loader.info.summary()`.
         """
 
-        def _bold(msg):
-            return "\033[1m" + msg + "\033[0m"
+        console = Console()
 
-        def _bold_yaml(msg):  # noqa
-            return "<|>" + msg + "<|>"
+        table = Table(title="Dataset Summary")
 
+        table.add_column("Attribute", justify="right", style="bold cyan")
+        table.add_column("Value", justify="left", style="bold white")
         _SWITCH_NAMES = {
             "ml_task": "Machine Learning Task",
             "ag_task": "Agricultural Task",
@@ -294,7 +297,6 @@ class DatasetMetadata(AgMLSerializable):
             "docs_url": "Documentation",
         }
 
-        formatted_metadata = {}
         for key, value in self._metadata.items():
             name = key.replace("_", " ").title()
             if key in _SWITCH_NAMES.keys():
@@ -303,18 +305,10 @@ class DatasetMetadata(AgMLSerializable):
                 value = {int(k): v for k, v in value.items()}
             if name == "Number of Images":
                 value = int(value)
-            formatted_metadata[_bold_yaml(name)] = value
 
-        stream = io.StringIO()
-        yaml.dump(formatted_metadata, stream, sort_keys=False)
-        content = stream.getvalue()
-        content = re.sub("<\\|>(.*?)<\\|>", _bold(r"\1"), content)
-        header = "=" * 20 + " DATASET SUMMARY " + "=" * 20
-        print(header)
-        print(_bold("Name") + f": {self._name}")
-        print(content, end="")
-        print("=" * 57)
-        sys.stdout.flush()
+            table.add_row(name, f"{value}")
+
+        console.print(table)
 
     def citation_summary(self):
         """Prints out a summary of the citation information of the dataset.

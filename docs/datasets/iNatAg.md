@@ -8,10 +8,7 @@ iNatAg is a large-scale dataset derived from the iNaturalist dataset, designed f
 from pprint import pprint
 import agml
 
-datasets = agml.data.public_data_sources()
-iNatAg_datasets = [ds._name.replace("iNatAg/","") for ds in datasets if "iNatAg" in ds._name]
-
-print(iNatAg_datasets)
+print(agml.data.public_data_sources(parent_dataset='iNatAg'))
 ```
 
 ## Loading iNatAg dataset
