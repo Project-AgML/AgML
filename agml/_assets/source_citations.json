@@ -266,5 +266,9 @@
     "soybean_insect_classification": {
         "license": "CC BY 4.0",
         "citation": "Mignoni, Maria Eloisa (2021), “Images of Soybean Leaves”, Mendeley Data, V1, doi: 10.17632/bycbh73438.1"
+    },
+    "mango_leaf_disease_classification": {
+        "license": "CC BY-NC 4.0",
+        "citation": "Ali, Sawkat; Ibrahim, Muhammad ; Ahmed, Sarder Iftekhar ; Nadim, Md. ; Mizanur, Mizanur Rahman; Shejunti, Maria Mehjabin ; Jabid, Taskeed (2022), “MangoLeafBD Dataset”, Mendeley Data, V1, doi: 10.17632/hxsnvwty3r.1"
     }
 }
