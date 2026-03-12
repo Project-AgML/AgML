@@ -2502,5 +2502,45 @@
                 0.20302338898181915
             ]
         }
+    },
+    "mango_leaf_disease_classification": {
+        "ml_task": "image_classification",
+        "ag_task": "disease_classification",
+        "location": {
+            "continent": "asia",
+            "country": "bangladesh"
+        },
+        "sensor_modality": "rgb",
+        "real_synthetic": "real",
+        "platform": "handheld",
+        "input_data_format": "jpg",
+        "annotation_format": "directory_names",
+        "n_images": "4000",
+        "docs_url": "https://data.mendeley.com/datasets/hxsnvwty3r/1",
+        "classes": {
+            "0": "Anthracnose",
+            "1": "Bacterial_Canker",
+            "2": "Cutting_Weevil",
+            "3": "Die_Back",
+            "4": "Gall_Midge",
+            "5": "Healthy",
+            "6": "Powdery_Mildew",
+            "7": "Sooty_Mold"
+        },
+        "external_image_sources": [],
+        "parent_dataset": "",
+        "extra_metadata": {},
+        "stats": {
+            "mean": [
+                0.6656161465062932,
+                0.6908410777008502,
+                0.6897037347395488
+            ],
+            "std": [
+                0.19750956584037743,
+                0.18696074420471073,
+                0.2579291888749908
+            ]
+        }
     }
 }
