@@ -79,6 +79,16 @@ class _PublicSourceFilter:
         if not filters:
             return self
 
+        # Validate filters against known metadata keys
+        valid_keys = {
+            'location', 'n_images', 'num_images', 'ml_task', 'ag_task', 
+            'sensor_modality', 'real_synthetic', 'platform', 'input_data_format', 
+            'annotation_format', 'docs_url', 'classes', 'parent_dataset'
+        }
+        for key in filters:
+            if key not in valid_keys:
+                raise ValueError(f"Invalid filter: '{key}'. Must be one of {valid_keys}")
+
         filtered_sources = []
         for source, meta in self._sources.items():
             if self._matches(meta, filters):
