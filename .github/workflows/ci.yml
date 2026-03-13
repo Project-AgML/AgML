@@ -1,6 +1,6 @@
 name: ci
 
-on: [push, pull_request]
+on: [push, pull_request, workflow_dispatch]
 
 jobs:
   test:
@@ -30,10 +30,6 @@ jobs:
         run: |
           uv venv --python  ${{ matrix.python-version }}
           uv sync --dev
-
-      - name: Run pre-commit
-        continue-on-error: true
-        run: make pre-commit
 
       - name: Run tests
         # For example, using `pytest`

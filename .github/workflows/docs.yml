@@ -1,5 +1,5 @@
 name: docs
-on: [push, pull_request]
+on: [push, pull_request, workflow_dispatch]
 
 permissions:
   contents: read
@@ -14,8 +14,8 @@ concurrency:
 jobs:
   deploy:
     environment:
-        name: documenation
-        url: ${{steps.deployement.outputs.page_url}}
+        name: documentation
+        url: ${{steps.deployment.outputs.page_url}}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

@@ -14,7 +14,7 @@ license = {text = "Apache 2.0"}
 readme = "README.md"
 packages = [{include = "agml", from = "agml", exclude ='agml/_internal'}]
 version = "0.7.4"
-requires-python = ">=3.8,<3.12"
+requires-python = ">=3.8"
 keywords = []
 classifiers = [
     "Development Status :: 4 - Beta",
@@ -73,4 +73,10 @@ dev-dependencies = [
     "mypy>=1.13.0",
     "coverage>=7.6.1",
     "interrogate>=1.7.0",
+]
+
+[dependency-groups]
+docs = [
+    "mkdocs>=1.5.0",
+    "mkdocs-material>=9.5.0",
 ]
