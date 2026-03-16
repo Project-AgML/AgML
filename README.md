@@ -205,6 +205,7 @@ to your desired specification.
 [iNatAg-mini](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/iNatAg-mini.md) | Image Classification | 560844 |
 [soybean_insect_classification](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/soybean_insect_classification.md) | Image Classification | 6410 |
 
+[susnato_plant_disease_detection_processed](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/susnato_plant_disease_detection_processed.md) | Object Detection | 2324 |
 ## iNatAg and iNatAg-mini
 
 
