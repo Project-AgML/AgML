@@ -2542,5 +2542,50 @@
                 0.2579291888749908
             ]
         }
+    },
+    "susnato_plant_disease_detection_processed": {
+        "ml_task": "object_detection",
+        "ag_task": null,
+        "location": null,
+        "sensor_modality": "RGB",
+        "real_synthetic": null,
+        "platform": null,
+        "input_data_format": "jpg",
+        "annotation_format": "coco_json",
+        "n_images": "2324",
+        "docs_url": "https://huggingface.co/datasets/susnato/plant_disease_detection_processed",
+        "classes": null,
+        "stats": null,
+        "parent_dataset": "",
+        "external_image_sources": [],
+        "extra_metadata": {
+            "title": "susnato/plant_disease_detection_processed",
+            "description": "This Dataset is created from processing the files from this GitHub repository : PlantDoc-Object-Detection-Dataset\nCitation\nBibTeX:\n@inproceedings{10.1145/3371158.3371196,\nauthor = {Singh, Davinder and Jain, Naman and Jain, Pranjali and Kayal, Pratik and Kumawat, Sudhakar and Batra, Nipun},\ntitle = {PlantDoc: A Dataset for Visual Plant Disease Detection},\nyear = {2020},\nisbn = {9781450377386},\npublisher = {Association for Computing Machinery},\naddress = {New York, NY, USA},\nurl =\u2026 See the full description on the dataset page: https://huggingface.co/datasets/susnato/plant_disease_detection_processed.",
+            "source_provenance": {
+                "source_type": "huggingface",
+                "external_id": "susnato/plant_disease_detection_processed",
+                "source_url": "https://huggingface.co/datasets/susnato/plant_disease_detection_processed",
+                "download_url": null,
+                "raw_metadata": {
+                    "id": "susnato/plant_disease_detection_processed",
+                    "tags": [
+                        "task_categories:object-detection",
+                        "license:cc-by-4.0",
+                        "size_categories:1K<n<10K",
+                        "format:parquet",
+                        "modality:image",
+                        "library:datasets",
+                        "library:dask",
+                        "library:mlcroissant",
+                        "library:polars",
+                        "region:us"
+                    ],
+                    "downloads": 130,
+                    "likes": 9,
+                    "gated": false,
+                    "private": false
+                }
+            }
+        }
     }
 }
