@@ -132,6 +132,8 @@ def copyright_print(name, location=None):
     # Create license message
     if not license_info:  # Handle empty license
         license_msg = Text("License: None specified", style="yellow")
+        license_more_info = ""
+        license_url = ""
     else:
         license_msg = Text.assemble(("This dataset is licensed under ", "bold cyan"), (f"{license_info}", "green"))
         if license_info in _LICENSE_TO_URL:

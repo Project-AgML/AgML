@@ -1,5 +1,5 @@
 name: docs
-on: [push, pull_request]
+on: [push, pull_request, workflow_dispatch]
 
 permissions:
   contents: read
@@ -14,8 +14,8 @@ concurrency:
 jobs:
   deploy:
     environment:
-        name: documenation
-        url: ${{steps.deployement.outputs.page_url}}
+        name: documentation
+        url: ${{steps.deployment.outputs.page_url}}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -25,7 +25,7 @@ jobs:
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
       - uses: actions/setup-python@v5
         with:
-          python-version: 3.x
+          python-version: '3.12'
       - run: echo "cache_id=$(date --utc '+%V')" >> $GITHUB_ENV
       - uses: actions/cache@v4
         with:

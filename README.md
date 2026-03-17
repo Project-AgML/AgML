@@ -204,6 +204,7 @@ to your desired specification.
 [iNatAg](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/iNatAg.md) | Image Classification | 4720903 |
 [iNatAg-mini](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/iNatAg-mini.md) | Image Classification | 560844 |
 [soybean_insect_classification](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/soybean_insect_classification.md) | Image Classification | 6410 |
+[mango_leaf_disease_classification](https://github.com/Project-AgML/AgML/blob/main/docs/datasets/mango_leaf_disease_classification.md) | Image Classification | 4000 |
 
 ## iNatAg and iNatAg-mini
 
@@ -249,4 +250,4 @@ a bug or feature that you would like to see implemented, please don't hesitate t
 See the [contributing guidelines](/CONTRIBUTING.md) for more information.
 
 ## Funding
-This project is partly funded by the [National AI Institute for Food Systems](https://aifs.ucdavis.edu).
+This project is partly funded by the [National AI Institute for Food Systems](https://aifs.ucdavis.ed
