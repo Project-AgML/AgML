@@ -69,7 +69,7 @@
     },
     "plant_doc_classification": {
         "license": "CC BY-SA 4.0",
-        "citation": "@inproceedings{10.1145/3371158.3371196,\n  author = {Singh, Davinder and Jain, Naman and Jain, Pranjali and Kayal, Pratik and Kumawat, Sudhakar and Batra, Nipun},\n  title = {PlantDoc: A Dataset for Visual Plant Disease Detection},\n  year = {2020},\n  isbn = {9781450377386},\n  publisher = {Association for Computing Machinery},\n  address = {New York, NY, USA},\n  url = {https://doi.org/10.1145/3371158.3371196},\n  doi = {10.1145/3371158.3371196},\n  booktitle = {Proceedings of the 7th ACM IKDD CoDS and 25th COMAD},\n  pages = {249–253},\n  numpages = {5},\n  keywords = {Deep Learning, Object Detection, Image Classification},\n  location = {Hyderabad, India},\n  series = {CoDS COMAD 2020}\n  }"
+        "citation": "@inproceedings{10.1145/3371158.3371196,\n  author = {Singh, Davinder and Jain, Naman and Jain, Pranjali and Kayal, Pratik and Kumawat, Sudhakar and Batra, Nipun},\n  title = {PlantDoc: A Dataset for Visual Plant Disease Detection},\n  year = {2020},\n  isbn = {9781450377386},\n  publisher = {Association for Computing Machinery},\n  address = {New York, NY, USA},\n  url = {https://doi.org/10.1145/3371158.3371196},\n  doi = {10.1145/3371158.3371196},\n  booktitle = {Proceedings of the 7th ACM IKDD CoDS and 25th COMAD},\n  pages = {249\u2013253},\n  numpages = {5},\n  keywords = {Deep Learning, Object Detection, Image Classification},\n  location = {Hyderabad, India},\n  series = {CoDS COMAD 2020}\n  }"
     },
     "autonomous_greenhouse_regression": {
         "license": "CC BY-SA 4.0",
@@ -93,7 +93,7 @@
     },
     "apple_detection_spain": {
         "license": "",
-        "citation": "@article{GENEMOLA2019104289,\ntitle = {KFuji RGB-DS database: Fuji apple multi-modal images for fruit detection with color, depth and range-corrected IR data},\njournal = {Data in Brief},\nvolume = {25},\npages = {104289},\nyear = {2019},\nissn = {2352-3409},\ndoi = {https://doi.org/10.1016/j.dib.2019.104289},\nurl = {https://www.sciencedirect.com/science/article/pii/S2352340919306432},\nauthor = {Jordi Gené-Mola and Verónica Vilaplana and Joan R. Rosell-Polo and Josep-Ramon Morros and Javier Ruiz-Hidalgo and Eduard Gregorio},\nkeywords = {Multi-modal dataset, Fruit detection, Depth cameras, RGB-D, Fruit reflectance, Fuji apple},\nabstract = {This article contains data related to the research article entitle “Multi-modal Deep Learning for Fruit Detection Using RGB-D Cameras and their Radiometric Capabilities” [1]. The development of reliable fruit detection and localization systems is essential for future sustainable agronomic management of high-value crops. RGB-D sensors have shown potential for fruit detection and localization since they provide 3D information with color data. However, the lack of substantial datasets is a barrier for exploiting the use of these sensors. This article presents the KFuji RGB-DS database which is composed by 967 multi-modal images of Fuji apples on trees captured using Microsoft Kinect v2 (Microsoft, Redmond, WA, USA). Each image contains information from 3 different modalities: color (RGB), depth (D) and range corrected IR intensity (S). Ground truth fruit locations were manually annotated, labeling a total of 12,839 apples in all the dataset. The current dataset is publicly available at http://www.grap.udl.cat/publicacions/datasets.html.}\n}"
+        "citation": "@article{GENEMOLA2019104289,\ntitle = {KFuji RGB-DS database: Fuji apple multi-modal images for fruit detection with color, depth and range-corrected IR data},\njournal = {Data in Brief},\nvolume = {25},\npages = {104289},\nyear = {2019},\nissn = {2352-3409},\ndoi = {https://doi.org/10.1016/j.dib.2019.104289},\nurl = {https://www.sciencedirect.com/science/article/pii/S2352340919306432},\nauthor = {Jordi Gen\u00e9-Mola and Ver\u00f3nica Vilaplana and Joan R. Rosell-Polo and Josep-Ramon Morros and Javier Ruiz-Hidalgo and Eduard Gregorio},\nkeywords = {Multi-modal dataset, Fruit detection, Depth cameras, RGB-D, Fruit reflectance, Fuji apple},\nabstract = {This article contains data related to the research article entitle \u201cMulti-modal Deep Learning for Fruit Detection Using RGB-D Cameras and their Radiometric Capabilities\u201d [1]. The development of reliable fruit detection and localization systems is essential for future sustainable agronomic management of high-value crops. RGB-D sensors have shown potential for fruit detection and localization since they provide 3D information with color data. However, the lack of substantial datasets is a barrier for exploiting the use of these sensors. This article presents the KFuji RGB-DS database which is composed by 967 multi-modal images of Fuji apples on trees captured using Microsoft Kinect v2 (Microsoft, Redmond, WA, USA). Each image contains information from 3 different modalities: color (RGB), depth (D) and range corrected IR intensity (S). Ground truth fruit locations were manually annotated, labeling a total of 12,839 apples in all the dataset. The current dataset is publicly available at http://www.grap.udl.cat/publicacions/datasets.html.}\n}"
     },
     "apple_detection_drone_brazil": {
         "license": "CC BY-SA 4.0",
@@ -101,7 +101,7 @@
     },
     "plant_doc_detection": {
         "license": "CC BY-SA 4.0",
-        "citation": "@inproceedings{10.1145/3371158.3371196,\n  author = {Singh, Davinder and Jain, Naman and Jain, Pranjali and Kayal, Pratik and Kumawat, Sudhakar and Batra, Nipun},\n  title = {PlantDoc: A Dataset for Visual Plant Disease Detection},\n  year = {2020},\n  isbn = {9781450377386},\n  publisher = {Association for Computing Machinery},\n  address = {New York, NY, USA},\n  url = {https://doi.org/10.1145/3371158.3371196},\n  doi = {10.1145/3371158.3371196},\n  booktitle = {Proceedings of the 7th ACM IKDD CoDS and 25th COMAD},\n  pages = {249–253},\n  numpages = {5},\n  keywords = {Deep Learning, Object Detection, Image Classification},\n  location = {Hyderabad, India},\n  series = {CoDS COMAD 2020}\n  }"
+        "citation": "@inproceedings{10.1145/3371158.3371196,\n  author = {Singh, Davinder and Jain, Naman and Jain, Pranjali and Kayal, Pratik and Kumawat, Sudhakar and Batra, Nipun},\n  title = {PlantDoc: A Dataset for Visual Plant Disease Detection},\n  year = {2020},\n  isbn = {9781450377386},\n  publisher = {Association for Computing Machinery},\n  address = {New York, NY, USA},\n  url = {https://doi.org/10.1145/3371158.3371196},\n  doi = {10.1145/3371158.3371196},\n  booktitle = {Proceedings of the 7th ACM IKDD CoDS and 25th COMAD},\n  pages = {249\u2013253},\n  numpages = {5},\n  keywords = {Deep Learning, Object Detection, Image Classification},\n  location = {Hyderabad, India},\n  series = {CoDS COMAD 2020}\n  }"
     },
     "wheat_head_counting": {
         "license": "CC BY-SA 4.0",
@@ -169,7 +169,7 @@
     },
     "growliflower_cauliflower_segmentation": {
         "license": "",
-        "citation": "Kierdorf, Jana & Junker-Frohn, Laura & Delaney, Mike & Olave, Mariele & Burkart, Andreas & Jaenicke, Hannah & Muller, Onno & Roscher, Ribana. (2022). GrowliFlower: An image time‐series dataset for GROWth analysis of cauLIFLOWER. Journal of Field Robotics. 40. 10.1002/rob.22122. "
+        "citation": "Kierdorf, Jana & Junker-Frohn, Laura & Delaney, Mike & Olave, Mariele & Burkart, Andreas & Jaenicke, Hannah & Muller, Onno & Roscher, Ribana. (2022). GrowliFlower: An image time\u2010series dataset for GROWth analysis of cauLIFLOWER. Journal of Field Robotics. 40. 10.1002/rob.22122. "
     },
     "strawberry_detection_2023": {
         "license": "CC BY 4.0",
@@ -217,15 +217,15 @@
     },
     "orange_leaf_disease_classification": {
         "license": "CC BY 4.0",
-        "citation": "Emon, Yousuf Rayhan; Ahad, Md Taimur (2023), “Multi-format open-source sweet orange leaf dataset for disease detection, classification, and analysis.”, Mendeley Data, V1, doi: 10.17632/f7cr74mwpj.1"
+        "citation": "Emon, Yousuf Rayhan; Ahad, Md Taimur (2023), \u201cMulti-format open-source sweet orange leaf dataset for disease detection, classification, and analysis.\u201d, Mendeley Data, V1, doi: 10.17632/f7cr74mwpj.1"
     },
     "papaya_leaf_disease_classification": {
         "license": "CC BY 4.0",
-        "citation": "Sarker, Arpita ; Mustofa, Sumaya; Ahad, Md Taimur  (2023), “BDPapayaLeaf: A annotation based image dataset of papaya leaf disease.”, Mendeley Data, V1, doi: 10.17632/p997fvf526.1"
+        "citation": "Sarker, Arpita ; Mustofa, Sumaya; Ahad, Md Taimur  (2023), \u201cBDPapayaLeaf: A annotation based image dataset of papaya leaf disease.\u201d, Mendeley Data, V1, doi: 10.17632/p997fvf526.1"
     },
     "blackgram_plant_leaf_disease_classification": {
         "license": "CC BY 4.0",
-        "citation": "Talasila, Srinivas; Rawal, Kirti; Sethi, Gaurav; MSS, Sanjay; M, Surya Prakash Reddy (2022), “Blackgram Plant Leaf Disease Dataset”, Mendeley Data, V3, doi: 10.17632/zfcv9fmrgv.3"
+        "citation": "Talasila, Srinivas; Rawal, Kirti; Sethi, Gaurav; MSS, Sanjay; M, Surya Prakash Reddy (2022), \u201cBlackgram Plant Leaf Disease Dataset\u201d, Mendeley Data, V3, doi: 10.17632/zfcv9fmrgv.3"
     },
     "arabica_coffee_leaf_disease_classification": {
         "license": "CC BY 4.0",
@@ -233,11 +233,11 @@
     },
     "banana_leaf_disease_classification": {
         "license": "CC BY 4.0",
-        "citation": "hailu, yordanos (2021), “Banana Leaf Disease Images”, Mendeley Data, V1, doi: 10.17632/rjykr62kdh.1"
+        "citation": "hailu, yordanos (2021), \u201cBanana Leaf Disease Images\u201d, Mendeley Data, V1, doi: 10.17632/rjykr62kdh.1"
     },
     "coconut_tree_disease_classification": {
         "license": "CC BY 4.0",
-        "citation": "PATIL, Kailas; Thite, Sandip; Suryawanshi, Yogesh; chumchu, prawit (2023), “Coconut Tree Disease Dataset”, Mendeley Data, V1, doi: 10.17632/gh56wbsnj5.1"
+        "citation": "PATIL, Kailas; Thite, Sandip; Suryawanshi, Yogesh; chumchu, prawit (2023), \u201cCoconut Tree Disease Dataset\u201d, Mendeley Data, V1, doi: 10.17632/gh56wbsnj5.1"
     },
     "rice_leaf_disease_classification": {
         "license": "",
@@ -249,26 +249,30 @@
     },
     "betel_leaf_disease_classification": {
         "license": "CC BY 4.0",
-        "citation": "Rashid, Mohammad Rifat Ahmmad; Hossain, Md. Miskat ; Biswas,  Joy ; Majumder, Hredoy  (2024), “Betel Leaf Image Dataset from Bangladesh”, Mendeley Data, V2, doi: 10.17632/g7fpgj57wc.2"
+        "citation": "Rashid, Mohammad Rifat Ahmmad; Hossain, Md. Miskat ; Biswas,  Joy ; Majumder, Hredoy  (2024), \u201cBetel Leaf Image Dataset from Bangladesh\u201d, Mendeley Data, V2, doi: 10.17632/g7fpgj57wc.2"
     },
     "java_plum_leaf_disease_classification": {
         "license": "CC BY 4.0",
-        "citation": "Bhowmik, Auvick Chandra; Ahad, Taimur (2024), “Java Plum Leaf Disease Dataset”, Mendeley Data, V3, doi: 10.17632/43d75vptz4.3"
+        "citation": "Bhowmik, Auvick Chandra; Ahad, Taimur (2024), \u201cJava Plum Leaf Disease Dataset\u201d, Mendeley Data, V3, doi: 10.17632/43d75vptz4.3"
     },
     "sunflower_disease_classification": {
         "license": "CC BY 4.0",
-        "citation": "Rajbongshi, Aditya; Sara, Umme ; Akter, Bonna ; Shakil, Rashiduzzaman ; Sazzad, Sadia (2022), “Sun Flower Fruits and Leaves dataset for Sunflower Disease Classification through Machine Learning and Deep Learning”, Mendeley Data, V1, doi: 10.17632/b83hmrzth8.1"
+        "citation": "Rajbongshi, Aditya; Sara, Umme ; Akter, Bonna ; Shakil, Rashiduzzaman ; Sazzad, Sadia (2022), \u201cSun Flower Fruits and Leaves dataset for Sunflower Disease Classification through Machine Learning and Deep Learning\u201d, Mendeley Data, V1, doi: 10.17632/b83hmrzth8.1"
     },
     "cucumber_disease_classification": {
         "license": "CC BY 4.0",
-        "citation": "Sultana, Nusrat; Shorif, Sumaita Binte ; Akter, Morium ; Uddin, Mohammad Shorif  (2022), “Cucumber Disease Recognition Dataset”, Mendeley Data, V1, doi: 10.17632/y6d3z6f8z9.1"
+        "citation": "Sultana, Nusrat; Shorif, Sumaita Binte ; Akter, Morium ; Uddin, Mohammad Shorif  (2022), \u201cCucumber Disease Recognition Dataset\u201d, Mendeley Data, V1, doi: 10.17632/y6d3z6f8z9.1"
     },
     "soybean_insect_classification": {
         "license": "CC BY 4.0",
-        "citation": "Mignoni, Maria Eloisa (2021), “Images of Soybean Leaves”, Mendeley Data, V1, doi: 10.17632/bycbh73438.1"
+        "citation": "Mignoni, Maria Eloisa (2021), \u201cImages of Soybean Leaves\u201d, Mendeley Data, V1, doi: 10.17632/bycbh73438.1"
     },
     "mango_leaf_disease_classification": {
         "license": "CC BY-NC 4.0",
-        "citation": "Ali, Sawkat; Ibrahim, Muhammad ; Ahmed, Sarder Iftekhar ; Nadim, Md. ; Mizanur, Mizanur Rahman; Shejunti, Maria Mehjabin ; Jabid, Taskeed (2022), “MangoLeafBD Dataset”, Mendeley Data, V1, doi: 10.17632/hxsnvwty3r.1"
+        "citation": "Ali, Sawkat; Ibrahim, Muhammad ; Ahmed, Sarder Iftekhar ; Nadim, Md. ; Mizanur, Mizanur Rahman; Shejunti, Maria Mehjabin ; Jabid, Taskeed (2022), \u201cMangoLeafBD Dataset\u201d, Mendeley Data, V1, doi: 10.17632/hxsnvwty3r.1"
+    },
+    "susnato_plant_disease_detection_processed": {
+        "license": "cc-by-4.0",
+        "citation": "@inproceedings{10.1145/3371158.3371196,\nauthor = {Singh, Davinder and Jain, Naman and Jain, Pranjali and Kayal, Pratik and Kumawat, Sudhakar and Batra, Nipun},\ntitle = {PlantDoc: A Dataset for Visual Plant Disease Detection},\nyear = {2020},\npublisher = {Association for Computing Machinery},\nurl = {https://doi.org/10.1145/3371158.3371196}}"
     }
 }
