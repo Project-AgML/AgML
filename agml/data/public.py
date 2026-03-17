@@ -105,7 +105,8 @@ class _PublicSourceFilter:
                     desired = desired.lower()
                 except ValueError:
                     raise ValueError("Location filter must be in the format 'key:value'.")
-                if meta.get('location', {}).get(loc_key) != desired:
+                loc_data = meta.get('location') or {}
+                if loc_data.get(loc_key) != desired:
                     return False
             elif key in ['n_images', 'num_images']:
                 try:
@@ -152,7 +153,7 @@ class _PublicSourceFilter:
             table.add_row(
                 source_name,
                 meta.get("ml_task", "N/A"),  # Handle missing 'ml_task'
-                f"{meta['location']['continent']}, {meta['location']['country']}" if "location" in meta else "N/A",
+                f"{meta['location']['continent']}, {meta['location']['country']}" if meta.get("location") else "N/A",
                 str(meta.get("n_images", "N/A")),  # prints N/A if number of images are not there.
             )
 
