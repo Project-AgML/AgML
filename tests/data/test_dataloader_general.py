@@ -73,3 +73,44 @@ def test_loader_detection_shuffle():
     contents = loader._manager._accessors.copy()
     loader.shuffle()
     assert np.any(contents != loader._manager._accessors)
+
+
+# ── Text & Multimodal Task Tests ──────────────────────────────────────────────
+
+_LOCAL_DATASET_DIR = os.path.join(os.path.expanduser("~"), ".agml", "datasets")
+
+
+def _require_dataset(name):
+    path = os.path.join(_LOCAL_DATASET_DIR, name)
+    if not os.path.isdir(path):
+        pytest.skip(f"Local dataset '{name}' not found at {path}")
+
+
+@pytest.mark.order(20)
+def test_text_classification_folder_load_and_display():
+    _require_dataset("agml_crop_disease_reports")
+    loader = agml.data.AgMLDataLoader("agml_crop_disease_reports", dataset_path=_LOCAL_DATASET_DIR)
+    text, label = loader[0]
+    print(f"\n[agml_crop_disease_reports] task={loader.task} len={len(loader)}")
+    print(f"  label={label}  text[:80]={text[:80]!r}")
+    assert isinstance(text, str) and isinstance(label, int)
+
+
+@pytest.mark.order(21)
+def test_text_classification_csv_load_and_display():
+    _require_dataset("agml_wheat_stress_survey")
+    loader = agml.data.AgMLDataLoader("agml_wheat_stress_survey", dataset_path=_LOCAL_DATASET_DIR)
+    text, label = loader[0]
+    print(f"\n[agml_wheat_stress_survey] task={loader.task} len={len(loader)}")
+    print(f"  label={label}  text[:80]={text[:80]!r}")
+    assert isinstance(text, str) and isinstance(label, int)
+
+
+@pytest.mark.order(22)
+def test_multimodal_classification_load_and_display():
+    _require_dataset("agml_field_crop_multimodal")
+    loader = agml.data.AgMLDataLoader("agml_field_crop_multimodal", dataset_path=_LOCAL_DATASET_DIR)
+    inputs, label = loader[0]
+    print(f"\n[agml_field_crop_multimodal] task={loader.task} len={len(loader)}")
+    print(f"  label={label}  image.shape={inputs['image'].shape}  text[:80]={inputs['text'][:80]!r}")
+    assert isinstance(inputs, dict) and "image" in inputs and "text" in inputs and isinstance(label, int)

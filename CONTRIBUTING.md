@@ -9,12 +9,13 @@ then the instructions below will help you format and the data to the AgML standa
 
 ### Dataset Formats
 
-Currently, we have image classification, object detection, and semantic segmentation datasets available
-in AgML. These sources are synthesized to standard annotation formats, namely the following:
+Currently, AgML supports the following dataset types and annotation formats:
 
 - **Image Classification**: Image-To-Label-Number
 - **Object Detection**: [COCO JSON](https://cocodataset.org/#format-data)
 - **Semantic Segmentation**: Dense Pixel-Wise
+- **Text Classification**: Folder-per-class or CSV
+- **Multimodal Classification**: CSV + images directory
 
 #### Image Classification
 
@@ -101,6 +102,48 @@ The directory tree should look like follows:
 ```
 
 
+
+#### Text Classification
+
+Text classification datasets map text documents to discrete class labels. Two layouts are supported:
+
+**Folder layout** — one folder per class, each containing `.txt` files:
+
+```
+<dataset name>
+    ├── class_a
+    │   ├── doc_001.txt
+    │   └── doc_002.txt
+    └── class_b
+        └── doc_003.txt
+```
+
+**CSV layout** — a single `data.csv` file with `text` and `label` columns:
+
+```
+<dataset name>
+    └── data.csv
+```
+
+The `AgMLDataLoader` returns `(str, int)` per sample — the raw text and its integer class index.
+
+#### Multimodal Classification
+
+Multimodal classification datasets pair an image with a text description for each sample.
+The layout requires a `data.csv` with `image`, `text`, and `label` columns alongside an
+`images/` sub-directory containing the image files:
+
+```
+<dataset name>
+    ├── images
+    │   ├── img_001.jpg
+    │   └── img_002.jpg
+    └── data.csv      # columns: image (filename only), text, label
+```
+
+The `AgMLDataLoader` returns `({"image": np.ndarray, "text": str}, int)` per sample.
+
+
 ## Contributing a Dataset
 
 If you've found a new dataset that *isn't already being used* in AgML and you want to add it, there's a few things you
@@ -175,6 +218,9 @@ The ML task can be quickly defined from the following table:
 | Image Classification | `image_classification` | `directory_names` |
 | Object Detection | `object_detection` | `coco_json` |
 | Semantic Segmentation | `semantic_segmentation` | `image` |
+| Text Classification (folder) | `text_classification` | `directory_names` |
+| Text Classification (CSV) | `text_classification` | `csv` |
+| Multimodal Classification | `multimodal_classification` | `csv` |
 
 
 The `ag_task` field is more broadly defined - it should be the main task that the dataset is associated with.
@@ -210,6 +256,9 @@ When contributing a dataset, you should abide by the following guidelines to ens
 - Make sure you have run `python3 scripts/generate_normalization_info.py --dataset <name>` and `python3 scripts/generate_shape_info.py --dataset <name>` to generate the dataset normalization and shape information.
 - Make sure that there is an entry in `agml/_internal/preprocess.py` for the dataset. Specifically, you should have a method in the class that makes up the file with the name of the method being the dataset, and the preprocessing code being that of the dataset.
   
+
+
+---
 
 ## Development Guidelines
 

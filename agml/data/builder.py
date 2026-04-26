@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import csv
 import json
 import os
 import re
@@ -198,8 +199,14 @@ class DataBuilder(AgMLSerializable):
             self._generate_image_regression_data()
         elif task == "object_detection":
             self._generate_object_detection_data()
-        else:
+        elif task == "semantic_segmentation":
             self._generate_semantic_segmentation_data()
+        # ── NEW ──────────────────────────────────────
+        elif task == "text_classification":
+            self._generate_text_classification_data()
+        elif task == "multimodal_classification":
+            self._generate_multimodal_classification_data()
+        # ─────────────────────────────────────────────
 
     def get_contents(self):
         """Extracts the internal representation of the data content."""
@@ -324,3 +331,84 @@ class DataBuilder(AgMLSerializable):
             coco_map[image_id_mapping[a_meta["image_id"]]].append(a_meta)
         self._labels_for_image = image_category_map
         self._data = coco_map
+
+    def _generate_text_classification_data(self):
+        """Loads text classification data.
+
+        Supports two layouts:
+        1. Folder-based: one sub-directory per class, each containing .txt files.
+           Mirrors image_classification exactly.
+        2. CSV-based: a single data.csv file with 'text' and 'label' columns.
+           Text values are stored directly as strings (not file paths).
+        """
+        csv_path = os.path.join(self._dataset_root, "data.csv")
+
+        if os.path.exists(csv_path):
+            # CSV layout: text, label
+            text_label_mapping = {}
+            with open(csv_path, "r", encoding="utf-8") as f:
+                reader = csv.DictReader(f)
+                for row in reader:
+                    text = row["text"].strip()
+                    label = self._info.class_to_num[row["label"].strip()]
+                    text_label_mapping[text] = label
+            self._data = text_label_mapping
+        else:
+            # Folder-based layout: mirrors _generate_image_classification_data()
+            text_label_mapping = {}
+            candidate_dirs = get_dir_list(self._dataset_root)
+            for dir_ in candidate_dirs:
+                if dir_.startswith("."):
+                    continue
+                dir_path = os.path.join(self._dataset_root, dir_)
+                if len(get_file_list(dir_path)) == 0:
+                    continue
+                for file_ in get_file_list(dir_path):
+                    file_path = os.path.join(dir_path, file_)
+                    text_label_mapping[file_path] = self._info.class_to_num[dir_]
+            self._data = text_label_mapping
+
+    def _generate_multimodal_classification_data(self):
+        """Loads multimodal (image + text) classification data from a CSV file.
+
+        Expects:
+        - data.csv with 'image', 'text', and 'label' columns.
+        - An images/ sub-directory containing the image files.
+
+        The 'image' column should contain filenames only (e.g. 'field_001.jpg'),
+        not full paths. Full paths are resolved here using the images/ sub-directory.
+
+        Uses the inputs/outputs dict format so DataManager._create_objects()
+        handles it identically to image_regression.
+        """
+        csv_path = os.path.join(self._dataset_root, "data.csv")
+        images_dir = os.path.join(self._dataset_root, "images")
+
+        if not os.path.exists(csv_path):
+            raise FileNotFoundError(
+                f"Expected a 'data.csv' file at {self._dataset_root} for "
+                f"multimodal_classification task but none was found."
+            )
+        if not os.path.exists(images_dir):
+            raise FileNotFoundError(
+                f"Expected an 'images/' directory at {self._dataset_root} for "
+                f"multimodal_classification task but none was found."
+            )
+
+        content_mapping = {"inputs": [], "outputs": []}
+        with open(csv_path, "r", encoding="utf-8") as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                image_path = os.path.join(images_dir, row["image"].strip())
+                if not os.path.exists(image_path):
+                    raise FileNotFoundError(
+                        f"Image file '{image_path}' listed in data.csv was not found."
+                    )
+                content_mapping["inputs"].append({
+                    "image": image_path,
+                    "text":  row["text"].strip(),
+                })
+                content_mapping["outputs"].append(
+                    self._info.class_to_num[row["label"].strip()]
+                )
+        self._data = content_mapping

@@ -29,6 +29,11 @@ from agml.backend.tftorch import (
 from agml.framework import AgMLSerializable
 from agml.utils.image import needs_batch_dim
 
+_TEXT_AND_MIXED_TASKS = frozenset({
+    "text_classification",
+    "multimodal_classification",
+})
+
 
 class TrainState(Enum):
     NONE = None
@@ -271,6 +276,8 @@ class TrainingManager(AgMLSerializable):
                     annotation[k] = tf.constant(v)
         elif task == "object_detection":
             annotation = TrainingManager._tf_tensor_coco_convert(annotation)
+        elif task in _TEXT_AND_MIXED_TASKS:
+            pass  # text cannot be converted to tf.Tensor without tokenisation
 
         # Add a first-dimension batch to the image.
         if isinstance(image, tf.Tensor):
@@ -300,6 +307,8 @@ class TrainingManager(AgMLSerializable):
             annotations = tf.stack(annotations, axis=0)
         elif task == "object_detection":
             annotations = [TrainingManager._tf_tensor_coco_convert(a_set) for a_set in annotations]
+        elif task in _TEXT_AND_MIXED_TASKS:
+            pass  # no tensor conversion for text/mixed tasks
         return images, annotations
 
     @staticmethod
@@ -339,6 +348,8 @@ class TrainingManager(AgMLSerializable):
             annotation = _convert_image_to_torch(annotation)
         elif task == "object_detection":
             annotation = TrainingManager._torch_tensor_coco_convert(annotation)
+        elif task in _TEXT_AND_MIXED_TASKS:
+            pass  # no tensor conversion for text/mixed tasks
         return image, annotation
 
     @staticmethod
@@ -356,6 +367,8 @@ class TrainingManager(AgMLSerializable):
             annotations = torch.stack([_convert_image_to_torch(a) for a in annotations])
         elif task == "object_detection":
             annotations = [TrainingManager._torch_tensor_coco_convert(a_set) for a_set in annotations]
+        elif task in _TEXT_AND_MIXED_TASKS:
+            pass  # no tensor conversion for text/mixed tasks
         return images, annotations
 
     @staticmethod

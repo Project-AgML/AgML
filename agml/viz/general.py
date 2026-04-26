@@ -61,7 +61,61 @@ def show_sample(loader, image_only=False, num_images=1, **kwargs):
     elif loader.task == 'image_classification':
         return show_images_and_labels(
             samples, info=loader.info, no_show=kwargs.get('no_show', False))
-    
+
+    # ── NEW: Text & Mixed Modal Display ──────────────────────────────────────
+    elif loader.task == 'text_classification':
+        return _show_text_classification_samples(samples, loader.info)
+
+    elif loader.task == 'multimodal_classification':
+        return _show_multimodal_samples(samples, loader.info)
+    # ─────────────────────────────────────────────────────────────────────────
+
+
+def _show_text_classification_samples(samples, info):
+    """Prints text classification samples to stdout in a readable format."""
+    num_to_class = info.num_to_class
+    print("\n" + "=" * 60)
+    print("Text Classification Samples")
+    print("=" * 60)
+    for i, (text, label) in enumerate(samples):
+        class_name = num_to_class.get(label, str(label))
+        print(f"\n[Sample {i + 1}]")
+        print(f"  Label : {class_name} (class {label})")
+        print(f"  Text  : {text[:300]}{'...' if len(text) > 300 else ''}")
+    print("=" * 60 + "\n")
+
+
+def _show_multimodal_samples(samples, info):
+    """Displays multimodal samples — image via matplotlib, text to stdout."""
+    num_to_class = info.num_to_class
+    print("\n" + "=" * 60)
+    print("Multimodal Classification Samples")
+    print("=" * 60)
+
+    n = len(samples)
+    fig, axes = plt.subplots(1, n, figsize=(5 * n, 5))
+    if n == 1:
+        axes = [axes]
+
+    for i, (inputs, label) in enumerate(samples):
+        class_name = num_to_class.get(label, str(label))
+        image = inputs["image"]
+        text  = inputs["text"]
+
+        axes[i].imshow(format_image(image))
+        axes[i].set_title(f"Label: {class_name}", fontsize=10)
+        axes[i].axis("off")
+
+        print(f"\n[Sample {i + 1}]")
+        print(f"  Label : {class_name} (class {label})")
+        print(f"  Text  : {text[:300]}{'...' if len(text) > 300 else ''}")
+        print(f"  Image : shape={image.shape}, dtype={image.dtype}")
+
+    plt.tight_layout()
+    plt.show()
+    print("=" * 60 + "\n")
+    return fig
+
 
 def show_images(images,
                 shape = None,

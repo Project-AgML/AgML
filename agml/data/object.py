@@ -116,6 +116,12 @@ class DataObject(AgMLSerializable):
             cls = ObjectDetectionDataObject
         elif task == "semantic_segmentation":
             cls = SemanticSegmentationDataObject
+        # ── NEW ──────────────────────────────
+        elif task == "text_classification":
+            cls = TextClassificationDataObject
+        elif task == "multimodal_classification":
+            cls = MultiModalDataObject
+        # ─────────────────────────────────────
         else:
             raise ValueError(f"Unsupported task {task}.")
         return cls(*contents, root)
@@ -246,3 +252,61 @@ class SemanticSegmentationDataObject(DataObject):
 
     def _parse_annotation(self, obj):
         return self._parse_mask(obj)
+
+
+# ── Text & Multimodal DataObjects ──────────────────────────────────────────────
+
+class TextClassificationDataObject(DataObject):
+    """DataObject for text classification tasks.
+
+    Primary input is a path to a .txt file OR a raw string directly.
+    Annotation is an integer class label (identical to image classification).
+
+    Supported layouts
+    -----------------
+    Folder-based::
+
+        dataset/class_a/doc.txt  →  class label inferred from folder name
+
+    CSV-based (data.csv columns: text, label)::
+
+        dataset/data.csv  →  text column is used as the raw string input
+    """
+
+    def _load_image_input(self, path_or_text):
+        if os.path.exists(str(path_or_text)):
+            with open(path_or_text, "r", encoding="utf-8") as f:
+                return f.read().strip()
+        return str(path_or_text)
+
+    def _parse_annotation(self, obj):
+        return self._parse_label(obj)
+
+
+class MultiModalDataObject(DataObject):
+    """DataObject for multimodal (image + text) classification tasks.
+
+    Primary input is a dict: {"image": str_path, "text": str}.
+    Loads the image via the existing _parse_image() helper and resolves
+    the text string. Returns {"image": np.ndarray, "text": str}.
+    Annotation is an integer class label, returned as-is.
+
+    Supported layout
+    ----------------
+    CSV-based (data.csv columns: image, text, label) with images/ folder::
+
+        dataset/
+        ├── images/field_001.jpg
+        └── data.csv
+    """
+
+    def _load_image_input(self, contents):
+        image = self._parse_image(contents["image"])
+        text_content = contents["text"]
+        if os.path.exists(str(text_content)):
+            with open(text_content, "r", encoding="utf-8") as f:
+                text_content = f.read().strip()
+        return {"image": image, "text": str(text_content)}
+
+    def _parse_annotation(self, obj):
+        return obj  # pass-through
