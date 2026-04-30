@@ -350,8 +350,17 @@ class CustomDatasetMetadata(DatasetMetadata):
         # have been provided, otherwise the loader will not be able to function.
         if "task" not in meta:
             raise ValueError("Expected a `task` when instantiating a custom loader.")
-        if "classes" not in meta:
-            raise ValueError("Expected a list of classes when instantiating a custom loader.")
+
+        task = meta.get("task")
+        classes = meta.get("classes")
+
+        if task == "multimodal_text_generation":
+            # Generative task — no class vocabulary.
+            classes = None
+        elif classes is None:
+            raise ValueError(
+                f"Custom dataset for task {task!r} requires a 'classes' list."
+            )
 
         # Create a custom dictionary of metadata.
         self._name = name
@@ -359,10 +368,63 @@ class CustomDatasetMetadata(DatasetMetadata):
             {"ml_task": meta["task"], "ag_task": meta.get("ag_task", None), **meta},
             dataset=name,
         )
-        self._metadata["classes"] = {str(i + 1): c for i, c in enumerate(meta["classes"])}
+        if classes is not None:
+            self._metadata["classes"] = {str(i + 1): c for i, c in enumerate(classes)}
+        else:
+            self._metadata["classes"] = None
 
         # There is no citation information necessary for custom datasets.
         self._citation_meta = None
+
+    @property
+    def classes(self):
+        classes = self._metadata.get("classes")
+        if classes is None:
+            return None
+        if has_nested_dicts(classes):
+            return {k: list(d.values()) for k, d in classes.items()}
+        return list(classes.values())
+
+    @property
+    def num_classes(self):
+        classes = self._metadata.get("classes")
+        if classes is None:
+            return 0
+        return len(self.classes)
+
+    @property
+    def class_to_num(self):
+        classes = self._metadata.get("classes")
+        if classes is None:
+            return {}
+        if has_nested_dicts(classes):
+            out = {}
+            for class_type in classes.keys():
+                if isinstance(classes[class_type], dict):
+                    nums = [int(float(i)) for i in classes[class_type].keys()]
+                    out[class_type] = dict(zip(classes[class_type].values(), nums))
+                else:
+                    out[class_type] = classes[class_type]
+            return out
+        nums = [int(float(i)) for i in classes.keys()]
+        return dict(zip(classes.values(), nums))
+
+    @property
+    def num_to_class(self):
+        classes = self._metadata.get("classes")
+        if classes is None:
+            return {}
+        if has_nested_dicts(classes):
+            out = {}
+            for class_type in classes.keys():
+                if isinstance(classes[class_type], dict):
+                    nums = [int(float(i)) for i in classes[class_type].keys()]
+                    out[class_type] = dict(zip(nums, classes[class_type].values()))
+                else:
+                    out[class_type] = classes[class_type]
+            return out
+        nums = [int(float(i)) for i in classes.keys()]
+        return dict(zip(nums, classes.values()))
 
     @property
     def license(self):

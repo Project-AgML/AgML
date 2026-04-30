@@ -122,6 +122,9 @@ venv.bak/
 # mkdocs documentation
 /site
 
+# AI tool files
+.claude/
+
 # mypy
 .mypy_cache/
 .dmypy.json

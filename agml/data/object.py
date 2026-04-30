@@ -121,6 +121,8 @@ class DataObject(AgMLSerializable):
             cls = TextClassificationDataObject
         elif task == "multimodal_classification":
             cls = MultiModalDataObject
+        elif task == "multimodal_text_generation":
+            cls = MultiModalTextGenerationDataObject
         # ─────────────────────────────────────
         else:
             raise ValueError(f"Unsupported task {task}.")
@@ -310,3 +312,43 @@ class MultiModalDataObject(DataObject):
 
     def _parse_annotation(self, obj):
         return obj  # pass-through
+
+
+class MultiModalTextGenerationDataObject(DataObject):
+    """
+    Phase 1 sample type for `multimodal_text_generation`.
+
+    Returns:
+        inputs (dict): {"image": np.ndarray[H, W, 3], "prompt": str}
+        answer (str):  the ground-truth target text
+
+    No tokenisation, no resizing, no tensor conversion in this phase.
+    """
+
+    serializable = frozenset((
+        "image_object", "annotation_object", "dataset_root",
+    ))
+
+    def _load_image_input(self, contents):
+        # `contents` is the dict produced by the builder:
+        #   {"image": "<absolute_image_path>", "prompt": "<prompt_text>"}
+        image_path = contents["image"]
+        if not os.path.exists(image_path):
+            raise FileNotFoundError(
+                f"multimodal_text_generation: image not found: {image_path!r}"
+            )
+        image = cv2.imread(image_path)
+        if image is None:
+            raise ValueError(
+                f"multimodal_text_generation: cv2 failed to decode "
+                f"image: {image_path!r}"
+            )
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        return {"image": image, "prompt": str(contents["prompt"])}
+
+    def _parse_annotation(self, obj):
+        # `obj` is the model_answer string from the CSV. It may be a
+        # single word, a sentence, or a multi-sentence paragraph
+        # (potentially with embedded newlines). Do not truncate, do not
+        # strip internal whitespace, do not normalise. Return verbatim.
+        return str(obj)

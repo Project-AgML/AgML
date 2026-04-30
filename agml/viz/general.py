@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
+
 import matplotlib.pyplot as plt
 
 from agml.backend.tftorch import is_array_like
@@ -68,6 +70,9 @@ def show_sample(loader, image_only=False, num_images=1, **kwargs):
 
     elif loader.task == 'multimodal_classification':
         return _show_multimodal_samples(samples, loader.info)
+
+    elif loader.task == 'multimodal_text_generation':
+        return _show_multimodal_textgen_samples(samples, loader)
     # ─────────────────────────────────────────────────────────────────────────
 
 
@@ -83,6 +88,40 @@ def _show_text_classification_samples(samples, info):
         print(f"  Label : {class_name} (class {label})")
         print(f"  Text  : {text[:300]}{'...' if len(text) > 300 else ''}")
     print("=" * 60 + "\n")
+
+
+def _show_multimodal_textgen_samples(samples, loader):
+    """Displays multimodal text generation samples — image with filename title via matplotlib, prompt and answer to stdout."""
+    print("\n" + "=" * 60)
+    print("Multimodal Text Generation Samples")
+    print("=" * 60)
+
+    n = len(samples)
+    fig, axes = plt.subplots(1, n, figsize=(5 * n, 5))
+    if n == 1:
+        axes = [axes]
+
+    for i, (inputs, answer) in enumerate(samples):
+        image  = inputs["image"]
+        prompt = inputs["prompt"]
+
+        # Resolve the original filename from the loader's data object.
+        obj = loader._manager._data_objects[loader._manager._accessors[i]]
+        filename = os.path.basename(obj._image_object["image"])
+
+        axes[i].imshow(format_image(image))
+        axes[i].set_title(filename, fontsize=9)
+        axes[i].axis("off")
+
+        print(f"\n[Sample {i + 1}] {filename}")
+        print(f"  Prompt : {prompt}")
+        print(f"  Answer : {answer[:300]}{'...' if len(answer) > 300 else ''}")
+        print(f"  Image  : shape={image.shape}, dtype={image.dtype}")
+
+    plt.tight_layout()
+    plt.show()
+    print("=" * 60 + "\n")
+    return fig
 
 
 def _show_multimodal_samples(samples, info):

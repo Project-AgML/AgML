@@ -261,6 +261,10 @@ class TrainingManager(AgMLSerializable):
     @staticmethod
     def _tf_tensor_convert(contents, task):
         """Converts contents to `tf.Tensor`s where possible."""
+        if task == "multimodal_text_generation":
+            # Phase 1: no tensor conversion. Phase 2 will convert the image
+            # half and leave prompt/answer as raw str.
+            return contents
         # Convert the image and annotation to `tf.Tensor`s.
         image, annotation = contents
         image = TrainingManager._tf_tensor_image_convert(image)
@@ -292,6 +296,10 @@ class TrainingManager(AgMLSerializable):
     @staticmethod
     def _tf_tensor_batch_convert(contents, task):
         """Converts batch contents to `tf.Tensor`s where possible."""
+        if task == "multimodal_text_generation":
+            # Phase 1: no tensor conversion. Phase 2 will convert the image
+            # half and leave prompt/answer as raw str.
+            return contents
         # This stacks the images and annotations together.
         images, annotations = contents
         images = TrainingManager._tf_tensor_image_batch_convert(images)
@@ -336,6 +344,10 @@ class TrainingManager(AgMLSerializable):
     @staticmethod
     def _torch_tensor_convert(contents, task):
         """Converts contents to `torch.Tensor`s where possible."""
+        if task == "multimodal_text_generation":
+            # Phase 1: no tensor conversion. Phase 2 will convert the image
+            # half and leave prompt/answer as raw str.
+            return contents
         image, annotation = contents
         image = TrainingManager._torch_tensor_image_convert(image)
         if task in ["image_classification", "image_regression"]:
@@ -355,6 +367,10 @@ class TrainingManager(AgMLSerializable):
     @staticmethod
     def _torch_tensor_batch_convert(contents, task):
         """Converts batch contents to `torch.Tensor`s where possible."""
+        if task == "multimodal_text_generation":
+            # Phase 1: no tensor conversion. Phase 2 will convert the image
+            # half and leave prompt/answer as raw str.
+            return contents
         images, annotations = contents
         images = TrainingManager._torch_tensor_image_batch_convert(images)
         if task in ["image_classification", "image_regression"]:

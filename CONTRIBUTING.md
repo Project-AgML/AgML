@@ -16,6 +16,7 @@ Currently, AgML supports the following dataset types and annotation formats:
 - **Semantic Segmentation**: Dense Pixel-Wise
 - **Text Classification**: Folder-per-class or CSV
 - **Multimodal Classification**: CSV + images directory
+- **Multimodal Text Generation**: CSV + images directory
 
 #### Image Classification
 
@@ -143,6 +144,26 @@ The layout requires a `data.csv` with `image`, `text`, and `label` columns along
 
 The `AgMLDataLoader` returns `({"image": np.ndarray, "text": str}, int)` per sample.
 
+#### Multimodal Text Generation
+
+Multimodal text generation datasets pair an image with a free-form text prompt and a variable-length
+text answer (the ground-truth model target). The layout requires a `data.csv` with `image`, `prompt`,
+and `model_answer` columns alongside an `images/` sub-directory:
+
+```
+<dataset name>
+    ├── images
+    │   ├── img_001.png
+    │   └── img_002.png
+    └── data.csv      # columns: image (filename only), prompt, model_answer
+```
+
+The `model_answer` column is **free-form text of any length** — a single token, a sentence, or a
+multi-paragraph answer with embedded newlines.
+
+The `AgMLDataLoader` returns `({"image": np.ndarray, "prompt": str}, str)` per sample — the image
+and prompt dict, and the raw ground-truth answer string (never truncated or stripped).
+
 
 ## Contributing a Dataset
 
@@ -221,6 +242,7 @@ The ML task can be quickly defined from the following table:
 | Text Classification (folder) | `text_classification` | `directory_names` |
 | Text Classification (CSV) | `text_classification` | `csv` |
 | Multimodal Classification | `multimodal_classification` | `csv` |
+| Multimodal Text Generation | `multimodal_text_generation` | `csv` |
 
 
 The `ag_task` field is more broadly defined - it should be the main task that the dataset is associated with.

@@ -206,6 +206,8 @@ class DataBuilder(AgMLSerializable):
             self._generate_text_classification_data()
         elif task == "multimodal_classification":
             self._generate_multimodal_classification_data()
+        elif task == "multimodal_text_generation":
+            self._generate_multimodal_text_generation_data()
         # ─────────────────────────────────────────────
 
     def get_contents(self):
@@ -412,3 +414,67 @@ class DataBuilder(AgMLSerializable):
                     self._info.class_to_num[row["label"].strip()]
                 )
         self._data = content_mapping
+
+    def _generate_multimodal_text_generation_data(self):
+        """
+        Build the content mapping for a multimodal_text_generation dataset.
+
+        Produces:
+            self._data = {
+                "inputs":  [{"image": <abs_path>, "prompt": <str>}, ...],
+                "outputs": [<answer_str>, ...],
+            }
+        """
+        csv_path   = os.path.join(self._dataset_root, "data.csv")
+        images_dir = os.path.join(self._dataset_root, "images")
+
+        if not os.path.exists(csv_path):
+            raise FileNotFoundError(
+                f"multimodal_text_generation requires data.csv at {csv_path!r}."
+            )
+        if not os.path.isdir(images_dir):
+            raise FileNotFoundError(
+                f"multimodal_text_generation requires an images/ directory at "
+                f"{images_dir!r}."
+            )
+
+        required = {"image", "prompt", "model_answer"}
+        inputs, outputs = [], []
+
+        # newline="" + csv.DictReader is REQUIRED for correct handling of
+        # quoted fields that contain commas or embedded newlines. Do not
+        # replace this with a manual split-based parser.
+        with open(csv_path, "r", encoding="utf-8", newline="") as f:
+            reader = csv.DictReader(f)
+            if reader.fieldnames is None:
+                raise ValueError(f"data.csv at {csv_path!r} is empty.")
+            missing = required - set(reader.fieldnames)
+            if missing:
+                raise ValueError(
+                    f"data.csv missing required column(s): {sorted(missing)}. "
+                    f"Found: {reader.fieldnames}."
+                )
+
+            for row_idx, row in enumerate(reader):
+                image_filename = (row.get("image") or "").strip()
+                if not image_filename:
+                    raise ValueError(
+                        f"Empty image filename at row {row_idx} of {csv_path!r}."
+                    )
+                # prompt and model_answer are stored verbatim. They may be
+                # single words OR multi-sentence paragraphs with commas,
+                # quotes, and embedded newlines. Do not strip, truncate, or
+                # split. An empty string is permitted ("") but is the
+                # caller's responsibility to handle.
+                inputs.append({
+                    "image":  os.path.join(images_dir, image_filename),
+                    "prompt": row.get("prompt") if row.get("prompt") is not None else "",
+                })
+                outputs.append(
+                    row.get("model_answer") if row.get("model_answer") is not None else ""
+                )
+
+        self._data = {"inputs": inputs, "outputs": outputs}
+        # Set n_images directly so get_contents() reports the correct sample
+        # count. The inputs/outputs dict format has len() == 2, not N.
+        self._info._metadata["n_images"] = str(len(inputs))
