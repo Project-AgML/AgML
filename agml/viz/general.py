@@ -68,10 +68,10 @@ def show_sample(loader, image_only=False, num_images=1, **kwargs):
     elif loader.task == 'text_classification':
         return _show_text_classification_samples(samples, loader.info)
 
-    elif loader.task == 'multimodal_classification':
+    elif loader.task == 'image_text_classification':
         return _show_multimodal_samples(samples, loader.info)
 
-    elif loader.task == 'multimodal_text_generation':
+    elif loader.task == 'image_text_to_text':
         return _show_multimodal_textgen_samples(samples, loader)
     # ─────────────────────────────────────────────────────────────────────────
 
@@ -138,17 +138,17 @@ def _show_multimodal_samples(samples, info):
 
     for i, (inputs, label) in enumerate(samples):
         class_name = num_to_class.get(label, str(label))
-        image = inputs["image"]
-        text  = inputs["text"]
+        image  = inputs["image"]
+        prompt = inputs["prompt"]
 
         axes[i].imshow(format_image(image))
         axes[i].set_title(f"Label: {class_name}", fontsize=10)
         axes[i].axis("off")
 
         print(f"\n[Sample {i + 1}]")
-        print(f"  Label : {class_name} (class {label})")
-        print(f"  Text  : {text[:300]}{'...' if len(text) > 300 else ''}")
-        print(f"  Image : shape={image.shape}, dtype={image.dtype}")
+        print(f"  Label  : {class_name} (class {label})")
+        print(f"  Prompt : {prompt[:300]}{'...' if len(prompt) > 300 else ''}")
+        print(f"  Image  : shape={image.shape}, dtype={image.dtype}")
 
     plt.tight_layout()
     plt.show()

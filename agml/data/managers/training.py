@@ -31,7 +31,7 @@ from agml.utils.image import needs_batch_dim
 
 _TEXT_AND_MIXED_TASKS = frozenset({
     "text_classification",
-    "multimodal_classification",
+    "image_text_classification",
 })
 
 
@@ -261,7 +261,7 @@ class TrainingManager(AgMLSerializable):
     @staticmethod
     def _tf_tensor_convert(contents, task):
         """Converts contents to `tf.Tensor`s where possible."""
-        if task == "multimodal_text_generation":
+        if task == "image_text_to_text":
             # Phase 1: no tensor conversion. Phase 2 will convert the image
             # half and leave prompt/answer as raw str.
             return contents
@@ -296,7 +296,7 @@ class TrainingManager(AgMLSerializable):
     @staticmethod
     def _tf_tensor_batch_convert(contents, task):
         """Converts batch contents to `tf.Tensor`s where possible."""
-        if task == "multimodal_text_generation":
+        if task == "image_text_to_text":
             # Phase 1: no tensor conversion. Phase 2 will convert the image
             # half and leave prompt/answer as raw str.
             return contents
@@ -344,7 +344,7 @@ class TrainingManager(AgMLSerializable):
     @staticmethod
     def _torch_tensor_convert(contents, task):
         """Converts contents to `torch.Tensor`s where possible."""
-        if task == "multimodal_text_generation":
+        if task == "image_text_to_text":
             # Phase 1: no tensor conversion. Phase 2 will convert the image
             # half and leave prompt/answer as raw str.
             return contents
@@ -367,7 +367,7 @@ class TrainingManager(AgMLSerializable):
     @staticmethod
     def _torch_tensor_batch_convert(contents, task):
         """Converts batch contents to `torch.Tensor`s where possible."""
-        if task == "multimodal_text_generation":
+        if task == "image_text_to_text":
             # Phase 1: no tensor conversion. Phase 2 will convert the image
             # half and leave prompt/answer as raw str.
             return contents

@@ -15,8 +15,8 @@ Currently, AgML supports the following dataset types and annotation formats:
 - **Object Detection**: [COCO JSON](https://cocodataset.org/#format-data)
 - **Semantic Segmentation**: Dense Pixel-Wise
 - **Text Classification**: Folder-per-class or CSV
-- **Multimodal Classification**: CSV + images directory
-- **Multimodal Text Generation**: CSV + images directory
+- **Image Text Classification**: CSV + images directory
+- **Image Text to Text**: CSV + images directory
 
 #### Image Classification
 
@@ -128,37 +128,37 @@ Text classification datasets map text documents to discrete class labels. Two la
 
 The `AgMLDataLoader` returns `(str, int)` per sample — the raw text and its integer class index.
 
-#### Multimodal Classification
+#### Image Text Classification
 
-Multimodal classification datasets pair an image with a text description for each sample.
-The layout requires a `data.csv` with `image`, `text`, and `label` columns alongside an
-`images/` sub-directory containing the image files:
+Image text classification datasets pair an image with a text prompt for each sample and assign a
+discrete class label. The layout requires a `data.csv` with `image`, `prompt`, and `label` columns
+alongside an `images/` sub-directory containing the image files:
 
 ```
 <dataset name>
     ├── images
     │   ├── img_001.jpg
     │   └── img_002.jpg
-    └── data.csv      # columns: image (filename only), text, label
+    └── data.csv      # columns: image (filename only), prompt, label
 ```
 
-The `AgMLDataLoader` returns `({"image": np.ndarray, "text": str}, int)` per sample.
+The `AgMLDataLoader` returns `({"image": np.ndarray, "prompt": str}, int)` per sample.
 
-#### Multimodal Text Generation
+#### Image Text to Text
 
-Multimodal text generation datasets pair an image with a free-form text prompt and a variable-length
+Image-text-to-text datasets pair an image with a free-form text prompt and a variable-length
 text answer (the ground-truth model target). The layout requires a `data.csv` with `image`, `prompt`,
-and `model_answer` columns alongside an `images/` sub-directory:
+and `answer` columns alongside an `images/` sub-directory:
 
 ```
 <dataset name>
     ├── images
     │   ├── img_001.png
     │   └── img_002.png
-    └── data.csv      # columns: image (filename only), prompt, model_answer
+    └── data.csv      # columns: image (filename only), prompt, answer
 ```
 
-The `model_answer` column is **free-form text of any length** — a single token, a sentence, or a
+The `answer` column is **free-form text of any length** — a single token, a sentence, or a
 multi-paragraph answer with embedded newlines.
 
 The `AgMLDataLoader` returns `({"image": np.ndarray, "prompt": str}, str)` per sample — the image
@@ -241,8 +241,8 @@ The ML task can be quickly defined from the following table:
 | Semantic Segmentation | `semantic_segmentation` | `image` |
 | Text Classification (folder) | `text_classification` | `directory_names` |
 | Text Classification (CSV) | `text_classification` | `csv` |
-| Multimodal Classification | `multimodal_classification` | `csv` |
-| Multimodal Text Generation | `multimodal_text_generation` | `csv` |
+| Image Text Classification | `image_text_classification` | `csv` |
+| Image Text to Text | `image_text_to_text` | `csv` |
 
 
 The `ag_task` field is more broadly defined - it should be the main task that the dataset is associated with.

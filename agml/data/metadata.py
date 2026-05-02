@@ -354,7 +354,7 @@ class CustomDatasetMetadata(DatasetMetadata):
         task = meta.get("task")
         classes = meta.get("classes")
 
-        if task == "multimodal_text_generation":
+        if task == "image_text_to_text":
             # Generative task — no class vocabulary.
             classes = None
         elif classes is None:

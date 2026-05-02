@@ -204,10 +204,10 @@ class DataBuilder(AgMLSerializable):
         # ── NEW ──────────────────────────────────────
         elif task == "text_classification":
             self._generate_text_classification_data()
-        elif task == "multimodal_classification":
-            self._generate_multimodal_classification_data()
-        elif task == "multimodal_text_generation":
-            self._generate_multimodal_text_generation_data()
+        elif task == "image_text_classification":
+            self._generate_image_text_classification_data()
+        elif task == "image_text_to_text":
+            self._generate_image_text_to_text_data()
         # ─────────────────────────────────────────────
 
     def get_contents(self):
@@ -370,11 +370,11 @@ class DataBuilder(AgMLSerializable):
                     text_label_mapping[file_path] = self._info.class_to_num[dir_]
             self._data = text_label_mapping
 
-    def _generate_multimodal_classification_data(self):
-        """Loads multimodal (image + text) classification data from a CSV file.
+    def _generate_image_text_classification_data(self):
+        """Loads image + text classification data from a CSV file.
 
         Expects:
-        - data.csv with 'image', 'text', and 'label' columns.
+        - data.csv with 'image', 'prompt', and 'label' columns.
         - An images/ sub-directory containing the image files.
 
         The 'image' column should contain filenames only (e.g. 'field_001.jpg'),
@@ -389,12 +389,12 @@ class DataBuilder(AgMLSerializable):
         if not os.path.exists(csv_path):
             raise FileNotFoundError(
                 f"Expected a 'data.csv' file at {self._dataset_root} for "
-                f"multimodal_classification task but none was found."
+                f"image_text_classification task but none was found."
             )
         if not os.path.exists(images_dir):
             raise FileNotFoundError(
                 f"Expected an 'images/' directory at {self._dataset_root} for "
-                f"multimodal_classification task but none was found."
+                f"image_text_classification task but none was found."
             )
 
         content_mapping = {"inputs": [], "outputs": []}
@@ -407,17 +407,16 @@ class DataBuilder(AgMLSerializable):
                         f"Image file '{image_path}' listed in data.csv was not found."
                     )
                 content_mapping["inputs"].append({
-                    "image": image_path,
-                    "text":  row["text"].strip(),
+                    "image":  image_path,
+                    "prompt": row["prompt"].strip(),
                 })
                 content_mapping["outputs"].append(
                     self._info.class_to_num[row["label"].strip()]
                 )
         self._data = content_mapping
 
-    def _generate_multimodal_text_generation_data(self):
-        """
-        Build the content mapping for a multimodal_text_generation dataset.
+    def _generate_image_text_to_text_data(self):
+        """Build the content mapping for an image_text_to_text dataset.
 
         Produces:
             self._data = {
@@ -430,15 +429,15 @@ class DataBuilder(AgMLSerializable):
 
         if not os.path.exists(csv_path):
             raise FileNotFoundError(
-                f"multimodal_text_generation requires data.csv at {csv_path!r}."
+                f"image_text_to_text requires data.csv at {csv_path!r}."
             )
         if not os.path.isdir(images_dir):
             raise FileNotFoundError(
-                f"multimodal_text_generation requires an images/ directory at "
+                f"image_text_to_text requires an images/ directory at "
                 f"{images_dir!r}."
             )
 
-        required = {"image", "prompt", "model_answer"}
+        required = {"image", "prompt", "answer"}
         inputs, outputs = [], []
 
         # newline="" + csv.DictReader is REQUIRED for correct handling of
@@ -461,17 +460,17 @@ class DataBuilder(AgMLSerializable):
                     raise ValueError(
                         f"Empty image filename at row {row_idx} of {csv_path!r}."
                     )
-                # prompt and model_answer are stored verbatim. They may be
-                # single words OR multi-sentence paragraphs with commas,
-                # quotes, and embedded newlines. Do not strip, truncate, or
-                # split. An empty string is permitted ("") but is the
-                # caller's responsibility to handle.
+                # prompt and answer are stored verbatim. They may be single
+                # words OR multi-sentence paragraphs with commas, quotes, and
+                # embedded newlines. Do not strip, truncate, or split. An
+                # empty string is permitted ("") but is the caller's
+                # responsibility to handle.
                 inputs.append({
                     "image":  os.path.join(images_dir, image_filename),
                     "prompt": row.get("prompt") if row.get("prompt") is not None else "",
                 })
                 outputs.append(
-                    row.get("model_answer") if row.get("model_answer") is not None else ""
+                    row.get("answer") if row.get("answer") is not None else ""
                 )
 
         self._data = {"inputs": inputs, "outputs": outputs}

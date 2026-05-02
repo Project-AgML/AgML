@@ -26,7 +26,7 @@ from agml.utils.logging import log
 
 _TEXT_AND_MIXED_TASKS = frozenset({
     "text_classification",
-    "multimodal_classification",
+    "image_text_classification",
 })
 
 
@@ -169,9 +169,9 @@ class ImageResizeManager(AgMLSerializable):
 
     def apply(self, contents):
         """Applies the resizing operation to the input data."""
-        # Phase 1: multimodal_text_generation passes through unchanged.
+        # Phase 1: image_text_to_text passes through unchanged.
         # TODO(phase 2): resize the image half, leave prompt as-is.
-        if self._task == "multimodal_text_generation":
+        if self._task == "image_text_to_text":
             return contents
         # Text and mixed tasks have no spatial dimensions — pass through unchanged.
         if self._task in _TEXT_AND_MIXED_TASKS:
