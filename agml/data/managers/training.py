@@ -29,12 +29,6 @@ from agml.backend.tftorch import (
 from agml.framework import AgMLSerializable
 from agml.utils.image import needs_batch_dim
 
-_TEXT_AND_MIXED_TASKS = frozenset({
-    "text_classification",
-    "image_text_classification",
-})
-
-
 class TrainState(Enum):
     NONE = None
     TF = "tf"
@@ -261,10 +255,6 @@ class TrainingManager(AgMLSerializable):
     @staticmethod
     def _tf_tensor_convert(contents, task):
         """Converts contents to `tf.Tensor`s where possible."""
-        if task == "image_text_to_text":
-            # Phase 1: no tensor conversion. Phase 2 will convert the image
-            # half and leave prompt/answer as raw str.
-            return contents
         # Convert the image and annotation to `tf.Tensor`s.
         image, annotation = contents
         image = TrainingManager._tf_tensor_image_convert(image)
@@ -280,7 +270,7 @@ class TrainingManager(AgMLSerializable):
                     annotation[k] = tf.constant(v)
         elif task == "object_detection":
             annotation = TrainingManager._tf_tensor_coco_convert(annotation)
-        elif task in _TEXT_AND_MIXED_TASKS:
+        elif task == "text_classification":
             pass  # text cannot be converted to tf.Tensor without tokenisation
 
         # Add a first-dimension batch to the image.
@@ -296,10 +286,6 @@ class TrainingManager(AgMLSerializable):
     @staticmethod
     def _tf_tensor_batch_convert(contents, task):
         """Converts batch contents to `tf.Tensor`s where possible."""
-        if task == "image_text_to_text":
-            # Phase 1: no tensor conversion. Phase 2 will convert the image
-            # half and leave prompt/answer as raw str.
-            return contents
         # This stacks the images and annotations together.
         images, annotations = contents
         images = TrainingManager._tf_tensor_image_batch_convert(images)
@@ -315,7 +301,7 @@ class TrainingManager(AgMLSerializable):
             annotations = tf.stack(annotations, axis=0)
         elif task == "object_detection":
             annotations = [TrainingManager._tf_tensor_coco_convert(a_set) for a_set in annotations]
-        elif task in _TEXT_AND_MIXED_TASKS:
+        elif task == "text_classification":
             pass  # no tensor conversion for text/mixed tasks
         return images, annotations
 
@@ -344,10 +330,6 @@ class TrainingManager(AgMLSerializable):
     @staticmethod
     def _torch_tensor_convert(contents, task):
         """Converts contents to `torch.Tensor`s where possible."""
-        if task == "image_text_to_text":
-            # Phase 1: no tensor conversion. Phase 2 will convert the image
-            # half and leave prompt/answer as raw str.
-            return contents
         image, annotation = contents
         image = TrainingManager._torch_tensor_image_convert(image)
         if task in ["image_classification", "image_regression"]:
@@ -360,17 +342,13 @@ class TrainingManager(AgMLSerializable):
             annotation = _convert_image_to_torch(annotation)
         elif task == "object_detection":
             annotation = TrainingManager._torch_tensor_coco_convert(annotation)
-        elif task in _TEXT_AND_MIXED_TASKS:
+        elif task == "text_classification":
             pass  # no tensor conversion for text/mixed tasks
         return image, annotation
 
     @staticmethod
     def _torch_tensor_batch_convert(contents, task):
         """Converts batch contents to `torch.Tensor`s where possible."""
-        if task == "image_text_to_text":
-            # Phase 1: no tensor conversion. Phase 2 will convert the image
-            # half and leave prompt/answer as raw str.
-            return contents
         images, annotations = contents
         images = TrainingManager._torch_tensor_image_batch_convert(images)
         if task in ["image_classification", "image_regression"]:
@@ -383,7 +361,7 @@ class TrainingManager(AgMLSerializable):
             annotations = torch.stack([_convert_image_to_torch(a) for a in annotations])
         elif task == "object_detection":
             annotations = [TrainingManager._torch_tensor_coco_convert(a_set) for a_set in annotations]
-        elif task in _TEXT_AND_MIXED_TASKS:
+        elif task == "text_classification":
             pass  # no tensor conversion for text/mixed tasks
         return images, annotations
 

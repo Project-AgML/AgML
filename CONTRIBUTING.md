@@ -15,8 +15,7 @@ Currently, AgML supports the following dataset types and annotation formats:
 - **Object Detection**: [COCO JSON](https://cocodataset.org/#format-data)
 - **Semantic Segmentation**: Dense Pixel-Wise
 - **Text Classification**: Folder-per-class or CSV
-- **Image Text Classification**: CSV + images directory
-- **Image Text to Text**: CSV + images directory
+- **Image Text to Text**: HuggingFace imagefolder convention (metadata.jsonl + flat image directory)
 
 #### Image Classification
 
@@ -128,41 +127,70 @@ Text classification datasets map text documents to discrete class labels. Two la
 
 The `AgMLDataLoader` returns `(str, int)` per sample — the raw text and its integer class index.
 
-#### Image Text Classification
-
-Image text classification datasets pair an image with a text prompt for each sample and assign a
-discrete class label. The layout requires a `data.csv` with `image`, `prompt`, and `label` columns
-alongside an `images/` sub-directory containing the image files:
-
-```
-<dataset name>
-    ├── images
-    │   ├── img_001.jpg
-    │   └── img_002.jpg
-    └── data.csv      # columns: image (filename only), prompt, label
-```
-
-The `AgMLDataLoader` returns `({"image": np.ndarray, "prompt": str}, int)` per sample.
-
 #### Image Text to Text
 
-Image-text-to-text datasets pair an image with a free-form text prompt and a variable-length
-text answer (the ground-truth model target). The layout requires a `data.csv` with `image`, `prompt`,
-and `answer` columns alongside an `images/` sub-directory:
+Image-text-to-text datasets use the [HuggingFace imagefolder](https://huggingface.co/docs/datasets/image_dataset)
+convention. Images and a `metadata.jsonl` manifest live flat in the same directory:
 
 ```
 <dataset name>
-    ├── images
-    │   ├── img_001.png
-    │   └── img_002.png
-    └── data.csv      # columns: image (filename only), prompt, answer
+    ├── metadata.jsonl
+    ├── img_001.jpg
+    └── img_002.jpg
 ```
 
-The `answer` column is **free-form text of any length** — a single token, a sentence, or a
-multi-paragraph answer with embedded newlines.
+Each line of `metadata.jsonl` is a JSON object with three fields:
 
-The `AgMLDataLoader` returns `({"image": np.ndarray, "prompt": str}, str)` per sample — the image
-and prompt dict, and the raw ground-truth answer string (never truncated or stripped).
+```json
+{
+  "file_name": "img_001.jpg",
+  "id": "unique_sample_id",
+  "messages": [
+    {
+      "role": "user",
+      "content": [
+        {"type": "image"},
+        {"type": "text", "text": "What disease is shown?"}
+      ]
+    },
+    {
+      "role": "assistant",
+      "content": [
+        {"type": "text", "text": "bean_rust"}
+      ]
+    }
+  ]
+}
+```
+
+Rules for the format:
+- `file_name` must be a bare filename (no path separators, no `..`) — the file must exist in the dataset root.
+- `id` must be a unique non-empty string across all samples.
+- `messages` must have at least 2 turns. Roles alternate `user` / `assistant`, with an optional `system` turn at index 0.
+- Each turn's `content` is a non-empty list of items with `type` of `"image"` or `"text"`.
+- Text-type items require a non-empty `text` field. Answer text is preserved verbatim — never truncated or stripped.
+- Image-type items are placeholders; the actual image is loaded from `file_name` by the imagefolder builder.
+- At least one `{"type": "image"}` item across all turns is recommended (text-only samples warn but are legal).
+
+The `AgMLDataLoader` returns a `dict` per sample:
+
+```python
+{
+    "id":       str,         # unique sample id
+    "image":    PIL.Image,   # lazily loaded via datasets.Image()
+    "messages": list[dict],  # HF-canonical conversation, ready for processor.apply_chat_template()
+}
+```
+
+The dataset is also directly loadable without AgML:
+
+```python
+from datasets import load_dataset
+ds = load_dataset("imagefolder", data_dir="/path/to/dataset", split="train")
+```
+
+The full [HuggingFace `Dataset`](https://huggingface.co/docs/datasets) object is also accessible
+via `loader.dataset` for batch operations, filtering, or passing directly to a trainer.
 
 
 ## Contributing a Dataset
@@ -241,8 +269,7 @@ The ML task can be quickly defined from the following table:
 | Semantic Segmentation | `semantic_segmentation` | `image` |
 | Text Classification (folder) | `text_classification` | `directory_names` |
 | Text Classification (CSV) | `text_classification` | `csv` |
-| Image Text Classification | `image_text_classification` | `csv` |
-| Image Text to Text | `image_text_to_text` | `csv` |
+| Image Text to Text | `image_text_to_text` | `imagefolder` |
 
 
 The `ag_task` field is more broadly defined - it should be the main task that the dataset is associated with.

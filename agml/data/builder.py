@@ -201,14 +201,8 @@ class DataBuilder(AgMLSerializable):
             self._generate_object_detection_data()
         elif task == "semantic_segmentation":
             self._generate_semantic_segmentation_data()
-        # ── NEW ──────────────────────────────────────
         elif task == "text_classification":
             self._generate_text_classification_data()
-        elif task == "image_text_classification":
-            self._generate_image_text_classification_data()
-        elif task == "image_text_to_text":
-            self._generate_image_text_to_text_data()
-        # ─────────────────────────────────────────────
 
     def get_contents(self):
         """Extracts the internal representation of the data content."""
@@ -370,110 +364,3 @@ class DataBuilder(AgMLSerializable):
                     text_label_mapping[file_path] = self._info.class_to_num[dir_]
             self._data = text_label_mapping
 
-    def _generate_image_text_classification_data(self):
-        """Loads image + text classification data from a CSV file.
-
-        Expects:
-        - data.csv with 'image', 'prompt', and 'label' columns.
-        - An images/ sub-directory containing the image files.
-
-        The 'image' column should contain filenames only (e.g. 'field_001.jpg'),
-        not full paths. Full paths are resolved here using the images/ sub-directory.
-
-        Uses the inputs/outputs dict format so DataManager._create_objects()
-        handles it identically to image_regression.
-        """
-        csv_path = os.path.join(self._dataset_root, "data.csv")
-        images_dir = os.path.join(self._dataset_root, "images")
-
-        if not os.path.exists(csv_path):
-            raise FileNotFoundError(
-                f"Expected a 'data.csv' file at {self._dataset_root} for "
-                f"image_text_classification task but none was found."
-            )
-        if not os.path.exists(images_dir):
-            raise FileNotFoundError(
-                f"Expected an 'images/' directory at {self._dataset_root} for "
-                f"image_text_classification task but none was found."
-            )
-
-        content_mapping = {"inputs": [], "outputs": []}
-        with open(csv_path, "r", encoding="utf-8") as f:
-            reader = csv.DictReader(f)
-            for row in reader:
-                image_path = os.path.join(images_dir, row["image"].strip())
-                if not os.path.exists(image_path):
-                    raise FileNotFoundError(
-                        f"Image file '{image_path}' listed in data.csv was not found."
-                    )
-                content_mapping["inputs"].append({
-                    "image":  image_path,
-                    "prompt": row["prompt"].strip(),
-                })
-                content_mapping["outputs"].append(
-                    self._info.class_to_num[row["label"].strip()]
-                )
-        self._data = content_mapping
-
-    def _generate_image_text_to_text_data(self):
-        """Build the content mapping for an image_text_to_text dataset.
-
-        Produces:
-            self._data = {
-                "inputs":  [{"image": <abs_path>, "prompt": <str>}, ...],
-                "outputs": [<answer_str>, ...],
-            }
-        """
-        csv_path   = os.path.join(self._dataset_root, "data.csv")
-        images_dir = os.path.join(self._dataset_root, "images")
-
-        if not os.path.exists(csv_path):
-            raise FileNotFoundError(
-                f"image_text_to_text requires data.csv at {csv_path!r}."
-            )
-        if not os.path.isdir(images_dir):
-            raise FileNotFoundError(
-                f"image_text_to_text requires an images/ directory at "
-                f"{images_dir!r}."
-            )
-
-        required = {"image", "prompt", "answer"}
-        inputs, outputs = [], []
-
-        # newline="" + csv.DictReader is REQUIRED for correct handling of
-        # quoted fields that contain commas or embedded newlines. Do not
-        # replace this with a manual split-based parser.
-        with open(csv_path, "r", encoding="utf-8", newline="") as f:
-            reader = csv.DictReader(f)
-            if reader.fieldnames is None:
-                raise ValueError(f"data.csv at {csv_path!r} is empty.")
-            missing = required - set(reader.fieldnames)
-            if missing:
-                raise ValueError(
-                    f"data.csv missing required column(s): {sorted(missing)}. "
-                    f"Found: {reader.fieldnames}."
-                )
-
-            for row_idx, row in enumerate(reader):
-                image_filename = (row.get("image") or "").strip()
-                if not image_filename:
-                    raise ValueError(
-                        f"Empty image filename at row {row_idx} of {csv_path!r}."
-                    )
-                # prompt and answer are stored verbatim. They may be single
-                # words OR multi-sentence paragraphs with commas, quotes, and
-                # embedded newlines. Do not strip, truncate, or split. An
-                # empty string is permitted ("") but is the caller's
-                # responsibility to handle.
-                inputs.append({
-                    "image":  os.path.join(images_dir, image_filename),
-                    "prompt": row.get("prompt") if row.get("prompt") is not None else "",
-                })
-                outputs.append(
-                    row.get("answer") if row.get("answer") is not None else ""
-                )
-
-        self._data = {"inputs": inputs, "outputs": outputs}
-        # Set n_images directly so get_contents() reports the correct sample
-        # count. The inputs/outputs dict format has len() == 2, not N.
-        self._info._metadata["n_images"] = str(len(inputs))

@@ -169,6 +169,40 @@ class AgMLDataLoader(AgMLSerializable, metaclass=AgMLDataLoaderMeta):
         # Set up the dataset and its associated metadata.
         self._info = make_metadata(dataset, kwargs.get("meta", None))
 
+        # Multimodal HF-native path: bypass DataBuilder/DataManager entirely.
+        if self._info.tasks.ml == "image_text_to_text":
+            # Use DataBuilder only to resolve/validate the dataset root.
+            _bootstrap_builder = DataBuilder(
+                info=self._info,
+                dataset_path=kwargs.get("dataset_path", None),
+                overwrite=kwargs.get("overwrite", False),
+            )
+            self._dataset_root = _bootstrap_builder.dataset_root
+            self._builder = None
+            self._manager = None
+            from agml.data.multimodal import load_multimodal_dataset
+            self._hf_dataset = load_multimodal_dataset(self._dataset_root)
+            self._train_data = None
+            self._train_content = None
+            self._val_data = None
+            self._val_content = None
+            self._test_data = None
+            self._test_content = None
+            self._is_split = False
+            n = len(self._hf_dataset)
+            self._meta_properties = {
+                "num_images": n,
+                "classes": None,
+                "num_classes": 0,
+                "num_to_class": {},
+                "class_to_num": {},
+                "data_distributions": {self.name: n},
+            }
+            return
+
+        self._hf_dataset = None
+        self._dataset_root = None
+
         # The data for the class is constructed in two stages. First, the
         # internal contents are constructed using a `DataBuilder`, which
         # finds and wraps the local data in a proper format.
@@ -306,6 +340,16 @@ class AgMLDataLoader(AgMLSerializable, metaclass=AgMLDataLoaderMeta):
                         f"Could not find a directory for dataset '{name}' at the "
                         f"provided dataset path: {dataset_path}."
                     )
+
+        # If the caller explicitly provides meta with image_text_to_text, bypass
+        # all task/class inference and forward directly to __init__.
+        explicit_meta = kwargs.pop("meta", None)
+        if explicit_meta is not None and explicit_meta.get("task") == "image_text_to_text":
+            return cls(
+                name,
+                dataset_path=dataset_path,
+                meta=explicit_meta,
+            )
 
         # Infer the task based on the provided dataset path.
         if os.path.exists(os.path.join(dataset_path, "annotations.json")):
@@ -534,9 +578,13 @@ class AgMLDataLoader(AgMLSerializable, metaclass=AgMLDataLoaderMeta):
         return AgMLDataLoader.merge(self, other)
 
     def __len__(self):
+        if self._hf_dataset is not None:
+            return len(self._hf_dataset)
         return self._manager.data_length()
 
     def __getitem__(self, indexes: Union[list, int, slice]):
+        if self._hf_dataset is not None:
+            return self._hf_dataset[indexes]
         if isinstance(indexes, slice):
             data = np.arange(self._manager.data_length())
             indexes = data[indexes].tolist()
@@ -612,7 +660,19 @@ class AgMLDataLoader(AgMLSerializable, metaclass=AgMLDataLoaderMeta):
     @property
     def dataset_root(self):
         """Returns the local path to the dataset being used."""
+        if self._hf_dataset is not None:
+            return self._dataset_root
         return self._builder.dataset_root
+
+    @property
+    def dataset(self) -> "datasets.Dataset":
+        """Return the underlying HuggingFace Dataset (multimodal image_text_to_text only)."""
+        if self._hf_dataset is None:
+            raise AttributeError(
+                f"loader.dataset is only available for image_text_to_text "
+                f"loaders; this loader is task={self.task!r}."
+            )
+        return self._hf_dataset
 
     @property
     def info(self):
@@ -724,6 +784,7 @@ class AgMLDataLoader(AgMLSerializable, metaclass=AgMLDataLoaderMeta):
         loader_state["meta_properties"] = meta_properties
         cls = super(AgMLDataLoader, self).__new__(AgMLDataLoader)
         cls.__setstate__(loader_state)
+        cls._hf_dataset = None
         for attr in ["train", "val", "test"]:
             setattr(cls, f"_{attr}_data", None)
         cls._is_split = True
@@ -1904,6 +1965,11 @@ class AgMLDataLoader(AgMLSerializable, metaclass=AgMLDataLoaderMeta):
         -------
         The data sample with/without annotation.
         """
+        # Multimodal loaders delegate display fully to show_sample in viz.
+        if self._hf_dataset is not None:
+            show_sample(self, no_show=no_show)
+            return
+
         # Get the sample (and take only the first one in a batch if batched).
         image, annotations = self[self._manager._get_random_index()]
         if len(image.shape) == 4:

@@ -24,12 +24,6 @@ from agml.utils.image import imread_context
 from agml.utils.io import recursive_dirname
 from agml.utils.logging import log
 
-_TEXT_AND_MIXED_TASKS = frozenset({
-    "text_classification",
-    "image_text_classification",
-})
-
-
 class ImageResizeManager(AgMLSerializable):
     """Smartly resizes input image and annotation data.
 
@@ -169,12 +163,8 @@ class ImageResizeManager(AgMLSerializable):
 
     def apply(self, contents):
         """Applies the resizing operation to the input data."""
-        # Phase 1: image_text_to_text passes through unchanged.
-        # TODO(phase 2): resize the image half, leave prompt as-is.
-        if self._task == "image_text_to_text":
-            return contents
-        # Text and mixed tasks have no spatial dimensions — pass through unchanged.
-        if self._task in _TEXT_AND_MIXED_TASKS:
+        # Text tasks have no spatial dimensions — pass through unchanged.
+        if self._task == "text_classification":
             return contents
         if self._task in ["image_classification", "image_regression"]:
             return self._resize_image_input(contents, self._image_size)

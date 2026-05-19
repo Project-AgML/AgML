@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
-
 import matplotlib.pyplot as plt
 
 from agml.backend.tftorch import is_array_like
@@ -64,16 +62,12 @@ def show_sample(loader, image_only=False, num_images=1, **kwargs):
         return show_images_and_labels(
             samples, info=loader.info, no_show=kwargs.get('no_show', False))
 
-    # ── NEW: Text & Mixed Modal Display ──────────────────────────────────────
     elif loader.task == 'text_classification':
         return _show_text_classification_samples(samples, loader.info)
 
-    elif loader.task == 'image_text_classification':
-        return _show_multimodal_samples(samples, loader.info)
-
     elif loader.task == 'image_text_to_text':
-        return _show_multimodal_textgen_samples(samples, loader)
-    # ─────────────────────────────────────────────────────────────────────────
+        _show_messages_samples(loader, num_images=len(samples))
+        return
 
 
 def _show_text_classification_samples(samples, info):
@@ -90,70 +84,38 @@ def _show_text_classification_samples(samples, info):
     print("=" * 60 + "\n")
 
 
-def _show_multimodal_textgen_samples(samples, loader):
-    """Displays multimodal text generation samples — image with filename title via matplotlib, prompt and answer to stdout."""
-    print("\n" + "=" * 60)
-    print("Multimodal Text Generation Samples")
-    print("=" * 60)
+def _show_messages_samples(loader, num_images=3):
+    """Renders HF-format multimodal samples: image with messages conversation overlay."""
+    import textwrap
 
-    n = len(samples)
-    fig, axes = plt.subplots(1, n, figsize=(5 * n, 5))
+    n = min(num_images, len(loader))
+    fig, axes = plt.subplots(n, 1, figsize=(10, 5 * n))
     if n == 1:
         axes = [axes]
 
-    for i, (inputs, answer) in enumerate(samples):
-        image  = inputs["image"]
-        prompt = inputs["prompt"]
+    for i, ax in enumerate(axes):
+        sample = loader[i]
+        ax.imshow(sample["image"])
+        ax.axis("off")
 
-        # Resolve the original filename from the loader's data object.
-        obj = loader._manager._data_objects[loader._manager._accessors[i]]
-        filename = os.path.basename(obj._image_object["image"])
-
-        axes[i].imshow(format_image(image))
-        axes[i].set_title(filename, fontsize=9)
-        axes[i].axis("off")
-
-        print(f"\n[Sample {i + 1}] {filename}")
-        print(f"  Prompt : {prompt}")
-        print(f"  Answer : {answer[:300]}{'...' if len(answer) > 300 else ''}")
-        print(f"  Image  : shape={image.shape}, dtype={image.dtype}")
-
-    plt.tight_layout()
-    plt.show()
-    print("=" * 60 + "\n")
-    return fig
-
-
-def _show_multimodal_samples(samples, info):
-    """Displays multimodal samples — image via matplotlib, text to stdout."""
-    num_to_class = info.num_to_class
-    print("\n" + "=" * 60)
-    print("Multimodal Classification Samples")
-    print("=" * 60)
-
-    n = len(samples)
-    fig, axes = plt.subplots(1, n, figsize=(5 * n, 5))
-    if n == 1:
-        axes = [axes]
-
-    for i, (inputs, label) in enumerate(samples):
-        class_name = num_to_class.get(label, str(label))
-        image  = inputs["image"]
-        prompt = inputs["prompt"]
-
-        axes[i].imshow(format_image(image))
-        axes[i].set_title(f"Label: {class_name}", fontsize=10)
-        axes[i].axis("off")
-
-        print(f"\n[Sample {i + 1}]")
-        print(f"  Label  : {class_name} (class {label})")
-        print(f"  Prompt : {prompt[:300]}{'...' if len(prompt) > 300 else ''}")
-        print(f"  Image  : shape={image.shape}, dtype={image.dtype}")
+        lines = [f"id: {sample['id']}", ""]
+        for turn in sample["messages"]:
+            role = turn["role"].upper()
+            text_parts = []
+            for item in turn["content"]:
+                if item["type"] == "image":
+                    text_parts.append("[IMAGE]")
+                elif item["type"] == "text":
+                    text_parts.append(item["text"])
+            combined = " ".join(text_parts)
+            wrapped = textwrap.fill(combined, width=80)
+            lines.append(f"[{role}]")
+            lines.append(wrapped)
+            lines.append("")
+        ax.set_title("\n".join(lines), loc="left", fontsize=9)
 
     plt.tight_layout()
     plt.show()
-    print("=" * 60 + "\n")
-    return fig
 
 
 def show_images(images,

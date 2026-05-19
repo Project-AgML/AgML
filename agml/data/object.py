@@ -116,14 +116,8 @@ class DataObject(AgMLSerializable):
             cls = ObjectDetectionDataObject
         elif task == "semantic_segmentation":
             cls = SemanticSegmentationDataObject
-        # ── NEW ──────────────────────────────
         elif task == "text_classification":
             cls = TextClassificationDataObject
-        elif task == "image_text_classification":
-            cls = ImageTextClassificationDataObject
-        elif task == "image_text_to_text":
-            cls = ImageTextToTextDataObject
-        # ─────────────────────────────────────
         else:
             raise ValueError(f"Unsupported task {task}.")
         return cls(*contents, root)
@@ -256,8 +250,6 @@ class SemanticSegmentationDataObject(DataObject):
         return self._parse_mask(obj)
 
 
-# ── Text & Multimodal DataObjects ──────────────────────────────────────────────
-
 class TextClassificationDataObject(DataObject):
     """DataObject for text classification tasks.
 
@@ -283,71 +275,3 @@ class TextClassificationDataObject(DataObject):
 
     def _parse_annotation(self, obj):
         return self._parse_label(obj)
-
-
-class ImageTextClassificationDataObject(DataObject):
-    """DataObject for image + text classification tasks.
-
-    Primary input is a dict: {"image": str_path, "prompt": str}.
-    Loads the image via the existing _parse_image() helper and resolves
-    the prompt string. Returns {"image": np.ndarray, "prompt": str}.
-    Annotation is an integer class label, returned as-is.
-
-    Supported layout
-    ----------------
-    CSV-based (data.csv columns: image, prompt, label) with images/ folder::
-
-        dataset/
-        ├── images/field_001.jpg
-        └── data.csv
-    """
-
-    def _load_image_input(self, contents):
-        image = self._parse_image(contents["image"])
-        text_content = contents["prompt"]
-        if os.path.exists(str(text_content)):
-            with open(text_content, "r", encoding="utf-8") as f:
-                text_content = f.read().strip()
-        return {"image": image, "prompt": str(text_content)}
-
-    def _parse_annotation(self, obj):
-        return obj  # pass-through
-
-
-class ImageTextToTextDataObject(DataObject):
-    """DataObject for image-text-to-text generation tasks.
-
-    Returns:
-        inputs (dict): {"image": np.ndarray[H, W, 3], "prompt": str}
-        answer (str):  the ground-truth target text
-
-    No tokenisation, no resizing, no tensor conversion in Phase 1.
-    """
-
-    serializable = frozenset((
-        "image_object", "annotation_object", "dataset_root",
-    ))
-
-    def _load_image_input(self, contents):
-        # `contents` is the dict produced by the builder:
-        #   {"image": "<absolute_image_path>", "prompt": "<prompt_text>"}
-        image_path = contents["image"]
-        if not os.path.exists(image_path):
-            raise FileNotFoundError(
-                f"image_text_to_text: image not found: {image_path!r}"
-            )
-        image = cv2.imread(image_path)
-        if image is None:
-            raise ValueError(
-                f"image_text_to_text: cv2 failed to decode "
-                f"image: {image_path!r}"
-            )
-        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        return {"image": image, "prompt": str(contents["prompt"])}
-
-    def _parse_annotation(self, obj):
-        # `obj` is the answer string from the CSV. It may be a single word,
-        # a sentence, or a multi-sentence paragraph (potentially with embedded
-        # newlines). Do not truncate, do not strip internal whitespace, do not
-        # normalise. Return verbatim.
-        return str(obj)
