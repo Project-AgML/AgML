@@ -17,6 +17,14 @@ This module contains PyTorch pre-trained weights and benchmarks for
 commonly used deep learning models on agricultural datasets within AgML.
 """
 
+import warnings
+
+warnings.warn(
+    "agml.models is deprecated and will be removed in a future release.",
+    DeprecationWarning,
+    stacklevel=2,
+)
+
 # Before anything can be imported, we need to run checks for PyTorch and
 # PyTorch Lightning, as these are not imported on their own.
 try:
