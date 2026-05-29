@@ -14,7 +14,7 @@ license = {text = "Apache 2.0"}
 readme = "README.md"
 packages = [{include = "agml", from = "agml", exclude ='agml/_internal'}]
 version = "0.7.4"
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 keywords = []
 classifiers = [
     "Development Status :: 4 - Beta",
@@ -23,7 +23,6 @@ classifiers = [
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
