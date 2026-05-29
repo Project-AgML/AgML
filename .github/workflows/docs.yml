@@ -1,5 +1,5 @@
 name: docs
-on: [push, pull_request, workflow_dispatch]
+on: [workflow_dispatch]
 
 permissions:
   contents: read
@@ -47,7 +47,7 @@ jobs:
 
       - run: uv sync --only-group docs
 
-      - run: uv run mkdocs build --config-file config/mkdocs.yml
+      - run: uv run properdocs build --config-file config/mkdocs.yml
 
     #   - run: uv run mkdocs gh-deploy --force --config-file config/mkdocs.yml
 

@@ -76,6 +76,7 @@ docs = [
     "mkdocstrings-python>=1.8.0",
     "mkdocs-git-revision-date-localized-plugin>=1.2.0",
     "mkdocs-minify-plugin>=0.8.0",
+    "properdocs"
 ]
 dev = [
     "boto3>=1.35.66",
