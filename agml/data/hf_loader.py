@@ -1,6 +1,3 @@
-import os
-import shutil
-import urllib.parse
 from collections import Counter
 import math
 from typing import List, Union
@@ -14,103 +11,47 @@ except ImportError:
     )
 
 from agml.framework import AgMLSerializable
-from agml.backend.config import data_save_path
 
 class HuggingFaceDataLoader(AgMLSerializable):
     """A data loader designed for loading datasets directly into Hugging Face formats.
 
-    This loader retrieves datasets from S3 (or local paths) and structures them
+    This loader retrieves datasets from the Hugging Face Hub and structures them
     into Hugging Face `DatasetDict` objects natively compatible with `transformers`
     or `diffusers` pipelines. It supports custom multi-column stratification.
 
     Parameters
     ----------
-    location : str
-        The location of the dataset. This can be an S3 URI (s3://...), a public URL,
-        or a local directory path containing the HuggingFace-formatted dataset.
+    dataset_name : str
+        The name of a dataset on the Hugging Face Hub.
     task : str
         The computer vision task. Must be one of 'classification', 'detection', or 'segmentation'.
-    local_dir : str, optional
-        The local directory to download the data to. Defaults to `~/.agml/datasets/<dataset_name>`.
+    cache_dir : str, optional
+        The local directory to cache the dataset in.
     """
 
-    serializable = frozenset(("location", "task", "local_dir"))
+    serializable = frozenset(("dataset_name", "task", "cache_dir"))
 
-    def __init__(self, location: str, task: str, local_dir: str = None, **kwargs):
+    def __init__(self, dataset_name: str, task: str, cache_dir: str = None, **kwargs):
         if task not in ['classification', 'detection', 'segmentation']:
             raise ValueError("Task must be 'classification', 'detection', or 'segmentation'.")
         
-        self.location = location
+        self.dataset_name = dataset_name
         self.task = task
-        
-        if local_dir is None:
-            # Extract a pseudo-name from the location
-            base_name = os.path.basename(location.rstrip('/'))
-            if not base_name:
-                base_name = "hf_dataset"
-            self.local_dir = os.path.join(data_save_path(), base_name)
-        else:
-            self.local_dir = local_dir
+        self.cache_dir = cache_dir
 
         self._hf_dataset = None
         self._setup_loader()
 
     def _setup_loader(self):
-        """Downloads the dataset and loads it into a Hugging Face Dataset."""
-        # 1. Handle downloading from S3 if needed
-        self._download_from_s3()
-
-        # 2. Load into Hugging Face Dataset object
-        # Assume the dataset is provided in imagefolder format.
+        """Loads the dataset from the Hugging Face Hub."""
         try:
-            self._hf_dataset = load_dataset('imagefolder', data_dir=self.local_dir)
+            self._hf_dataset = load_dataset(self.dataset_name, cache_dir=self.cache_dir)
         except Exception as e:
             raise RuntimeError(
-                f"Failed to load dataset as 'imagefolder' from {self.local_dir}: {e}"
+                f"Failed to load Hugging Face dataset '{self.dataset_name}': {e}"
             )
 
-        # 3. Cast features based on the task
         self._cast_features()
-
-    def _download_from_s3(self):
-        """Downloads files from an S3 URI to `self.local_dir`."""
-        if not self.location.startswith('s3://'):
-            if os.path.isdir(self.location):
-                self.local_dir = self.location
-            return # Assume it's a valid path or handle HTTP elsewhere
-            
-        if os.path.exists(self.local_dir) and len(os.listdir(self.local_dir)) > 0:
-            return  # Already downloaded
-
-        try:
-            import boto3
-        except ImportError:
-            raise ImportError("`boto3` is required to download S3 datasets. Run `pip install boto3`.")
-
-        print(f"Downloading dataset from {self.location} to {self.local_dir}...")
-        os.makedirs(self.local_dir, exist_ok=True)
-        
-        parsed_url = urllib.parse.urlparse(self.location)
-        bucket_name = parsed_url.netloc
-        prefix = parsed_url.path.lstrip('/')
-
-        s3 = boto3.client('s3')
-        paginator = s3.get_paginator('list_objects_v2')
-        pages = paginator.paginate(Bucket=bucket_name, Prefix=prefix)
-
-        for page in pages:
-            if 'Contents' not in page:
-                continue
-            for obj in page['Contents']:
-                key = obj['Key']
-                if key.endswith('/'):
-                    continue
-                # Compute relative path
-                rel_path = os.path.relpath(key, prefix)
-                local_file_path = os.path.join(self.local_dir, rel_path)
-                
-                os.makedirs(os.path.dirname(local_file_path), exist_ok=True)
-                s3.download_file(bucket_name, key, local_file_path)
 
     def _cast_features(self):
         """Casts Hugging Face Dataset features according to the specified CV task."""
