@@ -23,20 +23,28 @@ class HuggingFaceDataLoader(AgMLSerializable):
     ----------
     dataset_name : str
         The name of a dataset on the Hugging Face Hub.
-    task : str
-        The computer vision task. Must be one of 'classification', 'detection', or 'segmentation'.
+    config : str, optional
+        The dataset configuration (subset) name for datasets that expose multiple
+        configs (e.g. an augmented variant).
     cache_dir : str, optional
         The local directory to cache the dataset in.
+
+    Examples
+    --------
+    Single-config dataset::
+
+        loader = HuggingFaceDataLoader("org/dataset")
+
+    Multi-config dataset with an augmented variant::
+
+        loader = HuggingFaceDataLoader("org/dataset", "augmented")
     """
 
-    serializable = frozenset(("dataset_name", "task", "cache_dir"))
+    serializable = frozenset(("dataset_name", "config", "cache_dir"))
 
-    def __init__(self, dataset_name: str, task: str, cache_dir: str = None, **kwargs):
-        if task not in ['classification', 'detection', 'segmentation']:
-            raise ValueError("Task must be 'classification', 'detection', or 'segmentation'.")
-        
+    def __init__(self, dataset_name: str, config: str = None, cache_dir: str = None, **kwargs):
         self.dataset_name = dataset_name
-        self.task = task
+        self.config = config
         self.cache_dir = cache_dir
 
         self._hf_dataset = None
@@ -45,30 +53,37 @@ class HuggingFaceDataLoader(AgMLSerializable):
     def _setup_loader(self):
         """Loads the dataset from the Hugging Face Hub."""
         try:
-            self._hf_dataset = load_dataset(self.dataset_name, cache_dir=self.cache_dir)
-        except Exception as e:
-            raise RuntimeError(
-                f"Failed to load Hugging Face dataset '{self.dataset_name}': {e}"
+            self._hf_dataset = load_dataset(
+                self.dataset_name,
+                self.config,
+                cache_dir=self.cache_dir,
             )
+        except Exception as e:
+            name = self.dataset_name if self.config is None else f"{self.dataset_name}/{self.config}"
+            raise RuntimeError(f"Failed to load Hugging Face dataset '{name}': {e}")
 
         self._cast_features()
 
     def _cast_features(self):
-        """Casts Hugging Face Dataset features according to the specified CV task."""
-        # Convert DatasetDict to a processable format to cast columns accurately
+        """Infers and casts image-like columns to the HF Image type for automated decoding."""
         for split_name in self._hf_dataset.keys():
             ds = self._hf_dataset[split_name]
             features = ds.features
-            
-            # Ensure "image" exists and is of HF Image type
-            if "image" in features and not isinstance(features["image"], Image):
-                self._hf_dataset[split_name] = ds.cast_column("image", Image())
 
-            if self.task == "segmentation":
-                # Segmentation masks should also be casted to the Image type for automated decoding
-                label_col = "mask" if "mask" in features else "label"
-                if label_col in features and not isinstance(features[label_col], Image):
-                    self._hf_dataset[split_name] = ds.cast_column(label_col, Image())
+            if "image" in features and not isinstance(features["image"], Image):
+                ds = ds.cast_column("image", Image())
+
+            # A "mask" column is always a pixel map — cast unconditionally.
+            if "mask" in features and not isinstance(features["mask"], Image):
+                ds = ds.cast_column("mask", Image())
+            # Cast "label" only when it looks like image data (string path or binary bytes),
+            # not when it is a ClassLabel or a numeric scalar.
+            elif "label" in features and not isinstance(features["label"], Image):
+                label_feat = features["label"]
+                if isinstance(label_feat, Value) and label_feat.dtype in ("string", "binary", "large_binary"):
+                    ds = ds.cast_column("label", Image())
+
+            self._hf_dataset[split_name] = ds
 
     def split(self, 
               val_size: float = None, 
