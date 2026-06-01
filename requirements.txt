@@ -8,3 +8,5 @@ opencv-python-headless; sys.platform == 'linux'
 pyyaml>=5.4.1
 albumentations
 dict2xml
+datasets
+transformers

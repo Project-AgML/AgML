@@ -18,3 +18,4 @@ from .loader import AgMLDataLoader
 from .point_cloud import PointCloud
 from .public import download_public_dataset, public_data_sources, source
 from .tools import coco_to_bboxes, convert_bbox_format
+from .hf_loader import HuggingFaceDataLoader

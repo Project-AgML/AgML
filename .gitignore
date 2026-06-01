@@ -172,3 +172,6 @@ image*.png
 # under development
 agml/data/augmentations/
 agml/data/exporters/pascal_voc.py
+
+# vs code settings
+.vscode/
