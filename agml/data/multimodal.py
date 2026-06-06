@@ -17,6 +17,7 @@ import os
 import warnings
 
 _IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp", ".gif", ".bmp", ".tiff", ".tif"}
+_KNOWN_OPTIONAL_KEYS = {"origin_dataset"}
 
 
 def _validate_manifest(dataset_root: str) -> None:
@@ -30,17 +31,17 @@ def _validate_manifest(dataset_root: str) -> None:
             f"Expected HF imagefolder layout with a metadata.jsonl manifest."
         )
 
-    # Rule 2: At least one image file must exist in the dataset root.
-    image_files = {
-        f for f in os.listdir(dataset_root)
-        if os.path.isfile(os.path.join(dataset_root, f))
-        and os.path.splitext(f)[1].lower() in _IMAGE_EXTENSIONS
-    }
+    # Rule 2: At least one image file must exist directly in dataset_root (flat layout).
+    image_files = set()
+    for f in os.listdir(dataset_root):
+        if os.path.isfile(os.path.join(dataset_root, f)) and os.path.splitext(f)[1].lower() in _IMAGE_EXTENSIONS:
+            image_files.add(f)
+
     if not image_files:
         raise ValueError(
-            f"No image files found in {dataset_root!r}. "
-            f"Expected images (with extensions {sorted(_IMAGE_EXTENSIONS)}) "
-            f"to be in the same directory as metadata.jsonl."
+            f"No image files found directly in {dataset_root!r}. "
+            f"Expected flat imagefolder layout: image files co-located with metadata.jsonl. "
+            f"Supported extensions: {sorted(_IMAGE_EXTENSIONS)}."
         )
 
     # Rule 3 + 4: Parse all lines; ensure non-empty manifest.
@@ -76,7 +77,7 @@ def _validate_manifest(dataset_root: str) -> None:
             raise ValueError(
                 f"metadata.jsonl line {line_num}: missing required key(s): {sorted(missing)}."
             )
-        extra = entry.keys() - required_keys
+        extra = entry.keys() - required_keys - _KNOWN_OPTIONAL_KEYS
         if extra:
             warnings.warn(
                 f"metadata.jsonl line {line_num} (id={entry.get('id')!r}) has unexpected "
@@ -89,16 +90,16 @@ def _validate_manifest(dataset_root: str) -> None:
         sample_id = entry["id"]
         messages = entry["messages"]
 
-        # Rule 8: file_name must be a bare filename (no path separators or traversal).
+        # Rule 8: file_name must be a plain filename with no directory separators (flat layout).
         if not isinstance(file_name, str) or not file_name:
             raise ValueError(
                 f"metadata.jsonl line {line_num}: 'file_name' must be a non-empty string, "
                 f"got {file_name!r}."
             )
-        if "/" in file_name or "\\" in file_name or ".." in file_name:
+        if "/" in file_name or os.sep in file_name:
             raise ValueError(
-                f"metadata.jsonl line {line_num}: 'file_name' must be a bare filename "
-                f"(no path separators). Got: {file_name!r}"
+                f"metadata.jsonl line {line_num}: 'file_name' must be a plain filename with no "
+                f"directory separators — flat imagefolder layout required. Got: {file_name!r}."
             )
 
         # Rule 6: Each file_name must reference an existing file.
@@ -115,6 +116,15 @@ def _validate_manifest(dataset_root: str) -> None:
         if sample_id in seen_ids:
             duplicate_ids.append(sample_id)
         seen_ids.add(sample_id)
+
+        # Optional: origin_dataset must be a string if present (empty string is allowed).
+        if "origin_dataset" in entry:
+            origin = entry["origin_dataset"]
+            if not isinstance(origin, str):
+                raise ValueError(
+                    f"metadata.jsonl line {line_num} (id={sample_id!r}): "
+                    f"'origin_dataset' must be a string, got {type(origin).__name__!r}."
+                )
 
         # Rule 9: messages must be a list of length >= 2.
         if not isinstance(messages, list) or len(messages) < 2:
@@ -209,16 +219,20 @@ def _validate_manifest(dataset_root: str) -> None:
 
 
 def load_multimodal_dataset(dataset_root: str) -> "datasets.Dataset":
-    """Load a multimodal image_text_to_text dataset using HuggingFace's imagefolder convention.
+    """Load a multimodal image_text_to_text dataset using HuggingFace imagefolder.
+
+    Expects a flat directory layout:
+        dataset_root/
+            metadata.jsonl   (file_name values are plain filenames, no subdirectories)
+            image001.jpg
+            image002.jpg
+            ...
 
     Returns a datasets.Dataset with columns:
-        - image (datasets.Image)   — lazy-loaded PIL Image
-        - id (str)                 — AgML identifier
-        - messages (Sequence)      — HF-canonical conversation
-
-    The dataset_root must contain:
-        - metadata.jsonl  (one JSON object per line, HF-format messages)
-        - image files in supported formats (.jpg, .png, .webp, etc.)
+        - image (datasets.Image)    — lazy-loaded PIL Image
+        - id (str)                  — AgML identifier
+        - messages (Sequence)       — HF-canonical multi-turn conversation
+        - origin_dataset (str)      — source dataset name, if present in metadata.jsonl
 
     Parameters
     ----------
@@ -228,28 +242,17 @@ def load_multimodal_dataset(dataset_root: str) -> "datasets.Dataset":
     Returns
     -------
     datasets.Dataset
-        Columns: image (PIL Image via lazy load), id (string), messages (list of dicts).
+        All splits concatenated into a single flat dataset.
     """
-    from datasets import Dataset, Image as HFImage
+    from datasets import load_dataset, concatenate_datasets
 
     _validate_manifest(dataset_root)
 
-    # Read metadata.jsonl
-    metadata_path = os.path.join(dataset_root, "metadata.jsonl")
-    data = {"image": [], "id": [], "messages": []}
+    ds = load_dataset("imagefolder", data_dir=dataset_root)
 
-    with open(metadata_path, "r", encoding="utf-8") as f:
-        for line in f:
-            if line.strip():
-                entry = json.loads(line.strip())
-                image_path = os.path.join(dataset_root, entry["file_name"])
-                if os.path.exists(image_path):
-                    data["image"].append(image_path)
-                    data["id"].append(entry["id"])
-                    data["messages"].append(entry["messages"])
-
-    # Create dataset with lazy image loading via datasets.Image
-    ds = Dataset.from_dict(data)
-    ds = ds.cast_column("image", HFImage())
+    # imagefolder auto-splits into train/validation/test; collapse to one flat dataset
+    # since AgML handles splitting separately.
+    if hasattr(ds, "keys"):
+        ds = concatenate_datasets(list(ds.values()))
 
     return ds

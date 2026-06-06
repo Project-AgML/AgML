@@ -129,8 +129,8 @@ The `AgMLDataLoader` returns `(str, int)` per sample — the raw text and its in
 
 #### Image Text to Text
 
-Image-text-to-text datasets use the [HuggingFace imagefolder](https://huggingface.co/docs/datasets/image_dataset)
-convention. A flat directory contains both `metadata.jsonl` and all image files:
+Image-text-to-text datasets use a flat [HuggingFace imagefolder](https://huggingface.co/docs/datasets/image_dataset)
+layout — `metadata.jsonl` and all image files must be in the same directory:
 
 ```
 <dataset name>
@@ -140,7 +140,7 @@ convention. A flat directory contains both `metadata.jsonl` and all image files:
     └── img_003.jpg
 ```
 
-Each line of `metadata.jsonl` is a JSON object with three fields:
+Each line of `metadata.jsonl` is a JSON object with the following fields:
 
 ```json
 {
@@ -160,26 +160,29 @@ Each line of `metadata.jsonl` is a JSON object with three fields:
         {"type": "text", "text": "bean_rust"}
       ]
     }
-  ]
+  ],
+  "origin_dataset": "bean_disease_uganda"
 }
 ```
 
 Rules for the format:
-- `file_name` must be a bare filename (e.g., `img_001.jpg`), not a path. No subdirectories, no path separators, no `..` traversal. File must exist in the dataset root.
+- `file_name` must be a plain filename with no directory separators (e.g., `img_001.jpg`). Nested paths are not allowed. File must exist in the same directory as `metadata.jsonl`.
 - `id` must be a unique non-empty string across all samples.
 - `messages` must have at least 2 turns. Roles alternate `user` / `assistant`, with an optional `system` turn at index 0.
 - Each turn's `content` is a non-empty list of items with `type` of `"image"` or `"text"`.
 - Text-type items require a non-empty `text` field. Answer text is preserved verbatim — never truncated or stripped.
 - Image-type items are placeholders; the actual image is loaded from `file_name` by the imagefolder builder.
 - At least one `{"type": "image"}` item across all turns is recommended (text-only samples warn but are legal).
+- `origin_dataset` is optional. If present, it must be a string (empty string allowed) identifying the source dataset the image was drawn from.
 
 The `AgMLDataLoader` returns a `dict` per sample:
 
 ```python
 {
-    "id":       str,         # unique sample id
-    "image":    PIL.Image,   # lazily loaded via datasets.Image()
-    "messages": list[dict],  # HF-canonical conversation, ready for processor.apply_chat_template()
+    "id":             str,         # unique sample id
+    "image":          PIL.Image,   # lazily loaded via datasets.Image()
+    "messages":       list[dict],  # HF-canonical conversation, ready for processor.apply_chat_template()
+    "origin_dataset": str,         # source dataset name, if present in metadata.jsonl
 }
 ```
 
@@ -187,7 +190,7 @@ The dataset is also directly loadable without AgML:
 
 ```python
 from datasets import load_dataset
-ds = load_dataset("imagefolder", data_dir="/path/to/dataset", split="train")
+ds = load_dataset("imagefolder", data_dir="/path/to/dataset")
 ```
 
 The full [HuggingFace `Dataset`](https://huggingface.co/docs/datasets) object is also accessible
