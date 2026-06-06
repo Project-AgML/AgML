@@ -130,13 +130,14 @@ The `AgMLDataLoader` returns `(str, int)` per sample — the raw text and its in
 #### Image Text to Text
 
 Image-text-to-text datasets use the [HuggingFace imagefolder](https://huggingface.co/docs/datasets/image_dataset)
-convention. Images and a `metadata.jsonl` manifest live flat in the same directory:
+convention. A flat directory contains both `metadata.jsonl` and all image files:
 
 ```
 <dataset name>
     ├── metadata.jsonl
     ├── img_001.jpg
-    └── img_002.jpg
+    ├── img_002.jpg
+    └── img_003.jpg
 ```
 
 Each line of `metadata.jsonl` is a JSON object with three fields:
@@ -164,7 +165,7 @@ Each line of `metadata.jsonl` is a JSON object with three fields:
 ```
 
 Rules for the format:
-- `file_name` must be a bare filename (no path separators, no `..`) — the file must exist in the dataset root.
+- `file_name` must be a bare filename (e.g., `img_001.jpg`), not a path. No subdirectories, no path separators, no `..` traversal. File must exist in the dataset root.
 - `id` must be a unique non-empty string across all samples.
 - `messages` must have at least 2 turns. Roles alternate `user` / `assistant`, with an optional `system` turn at index 0.
 - Each turn's `content` is a non-empty list of items with `type` of `"image"` or `"text"`.
