@@ -41,3 +41,5 @@ dependencies:
       - pyyaml>=5.4.1
       - albumentations
       - dict2xml
+      - datasets
+      - transformers

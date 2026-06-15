@@ -9,3 +9,4 @@ pyyaml>=5.4.1
 albumentations
 dict2xml
 datasets>=2.0.0
+transformers
