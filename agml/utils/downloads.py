@@ -14,6 +14,7 @@
 
 import os
 import shutil
+import warnings
 import zipfile
 
 from rich.progress import (
@@ -55,6 +56,13 @@ def download_dataset(dataset_name, dest_dir, redownload=False):
         else:
             log(f"Interpreted dataset '{dataset_name}' as " f"'{dataset_name.replace('-', '_')}.'")
             dataset_name = dataset_name.replace("-", "_")
+
+    warnings.warn(
+        "Loading datasets through the AgML S3 data loader is deprecated and will be "
+        "removed in a future release. Please use the Hugging Face data loader instead.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
 
     # Connect to S3 and generate unsigned URL for bucket object
     url = f"https://agdata-data.s3.us-west-1.amazonaws.com/datasets/{dataset_name}.zip"
