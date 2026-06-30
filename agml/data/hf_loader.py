@@ -3,7 +3,7 @@ import math
 from typing import List, Union
 
 try:
-    from datasets import load_dataset, DatasetDict, Image, Sequence, Value, ClassLabel
+    from datasets import load_dataset, DatasetDict, Image, Sequence, ClassLabel
 except ImportError:
     raise ImportError(
         "The `datasets` library is required to use the HuggingFaceDataLoader. "
@@ -66,24 +66,25 @@ class HuggingFaceDataLoader(AgMLSerializable):
 
     def _cast_features(self):
         """Infers and casts image-like columns to the HF Image type for automated decoding."""
-        for split_name in self._hf_dataset.keys():
-            ds = self._hf_dataset[split_name]
-            features = ds.features
+        if isinstance(self._hf_dataset, DatasetDict):
+            splits = {name: self._hf_dataset[name] for name in self._hf_dataset.keys()}
+            for split_name, ds in splits.items():
+                self._hf_dataset[split_name] = self._cast_single(ds)
+        else:
+            self._hf_dataset = self._cast_single(self._hf_dataset)
 
-            if "image" in features and not isinstance(features["image"], Image):
-                ds = ds.cast_column("image", Image())
+    def _cast_single(self, ds):
+        """Casts image-like columns on a single Dataset."""
+        features = ds.features
 
-            # A "mask" column is always a pixel map — cast unconditionally.
-            if "mask" in features and not isinstance(features["mask"], Image):
-                ds = ds.cast_column("mask", Image())
-            # Cast "label" only when it looks like image data (string path or binary bytes),
-            # not when it is a ClassLabel or a numeric scalar.
-            elif "label" in features and not isinstance(features["label"], Image):
-                label_feat = features["label"]
-                if isinstance(label_feat, Value) and label_feat.dtype in ("string", "binary", "large_binary"):
-                    ds = ds.cast_column("label", Image())
+        if "image" in features and not isinstance(features["image"], Image):
+            ds = ds.cast_column("image", Image())
 
-            self._hf_dataset[split_name] = ds
+        # A "mask" column is always a pixel map — cast unconditionally.
+        if "mask" in features and not isinstance(features["mask"], Image):
+            ds = ds.cast_column("mask", Image())
+
+        return ds
 
     def split(self, 
               val_size: float = None, 

@@ -15,6 +15,7 @@
 import functools
 
 from rich.console import Console
+from rich.table import Table
 import numpy as np
 
 from agml.backend.config import data_save_path
