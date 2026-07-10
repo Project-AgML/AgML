@@ -10,7 +10,8 @@ description = "A comprehensive library for agricultural deep learning"
 authors = [{name = "UC Davis Plant AI and Biophysics Lab", email = "jmearles@ucdavis.edu"}]
 maintainers = [{ name="Amogh Joshi", email="amnjoshi@ucdavis.edu"}]
 
-license = {text = "Apache 2.0"}
+license = "Apache-2.0"
+license-files = ["LICENSE", "AUTHORS"]
 readme = "README.md"
 packages = [{include = "agml", from = "agml", exclude ='agml/_internal'}]
 version = "0.8.0"
