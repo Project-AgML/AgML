@@ -38,12 +38,6 @@ dmypy.json
 .pyre/
 .ruff_cache
 
-# IDEs & editors
-.DS_Store
-__MACOSX
-.idea/
-.vscode/
-
 # Jupyter
 .ipynb_checkpoints
 
@@ -84,3 +78,9 @@ image*.png
 # Under development
 agml/data/augmentations/
 agml/data/exporters/pascal_voc.py
+
+# IDEs & editors
+.DS_Store
+__MACOSX
+.idea/
+.vscode/
