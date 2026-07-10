@@ -11,7 +11,7 @@ authors = [{name = "UC Davis Plant AI and Biophysics Lab", email = "jmearles@ucd
 maintainers = [{ name="Amogh Joshi", email="amnjoshi@ucdavis.edu"}]
 
 license = "Apache-2.0"
-license-files = ["LICENSE", "AUTHORS"]
+license-files = ["LICENSE"]
 readme = "README.md"
 packages = [{include = "agml", from = "agml", exclude ='agml/_internal'}]
 version = "0.8.0"
