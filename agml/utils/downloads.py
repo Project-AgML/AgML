@@ -61,7 +61,7 @@ def download_dataset(dataset_name, dest_dir, redownload=False):
         "Loading datasets through the AgML S3 data loader is deprecated and will be "
         "removed in a future release. Please use the Hugging Face data loader instead.",
         DeprecationWarning,
-        stacklevel=2,
+        stacklevel=3,
     )
 
     # Connect to S3 and generate unsigned URL for bucket object

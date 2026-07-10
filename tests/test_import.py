@@ -5,4 +5,4 @@ def test_import():
     """Test import only"""
     import agml
 
-    assert agml.__version__ == "0.7.4"
+    assert agml.__version__ == "0.8.0"
