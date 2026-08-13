@@ -12,13 +12,11 @@ We're looking to hire a postdoc with both Python library development and ML expe
 
 ## Overview
 AgML is a comprehensive library for agricultural machine learning. Currently, AgML provides
-access to a wealth of public agricultural datasets for common agricultural deep learning tasks. In the future, AgML will provide ag-specific ML functionality related to data, training, and evaluation. Here's a conceptual diagram of the overall framework.
-
-<p align="center">
-<img src="docs/assets/agml-framework.png" alt="agml framework" width="350" height="291">
-</p>
+access to a wealth of public agricultural datasets for common agricultural deep learning tasks. 
 
 AgML supports both the [TensorFlow](https://www.tensorflow.org/) and [PyTorch](https://pytorch.org/) machine learning frameworks.
+
+To browse our latest datasets, view our full set of documentation, and compare model performance on your crops / tasks of interest, please visit [project-agml.github.io](https://project-agml.github.io/).
 
 ## Installation
 
@@ -28,111 +26,70 @@ To install the latest release of AgML, run the following command:
 pip install agml
 ```
 
-**_NOTE:_** Some features of AgML, such as synthetic data generation, require GUI applications. When running AgML through
-Windows Subsystem for Linux (WSL), it may be necessary to configure your WSL environment to utilize these features. Please
-follow the [Microsoft documentation](https://learn.microsoft.com/en-us/windows/wsl/tutorials/gui-apps) to install all
-necessary prerequisites and update WSL. The latest version of WSL includes built-in support for running Linux GUI applications.
-
 ## Quick Start
 
-AgML is designed for easy usage of agricultural data in a variety of formats. You can start off by using the `AgMLDataLoader` to
-download and load a dataset into a container:
+AgML datasets are hosted on the [Hugging Face Hub](https://huggingface.co/Project-AgML) under the `Project-AgML`
+organization. You can start off by using the `HuggingFaceDataLoader` to download and load a dataset directly into a
+native Hugging Face `DatasetDict`:
 
 ```python
-import agml
+from agml.data import HuggingFaceDataLoader
 
-loader = agml.data.AgMLDataLoader('apple_flower_segmentation')
+# Load a dataset from the Hub
+loader = HuggingFaceDataLoader("Project-AgML/apple_flower_segmentation")
+
+# Load a specific config/subset (e.g. an augmented variant)
+loader = HuggingFaceDataLoader("Project-AgML/apple_flower_segmentation", config="augmented")
 ```
 
-You can then use the in-built processing methods to get the loader ready for your training and evaluation pipelines. This includes, but
-is not limited to, batching data, shuffling data, splitting data into training, validation, and test sets, and applying transforms.
+`HuggingFaceDataLoader` automatically casts image-like columns (`image`, `mask`, and image-typed `label` columns) to
+the Hugging Face `Image` type for decoded pixel access.
+
+You can split the dataset into train/val/test sets, with optional stratification across one or more columns:
 
 ```python
-import albumentations as A
+dataset = loader.split(val_size=0.1, test_size=0.1, stratify_cols="label")
+# Returns a DatasetDict with 'train', 'val', and 'test' splits
 
-# Batch the dataset into collections of 8 pieces of data:
-loader.batch(8)
+# Access the underlying DatasetDict at any time
+dataset = loader.dataset
+```
 
-# Shuffle the data:
-loader.shuffle()
+**For any preprocessing, inference, or training beyond loading and splitting, use the
+[`datasets`](https://huggingface.co/docs/datasets) and [`transformers`](https://huggingface.co/docs/transformers)
+libraries directly.** Since `loader.dataset` is a native Hugging Face `DatasetDict`, it works out of the box with
+`datasets`' `map`, `filter`, and `with_transform` methods for preprocessing, and with `transformers`' `Trainer`,
+`Pipeline`, and model classes for training and inference — there's no separate AgML-specific processing API to learn.
 
-# Apply transforms to the input images and output annotation masks:
-loader.mask_to_channel_basis()
-loader.transform(
-    transform = A.RandomContrast(),
-    dual_transform = A.Compose([A.RandomRotate90()])
+```python
+from transformers import AutoImageProcessor, AutoModelForImageClassification, Trainer
+
+processor = AutoImageProcessor.from_pretrained("google/vit-base-patch16-224")
+model = AutoModelForImageClassification.from_pretrained(
+    "google/vit-base-patch16-224",
+    num_labels=dataset["train"].features["label"].num_classes,
 )
 
-# Split the data into train/val/test sets.
-loader.split(train = 0.8, val = 0.1, test = 0.1)
+def preprocess(batch):
+    batch["pixel_values"] = processor(batch["image"], return_tensors="pt")["pixel_values"]
+    return batch
+
+dataset = dataset.with_transform(preprocess)
+
+trainer = Trainer(model=model, train_dataset=dataset["train"], eval_dataset=dataset["val"])
+trainer.train()
 ```
 
-The split datasets can be accessed using `loader.train_data`, `loader.val_data`, and `loader.test_data`. Any further processing applied to the
-main loader will be applied to the split datasets, until the split attributes are accessed, at which point you need to apply processing independently
-to each of the loaders. You can also turn toggle processing on and off using the `loader.eval()`, `loader.reset_preprocessing()`, and `loader.disable_preprocessing()`
-methods.
-
-You can visualize data using the `agml.viz` module, which supports multiple different types of visualization for different data types:
-
-```python
-# Disable processing and batching for the test data:
-test_ds = loader.test_data
-test_ds.batch(None)
-test_ds.reset_prepreprocessing()
-
-# Visualize the image and mask side-by-side:
-agml.viz.visualize_image_and_mask(test_ds[0])
-
-# Visualize the mask overlaid onto the image:
-agml.viz.visualize_overlaid_masks(test_ds[0])
-```
-
-AgML supports both the TensorFlow and PyTorch libraries as backends, and provides functionality to export your loaders to native TensorFlow and PyTorch
-formats when you want to use them in a training pipeline. This includes both exporting the `AgMLDataLoader` to a `tf.data.Dataset` or `torch.utils.data.DataLoader`,
-but also internally converting data within the `AgMLDataLoader` itself, enabling access to its core functionality.
-
-
-```python
-# Export the loader as a `tf.data.Dataset`:
-train_ds = loader.train_data.export_tensorflow()
-
-# Convert to PyTorch tensors without exporting.
-train_ds = loader.train_data
-train_ds.as_torch_dataset()
-```
-
-You're now ready to use AgML for training your own models! Luckily, AgML comes with a training module that enables quick-start training of standard deep learning models on agricultural datasets. Training a grape detection model is as simple as the following code:
-
-```python
-import agml
-import agml.models
-
-import albumentations as A
-
-loader = agml.data.AgMLDataLoader('grape_detection_californiaday')
-loader.split(train = 0.8, val = 0.1, test = 0.1)
-processor = agml.models.preprocessing.EfficientDetPreprocessor(
-    image_size = 512, augmentation = [A.HorizontalFlip(p=0.5)]
-)
-loader.transform(processor)
-
-model = agml.models.DetectionModel(num_classes=loader.num_classes)
-
-model.run_training(loader)
-```
-
-## Public Dataset Listing
+## Public Datasets
 
 AgML contains a wide variety of public datasets from various locations across the world:
 
 ![AgML Dataset World Map](/docs/assets/agml_dataset_world_map.png)
 
-
-To browse existing AgML datasets, please visit https://project-agml.github.io/datasets, where you can search the datasets that we have collected by a variet of fields.
-
+Use the [Dataset Search](https://project-agml.github.io/datasets) experience for filtering and previews. For programmatic filtering,
+`agml.data.public_data_sources(...)` supports task and modality filters.
 
 ## iNatAg and iNatAg-mini
-
 
 AgML provides an API with direct access to iNatAg (and iNatAg-mini), one of the world's largest collections of agricultural images dedicated for the task of image classification. Collectively, this dataset contains over 4 million images along with detailed species classificaations and enables access to a variety of large-scale agricultural machine learning tasks. You can instantiate the iNatAg (or iNatAg-mini, a smaller variant of iNatAg for smaller-scale applications) dataset as follows:
 
@@ -144,35 +101,33 @@ loader = agml.data.AgMLDataLoader.from_parent("iNatAg", filters={"family_name": 
 loader = agml.data.AgMLDataLoader.from_parent("iNatAg", filters={"common_name": "..."})
 ```
 
-
 ## Usage Information
 
 ### Using Public Agricultural Data
 
 AgML aims to provide easy access to a range of existing public agricultural datasets The core of AgML's public data pipeline is
-[`AgMLDataLoader`](/agml/data/loader.py). You can use the `AgMLDataLoader` or `agml.data.download_public_dataset()` to download
+[`AgMLDataLoader`](https://github.com/Project-AgML/AgML/blob/main/agml/data/loader.py). You can use the `AgMLDataLoader` or `agml.data.download_public_dataset()` to download
 the dataset locally from which point it will be automatically loaded from the disk on future runs.
 From this point, the data within the loader can be split into train/val/test sets, batched, have augmentations and transforms
 applied, and be converted into a training-ready dataset (including batching, tensor conversion, and image formatting).
 
-To see the various ways in which you can use AgML datasets in your training pipelines, check out
-the [example notebook](/examples/AgML-Data.ipynb).
-
 ## Annotation Formats
 
 A core aim of AgML is to provide datasets in a standardized format, enabling the synthesizing of multiple datasets
-into a single training pipeline. To this end, we provide annotations in the following formats:
+into a single training pipeline. Datasets on the Hugging Face Hub encode annotations as columns on the underlying
+`Dataset`/`DatasetDict`:
 
-- **Image Classification**: Image-To-Label-Number
-- **Object Detection**: [COCO JSON](https://cocodataset.org/#format-data)
-- **Semantic Segmentation**: Dense Pixel-Wise
+- **Image Classification**: a `label` column of type `ClassLabel`.
+- **Object Detection**: an `objects` column, holding COCO-style bounding boxes (un-normlized [x_min, y_min, width, height]) and corresponding category IDs as a ClassLabel per image.
+- **Semantic Segmentation**: a `mask` column, a single-channel (`L`-mode) image the same size as the corresponding image.
 
 ## Contributions
 
 We welcome contributions! If you would like to contribute a new feature, fix an issue that you've noticed, or even just mention
 a bug or feature that you would like to see implemented, please don't hesitate to use the *Issues* tab to bring it to our attention.
 
-See the [contributing guidelines](/CONTRIBUTING.md) for more information.
+See the [contributing guidelines]([https://project-agml.github.io/docs/development) for more information, or the
+[guide to contributing leaderboard results](https://project-agml.github.io/docs/contributing-results) if you have benchmark results to add.
 
 ## Funding
-This project is partly funded by the [National AI Institute for Food Systems](https://aifs.ucdavis.ed
+This project is partly funded by the [National AI Institute for Food Systems](https://aifs.ucdavis.edu).
