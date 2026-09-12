@@ -3,7 +3,7 @@ import math
 from typing import List, Union
 
 try:
-    from datasets import load_dataset, DatasetDict, Image, Sequence, ClassLabel
+    from datasets import load_dataset, DatasetDict, Image, Sequence, ClassLabel, Array2D
 except ImportError:
     raise ImportError(
         "The `datasets` library is required to use the HuggingFaceDataLoader. "
@@ -80,8 +80,10 @@ class HuggingFaceDataLoader(AgMLSerializable):
         if "image" in features and not isinstance(features["image"], Image):
             ds = ds.cast_column("image", Image())
 
-        # A "mask" column is always a pixel map — cast unconditionally.
-        if "mask" in features and not isinstance(features["mask"], Image):
+        # A "mask" column is a pixel map for image datasets, but a per-point
+        # label array (Array2D) for point cloud datasets. Only cast to
+        # Image() when it isn't already a numeric array type.
+        if "mask" in features and not isinstance(features["mask"], (Image, Array2D)):
             ds = ds.cast_column("mask", Image())
 
         return ds
