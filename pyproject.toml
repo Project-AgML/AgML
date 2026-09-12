@@ -8,13 +8,13 @@ build-backend = "hatchling.build"
 name = "agml"
 description = "A comprehensive library for agricultural deep learning"
 authors = [{name = "UC Davis Plant AI and Biophysics Lab", email = "jmearles@ucdavis.edu"}]
-maintainers = [{ name="Amogh Joshi", email="amnjoshi@ucdavis.edu"}]
+maintainers = [{ name="Jared Smith", email="jrssmith@ucdavis.edu"}]
 
 license = "Apache-2.0"
 license-files = ["LICENSE"]
 readme = "README.md"
 packages = [{include = "agml", from = "agml", exclude ='agml/_internal'}]
-version = "0.8.0"
+version = "0.8.1"
 requires-python = ">=3.10"
 keywords = []
 classifiers = [
