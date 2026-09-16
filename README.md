@@ -80,6 +80,46 @@ trainer = Trainer(model=model, train_dataset=dataset["train"], eval_dataset=data
 trainer.train()
 ```
 
+### Image-Text-to-Text Datasets
+
+Some AgML datasets (e.g. `Project-AgML/AgroOmni`) are too large to fit the standard `load_dataset()`
+archive handling, which fully extracts every archive to disk before reading it. These datasets instead store images
+as raw relative paths inside zip shards, alongside a single shared `path -> shard` index, so no extraction step is
+needed and no per-archive metadata has to be duplicated. Because of that, they aren't `load_dataset()`-compatible,
+and are loaded with `loadImageTextToTextDataset` instead:
+
+```python
+from agml import loadImageTextToTextDataset
+
+# Whole dataset, split-aware:
+ds = loadImageTextToTextDataset(
+    "Project-AgML/AgroOmni", 
+    token=HF_TOKEN
+)
+
+ds["train"][0]      # {'id', 'messages', 'raw_metadata', 'images': [PIL.Image, ...]}
+
+# Single split:
+train_ds = loadImageTextToTextDataset(
+    "Project-AgML/AgroOmni", 
+    split="train", 
+    token=HF_TOKEN
+)
+```
+
+`loadImageTextToTextDataset(repo_id, split=None, cache_dir=None, token=None)` returns a `DatasetDict` when `split`
+is omitted, or a single `Dataset` when a split name is given. Splits are auto-discovered from the metadata parquet
+filenames (e.g. `train-0000-of-0001.parquet` becomes `train`), the same convention `load_dataset()` itself uses; if
+no split can be inferred, every row is placed under a single `train` split.
+
+Image bytes are only read the first time a row is actually accessed (`ds["train"][0]`, a slice, or a batch), never
+eagerly over the whole dataset, and repeated access to the same image is cached. The `ImageTextToTextShardStore`
+backing that lazy decoding is attached to the returned dataset as `ds.store`, in case you want to inspect its cache,
+call `ds.store.getBytes(path)` directly, or free its open shard file handles (`del ds.store`).
+
+If you're using this with a PyTorch `DataLoader`, prefer `num_workers > 0` so each worker process opens its own
+shard handles rather than sharing one across threads.
+
 ## Public Datasets
 
 AgML contains a wide variety of public datasets from various locations across the world:
