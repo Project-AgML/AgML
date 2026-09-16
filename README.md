@@ -105,12 +105,21 @@ train_ds = loadImageTextToTextDataset(
     split="train", 
     token=HF_TOKEN
 )
+
+# Multi-config repo (each config under its own folder): pass `config` to select one.
+ds = loadImageTextToTextDataset(
+    "Project-AgML/MIRAGE",
+    config="MMST_Standard",
+    token=HF_TOKEN,
+)
 ```
 
-`loadImageTextToTextDataset(repo_id, split=None, cache_dir=None, token=None)` returns a `DatasetDict` when `split`
-is omitted, or a single `Dataset` when a split name is given. Splits are auto-discovered from the metadata parquet
-filenames (e.g. `train-0000-of-0001.parquet` becomes `train`), the same convention `load_dataset()` itself uses; if
-no split can be inferred, every row is placed under a single `train` split.
+`loadImageTextToTextDataset(repo_id, config=None, split=None, cache_dir=None, token=None)` returns a `DatasetDict`
+when `split` is omitted, or a single `Dataset` when a split name is given. Splits are auto-discovered from the
+metadata parquet filenames (e.g. `train-0000-of-0001.parquet` becomes `train`), the same convention `load_dataset()`
+itself uses; if no split can be inferred, every row is placed under a single `train` split. For repos with multiple
+configs, each living under its own folder, `config` is required, if it's omitted the error message lists the
+configs available in that repo.
 
 Image bytes are only read the first time a row is actually accessed (`ds["train"][0]`, a slice, or a batch), never
 eagerly over the whole dataset, and repeated access to the same image is cached. The `ImageTextToTextShardStore`
