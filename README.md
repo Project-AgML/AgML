@@ -114,7 +114,7 @@ ds = loadImageTextToTextDataset(
 )
 ```
 
-`loadImageTextToTextDataset(repo_id, config=None, split=None, cache_dir=None, token=None)` returns a `DatasetDict`
+`loadImageTextToTextDataset(repo_id, config=None, split=None, cache_dir=None, token=None, cache_max_bytes=...)` returns a `DatasetDict`
 when `split` is omitted, or a single `Dataset` when a split name is given. Splits are auto-discovered from the
 metadata parquet filenames (e.g. `train-0000-of-0001.parquet` becomes `train`), the same convention `load_dataset()`
 itself uses; if no split can be inferred, every row is placed under a single `train` split. For repos with multiple
@@ -124,10 +124,11 @@ configs available in that repo.
 Image bytes are only read the first time a row is actually accessed (`ds["train"][0]`, a slice, or a batch), never
 eagerly over the whole dataset, and repeated access to the same image is cached. The `ImageTextToTextShardStore`
 backing that lazy decoding is attached to the returned dataset as `ds.store`, in case you want to inspect its cache,
-call `ds.store.getBytes(path)` directly, or free its open shard file handles (`del ds.store`).
+call `ds.store.getBytes(path)` directly, or free its open shard file handles and cached bytes (`ds.store.close()`).
+The cache is bounded by total size, 256 MiB by default; pass `cache_max_bytes=` to change it, or `0` to disable it.
 
-If you're using this with a PyTorch `DataLoader`, prefer `num_workers > 0` so each worker process opens its own
-shard handles rather than sharing one across threads.
+If you're using this with a PyTorch `DataLoader`, prefer `num_workers > 0`. Each worker process opens its
+own shard handles (and keeps its own byte cache), whether workers are forked or spawned.
 
 ## Public Datasets
 

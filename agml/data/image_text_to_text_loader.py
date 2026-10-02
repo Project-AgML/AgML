@@ -2,8 +2,7 @@ import io
 import os
 import re
 import zipfile
-from collections import defaultdict
-from functools import lru_cache
+from collections import OrderedDict, defaultdict
 from typing import Optional, Union
 
 import pandas as pd
@@ -43,6 +42,9 @@ _DEFAULT_SPLIT_NAME = "train"
 # The dataset card holding the `configs` YAML front matter that names the default config.
 _DATASET_CARD_FILENAME = "README.md"
 
+# The default upper bound, in bytes, on each store's cache of raw image bytes.
+_DEFAULT_CACHE_MAX_BYTES = 256 * 1024 * 1024
+
 
 class ImageTextToTextShardStore:
 	"""
@@ -50,19 +52,36 @@ class ImageTextToTextShardStore:
 
 	On construction, this reads `path_to_shard.parquet` into an in-memory
 	`{path: shard_file}` index. Each shard's `zipfile.ZipFile` handle is opened
-	lazily on first access and kept open for reuse, and reads are cached with
-	an `lru_cache` since the same image path is often referenced by multiple rows.
+	lazily on first access and kept open for reuse. Handles are tracked per
+	process, so a store copied into a `DataLoader` worker (forked or pickled)
+	opens its own handles rather than sharing the parent's file position.
+
+	Reads are cached in a per-store LRU bounded by total bytes (`cache_max_bytes`),
+	since the same image path is often referenced by multiple rows. Pass
+	`cache_max_bytes=0` to disable the cache.
 	"""
 
-	def __init__(self, images_dir: str):
+	def __init__(self, images_dir: str, cache_max_bytes: int = _DEFAULT_CACHE_MAX_BYTES):
 		self.images_dir = images_dir
+		self.cache_max_bytes = cache_max_bytes
 		index_path = os.path.join(images_dir, _SHARD_INDEX_FILENAME)
 		index_df = pd.read_parquet(index_path)
 		self._path_to_shard = dict(zip(index_df["path"], index_df["shard_file"]))
+		self._resetHandles()
+
+	def _resetHandles(self):
+		"""Drops all open zip handles and cached bytes, binding the store to the current process."""
+		self._pid = os.getpid()
 		self._zip_cache = {}
+		self._bytes_cache = OrderedDict()
+		self._cached_bytes = 0
 
 	def _getZip(self, shard_file: str):
-		"""Returns the open `ZipFile` handle for a shard, opening it on first access."""
+		"""Returns the open `ZipFile` handle for a shard, opening it on first access in this process."""
+		if self._pid != os.getpid():
+			# Forked into a new process: the inherited handles share the parent's file
+			# position, so abandon them (without closing, the parent still owns them).
+			self._resetHandles()
 		zf = self._zip_cache.get(shard_file)
 		if zf is None:
 			shard_path = os.path.join(self.images_dir, shard_file)
@@ -70,41 +89,76 @@ class ImageTextToTextShardStore:
 			self._zip_cache[shard_file] = zf
 		return zf
 
-	@lru_cache(maxsize=4096)
-	def _getBytesCached(self, path: str) -> bytes:
-		"""Reads raw image bytes for a path, caching repeat reads of the same path."""
-		shard_file = self._path_to_shard[path]
-		return self._getZip(shard_file).read(path)
-
 	def getBytes(self, path: str) -> bytes:
-		"""Public entry point for reading the raw bytes of a single image path."""
-		return self._getBytesCached(path)
+		"""Reads the raw bytes of a single image path, caching repeat reads of the same path."""
+		if self._pid != os.getpid():
+			self._resetHandles()
+		raw_bytes = self._bytes_cache.get(path)
+		if raw_bytes is not None:
+			self._bytes_cache.move_to_end(path)
+			return raw_bytes
+
+		shard_file = self._path_to_shard[path]
+		raw_bytes = self._getZip(shard_file).read(path)
+
+		if len(raw_bytes) <= self.cache_max_bytes:
+			self._bytes_cache[path] = raw_bytes
+			self._cached_bytes += len(raw_bytes)
+			while self._cached_bytes > self.cache_max_bytes:
+				_, evicted = self._bytes_cache.popitem(last=False)
+				self._cached_bytes -= len(evicted)
+		return raw_bytes
+
+	def close(self):
+		"""Closes every open shard handle and clears the byte cache. Handles reopen lazily on next access."""
+		if getattr(self, "_pid", None) == os.getpid():
+			for zf in self._zip_cache.values():
+				try:
+					zf.close()
+				except Exception:
+					pass
+		self._resetHandles()
+
+	def __getstate__(self):
+		# Open file handles can't be pickled (e.g. into spawned `DataLoader` workers),
+		# and the byte cache shouldn't be shipped along, so drop both.
+		state = self.__dict__.copy()
+		state["_zip_cache"] = {}
+		state["_bytes_cache"] = OrderedDict()
+		state["_cached_bytes"] = 0
+		state["_pid"] = None
+		return state
 
 	def __del__(self):
 		# Best effort cleanup, the process may already be tearing down.
-		for zf in getattr(self, "_zip_cache", {}).values():
-			try:
-				zf.close()
-			except Exception:
-				pass
+		try:
+			self.close()
+		except Exception:
+			pass
 
 
-def _makeDecodeTransform(store: ImageTextToTextShardStore):
-	"""Builds the lazy `set_transform` callback that decodes the `images` column via `store`."""
+class _DecodeTransform:
+	"""
+	The lazy `set_transform` callback that decodes the `images` column via `store`.
 
-	def decode(batch):
+	This is a module-level class rather than a closure so the dataset it is
+	attached to can be pickled into spawned `DataLoader` workers.
+	"""
+
+	def __init__(self, store: ImageTextToTextShardStore):
+		self.store = store
+
+	def __call__(self, batch):
 		decoded_rows = []
 		for images in batch["images"]:
 			decoded_row = []
 			for image_ref in images:
 				path = image_ref["path"] if isinstance(image_ref, dict) else image_ref
-				raw_bytes = store.getBytes(path)
+				raw_bytes = self.store.getBytes(path)
 				decoded_row.append(Image.open(io.BytesIO(raw_bytes)))
 			decoded_rows.append(decoded_row)
 		batch["images"] = decoded_rows
 		return batch
-
-	return decode
 
 
 def _discoverSplits(config_dir: str) -> dict:
@@ -135,7 +189,7 @@ def _discoverSplits(config_dir: str) -> dict:
 	return split_to_files
 
 
-def _fetchDefaultConfigName(repo_id: str, token: Optional[str]) -> Optional[str]:
+def _fetchDefaultConfigName(repo_id: str, token: Optional[str], cache_dir: Optional[str]) -> Optional[str]:
 	"""
 	Reads the default config name out of the dataset card's `configs` YAML front matter.
 
@@ -149,7 +203,11 @@ def _fetchDefaultConfigName(repo_id: str, token: Optional[str]) -> Optional[str]
 	"""
 	try:
 		readme_path = hf_hub_download(
-			repo_id=repo_id, repo_type="dataset", filename=_DATASET_CARD_FILENAME, token=token
+			repo_id=repo_id,
+			repo_type="dataset",
+			filename=_DATASET_CARD_FILENAME,
+			token=token,
+			cache_dir=cache_dir,
 		)
 	except EntryNotFoundError:
 		return None
@@ -179,7 +237,9 @@ def _fetchDefaultConfigName(repo_id: str, token: Optional[str]) -> Optional[str]
 	return configs[0].get("config_name")
 
 
-def _resolveConfig(repo_id: str, config: Optional[str], token: Optional[str]) -> Optional[str]:
+def _resolveConfig(
+	repo_id: str, config: Optional[str], token: Optional[str], cache_dir: Optional[str]
+) -> Optional[str]:
 	"""
 	Resolves which config's files to download, without downloading any shard.
 
@@ -208,7 +268,7 @@ def _resolveConfig(repo_id: str, config: Optional[str], token: Optional[str]) ->
 	if not available_configs:
 		raise FileNotFoundError(f"No '{_IMAGES_DIRNAME}/' folder was found in '{repo_id}' or any of its subfolders.")
 
-	default_config = _fetchDefaultConfigName(repo_id, token)
+	default_config = _fetchDefaultConfigName(repo_id, token, cache_dir)
 	if default_config in available_configs:
 		return default_config
 
@@ -221,6 +281,7 @@ def loadImageTextToTextDataset(
 	split: Optional[str] = None,
 	cache_dir: Optional[str] = None,
 	token: Optional[str] = None,
+	cache_max_bytes: int = _DEFAULT_CACHE_MAX_BYTES,
 ) -> Union["DatasetDict", "Dataset"]:
 	"""
 	Loads an AgML image-text-to-text shard dataset from the Hub.
@@ -244,7 +305,7 @@ def loadImageTextToTextDataset(
 
 	The backing `ImageTextToTextShardStore` is attached to the returned dataset
 	as a `.store` attribute rather than returned separately, so callers can
-	inspect its cache or free its open file handles (`del ds.store`) without
+	inspect its cache or free its open file handles (`ds.store.close()`) without
 	changing the common `ds = loadImageTextToTextDataset(...)` call shape.
 
 	Parameters
@@ -258,9 +319,14 @@ def loadImageTextToTextDataset(
 	split : str, optional
 		If given, only that split is returned (as a `Dataset` rather than a `DatasetDict`).
 	cache_dir : str, optional
-		The local directory to cache the downloaded repo in.
+		The local directory to cache the downloaded repo and the Arrow
+		files built from its metadata parquet(s) in.
 	token : str, optional
 		A Hugging Face Hub token, needed for private or gated repos.
+	cache_max_bytes : int, optional
+		The upper bound, in bytes, on the store's in-memory cache of raw image
+		bytes (256 MiB by default). Each `DataLoader` worker keeps its own
+		cache of up to this size. Pass `0` to disable caching.
 
 	Returns
 	-------
@@ -269,7 +335,7 @@ def loadImageTextToTextDataset(
 		`ImageTextToTextShardStore` backing the lazy image decoding attached as
 		its `.store` attribute.
 	"""
-	resolved_config = _resolveConfig(repo_id, config, token)
+	resolved_config = _resolveConfig(repo_id, config, token, cache_dir)
 	allow_patterns = None if resolved_config is None else [f"{resolved_config}/*"]
 	repo_dir = snapshot_download(
 		repo_id=repo_id,
@@ -280,13 +346,13 @@ def loadImageTextToTextDataset(
 	)
 	config_dir = repo_dir if resolved_config is None else os.path.join(repo_dir, resolved_config)
 	images_dir = os.path.join(config_dir, _IMAGES_DIRNAME)
-	store = ImageTextToTextShardStore(images_dir)
-	decode = _makeDecodeTransform(store)
+	store = ImageTextToTextShardStore(images_dir, cache_max_bytes=cache_max_bytes)
+	decode = _DecodeTransform(store)
 
 	split_to_files = _discoverSplits(config_dir)
 	dataset_dict = DatasetDict()
 	for split_name, parquet_files in split_to_files.items():
-		split_ds = Dataset.from_parquet(parquet_files, split=split_name)
+		split_ds = Dataset.from_parquet(parquet_files, split=split_name, cache_dir=cache_dir)
 		split_ds.set_transform(decode)
 		dataset_dict[split_name] = split_ds
 
