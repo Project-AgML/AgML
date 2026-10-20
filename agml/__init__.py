@@ -38,5 +38,7 @@ _setup()
 del _setup  # noqa
 
 
-# There are no top-level imported functions or classes, only the modules.
+# Besides the modules, `loadImageTextToTextDataset` is exposed at the top level
+# since it is the entry point for loading AgML image-text-to-text datasets from the Hub.
 from . import backend, data, io, synthetic, viz
+from .data import loadImageTextToTextDataset
