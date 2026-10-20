@@ -1,7 +1,7 @@
 
 SHELL := bash
 
-version := 0.8.1
+version := 0.8.2
 
 src.python := $(shell find ./agml -type f -name "*.py" || :)
 test.python := $(shell find ./tests -type f -name "*.py" || :)
