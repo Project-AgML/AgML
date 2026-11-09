@@ -9,7 +9,7 @@ import pyarrow.compute as pc
 import pyarrow.dataset as ds
 
 from agml.framework import AgMLSerializable
-from agml.ag_stats.catalog import _DIM_FILES, NASSCatalog, StrOrList, _as_list
+from agml.ag_stats.nass.catalog import _DIM_FILES, NASSCatalog, StrOrList, _as_list
 
 # The environment variable read when no `root` is passed to the loader.
 _ROOT_ENV_VAR = "AGML_NASS_PATH"
@@ -142,7 +142,7 @@ class NASSDataLoader(AgMLSerializable):
     --------
     >>> nass = NASSDataLoader()  # reads from the Hugging Face Hub
     >>> nass = NASSDataLoader("/path/to/nass-usda-full-data")  # a local copy
-    >>> df = nass.yield_data(crop="corn", utilization="grain", state="IA",
+    >>> df = nass.load_yield(crop="corn", utilization="grain", state="IA",
     ...                      county="Story", years=(2000, 2024))
     >>> nass.query("progress", crop="soybeans", state="IL", years=2023,
     ...            where={"stage": "PLANTED"}, format="polars")
@@ -288,15 +288,15 @@ class NASSDataLoader(AgMLSerializable):
 
     # Convenience wrappers, one per table.
 
-    def yield_data(self, **kwargs):
+    def load_yield(self, **kwargs):
         """Queries the `yield` table. Takes the same arguments as `query`."""
         return self.query("yield", **kwargs)
 
-    def county_yield(self, **kwargs):
+    def load_county_yield(self, **kwargs):
         """Queries the `county_yield` table. Takes the same arguments as `query`."""
         return self.query("county_yield", **kwargs)
 
-    def area_production(self, statistic: StrOrList = None, **kwargs):
+    def load_area_production(self, statistic: StrOrList = None, **kwargs):
         """Queries the `area_production` table.
 
         `statistic` is one or more of `area_planted`, `area_harvested`, and
@@ -305,16 +305,16 @@ class NASSDataLoader(AgMLSerializable):
         where = self._merge_where(kwargs, statistic=statistic)
         return self.query("area_production", where=where, **kwargs)
 
-    def census(self, statistic: StrOrList = None, **kwargs):
+    def load_census(self, statistic: StrOrList = None, **kwargs):
         """Queries the `census` table. See `area_production` for `statistic`."""
         where = self._merge_where(kwargs, statistic=statistic)
         return self.query("census", where=where, **kwargs)
 
-    def forecast(self, **kwargs):
+    def load_forecast(self, **kwargs):
         """Queries the `forecast` table. Takes the same arguments as `query`."""
         return self.query("forecast", **kwargs)
 
-    def progress(self, stage: StrOrList = None, **kwargs):
+    def load_progress(self, stage: StrOrList = None, **kwargs):
         """Queries the `progress` table, e.g. `stage="planted"`.
 
         `stage` ignores letter case and an optional `PCT ` prefix, so
@@ -325,11 +325,11 @@ class NASSDataLoader(AgMLSerializable):
         where = self._merge_where(kwargs, stage=stage)
         return self.query("progress", where=where, **kwargs)
 
-    def condition(self, long: bool = False, **kwargs):
+    def load_condition(self, long: bool = False, **kwargs):
         """Queries the weekly condition ratings, wide (default) or long."""
         return self.query("condition_long" if long else "condition", **kwargs)
 
-    def boundaries(self, level: str = "county", geometry: bool = True, format: str = "pandas", path: Optional[str] = None):
+    def load_boundaries(self, level: str = "county", geometry: bool = True, format: str = "pandas", path: Optional[str] = None):
         """Returns the 2020 Census county or state boundaries.
 
         Each row has the FIPS code (`GEOID`), names, area, and centroid.

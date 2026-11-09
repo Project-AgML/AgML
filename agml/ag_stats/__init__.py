@@ -13,18 +13,30 @@
 # limitations under the License.
 
 """
-This module gives access to USDA NASS crop statistics (yield, area,
-production, crop progress, crop condition, and forecasts) at national,
-state, district, and county level, with queries by crop, place, and year.
+Agricultural statistics, one subpackage per data source:
+
+- `agml.ag_stats.nass`: USDA NASS crop statistics for the United States.
+- `agml.ag_stats.calicropyield`: the California Crop Yield Benchmark
+  (county crop yield with satellite, ET, climate, and soil layers).
+
+Each source has its own optional dependencies, so a source is only
+imported when it is first used, e.g. `agml.ag_stats.nass.NASSDataLoader()`
+or `from agml.ag_stats.calicropyield import CaliCropYieldLoader`.
 """
 
-try:
-    import pandas  # noqa: F401
-    import pyarrow  # noqa: F401
-except ImportError:
-    raise ImportError(
-        "The `agml.ag_stats` module needs pandas and pyarrow. Install them with `pip install agml[ag_stats]`."
-    )
+import importlib as _importlib
 
-from .catalog import NASSCatalog
-from .loader import DEFAULT_REPO_ID, FORMATS, TABLES, NASSDataLoader
+# Every data source. Add a new source's subpackage name here.
+SOURCES = ("nass", "calicropyield")
+
+__all__ = list(SOURCES)
+
+
+def __getattr__(name):
+    if name in SOURCES:
+        return _importlib.import_module(f".{name}", __name__)
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
+
+def __dir__():
+    return sorted(list(globals()) + list(SOURCES))

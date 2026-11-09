@@ -2,9 +2,9 @@ import pytest
 
 pytest.importorskip("pyarrow")
 
-from agml.ag_stats import NASSCatalog
+from agml.ag_stats.nass import NASSCatalog
 
-from nass_fixtures import CORN_GRAIN, CORN_SILAGE, SOYBEANS
+from .nass_fixtures import CORN_GRAIN, CORN_SILAGE, SOYBEANS
 
 
 @pytest.fixture(scope="module")

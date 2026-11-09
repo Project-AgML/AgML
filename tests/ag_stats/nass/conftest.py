@@ -1,5 +1,5 @@
 import pytest
-from nass_fixtures import CORN_GRAIN, CORN_SILAGE, SOYBEANS
+from .nass_fixtures import CORN_GRAIN, CORN_SILAGE, SOYBEANS
 
 pa = pytest.importorskip("pyarrow")
 pq = pytest.importorskip("pyarrow.parquet")
