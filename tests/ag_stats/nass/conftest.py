@@ -1,9 +1,6 @@
 import pytest
 from .nass_fixtures import CORN_GRAIN, CORN_SILAGE, SOYBEANS
 
-pa = pytest.importorskip("pyarrow")
-pq = pytest.importorskip("pyarrow.parquet")
-
 
 # ── Fixture dataset ──────────────────────────────────────────────────────────
 # A few rows per table, shaped like the real NASS parquet files.
@@ -84,6 +81,9 @@ def _fact_rows(years):
 
 
 def _write(path, data):
+    import pyarrow as pa
+    import pyarrow.parquet as pq
+
     table = pa.Table.from_pylist(data) if isinstance(data, list) else pa.table(data)
     pq.write_table(table, path)
 
@@ -91,6 +91,8 @@ def _write(path, data):
 @pytest.fixture(scope="session")
 def nass_root(tmp_path_factory):
     """A directory laid out like the real dataset: `<root>/parquet/*.parquet`."""
+    # Skipped here, not at module level: a skip while loading a conftest aborts the whole run.
+    pytest.importorskip("pyarrow")
     root = tmp_path_factory.mktemp("nass")
     parquet = root / "parquet"
     parquet.mkdir()

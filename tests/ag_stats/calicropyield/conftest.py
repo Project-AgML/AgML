@@ -4,26 +4,21 @@ import numpy as np
 import pandas as pd
 import pytest
 
-pytest.importorskip("rasterio")
-pytest.importorskip("xarray")
-
-import rasterio
-import xarray as xr
-from rasterio.transform import from_origin
-
 from .calicropyield_fixtures import CDL, LANDSAT_BANDS, RES
 
 # A 4x6 pixel grid at the CDL resolution, in the corner of Yolo County.
-_TRANSFORM = from_origin(-122.0, 38.6, RES, RES)
 _HEIGHT, _WIDTH = CDL.shape
 
 
 def _write_tif(path, data, nodata=None, descriptions=None):
+    import rasterio
+    from rasterio.transform import from_origin
+
     path.parent.mkdir(parents=True, exist_ok=True)
     data = data if data.ndim == 3 else data[None]
     with rasterio.open(
         path, "w", driver="GTiff", height=_HEIGHT, width=_WIDTH, count=data.shape[0],
-        dtype=data.dtype, crs="EPSG:4326", transform=_TRANSFORM, nodata=nodata,
+        dtype=data.dtype, crs="EPSG:4326", transform=from_origin(-122.0, 38.6, RES, RES), nodata=nodata,
     ) as dst:
         dst.write(data)
         for i, name in enumerate(descriptions or []):
@@ -37,6 +32,9 @@ def _grid_coords(n_y, n_x, step):
 @pytest.fixture(scope="session")
 def cali_root(tmp_path_factory):
     """A directory laid out like the Hub repo, with Yolo 2020 and 2021 data."""
+    # Skipped here, not at module level: a skip while loading a conftest aborts the whole run.
+    pytest.importorskip("rasterio")
+    xr = pytest.importorskip("xarray")
     root = tmp_path_factory.mktemp("calicropyield")
     county = root / "counties" / "Yolo"
 
