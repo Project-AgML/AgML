@@ -18,9 +18,13 @@ YIELD_TABLE = "yield/county_crop_yield.parquet"
 YIELD_DETAIL_TABLE = "yield/county_crop_yield_detail.parquet"
 CDL_CROSSWALK = "yield/metadata/cdl_crop_crosswalk.csv"
 COUNTY_BOUNDARIES = "reference/California_Counties.geojson"
+DATASET_CARD = "README.md"
+
+# No layer or table has data for this year.
+MISSING_YEAR = 2012
 
 # 2012 is missing from every layer.
-_YEARS = tuple(y for y in range(2008, 2024) if y != 2012)
+_YEARS = tuple(y for y in range(2008, 2024) if y != MISSING_YEAR)
 
 
 @dataclass(frozen=True)
@@ -158,23 +162,39 @@ def county_slug(county: str) -> str:
 
 
 def resolve_years(name: str, years: Union[None, int, Tuple[int, int], Iterable[int]]) -> List[int]:
-    """Turns a year, an inclusive `(start, end)` range, or a list into the years a layer has.
+    """Turns a year, an inclusive `(start, end)` range, or a list into the years of a layer.
 
-    Raises an error for years the layer does not have, so a typo is not
-    silently skipped. `None` means every year.
+    `None` means every year. See `check_years` for how missing years are handled.
     """
     available = layer(name).years
     if years is None:
         return list(available)
+    return check_years(years, available, f"Layer '{name}'")
+
+
+def check_years(years: Union[int, Tuple[int, int], Iterable[int]], available: Iterable[int], what: str) -> List[int]:
+    """Returns the requested years, or raises an error naming the years that have no data.
+
+    A `(start, end)` range means every year from `start` to `end`, so a
+    range that reaches past the data raises an error instead of being cut
+    short. The one exception is 2012, which no layer or table has: a range
+    skips it, but asking for 2012 directly raises an error.
+    """
+    available = sorted(int(y) for y in available)
     if isinstance(years, int):
         wanted = [years]
     elif isinstance(years, tuple) and len(years) == 2:
-        wanted = [y for y in available if years[0] <= y <= years[1]]
+        start, end = (int(y) for y in years)
+        if start > end:
+            raise ValueError(f"The year range {years} is reversed. Pass it as (start, end).")
+        wanted = [y for y in range(start, end + 1) if y != MISSING_YEAR]
     else:
         wanted = [int(y) for y in years]
     missing = [y for y in wanted if y not in available]
     if missing:
-        raise ValueError(f"Layer '{name}' has no data for {missing}. It covers {available[0]}-{available[-1]} except 2012.")
+        raise ValueError(
+            f"{what} has no data for {missing}. It covers {available[0]}-{available[-1]} except {MISSING_YEAR}."
+        )
     return wanted
 
 

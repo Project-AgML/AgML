@@ -10,7 +10,7 @@ pytest.importorskip("xarray")
 
 from shapely.geometry import box
 
-from agml.ag_stats.calicropyield import DEFAULT_REPO_ID, CaliCropYieldLoader
+from agml.ag_stats.calicropyield import DEFAULT_REPO_ID, CaliCropYieldLoader, DownloadError
 
 from .calicropyield_fixtures import CDL, LANDSAT_BANDS, RES
 
@@ -19,6 +19,13 @@ try:
 except ImportError:
     zarr = None
 needs_zarr = pytest.mark.skipif(zarr is None, reason="zarr is not installed")
+
+
+# A triangle over the top-left 4x4 pixels, so part of the crop is outside it.
+TRIANGLE = {
+    "type": "Polygon",
+    "coordinates": [[[-122.0, 38.6], [-122.0 + 4 * RES, 38.6], [-122.0, 38.6 - 4 * RES], [-122.0, 38.6]]],
+}
 
 
 @pytest.fixture(scope="module")
@@ -33,8 +40,7 @@ class TestInit:
         monkeypatch.setenv("AGML_CALICROPYIELD_PATH", str(cali_root))
         assert CaliCropYieldLoader().root == os.path.realpath(cali_root)
 
-    def test_defaults_to_hub(self, monkeypatch):
-        monkeypatch.delenv("AGML_CALICROPYIELD_PATH", raising=False)
+    def test_defaults_to_hub(self, hub):
         loader = CaliCropYieldLoader()
         assert loader.repo_id == DEFAULT_REPO_ID and loader.root is None
 
@@ -80,6 +86,18 @@ class TestRasters:
     def test_irrigation(self, cali):
         assert cali.load_irrigation("Yolo", 2021).dims == ("y", "x")
 
+    def test_irrigation_geometry_fill_is_not_a_class(self, cali):
+        # Irrigation has no no-data value and uses 0 for "not irrigated", so 0 cannot mark "outside".
+        irrigation = cali.load_irrigation("Yolo", 2020, geometry=TRIANGLE)
+        assert irrigation.attrs["nodata"] == 255
+        outside = irrigation.values == 255
+        assert outside.any() and not outside.all()
+        full = cali.load_irrigation("Yolo", 2020).sel(x=irrigation.x, y=irrigation.y)
+        np.testing.assert_array_equal(irrigation.values[~outside], full.values[~outside])
+
+    def test_cdl_geometry_fill_is_files_nodata(self, cali):
+        assert cali.load_cdl("Yolo", 2020, geometry=TRIANGLE).attrs["nodata"] == 0
+
     def test_landsat(self, cali):
         landsat = cali.load_landsat("Yolo", 2020, months=[6, 7])
         assert landsat.dims == ("month", "band", "y", "x")
@@ -99,8 +117,7 @@ class TestRasters:
         assert (cdl.values == 54).all()
 
     def test_geometry_fills_floats_with_nan(self, cali):
-        triangle = {"type": "Polygon", "coordinates": [[[-122.0, 38.6], [-122.0 + 4 * RES, 38.6], [-122.0, 38.6 - 4 * RES], [-122.0, 38.6]]]}
-        et = cali.load_et("Yolo", 2020, months=[1], geometry=triangle)
+        et = cali.load_et("Yolo", 2020, months=[1], geometry=TRIANGLE)
         assert np.isnan(et.values).any() and not np.isnan(et.values).all()
 
     def test_bad_month(self, cali):
@@ -169,6 +186,10 @@ class TestTables:
         df = cali.load_yield(years=(2020, 2021))
         assert set(df["year"]) == {2020, 2021}
 
+    def test_yield_range_past_data_raises(self, cali):
+        with pytest.raises(ValueError, match=r"\[2022, 2023\]"):
+            cali.load_yield(years=(2020, 2023))
+
     def test_yield_detail(self, cali):
         df = cali.load_yield(crop="tomatoes processing", detail=True)
         assert list(df["Yield_Tons_Per_Hectare"]) == [95.0]
@@ -218,25 +239,45 @@ class TestDownload:
 # ── Hugging Face Hub ──────────────────────────────────────────────────────────
 
 class FakeHub:
-    """Stands in for `huggingface_hub`, serving the fixture dataset from a folder."""
+    """Stands in for `huggingface_hub`, serving the fixture dataset as one commit."""
+
+    COMMIT = "0123456789abcdef0123456789abcdef01234567"
 
     def __init__(self, cali_root, tmp_path):
-        self.folder = tmp_path / "snapshot"
+        # Like the Hugging Face cache, files sit in a folder named after the commit.
+        self.folder = tmp_path / "snapshots" / self.COMMIT
         shutil.copytree(cali_root, self.folder)
-        self.downloads = []
+        self.downloads, self.listings, self.card_requests = [], [], 0
+        self.fail = set()
 
     def hf_hub_download(self, repo_id, repo_type, filename, revision, cache_dir, token):
         from huggingface_hub.errors import EntryNotFoundError
 
         assert repo_id == DEFAULT_REPO_ID and repo_type == "dataset"
+        if filename == "README.md":
+            assert revision in (None, "main", self.COMMIT)
+            self.card_requests += 1
+        else:
+            assert revision == self.COMMIT, "files must come from the pinned commit"
+            self.downloads.append(filename)
+        if filename in self.fail:
+            raise ConnectionError("connection reset")
         if not (self.folder / filename).is_file():
             raise EntryNotFoundError(filename)
-        self.downloads.append(filename)
         return str(self.folder / filename)
 
-    def snapshot_download(self, repo_id, repo_type, revision, cache_dir, token, allow_patterns):
-        self.downloads.extend(allow_patterns)
-        return str(self.folder)
+    def list_repo_tree(self, repo_id, path_in_repo, recursive, repo_type, revision, token):
+        from huggingface_hub.errors import EntryNotFoundError
+        from huggingface_hub.hf_api import RepoFile, RepoFolder
+
+        assert recursive and revision == self.COMMIT
+        self.listings.append(path_in_repo)
+        base = self.folder / path_in_repo
+        if not base.is_dir():
+            raise EntryNotFoundError(path_in_repo)
+        for path in sorted(base.rglob("*")):
+            rel = str(path.relative_to(self.folder))
+            yield RepoFile(path=rel, size=1, oid="x") if path.is_file() else RepoFolder(path=rel, oid="x")
 
 
 @pytest.fixture
@@ -246,7 +287,7 @@ def hub(cali_root, tmp_path, monkeypatch):
     fake = FakeHub(cali_root, tmp_path)
     monkeypatch.delenv("AGML_CALICROPYIELD_PATH", raising=False)
     monkeypatch.setattr(huggingface_hub, "hf_hub_download", fake.hf_hub_download)
-    monkeypatch.setattr(huggingface_hub, "snapshot_download", fake.snapshot_download)
+    monkeypatch.setattr(huggingface_hub, "list_repo_tree", fake.list_repo_tree)
     return fake
 
 
@@ -263,12 +304,68 @@ class TestHub:
     def test_zarr_store(self, hub):
         ds = CaliCropYieldLoader().load_soil("Yolo")
         assert "soc0_100" in ds
-        assert hub.downloads == ["counties/Yolo/soil/2020/Yolo_soil.zarr/*"]
+        assert hub.listings == ["counties/Yolo/soil"]
+        assert all(d.startswith("counties/Yolo/soil/2020/Yolo_soil.zarr/") for d in hub.downloads)
+
+    @needs_zarr
+    def test_missing_store(self, hub):
+        with pytest.raises(FileNotFoundError, match="not in the dataset"):
+            CaliCropYieldLoader().load_climate("Fresno", years=2020)
 
     def test_missing_file(self, hub):
         with pytest.raises(FileNotFoundError, match="not in the dataset"):
             CaliCropYieldLoader().load_cdl("Fresno", 2020)
 
-    def test_pickle_keeps_repo(self, hub):
-        clone = pickle.loads(pickle.dumps(CaliCropYieldLoader(revision="abc123")))
-        assert clone.repo_id == DEFAULT_REPO_ID and clone.revision == "abc123"
+
+class TestRevision:
+    def test_latest_is_pinned_to_its_commit(self, hub):
+        loader = CaliCropYieldLoader()
+        assert loader.revision == FakeHub.COMMIT
+        assert FakeHub.COMMIT[:7] in repr(loader)
+
+    def test_branch_is_resolved(self, hub):
+        assert CaliCropYieldLoader(revision="main").revision == FakeHub.COMMIT
+
+    def test_commit_is_used_as_is(self, hub):
+        assert CaliCropYieldLoader(revision=FakeHub.COMMIT).revision == FakeHub.COMMIT
+        assert hub.card_requests == 0
+
+    def test_local_copy_has_no_revision(self, cali):
+        assert cali.revision is None
+
+    def test_pickle_keeps_commit(self, hub):
+        clone = pickle.loads(pickle.dumps(CaliCropYieldLoader()))
+        assert clone.repo_id == DEFAULT_REPO_ID and clone.revision == FakeHub.COMMIT
+        assert len(clone.load_yield(county="Yolo")) == 3
+
+
+class TestBatchedDownload:
+    def test_one_listing_per_county_layer(self, hub):
+        paths = CaliCropYieldLoader().download_landsat("Yolo", years=(2020, 2021), months=[1, 2])
+        assert len(paths) == 4 and all(os.path.isfile(p) for p in paths)
+        assert hub.listings == ["counties/Yolo/landsat"]
+
+    @needs_zarr
+    def test_zarr_stores_in_one_batch(self, hub):
+        paths = CaliCropYieldLoader().download_climate("Yolo", years=[2020, 2021])
+        assert [os.path.basename(p) for p in paths] == ["DayMet_Yolo_2020.zarr", "DayMet_Yolo_2021.zarr"]
+        assert all(os.path.isdir(p) for p in paths)
+        assert hub.listings == ["counties/Yolo/climate"]
+
+    def test_missing_files_are_skipped(self, hub):
+        paths = CaliCropYieldLoader().download("cdl", ["Yolo", "Fresno"], years=2020)
+        assert [os.path.basename(p) for p in paths] == ["Yolo_2020.tif"]
+        assert hub.listings == ["counties/Fresno/cdl", "counties/Yolo/cdl"]
+
+    def test_failed_downloads_raise_and_others_finish(self, hub):
+        failing = "counties/Yolo/cdl/2021/Yolo_2021.tif"
+        hub.fail.add(failing)
+        with pytest.raises(DownloadError, match="1 file") as info:
+            CaliCropYieldLoader().download_cdl("Yolo", years=(2020, 2021))
+        assert list(info.value.failed) == [failing]
+        assert isinstance(info.value.failed[failing], ConnectionError)
+        assert "counties/Yolo/cdl/2020/Yolo_2020.tif" in hub.downloads
+
+    def test_bad_month(self, hub):
+        with pytest.raises(ValueError, match="Months"):
+            CaliCropYieldLoader().download_et("Yolo", years=2020, months=[0])

@@ -101,6 +101,7 @@ def cali_root(tmp_path_factory):
         }
     ).to_csv(root / "yield" / "metadata" / "cdl_crop_crosswalk.csv", index=False)
 
+    (root / "README.md").write_text("Dataset card")
     (root / "reference").mkdir()
     square = [[-122.0, 38.6], [-121.9, 38.6], [-121.9, 38.5], [-122.0, 38.5], [-122.0, 38.6]]
     feature = {"type": "Feature", "properties": {"NAME": "Yolo County"}, "geometry": {"type": "Polygon", "coordinates": [square]}}

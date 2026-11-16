@@ -1,6 +1,8 @@
 """Downloads and reads the California Crop Yield Benchmark."""
 
 import os
+import re
+from concurrent.futures import ThreadPoolExecutor
 from typing import Dict, Iterable, List, Optional, Tuple, Union
 
 import numpy as np
@@ -20,6 +22,27 @@ _ROOT_ENV_VAR = "AGML_CALICROPYIELD_PATH"
 
 StrOrList = Union[str, Iterable[str], None]
 YearSpec = Union[None, int, Tuple[int, int], Iterable[int]]
+
+# Files downloaded at the same time from the Hub.
+_DOWNLOAD_WORKERS = 8
+
+
+class DownloadError(RuntimeError):
+    """Raised when files that are in the dataset fail to download.
+
+    `failed` maps each repo path that failed to the exception it raised.
+    Files that finished are kept in the cache, so running the same call
+    again only downloads the rest.
+    """
+
+    def __init__(self, failed: Dict[str, Exception]):
+        self.failed = failed
+        first_path, first_error = next(iter(failed.items()))
+        super().__init__(
+            f"{len(failed)} file(s) failed to download, e.g. '{first_path}' "
+            f"({type(first_error).__name__}: {first_error}). Files that finished are cached, "
+            f"so running the same call again only downloads the rest. See `.failed` for every file."
+        )
 
 
 class CaliCropYieldLoader(AgMLSerializable):
@@ -53,8 +76,10 @@ class CaliCropYieldLoader(AgMLSerializable):
     repo_id : str, optional
         The Hugging Face dataset repo to read from.
     revision : str, optional
-        A branch, tag, or commit of `repo_id`. Pin a commit to make
-        results reproducible. Defaults to the latest version.
+        A branch, tag, or commit of `repo_id`. Defaults to the latest
+        version. A branch or tag is resolved to its commit when the loader
+        is created, so every file comes from the same version of the
+        dataset. Pass a commit hash to make results reproducible.
     cache_dir : str, optional
         Where downloaded files are kept. Defaults to the Hugging Face cache.
     token : str, optional
@@ -85,15 +110,15 @@ class CaliCropYieldLoader(AgMLSerializable):
             if not os.path.isdir(root):
                 raise FileNotFoundError(f"The California Crop Yield Benchmark directory '{root}' does not exist.")
         self._root = root
-        # `repo_id` is only kept in Hub mode; `None` marks a local copy.
+        # `repo_id` and `revision` are only kept in Hub mode; `None` marks a local copy.
         self._repo_id = None if root is not None else repo_id
-        self._revision = revision
         self._cache_dir = cache_dir
         self._token = token
+        self._revision = None if root is not None else self._resolve_commit(revision)
 
     def __repr__(self):
         if self._repo_id is not None:
-            return f"<CaliCropYieldLoader: {self._repo_id}@{self._revision or 'main'}>"
+            return f"<CaliCropYieldLoader: {self._repo_id}@{self._revision[:7]}>"
         return f"<CaliCropYieldLoader: {self._root}>"
 
     @property
@@ -108,7 +133,7 @@ class CaliCropYieldLoader(AgMLSerializable):
 
     @property
     def revision(self) -> Optional[str]:
-        """The revision of `repo_id` the data comes from."""
+        """The commit of `repo_id` the data comes from, or `None` for a local copy."""
         return self._revision
 
     # Listings.
@@ -145,8 +170,10 @@ class CaliCropYieldLoader(AgMLSerializable):
         """Downloads layer files without loading them, and returns their local paths.
 
         Use this to fetch data ahead of time, e.g. before going offline.
-        Files missing from the dataset are skipped with a warning. Zarr
-        layers return the path of each store (a directory).
+        Files are downloaded in parallel. Files that are not in the dataset
+        are skipped with a warning. Files that are in the dataset but fail
+        to download raise a `DownloadError` that lists them. Zarr layers
+        return the path of each store (a directory).
 
         Parameters
         ----------
@@ -161,19 +188,21 @@ class CaliCropYieldLoader(AgMLSerializable):
             Months of the monthly layers (`landsat`, `et`). Defaults to all.
         """
         spec = catalog.layer(layer)
-        months = list(months) if months is not None else list(range(1, 13))
-        paths, missing = [], []
-        for county in _as_list(counties):
-            slug = catalog.county_slug(county)
-            for year in catalog.resolve_years(layer, years):
-                for month in months if spec.monthly else [None]:
-                    try:
-                        paths.append(self._layer_path(layer, slug, year, month))
-                    except FileNotFoundError:
-                        missing.append(spec.path(layer, slug, year, month))
+        months = _check_months(months) if spec.monthly else [None]
+        targets = [
+            spec.path(layer, catalog.county_slug(county), year, month)
+            for county in _as_list(counties)
+            for year in catalog.resolve_years(layer, years)
+            for month in months
+        ]
+        if self._repo_id is None:
+            found = {t: os.path.join(self._root, t) for t in targets if os.path.exists(os.path.join(self._root, t))}
+            missing = [t for t in targets if t not in found]
+        else:
+            found, missing = self._fetch(targets)
         if missing:
             log(f"{len(missing)} file(s) are not in the dataset and were skipped: {missing[:5]}")
-        return paths
+        return [found[t] for t in targets if t in found]
 
     def download_cdl(self, counties: StrOrList, years: YearSpec = None) -> List[str]:
         """Downloads Cropland Data Layer GeoTIFFs. See `download`."""
@@ -228,7 +257,10 @@ class CaliCropYieldLoader(AgMLSerializable):
         return cdl.isin(catalog.cdl_codes(crops)).rename("crop_mask")
 
     def load_irrigation(self, county: str, year: int, geometry=None) -> xr.DataArray:
-        """Reads irrigated land as a `(y, x)` array: 1 irrigated, 0 not irrigated."""
+        """Reads irrigated land as a `(y, x)` array: 1 irrigated, 0 not irrigated.
+
+        With `geometry`, pixels outside it are 255, the value in `attrs["nodata"]`.
+        """
         return self._read_raster("irrigation", county, year, geometry=geometry)[0]
 
     def load_landsat(self, county: str, year: int, months: Optional[Iterable[int]] = None, geometry=None) -> xr.DataArray:
@@ -319,7 +351,7 @@ class CaliCropYieldLoader(AgMLSerializable):
             crops = {c.strip().lower() for c in _as_list(crop)}
             keep &= df[crop_col].str.lower().isin(crops)
         if years is not None:
-            keep &= df[year_col].isin(_years_list(years, df[year_col]))
+            keep &= df[year_col].isin(catalog.check_years(years, df[year_col].unique(), "The yield table"))
         return df[keep].sort_values([county_col, crop_col, year_col]).reset_index(drop=True)
 
     def yield_crops(self) -> List[str]:
@@ -379,22 +411,89 @@ class CaliCropYieldLoader(AgMLSerializable):
         """Returns the local path of a Zarr store, downloading it from the Hub if needed."""
         if self._repo_id is None:
             local = os.path.join(self._root, path)
-        else:
-            from huggingface_hub import snapshot_download
+            if not os.path.isdir(local):
+                raise FileNotFoundError(f"The Zarr store '{path}' is missing: '{local}'.")
+            return local
+        found, missing = self._fetch([path])
+        if missing:
+            raise FileNotFoundError(f"The Zarr store '{path}' is not in the dataset '{self._repo_id}'.")
+        return found[path]
 
-            # A store is a directory of small files, so fetch it in one call.
-            folder = snapshot_download(
+    def _resolve_commit(self, revision: Optional[str]) -> str:
+        """Returns the commit hash of `revision`, so every file comes from one version of the dataset."""
+        if revision is not None and re.fullmatch(r"[0-9a-f]{40}", revision):
+            return revision
+        from huggingface_hub import hf_hub_download
+
+        # The Hugging Face cache names each snapshot folder after its commit. This
+        # also works offline once the dataset card is cached.
+        card = hf_hub_download(
+            repo_id=self._repo_id,
+            repo_type="dataset",
+            filename=catalog.DATASET_CARD,
+            revision=revision,
+            cache_dir=self._cache_dir,
+            token=self._token,
+        )
+        return os.path.basename(os.path.dirname(card))
+
+    def _fetch(self, targets: List[str]) -> Tuple[Dict[str, str], List[str]]:
+        """Downloads files and Zarr stores from the Hub in one batch.
+
+        Returns the local path of every target in the dataset, and the
+        targets that are not in it. Raises a `DownloadError` that lists
+        every file that is in the dataset but failed to download.
+        """
+        from huggingface_hub import hf_hub_download, list_repo_tree
+        from huggingface_hub.errors import EntryNotFoundError
+        from huggingface_hub.hf_api import RepoFile
+
+        token = getattr(self, "_token", None)  # not serialized
+
+        # List each layer folder (`counties/<County>/<layer>`) once to see which files exist.
+        listed = set()
+        for folder in sorted({"/".join(t.split("/")[:3]) for t in targets}):
+            try:
+                entries = list_repo_tree(
+                    self._repo_id, folder, recursive=True, repo_type="dataset", revision=self._revision, token=token
+                )
+                listed.update(entry.path for entry in entries if isinstance(entry, RepoFile))
+            except EntryNotFoundError:
+                pass  # The whole folder is missing.
+
+        # A target is either one file or a Zarr store, i.e. every file under it.
+        files = {t: [t] if t in listed else sorted(f for f in listed if f.startswith(t + "/")) for t in targets}
+        wanted = [f for names in files.values() for f in names]
+
+        def download(filename):
+            return hf_hub_download(
                 repo_id=self._repo_id,
                 repo_type="dataset",
+                filename=filename,
                 revision=self._revision,
                 cache_dir=self._cache_dir,
-                token=getattr(self, "_token", None),
-                allow_patterns=[f"{path}/*"],
+                token=token,
             )
-            local = os.path.join(folder, path)
-        if not os.path.isdir(local):
-            raise FileNotFoundError(f"The Zarr store '{path}' is not in the dataset.")
-        return local
+
+        local, failed = {}, {}
+        with ThreadPoolExecutor(max_workers=_DOWNLOAD_WORKERS) as pool:
+            futures = {f: pool.submit(download, f) for f in wanted}
+            for f, future in futures.items():
+                try:
+                    local[f] = future.result()
+                except Exception as error:
+                    failed[f] = error
+        if failed:
+            raise DownloadError(failed)
+
+        found = {}
+        for target, names in files.items():
+            if names:
+                # The cache keeps the repo layout, so a store's folder sits above its files.
+                first = local[names[0]]
+                found[target] = first if names == [target] else first[: len(first) - len(names[0])] + target
+        missing = [t for t, names in files.items() if not names]
+        return found, missing
 
     def _layer_path(self, layer: str, slug: str, year: int, month: Optional[int]) -> str:
         spec = catalog.LAYERS[layer]
@@ -406,13 +505,18 @@ class CaliCropYieldLoader(AgMLSerializable):
         catalog.resolve_years(layer, year)
         path = self._layer_path(layer, catalog.county_slug(county), year, month)
         with rasterio.open(path) as src:
+            nodata = src.nodata
             if geometry is None:
                 data, transform = src.read(), src.transform
             else:
-                fill = np.nan if np.issubdtype(np.dtype(src.dtypes[0]), np.floating) else (src.nodata or 0)
-                data, transform = rasterio.mask.mask(src, [geometry], crop=True, nodata=fill)
+                # Pixels outside the geometry get the file's no-data value. Files without
+                # one get NaN or the dtype's maximum, never a value that could be a class.
+                if nodata is None:
+                    dtype = np.dtype(src.dtypes[0])
+                    nodata = np.nan if np.issubdtype(dtype, np.floating) else np.iinfo(dtype).max
+                data, transform = rasterio.mask.mask(src, [geometry], crop=True, nodata=nodata)
             bands = list(src.descriptions) if all(src.descriptions) else list(range(1, src.count + 1))
-            attrs = {"crs": src.crs.to_string(), "transform": tuple(transform)[:6], "nodata": src.nodata}
+            attrs = {"crs": src.crs.to_string(), "transform": tuple(transform)[:6], "nodata": nodata}
 
         height, width = data.shape[1:]
         x = transform.c + transform.a * (np.arange(width) + 0.5)
@@ -422,9 +526,7 @@ class CaliCropYieldLoader(AgMLSerializable):
         )
 
     def _read_monthly(self, layer, county, year, months, geometry) -> xr.DataArray:
-        months = list(months) if months is not None else list(range(1, 13))
-        if any(m not in range(1, 13) for m in months):
-            raise ValueError(f"Months must be between 1 and 12, got {months}.")
+        months = _check_months(months)
         arrays = [self._read_raster(layer, county, year, month, geometry) for month in months]
         return xr.concat(arrays, dim=pd.Index(months, name="month"), join="override")
 
@@ -455,9 +557,8 @@ def _as_list(value) -> list:
     return [value] if isinstance(value, str) else list(value)
 
 
-def _years_list(years: YearSpec, available: pd.Series) -> List[int]:
-    if isinstance(years, int):
-        return [years]
-    if isinstance(years, tuple) and len(years) == 2:
-        return [y for y in available.unique() if years[0] <= y <= years[1]]
-    return [int(y) for y in years]
+def _check_months(months: Optional[Iterable[int]]) -> List[int]:
+    months = list(months) if months is not None else list(range(1, 13))
+    if any(m not in range(1, 13) for m in months):
+        raise ValueError(f"Months must be between 1 and 12, got {months}.")
+    return months

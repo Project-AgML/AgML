@@ -32,6 +32,18 @@ class TestYears:
         assert catalog.resolve_years("cdl", 2024) == [2024]
         assert catalog.LAYERS["climate"].years[-1] == 2022
 
+    def test_range_past_data_raises(self):
+        with pytest.raises(ValueError, match=r"\[2023\]"):
+            catalog.resolve_years("climate", (2020, 2023))
+
+    def test_range_outside_data_raises(self):
+        with pytest.raises(ValueError, match="2030"):
+            catalog.resolve_years("et", (2030, 2031))
+
+    def test_reversed_range_raises(self):
+        with pytest.raises(ValueError, match="reversed"):
+            catalog.resolve_years("et", (2021, 2019))
+
     @pytest.mark.parametrize("year", [2012, 2030])
     def test_missing_year(self, year):
         with pytest.raises(ValueError, match=str(year)):

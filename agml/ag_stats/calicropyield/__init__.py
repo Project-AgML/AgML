@@ -32,6 +32,6 @@ except ImportError:
     )
 
 from .catalog import CDL_CLASSES, COUNTIES, DEFAULT_REPO_ID, LAYERS
-from .loader import CaliCropYieldLoader
+from .loader import CaliCropYieldLoader, DownloadError
 
-__all__ = ["CaliCropYieldLoader", "CDL_CLASSES", "COUNTIES", "DEFAULT_REPO_ID", "LAYERS"]
+__all__ = ["CaliCropYieldLoader", "DownloadError", "CDL_CLASSES", "COUNTIES", "DEFAULT_REPO_ID", "LAYERS"]
