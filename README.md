@@ -130,6 +130,86 @@ The cache is bounded by total size, 256 MiB by default; pass `cache_max_bytes=` 
 If you're using this with a PyTorch `DataLoader`, prefer `num_workers > 0`. Each worker process opens its
 own shard handles (and keeps its own byte cache), whether workers are forked or spawned.
 
+### Agricultural Statistics
+
+`agml.ag_stats` holds crop statistics, one subpackage per data source. Each source has its own extra, so only the
+packages for the sources you use are installed:
+
+| Source | Module | Data |
+|---|---|---|
+| USDA NASS | `agml.ag_stats.nass` | United States crop statistics at national, state, district, and county level |
+| California Crop Yield Benchmark | `agml.ag_stats.calicropyield` | California county crop yield with satellite, ET, climate, and soil layers |
+
+#### USDA NASS Crop Statistics
+
+`agml.ag_stats.nass` queries USDA NASS crop statistics (yield, area and production, Census of Agriculture, crop progress,
+crop condition, and yield forecasts) at national, state, district, and county level. It needs the `ag_stats` extra
+(`pip install agml[ag_stats]`). The data is read from the
+[Project-AgML/usda_nass_crop_statistics](https://huggingface.co/datasets/Project-AgML/usda_nass_crop_statistics)
+dataset on Hugging Face. Each table is downloaded the first time it is queried and cached after that:
+
+```python
+from agml.ag_stats.nass import NASSDataLoader
+
+nass = NASSDataLoader()   # or NASSDataLoader("/path/to/local/copy"), or set AGML_NASS_PATH
+
+# Corn grain yield for one county, 2000 to 2024, as a pandas DataFrame.
+df = nass.load_yield(crop="corn", utilization="grain", state="IA", county="Story", years=(2000, 2024))
+
+# Weekly planting progress for soybeans in Illinois, as a polars DataFrame.
+nass.load_progress(crop="soybeans", state="IL", years=2023, stage="planted", format="polars")
+
+# State-level wheat production for several states, written to a CSV file.
+nass.load_area_production(crop="wheat", state=["KS", "ND"], level="state", statistic="production",
+                     format="csv", path="wheat_production.csv")
+
+# Look up names and codes.
+nass.catalog.crops("corn")
+nass.catalog.counties(state="IA")
+
+# 2020 Census county boundaries, with WKB geometry.
+nass.load_boundaries("county")
+```
+
+`NASSDataLoader.tables()` lists every table. `nass.query(table, ...)` takes the same filters as the per-table methods:
+`crop`, `crop_class`, `practice`, `utilization`, `state`, `county`, `district`, `years`, `level`, `where`, and
+`columns`. Results come back as `pandas` (default), `polars`, `arrow`, or `records`, or are written to a `csv` or
+`parquet` file. Pass `revision=` (a commit hash) to `NASSDataLoader` to pin a version of the dataset, and `cache_dir=`
+to choose where downloads are kept.
+
+#### California Crop Yield Benchmark
+
+`agml.ag_stats.calicropyield` reads the [California Crop Yield Benchmark](https://huggingface.co/datasets/hkaman/california-crop-yield-benchmark):
+county crop yield (t/ha) for over 100 crops in the 58 California counties (2008-2022), with Cropland Data Layer,
+monthly Landsat and OpenET, irrigation, daily DayMet climate, and soil layers for each county. It needs the
+`calicropyield` extra (`pip install agml[calicropyield]`; the climate and soil layers need zarr 3, so Python 3.11 or
+newer). Each file is downloaded from Hugging Face the first time it is read and cached after that:
+
+```python
+from agml.ag_stats.calicropyield import CaliCropYieldLoader
+
+cali = CaliCropYieldLoader()   # or CaliCropYieldLoader("/path/to/local/copy"), or set AGML_CALICROPYIELD_PATH
+
+# County yield as a pandas DataFrame.
+cali.load_yield(county="Yolo", crop="tomatoes", years=(2015, 2022))
+
+# Rasters as xarray DataArrays in EPSG:4326, optionally cropped to a shapely geometry.
+cdl = cali.load_cdl("Yolo", 2020)                                    # (y, x) CDL class codes
+tomatoes = cali.crop_mask("Yolo", 2020, crops=cali.yield_crop_cdl_codes("TOMATOES"))
+landsat = cali.load_landsat("Yolo", 2020, months=[6, 7, 8])          # (month, band, y, x)
+et = cali.load_et("Yolo", 2020)                                      # (month, y, x)
+
+# Climate and soil as xarray Datasets.
+weather = cali.load_climate("Yolo", years=[2019, 2020], variables=["prcp", "tmax"], monthly=True)
+soil = cali.load_soil("Yolo", variables=["soc0_100", "nccpi3all"])
+
+# Fetch files ahead of time, e.g. before working offline.
+cali.download("cdl", ["Fresno", "Kern"], years=(2018, 2022))
+```
+
+`CaliCropYieldLoader.layers()` lists the layers and `years(layer)` their years. `load_boundaries()` returns the county
+polygons as a GeoDataFrame.
+
 ## Public Datasets
 
 AgML contains a wide variety of public datasets from various locations across the world:

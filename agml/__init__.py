@@ -42,3 +42,6 @@ del _setup  # noqa
 # since it is the entry point for loading AgML image-text-to-text datasets from the Hub.
 from . import backend, data, io, synthetic, viz
 from .data import loadImageTextToTextDataset
+
+# Each `ag_stats` source loads its optional dependencies on first use, e.g. `agml.ag_stats.nass`.
+from . import ag_stats  # noqa: E402, F401

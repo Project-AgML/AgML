@@ -50,6 +50,22 @@ dependencies = [
     "rich>=14.0.0",
     "datasets",
 ]
+
+[project.optional-dependencies]
+ag_stats = [
+    "huggingface_hub>=0.23.0",
+    "pandas>=2.0.3",
+    "pyarrow>=14.0.0",
+]
+calicropyield = [
+    "huggingface_hub>=0.23.0",
+    "pandas>=2.0.3",
+    "pyarrow>=14.0.0",
+    "rasterio>=1.3",
+    "xarray>=2023.1",
+    "zarr>=3.0; python_version >= '3.11'",
+    "geopandas>=0.12",
+]
 [project.urls]
 
 
